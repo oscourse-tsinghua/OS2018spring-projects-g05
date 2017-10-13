@@ -1,0 +1,161 @@
+\documentclass{article}
+
+\usepackage{amsmath,amsfonts,latexsym,graphicx}
+\usepackage{fullpage,color}
+\usepackage{setspace}
+\usepackage{float}
+
+\usepackage{tocloft}
+\setlength{\cftbeforesecskip}{10pt}
+\renewcommand{\cftbeforesubsecskip}{4pt}
+\renewcommand{\cftbeforesubsubsecskip}{4pt}
+\renewcommand\cftdotsep{2}
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{4}
+
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+
+\usepackage{xeCJK}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Songti SC}
+\setCJKmonofont{Songti SC}
+
+\usepackage{indentfirst}
+\setlength{\parindent}{2em}
+
+\usepackage[linesnumbered,boxed,ruled,vlined]{algorithm2e}
+
+\begin{document}
+\begin{titlepage}
+\fancyhead[CH]{}
+
+\hspace{3.0cm}
+\begin{center}
+\vfill
+% Upper part of the page
+
+\textsc{\LARGE Tsinghua University}\\[1.5cm]
+
+\textsc{\Large Computer Organization Experimentation}\\[0.5cm]
+
+
+% Title
+\rule[0.75\baselineskip]{0.75\textwidth}{1pt}
+
+{ \huge \bfseries REPORT\_NAME\_HERE}\\[0.4cm]
+
+\rule[20\baselineskip]{0.75\textwidth}{1pt}
+
+% Author and supervisor
+\begin{minipage}{0.4\textwidth}
+\begin{flushleft} \large
+\emph{Author:}\\
+Shizhi \textsc{Tang}
+
+Xihang \textsc{Liu}
+
+Zixi \textsc{Cai}
+\end{flushleft}
+\end{minipage}
+\begin{minipage}{0.4\textwidth}
+\begin{flushright} \large
+\emph{Supervisor:} \\
+Yuxiang \textsc{Zhang}
+
+Prof.~Weidong \textsc{Liu}
+\end{flushright}
+\end{minipage}
+
+\vfill
+\vspace{3.0cm}
+% Bottom of the page
+{\large \today}
+
+\end{center}
+
+\end{titlepage}
+\setcounter{page}{2}
+\tableofcontents
+\newpage
+\begin{spacing}{1.4}
+
+\section{对象模板}
+\subsection{公式}
+$$f(x)=x^2$$
+$$g(x)=x_3$$
+\begin{eqnarray}
+\begin{split}
+h(x)&=x^3+3x^2+3x+1 \\
+&=(x+1)^3
+\end{split}
+\end{eqnarray}
+
+\subsection{角注}
+\indent 利用线性网络求解非线性问题\footnote{This is a footnode}是一种特立独行的思路。
+
+\noindent 这一行\footnote{This is also a footnode}没有缩进。
+\subsection{表格}
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{c|c|c|c}  
+\hline  
+\textbf{格式}&\textbf{arg1}&\textbf{arg2}&\textbf{描述} \\
+\hline
+list & None & None &读取和反汇编从当前地址开始的10条指令 \\
+\hline
+list[count] & count & None & etc \\
+\hline 
+\end{tabular*}  
+\caption{这是可爱的表格名}
+\end{center}
+\end{table}
+
+\subsection{指令序列}
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{lll}  
+\hline  
+\$ r\\
+Running...\\
+Debugger reset.\\
+\$ c\\
+Operating system not started.\\
+\hline  
+\end{tabular*}  
+\end{center}
+\end{table}
+
+\subsection{代码/伪代码}
+
+\begin{algorithm}[H]
+\caption{An Algorithm}
+\label{algo2}
+Initially, let $\mathcal{L} = 0$\;
+\While{$a>b$}{
+    \For{$m = 1,2,\ldots, s+1$}{
+        $\Theta=\Xi$\;
+    }
+   $\clubsuit\diamondsuit\heartsuit\spadesuit$\;
+    \If{$b<a$}{ 
+        Do nothing\;
+    }
+}%while
+{\bf Return} $\bigoplus$\;
+\end{algorithm}
+
+\subsection{bullet sequence}
+\begin{itemize}
+\item condition a
+\item condition b
+\item[bba] condition c
+\end{itemize}
+
+\renewcommand\refname{\large 参考文献}
+\begin{thebibliography}{}  
+\bibitem[显示符号]{引用标签} Book Title, Author  
+\end{thebibliography}
+
+\section{其他注意事项}
+\end{spacing}
+\end{document}
