@@ -5,6 +5,19 @@
 # Line starting with '#' is comment
 # The comment should be in seperated lines
 
+# Define a signal to be checked
+# Grammar: "DEFINE <signalName> <sub_instace_name.sub_sub_instance_name.(...).signal_name>: <type>"
+# "DEFINE" should be in UPPER CASE, same below
+DEFINE reg1 sig: std_logic_vector(31 downto 0)
+
 # Execute an assembly instruction
-# "RUN" should be in UPPER CASE
+# Grammar: "RUN <assembly>"
 RUN ori $2, $0, 0x0020
+
+# Assert a previously defined signal to be equal to some value
+# Grammar: "ASSERT <signalName> <value>"
+ASSERT reg1 x"20000234"
+
+# And so on
+RUN ori $2, $3, 0xffff
+ASSERT reg1 x"00000000"

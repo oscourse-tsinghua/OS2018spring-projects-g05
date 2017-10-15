@@ -108,12 +108,14 @@ begin
         clk <= not clk;
     end process;
 
-    process begin
+    process
+        {{{ALIASES}}}
+    begin
         -- begin reset
         wait for CLK_PERIOD;
         rst <= '0';
 
-        -- insert test logic here
+        {{{ASSERTIONS}}}
 
         wait;
     end process;
