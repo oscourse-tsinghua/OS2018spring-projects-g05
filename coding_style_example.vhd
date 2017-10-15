@@ -13,7 +13,7 @@ end entity_name;
 architecture bhv of entity_name is
     component sub_component
         generic (
-        )
+        );
         port (
         );
     end component;
@@ -21,9 +21,13 @@ architecture bhv of entity_name is
         ENUM1, ENUM2
     );
     signal anOutputSignal: std_logic;
-    variable aVar: std_logic;
     constant A_CONST: integer := 0;
 begin
+    process
+        variable aLocalVar: std_logic;
+    begin
+    end process;
+
     process (clk) begin
         if (rising_edge(clk)) then
             anOutputSignal <= not anOutputSignal;
