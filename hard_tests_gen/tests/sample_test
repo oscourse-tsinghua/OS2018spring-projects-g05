@@ -1,0 +1,10 @@
+# Sample test file
+# The entity name is the same as the file name,
+# so there shuld be no file-name suffix
+
+# Line starting with '#' is comment
+# The comment should be in seperated lines
+
+# Execute an assembly instruction
+# "RUN" should be in UPPER CASE
+RUN ori $2, $0, 0x0020

@@ -1,12 +1,14 @@
+{{{NOTICE}}}
+
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.test_const.all;
+use work.{{{TEST_NAME}}}_test_const.all;
 
-entity {{{TEST_NAME}}} is
-end {{{TEST_NAME}}};
+entity {{{TEST_NAME}}}_tb is
+end {{{TEST_NAME}}}_tb;
 
-architecture bhv of {{{TEST_NAME}}} is
+architecture bhv of {{{TEST_NAME}}}_tb is
     component cpu
         port (
             rst, clk: in std_logic;
@@ -27,7 +29,10 @@ architecture bhv of {{{TEST_NAME}}} is
         );
     end component;
 
-    component fake_ram is
+    component {{{TEST_NAME}}}_fake_ram is
+        generic (
+            isInst: boolean := false -- The RAM will be initialized with instructions when true
+        );
         port (
             enable_i, write_i, clk: in std_logic;
             data_i: in std_logic_vector(RamDataWidth);
@@ -54,7 +59,10 @@ architecture bhv of {{{TEST_NAME}}} is
     signal int: std_logic_vector(intWidth);
     signal timerInt: std_logic;
 begin
-    inst_ram: fake_ram
+    inst_ram: {{{TEST_NAME}}}_fake_ram
+        generic map (
+            isInst => true
+        )
         port map (
             enable_i => instEnable,
             write_i => '0',
@@ -65,7 +73,7 @@ begin
             data_o => instData
         );
 
-    data_ram: fake_ram
+    data_ram: {{{TEST_NAME}}}_fake_ram
         port map (
             enable_i =>dataEnable,
             write_i => dataWrite,

@@ -1,10 +1,15 @@
+{{{NOTICE}}}
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.test_const.all;
+use work.{{{TEST_NAME}}}_test_const.all;
 
-entity fake_ram is
+entity {{{TEST_NAME}}}_fake_ram is
+    generic (
+        isInst: boolean := false -- The RAM will be initialized with instructions when true
+    );
     port (
         enable_i, write_i, clk: in std_logic;
         data_i: in std_logic_vector(RamDataWidth);
@@ -12,9 +17,9 @@ entity fake_ram is
         byteSelect_i: in std_logic_vector(3 downto 0);
         data_o: out std_logic_vector(RamDataWidth)
     );
-end fake_ram;
+end {{{TEST_NAME}}}_fake_ram;
 
-architecture bhv of fake_ram is
+architecture bhv of {{{TEST_NAME}}}_fake_ram is
     type WordsArray is array(0 to MAX_RAM_ADDRESS) of std_logic_vector(RamDataWidth);
     signal words: WordsArray;
     signal wordAddr: integer;
@@ -30,8 +35,13 @@ begin
     );
 
     process (clk) begin
-        if (rising_edge(clk) and (enable_i = '1') and (write_i = '1')) then
-            words(wordAddr) <= (words(wordAddr) xnor bitSelect) and (data_i xor bitSelect);
+        if (not isInst) then
+            if (rising_edge(clk) and (enable_i = '1') and (write_i = '1')) then
+                words(wordAddr) <= (words(wordAddr) xnor bitSelect) and (data_i xor bitSelect);
+            end if;
+        else
+            -- The first instruction is at 0x0
+            {{{INIT_INST_RAM}}}
         end if;
     end process;
 
