@@ -41,6 +41,9 @@ begin
         else
             if (readEnable1_i = ENABLE) then
                 readData1_o <= regArray(conv_integer(readAddr1_i));
+                if (readAddr1_i = writeAddr_i and writeEnable_i = ENABLE) then
+                    readData1_o <= writeData_i;
+                end if;
                 if (readAddr1_i = "00000") then
                     readData1_o <= (others => '0');
                 end if;
@@ -54,6 +57,9 @@ begin
         else
             if (readEnable2_i = ENABLE) then
                 readData2_o <= regArray(conv_integer(readAddr2_i));
+                if (readAddr2_i = writeAddr_i and writeEnable_i = ENABLE) then
+                    readData2_o <= writeData_i;
+                end if;
                 if (readAddr2_i = "00000") then
                     readData2_o <= (others => '0');
                 end if;
