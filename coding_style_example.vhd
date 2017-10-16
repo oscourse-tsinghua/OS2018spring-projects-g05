@@ -13,8 +13,11 @@ end entity_name;
 architecture bhv of entity_name is
     component sub_component
         generic (
+            n: integer
         );
         port (
+            rst, clk: in std_logic;
+            anotherOutputSignal_o: out std_logic
         );
     end component;
     type ATypeName is (
@@ -38,8 +41,12 @@ begin
 
     sub_component_inst1: sub_component
         generic map (
+            n => 2
         )
         port map (
+            rst => rst,
+            clk => clk,
+            anotherOutputSignal_o => anOutputSignal_o
         );
 
     gen_something: for i in 0 to 19 generate
