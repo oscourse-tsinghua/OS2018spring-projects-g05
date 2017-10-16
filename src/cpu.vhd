@@ -320,7 +320,7 @@ begin
             writeRegData_i => writeRegData_89,
             toWriteReg_o => toWriteReg_93,
             writeRegAddr_o => writeRegAddr_93,
-            writeRegData_o => writeRegAddr_93
+            writeRegData_o => writeRegData_93
         );
 
 end bhv;
