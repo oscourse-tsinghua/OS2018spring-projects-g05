@@ -46,11 +46,18 @@ def genAliases(defineCmd):
         stmts.append('alias user_%s is <<signal cpu_inst.%s>>;'%(alias, hierarchy))
     return '\n'.join(stmts)
 
+def genImports(importCmd):
+    stmts = ['-- CODE BELOW IS AUTOMATICALLY GENERATED']
+    for package in importCmd:
+        stmts.append('use work.%s.all' % package)
+    return '\n'.join(stmts)
+
 ''' Parse test file and return (RUN instructions, ASSERT pairs, DEFINE pairs) '''
 def parse(filename):
     runCmd = []
     assertCmd = []
     defineCmd = []
+    importCmd = []
     with open(SRC_DIR + filename) as f:
         for line in f:
             line = line.rstrip()
@@ -65,9 +72,11 @@ def parse(filename):
                 assertCmd.append(param.split(None, 1))
             elif op == 'DEFINE':
                 defineCmd.append(param.split(None, 1))
+            elif op == 'IMPORT':
+                importCmd.append(param)
             else:
                 raise Exception("Unrecognized op '%s'"%(op))
-    return (runCmd, assertCmd, defineCmd)
+    return (runCmd, assertCmd, defineCmd, importCmd)
 
 templateNames = ['tb.vhd', 'fake_ram.vhd', 'test_const.vhd']
 templates = {}
@@ -79,10 +88,11 @@ for name in templateNames:
 for testCase in os.listdir(SRC_DIR):
     if testCase[0] == '.': # Might be editor temporary files
         continue
-    runCmd, assertCmd, defineCmd = parse(testCase)
+    runCmd, assertCmd, defineCmd, importCmd = parse(testCase)
     initInstRam = genInitInstRam(runCmd)
     assertions = genAssertions(assertCmd)
     aliases = genAliases(defineCmd)
+    imports = genImports(importCmd)
 
     try:
         os.makedirs(OUT_DIR + testCase)
@@ -97,6 +107,7 @@ for testCase in os.listdir(SRC_DIR):
         out = out.replace("{{{INIT_INST_RAM}}}", initInstRam)
         out = out.replace("{{{ASSERTIONS}}}", assertions)
         out = out.replace("{{{ALIASES}}}", aliases)
+        out = out.replace("{{{IMPORT}}}", imports)
         outputName = name if name != 'template.vhd' else testCase + '.vhd'
         with open("%s/%s/%s"%(OUT_DIR, testCase, "%s_%s"%(testCase, outputName)), 'w') as outFile:
             outFile.write(out)

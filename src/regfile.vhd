@@ -19,10 +19,8 @@ entity regfile is
 end regfile;
 
 architecture bhv of regfile is
-    type RegArrayType is array(RegNum) of std_logic_vector(DataWidth);
     signal regArray: RegArrayType;
 begin
-
     process(clk) begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then

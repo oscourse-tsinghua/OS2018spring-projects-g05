@@ -4,6 +4,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 use work.{{{TEST_NAME}}}_test_const.all;
+{{{IMPORT}}}
 
 entity {{{TEST_NAME}}}_tb is
 end {{{TEST_NAME}}}_tb;
