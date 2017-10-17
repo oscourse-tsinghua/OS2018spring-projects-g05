@@ -19,7 +19,7 @@ entity regfile is
 end regfile;
 
 architecture bhv of regfile is
-    signal regArray: RegArrayType;
+    signal regArray: RegArrayType := (others => (others => '0'));
 begin
     process(clk) begin
         if (rising_edge(clk)) then
