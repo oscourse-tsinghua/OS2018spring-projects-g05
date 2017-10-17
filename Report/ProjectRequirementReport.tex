@@ -1,0 +1,1414 @@
+%!TEX program = xelatex
+\documentclass[11pt,utf8]{article}
+\usepackage[no-math]{fontspec}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+%\usepackage{xeCJK}
+\usepackage{verbatim}
+\usepackage{indentfirst}
+\usepackage{syntonly}
+\usepackage{fancyhdr}
+\usepackage[unicode=true, colorlinks, linkcolor=black, anchorcolor=black, citecolor=black, urlcolor=black]{hyperref}
+\usepackage{graphicx}
+\usepackage[top = 1.2in, bottom = 1.2in, left = 1.3in, right = 1.3in]{geometry}
+\usepackage[svgnames]{xcolor}
+\usepackage{paralist}
+\usepackage{ulem}
+\usepackage{titlesec}
+\usepackage{zhspacing}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{supertabular}
+\usepackage[final]{pdfpages}
+\usepackage{minted}
+\usepackage{mdframed}
+
+\defaultfontfeatures{Mapping=tex-text}
+\zhspacing
+%\setromanfont{Computer Modern Roman}
+\newfontfamily\zhfont{Songti SC}
+\setmonofont[Scale=1]{Courier New}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+
+\pagestyle{fancy}
+\pagestyle{plain}
+
+\begin{document}
+
+\newcommand{\hlink}[1]{
+	\footnote{\href{#1}{\textsl{\underline{#1}}}}
+}
+\renewenvironment{proof}{\noindent{\textbf{证明：}}}{\hfill $\square$ \vskip 4mm}
+\newtheorem*{theorem*}{定理}
+\newcommand{\theorem}[1]{
+	\begin{theorem*}\textup{#1}\end{theorem*}
+}
+\let\enumerate\compactenum
+\let\endenumerate\endcompactenum
+\let\itemize\compactitem
+\let\enditemize\endcompactitem
+\setlength{\pltopsep}{5pt}
+\setlength{\parindent}{2em}
+\setlength{\footskip}{30pt}
+\setlength{\baselineskip}{1.3\baselineskip}
+\renewcommand\arraystretch{1.2}
+
+\colorlet{LightGray}{Gray!10!}
+
+\begin{titlepage}
+\fancyhead[CH]{}
+
+\hspace{3.0cm}
+\begin{center}
+\vfill
+% Upper part of the page
+
+\textsc{\LARGE Tsinghua University}\\[0.8cm]
+
+\textsc{\Large Computer Organization Experimentation}\\[2.5cm]
+
+
+% Title
+\rule[0.75\baselineskip]{0.75\textwidth}{1pt}
+
+{ \huge \bfseries Project Requirement Document}\\[0.4cm]
+
+\rule[15\baselineskip]{0.75\textwidth}{1pt}
+
+% Author and supervisor
+\begin{minipage}{0.4\textwidth}
+\begin{flushleft} \large
+\emph{Author:}\\
+Shizhi \textsc{Tang}
+
+Xihang \textsc{Liu}
+
+Zixi \textsc{Cai}
+\end{flushleft}
+\end{minipage}
+\begin{minipage}{0.4\textwidth}
+\begin{flushright} \large
+\emph{Supervisor:} \\
+Yuxiang \textsc{Zhang}
+
+Prof.~Weidong \textsc{Liu}
+\end{flushright}
+\end{minipage}
+
+\vfill
+\vspace{3.0cm}
+% Bottom of the page
+{\large \today}
+
+\end{center}
+
+\end{titlepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\setcounter{page}{2}
+\tableofcontents
+\newpage
+
+%============================MAIN TEXT FROM HERE==============================
+\section{引言}
+\subsection{项目背景}
+本项目旨在设计一个基于MIPS32的CPU及其相关硬件，最终结果是，可以支持一个MIPS32指令的一个子集，最终能够运行UCORE操作系统。
+
+本项目是计算机组成原理课程和软件工程课程的联合实验，需求方为计算机组成原理课程和软件工程课程。承担此项目的是BnG小组，成员包括计53班的唐适之、刘熙航和蔡子熙。
+
+\subsection{编写目的}
+本文档为该项目的需求文档，初版编写于项目正式启动之前，用于明确CPU中主要需要实现的功能，硬件设计中主要用到的技术和UCORE操作系统对硬件的需求，以保证在项目进行过程中可以保持在正确的方向上。此外，在整个设计过程中也将会对该文档进行部分的修改。
+
+\subsection{项目概览}
+本项目所需要实现的主要部分包括：CPU、MMU、通信等部分，项目将采用Verilog HDL语言实现，并将基于Vivado2017.2.以下是项目所需要的各个部分的概览：
+
+\subsubsection{CPU}
+CPU的总体设计主要包括指令系统、基本数据通路、流水线结构、异常与中断处理等。
+
+\textbf{指令系统} UCORE操作系统用到的指令有 47 条，其中算术指令 8 条，逻辑指令 8 条，移位指令 6 条，分 支跳转指令 10 条，访存指令 5 条，移动指令 4 条，陷入指令 1 条，特权指令 5 条。该 47 条指 令也是本次项目支持的 MIPS 32 指令集的子集。详细的内容我们将在附录中提到。
+
+\textbf{流水线} 计划实现的流水线为五级流水线，包括取指、译码、执行、访存、回写五个阶段，需要解决的 冲突有数据冲突、结构冲突和控制冲突。
+
+\textbf{异常与中断处理} 能够正确进行异常和中断处理，支持精确异常。
+
+\subsubsection{MMU}
+MMU主要完成的功能为虚拟地址到物理地址的转换，除外，还需要进行地址到外设端口的映射等。
+
+\subsubsection{通信}
+通信部分主要包括串口通信，VGA通信和键盘通信。
+
+\subsection{项目目标}
+项目主要需要达成的目标有以下三点：
+\begin{itemize}
+\item 能够设计实现CPU、MMU、通信等功能
+\item 能够通过引动程序将 CPU 从 Flash 加载到 RAM 中，并顺利接受用户输入，执行相应功能。
+\item 逐步提高主频，并处理主频提高过程中遇到的一系列问题。
+\end{itemize}
+
+\subsection{一些重要定义}
+以下是本文档及后续文档中用到的英文简称及其含义：
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+\textbf{英文简称} & \textbf{含义} \\
+\hline
+MIPS & 无内部互锁流水级的微处理器 \\
+CPU & 中央处理器 \\
+CP0 & 协处理器0 \\
+ALU & 算术逻辑单元 \\
+MMU & 内存管理单元 \\
+PA & 物理地址 \\
+VA & 虚拟地址 \\
+TLB & 旁路快表缓冲 \\
+BIOS & 基础输入输出系统 \\
+ROM & 只读存储器 \\
+RAM & 随机存取存储器 \\
+SRAM & 静态随机存取存储器 \\
+Flash & 快闪存储器 \\
+\hline
+\end{tabular}
+\end{center}
+\subsection{项目开发环境}
+\subsubsection{硬件环境}
+To be continue...
+\subsubsection{软件环境}
+\begin{itemize}
+\item EDA工具： Xilinx Vivado 2017.2
+\item 编译运行平台：Windows 10 x64
+\item 所需要支持的目标操作系统：ucore-thumips
+\item 操作系统模拟器：tbc
+\item 操作系统模拟器运行平台：tbc
+\end{itemize}
+
+\section{UCORE操作系统解析}
+\subsection{简介}
+该部分主要分析操作系统中与硬件直接相关的部分，在接下来的内容中，我们首先简介UCORE操作系统及其编译、仿真方法。然后针对UCORE操作系统的boot阶段、内存布局和异常处理作深入分析。
+
+UCORE是一款类似UNIX的教学操作系统，本项目使用的是UCORE的MIPS移植版，称为UCORE-THUMIPS。上述移植版的GitHub项目中含有一份简要文档。
+
+\subsection{准备工作}
+\subsubsection{编译}
+\subsubsection{仿真}
+\subsection{Boot阶段}
+Boot 阶段是操作系统启动阶段，在硬件进行初始化后，引导程序 BootLoader 从硬盘中加载操作 系统到内存，然后将控制权交由操作系统，操作系统初始化相关状态，随后进行进程调度。整个阶段 可以分为 3 部分:硬件初始化阶段，BootLoader 阶段，操作系统初始化阶段。
+\subsubsection{硬件初始化阶段}
+硬件接收到Reset信号后，根据MIPS标准，将进行如下初始化：
+\begin{itemize}
+\item 初始化 CP0 寄存器:根据我们的需要，这一阶段需要初始化的有 Random 和 Status 寄存器。 
+\item 初始化 TLB:TLB 中有一位表示是否可以匹配的“隐藏”位，这一阶段需要将之置为禁止。 
+\item Bus 状态机和配置初始化。
+\item PC 初始化:取值地址将从 VA 0xBFC00000 开始。
+\end{itemize}
+硬件完成初始化后，将从 VA 0xBFC00000 开始执行指令，进入 BootLoader 阶段。
+\subsubsection{BootLoader阶段}
+\subsubsection{操作系统初始化阶段}
+
+\subsection{内存管理}
+\subsubsection{内存管理器}
+\subsubsection{MMU}
+\subsection{异常处理}
+\subsubsection{异常处理流程}
+\subsubsection{异常类型}
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+\textbf{Syscall序号} & \textbf{Syscall说明} \\
+\hline
+0 & sys\_exit \\
+1 & sys\_fork \\
+2 & sys\_wait \\
+3 & sys\_exec \\
+4 & sys\_yield \\
+5 & sys\_kill \\
+6 & sys\_getpid \\
+7 & sys\_putc \\
+8 & sys\_pgdir \\
+9 & sys\_gettime \\
+10 & sys\_sleep \\
+11 & sys\_open \\
+12 & sys\_close \\
+13 & sys\_read \\
+14 & sys\_write \\
+15 & sys\_seek \\
+16 & sys\_fstat \\
+17 & sys\_fsync \\
+18 & sys\_getcwd \\
+19 & sys\_getdirentry \\
+20 & sys\_dup \\
+\hline
+\end{tabular}
+\end{center}
+\subsubsection{ALU}
+
+\section{基础部件}
+\subsection{ALU}
+ALU 全称为算术逻辑单元(Arithmetic Logic Unit)，是能实现多种算术运算和逻辑运算的组合逻 辑电路，也是 CPU 中的核心组成部分。例如，存储访问指令用 ALU 计算目标数据的地址，算术逻辑 指令用 ALU 执行运算，而分支跳转指令用 ALU 进行比较。根据 ucore 操作系统的实际需求，我们的 ALU 只需要进行基本的整数算术逻辑运算即可，不需要支持浮点数运算。附录所示 ucore 操作系统的 47 条基本指令中，包含了 8 条算术指令、6 条分支指令、8 条逻辑指令和 6 条移位指令。从这些指令 出发，ALU 运算需求可以整理为下表。
+
+具体实现需求中，ALU 接受两个 32 位整数与控制信号作为输入，以一个 32 位整数作为输出。很 显然，ALU 根据不同的控制信号执行不同的操作。这些控制信号来源于指令当中的特定字段，在流水 线结构的译码阶段生成。如果是算术逻辑指令，ALU 的结果将写回寄存器;如果是存取指令，ALU 的 结果可作为读写寄存器的地址;如果是分支指令，ALU 的结果会被用于决定下一条指令地址。
+
+\subsection{乘法器}
+乘法器(Multiplier)是现代计算机 CPU 中必不可少的一部分，常见的乘法器模型基于“移位相
+加”算法实现。从乘数的最低位开始，若其为 1，则被乘数左移一位并与上一次的和相加;若为 0，则
+被乘数左移后以全零相加，如此循环至乘数的最高位。
+
+MIPS32 指令集的乘法指令与其余算术逻辑指令略有差异。它接受两个 32 位整数为输入，以 64
+位整数保存乘法运算结果，存储在 HILO 寄存器内。其中，HI 寄存器保存结果的高 32 位，LO 寄存器 保存结果的低 32 位。这里运算结果的位数和存储位置发生了变化，因此我们需要将乘法器视为独立的 运算单元，而不再是 ALU 的一部分。由于 ucore 操作系统中并未涉及到 MADD、MADDU、MSUB、 MSUBU 等乘法与加减法混合指令，我们的乘法器只需要一个时钟周期就可以完成计算，从而避免了 流水线调度的问题。
+
+乘法器在具体实现中，主要用于执行 MULT、MULTU 两种指令，输入两个 32 位整数，将计算结 果保存在 HILO 寄存器中。HILO 寄存器的读写操作，可以通过 MFLO、MFHI、MTLO 和 MTHI 四 种指令完成。
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{操作码} & \textbf{功能} & \textbf{描述} \\
+\hline
+ADD & $A+B$ & 加法 \\
+SUB & $A-B$ & 减法 \\
+AND & $A~and~B$ & 按位与运算 \\
+OR & $A~or~B$ & 按位或运算 \\
+XOR & $A~xor~B$ & 按位异或运算 \\
+NOT & $not~A$ & 按位非运算 \\
+SLL & $A~sll~B$ & 将A逻辑左移B位 \\
+SRL & $A~SRL~B$ & 将A逻辑右移B位 \\
+SRA & $A~SRA~B$ & 将A算数右移B位 \\
+EQU & $A~=~B$ & 判断A是否等于B \\
+SLT & $A~<~B$ & 判断A是否小于B \\
+\hline
+\end{tabular}
+\end{center}
+\subsection{寄存器组}
+寄存器(Register)是 CPU 中的重要组成部分。它是容量大小有限的高速存储部件，可用作暂 存指令、数据、地址等信息。依据存储内容的不同，寄存器可以分为整数寄存器、浮点寄存器、指令 寄存器等;而依据设计用途的不同，寄存器也可以分为通用目的寄存器(General Purpose Registers, GPR)、程序计数器(Program Counter, PC)、堆栈寄存器(Stack Pointer, SP)、状态寄存器等。基 本寄存器由 D 触发器构成，在 CP 脉冲信号的控制下，每到时钟上升沿时进行数据写入，其余时段数 据保持不变。寄存器通常拥有非常高的读写速度，所以在寄存器之间传递数据效率很高，相比处理器 缓存和主存储器而言有着显著的性能优势。
+
+MIPS32 CPU 有 32 个通用目的寄存器，被命名为 $0 至 $31。各个寄存器的功能及汇编程序中的 使用约定如下表所示:
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{寄存器号} & \textbf{寄存器名} & \textbf{功能} \\
+\hline
+\$0 & $zero$ & 常量0 \\
+\$1 & $a_t$	& 保留给汇编器使用 \\
+\$2$\sim$\$3 & $v_0 \sim v_1$ & 函数调用返回值 \\ 
+\$4$\sim$\$7 & $a_0 \sim a_3$ & 函数调用参数 \\
+\$8$\sim$\$15 & $t_0 \sim t_7$ & 调用者保存寄存器 \\
+\$16$\sim$\$23 & $s_0 \sim s_7$ & 被调用者保存寄存器 \\
+\$24$\sim$\$25 & $t_8 \sim t_9$ & 调用者保存寄存器 \\
+\$26$\sim$\$27 & $k_0 \sim k_1$ & 保留给异常处理使用 \\
+\$28 & $gp$ & 全局指针(Global Pointer) \\
+\$29 & $sp$ & 堆栈指针(Stack Pointer) \\
+\$30 & $fp$ & 帧指针(Frame Pointer) \\
+\$31 & $ra$ & 返回地址(Return Address) \\
+\hline
+\end{tabular}
+\end{center}
+
+在采用 MIPS32 架构的硬件系统中，寄存器组内包括上述的 32 个通用目的寄存器，并且每个寄存 器的位宽均为 32 位。寄存器内的值可以在一个时钟周期内的任意时间读出，但只能在时钟上升沿处更 改。MIPS32 指令集中的 R 型指令(如算术逻辑指令、条件移动指令等)最多涉及三个不同寄存器的 访问，并且规定从两个寄存器中读取数据，并将结果写入最后一个寄存器中。因此，寄存器组模块需 要接收全局的时钟信号，支持对任意两个寄存器同时进行的读操作，和在时钟边沿处对某一个寄存器 进行的写操作。
+此外我们注意到，并非所有指令都需要将结果写入寄存器，而且对 0 号寄存器的写入操作不符合 寄存器功能要求，这意味着我们还需要为寄存器组添加必要的写使能信号，以规避潜在风险。
+
+\subsection{CP0}
+协处理器(Coprocessor)一词通常用来表示处理器的一个可选部件，通过扩展指令集或提供配置 寄存器的方式来扩展内核处理功能。MIPS32 架构提供了最多 4 个协处理器，分别命名为 CP0 CP3， 其功能如下表所示。协处理器可以借助一组专门的、提供装载或存储类型接口的 MIPS 指令来访问。
+
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+\textbf{协处理器} & \textbf{功能} \\
+\hline
+CP0 & 控制 CPU，实现 MMU、异常处理、乘除法等功能 \\
+CP1 & 浮点处理器(Floating Point Unit, FPU) \\
+CP2 & 保留，各生产厂商用来实现自己的特色功能 \\
+CP3 & 浮点处理器 \\
+\hline
+\end{tabular}
+\end{center}
+
+实验用操作系统 ucore 没有实现浮点运算，因此我们不需要实现 CP1 和 CP3。CP2 没有特殊功 能，同样不用实现。只有 CP0 是唯一不可选的协处理器，由于它涉及中断处理、提供可选配置、观察 并控制系统缓存或时钟、地址转换等关键功能，我们必须加以足够重视。MIPS32 架构定义的协处理器 CP0 所负责的主要工作如下。
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{寄存器号} & \textbf{寄存器名} & \textbf{功能} \\
+\hline
+0 & Index & TLB阵列的入口索引 \\
+2 & EntryLo0 & 偶数虚拟页入口地址的低 32 位部分 \\
+3 & EntryLo1 & 奇数虚拟页入口地址的低 32 位部分 \\
+8 & BadVAddr & 记录最近一次存储发生异常时的虚拟地址 \\
+9 & Count & 与 Compare 寄存器组成片内计时器，两者相等时发出时钟中断信号 \\
+10 & EntryHi & TLB 入口地址的高 32 位部分 \\
+11 & Compare & 与 Count 寄存器组成片内计时器，两者相等时发出时钟中断信号 \\
+12 & Status & 处理器状态和控制寄存器，决定 CPU 特权等级和中断使能等 \\
+13 & Cause & 保存最近一次异常原因 \\
+14 & EPC & 保存最近一次异常时的程序计数器 \\
+15 & Ebase & 保存异常处理程序的入口地址 \\
+\hline
+\end{tabular}
+\end{center}
+
+CP0 包含 32 个寄存器，每个寄存器位数为 32 位。操作系统 ucore 所涉及的协处理器 CP0 寄存 器共有 11 个，这些寄存器的编号、名称和功能已在下表中列出。为了实现对 CP0 的控制功能，我们需要使用 MTC0、MFC0 两条协处理器访问指令。在 MIPS32 指令集架构中，MTC0 指令实现修改 CP0 中的寄存器，MFC0 指令实现读取 CP0 中的寄存器，具体格式可参考附录中的 ucore 指令格式列 表。异常发生时，CPU 中的异常处理模块访问 CP0 寄存器，将异常原因、指令地址、访存错误地址、 处理器状态等信息写入对应的寄存器。
+
+从表中不难看出，这 11 个寄存器大多与 MMU、TLB 和异常处理相关。以下部分着重介绍
+Count、Compare、Status、Cause、EPC 这五个寄存器的具体功能和实现需求。
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+Bit & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\hline
+标志名 & \multicolumn{4}{c|}{CU3$\sim$CU0} & RP & R & RE & \multicolumn{2}{c|}{0} & BEV & TS & SR & NMI & \multicolumn{3}{c|}{0} \\
+\hline
+Bit & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\hline
+标志名 & \multicolumn{8}{c|}{IM7$\sim$IM0} & \multicolumn{3}{c|}{R} & UM & R & ERL & EXL & IE \\
+\hline
+\end{tabular}
+\end{center}
+
+上表中表示为 R 的字段是保留字段，下面介绍其中比较重要的非保留字段。
+\subsection{MMU}
+MMU 是 Memory Management Unit 的缩写，中文名是内存管理单元，它是 CPU 中用来管理虚 拟存储器、物理存储器的控制模块，同时也负责虚拟地址映射为物理地址，以及提供硬件机制的内存 访问授权，多用户多进程操作系统。我们知道，计算机的虚拟地址空间大小由 CPU 位数所决定，对于 一个 32 位的 CPU，地址范围为 0-0xFFFFFFFF，总大小为 4G。而实际物理地址往往只是虚拟地址 空间的子集，因此在具备 MMU 的计算机上，虚拟地址将通过 MMU 模块转化为物理地址。
+
+MIPS32 架构的 MMU 主要实现虚拟内存映射的功能，以读写控制信号和虚拟地址为输入，实现 对应物理地址数据的存储和访问。MIPS 标准的内存映射方案如下表所示:
+
+在本次实验中，整体的内存映射方案如上表所示，由于开发板上的 SRAM 不能覆盖 kseg0 和 kseg1 段的物理地址空间，因此该段空间实际有效的地址范围是:VA 0x80000000 - 0x800FFFFF(对应 PA 0x0000000-0x000FFFFF).
+此外，kseg1 段的部分地址将不被映射到物理内存地址，而是映射到特殊设备，具体见下表:
+\subsection{TLB}
+
+旁路快表缓冲(Translation Lookaside Buffer, TLB)，简称快表，可以理解为一种地址变换高速缓 存。
+
+在上一个部分中，计算机内部虚拟地址与实际物理地址之间的对应关系通常由一种特殊的数据结 构——页表(Page Table)进行储存。因此，虚拟内存到物理内存的转换可以通过查表操作进行。由于 页表存放在主存中，程序每次访问内存至少需要两次:一次访存获取物理地址，第二次访存才获得数 据。提高访存性能的关键在于依靠页表的访问局部性。当一个转换的虚拟页号被使用时，它可能在不 久的将来再次被使用到。TLB 就是符合这些要求的一种高速缓存，内存管理硬件使用它来改善虚拟地 址到物理地址的转换速度。
+
+CPU 访问虚拟地址时，会首先根据虚拟地址的高 20 位在 TLB 中查找。如果快表中没有相应的表 项，则触发页表缺失异常(TLB miss)，需要通过访问内存中的页表计算出相应的物理地址。与此同 时，物理地址被存放在一个 TLB 表项中，以后对同一线性地址的访问，直接从 TLB 表项中获取物理 地址即可，称为页表命中(TLB hit)。
+
+结合操作系统 ucore 及 THINPAD 教学实验平台的实际情况，我们最终确定将 TLB 条目数设置
+为 16。虚拟地址的高 20 位作为虚页号，用于在 TLB 中查找对应的页表项，返回实际物理地址。
+\subsection{异常及中断处理}
+
+MIP32 架构中的异常包括中断(Interrupt)、陷阱(Trap)、系统调用(System Call)以及其它任 何可以打断程序正常执行流程的操作。在 ucore 异常处理一节和 CP0 一节的 ExcCode 表中，我们已 经列举了操作系统 ucore 涉及的异常，而下表则进一步按照优先级对 MIPS CPU 所需处理异常类型进 行了排序。
+
+检测到异常发生之后，CPU 会执行一系列指令以处理异常。MIPS32 架构的异常处理过程如下:
+
+MIPS CPU 有 8 个独立的中断位(在 Cause 寄存器中)，其中 6 个为外部硬件中断，2 个为软件
+中断。具体实现方面，CPU 能够处理的中断类型如下表所示。遇到中断时，CPU 将跳转至通用的异 常处理程序入口。
+
+\section{流水线结构}
+
+\subsection{流水线概述}
+流水线是指将计算机指令处理过程拆分为多个步骤，并通过多个硬件处理单元并行执行来加快指 令执行速度。大多数现代处理器选择采用流水线方式执行指令。通常，一条 MIPS 指令包含如下五个 处理步骤:
+
+MIPS CPU 按照这五个处理步骤，建立了五级流水线结构。它的加速原理可用一个简单的公式说 明。我们假设所有的流水级都只花费 ∆t 的时间，该时间能够满足最慢操作的执行需要。在单周期、非 流水线模型中，任意 n 条指令所需的执行时间均为 tnp = 5n∆t;而在五级流水线模型中，执行 n 条指 令所用的时间为 tp = (n + 4)∆t。那么采用流水线结构 CPU 的性能加速比为:
+
+也就是说，在指令数量足够大的情况下，流水线所带来的加速比近似等于流水线级数。这里五级 流水线结构的加速比接近于 5。考虑到实际情况当中指令数目有限，以及各流水级所需要的时间不尽相 同，对于本实验来说，MIPS32 架构的 CPU 大约可带来 4 倍左右的实际性能提升。
+
+总而言之，流水线提升性能的方法是通过增加指令的吞吐率，而非减少单条指令的执行时间。因 此执行程序时，指令的吞吐率是一个很重要的性能参数。
+\subsection{数据通路}
+五级流水线结构的设计，意味着任何一个单时钟周期内，CPU 最多会执行 5 条指令。因此必须把
+CPU 数据通路划分为 5 个部分，每部分用相对应的指令执行阶段来进行命名:
+
+程序执行过程中，指令与数据由上而下地顺序通过五级流水线。通过增加保存中间数据的寄存器， 指令执行过程中可以实现对数据通路的共享。然而数据通路中同样存在一些例外。比如，写回阶段需 要把结果写回数据通路中间的寄存器堆中;程序计数器的下一个取值，需在自增的 PC 和 ID 阶段产生 的分支目标之间选择。第一个例外可能导致数据冒险，第二个例外可能导致控制冒险。关于流水线冒 险，下一节将给出具体说明和解决方案。
+\subsection{冒险及解决方案}
+\subsubsection{流水线冒险及其类型}
+\subsubsection{消除数据冒险}
+\subsubsection{规避控制冒险}
+分支转移指令或者其它指令修改了 PC 的值，导致已经进入流水线的指令无效，从而引发控制冒 险。MIPS CPU 采用分支延迟槽(Branch Delay Slot)来减小控制冒险的代价。
+
+我们规定分支指令后面的指令位置为分支延迟槽，延迟槽内的指令称为“延迟指令”。延迟指令在 计算分支目标地址时已经进入流水线，因此它总是被执行，与跳转发生与否没有关系。为保证延迟槽 中只有一条指令，分支判断需要在译码阶段完成，MIPS CPU 会通过额外的计算单元实现这一功能。 很显然，并非所有的指令都可以放入延迟槽。部分编译器能够对指令顺序进行调整，在结果不变的情 况下使用延迟指令来优化性能。但大多数情况下，延迟指令由程序员依据实际情况设置。
+
+需要注意，如果延迟指令导致异常，那么进入异常处理程序之前，CP0 协处理器的 EPC 寄存器 应保存之前的分支跳转指令地址，而不是该延迟指令地址。
+\subsection{功能需求}
+\subsection{性能需求}
+流水线结构的性能瓶颈取决于最慢的流水级。考虑到 THINPAD 教学实验平台上的 RAM 读取速 度为 12.5MHz，各阶段引入的控制单元存在延时，MIPS CPU 基于结果正确、运行稳定的原则，通过 不断测试以提升时钟频率。
+
+外设方面，键盘输入将用软件中断方式实现，VGA 信号通过串口输出并且由硬件直接处理，从而 尽可能减小对性能的影响。
+
+此外，为进一步优化性能，我们将对 CPU 各个逻辑部件的时序做深入分析，努力逼近和提升 CPU 频率上限。
+
+\section{存储器和外围设备}
+\subsection{SRAM}
+SRAM(Static Random Access Memory)，即静态随机存取存储器，是一种具有静止存取功能的 内存，不需要刷新电路就可以保存内部数据。SRAM 的优点是速度快，不需要周期性刷新内存数据; 缺点是集成度低，掉电后数据会丢失，相同容量下的体积和功耗较大，价格较高。因此 SRAM 一般少 量用于关键性系统中，以提高运行效率。
+
+THINPAD 教学计算机设置了两片 256×1024×16b 的 SRAM 作为内存，其访问过程可通过设计状 态机和内存读写逻辑而实现。需要注意的是，教学实验平台上的内存芯片 RAM1 和串口共同连接在一 条总线上，访问 SRAM 的前提是串口不工作，这可以通过调节读写控制信号加以实现。
+
+对存储器的访问是 CPU 流水线非常关键的一级。SRAM 读写时序的优化，可以使得整个流水线 数据通路的设计得到简化，有助于提升 CPU 频率和增强 CPU 设计的鲁棒性。不得当的读写时序设 计，将给 CPU 的调试运行带来各种难以定位和解决的麻烦。比如依据流水线结构一节的叙述，同时 进行取指和访存操作将导致存储器结构冒险。为解决这一问题，我们必须更加精细地设计 SRAM 访 问时序，或是实现指令和数据分立存储。不仅如此，由于 RAM 运行频率成为限制 CPU 主频的瓶颈， CPU 性能提升也需要通过优化访存操作或改善存储器体系结构来完成。
+\subsection{Flash存储器}
+Flash 存储器又称为闪存，它不仅具备电子可擦除和可编程的功能，还能够快速读取数据。Flash 不像 SRAM，保存的数据断电后也不会丢失。由于这些特点，它在便携式设备中被大量使用，如手机、 平板电脑、U 盘和 SD 卡等。
+
+THINPAD 教学实验平台上用到的 Flash 型号为 28F640J3，涉及操作主要有读、写和擦除。本实 验的具体需求中，Flash 存储器被当做计算机的“硬盘”来使用，除存储操作系统 ucore 的核心代码 外，还可以存储用户程序和数据。操作系统启动之前，写入 FPGA 的 BootLoader 程序将会把 Flash 内部的操作系统代码转移至 SRAM。
+下表列出了和 Flash 操作相关的部分控制信号。
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+\textbf{信号名称} & \textbf{描述} \\
+\hline
+CE0、CE1、CE2 & 使能信号，本实验中仅控制CE0 \\
+BYTE & 操作模式，置1，表示字模式 \\
+VPEN & 写保护，置 1，表示写保护开启 \\
+RP & 重置信号，置 1，表示工作 \\
+OE & 读使能信号，0 有效 \\
+WE & 写使能信号，0 有效 \\
+ADDR[22:0] & 23 位地址线，字模式下使用 ADDR[22:1] \\
+DATA[15:0] & 16 位数据线，读写操作共用 \\
+SR[7:0] & 8 位状态寄存器，与 DATA[7:0] 共用 \\
+\hline
+\end{tabular}
+\end{center}
+\subsection{串行接口}
+THINPAD 教学计算机的 FPGA 芯片通过 UART 芯片连接 RS232 接口，作为串行接口与其它设 备相连。本实验中，RS232 接口将连接至 PC 上的串口，实现 PC 和教学计算机之间的程序通信。串 口的功能需求具体表现在:
+\begin{itemize}
+\item 计算机启动测试之前，操作系统 ucore 的 elf 文件将通过串口写入计算机的 Flash 存储器中。开 始运行时，BootLoader 负责将这些代码转移至内存。
+\item 调试阶段，我们借助调试器，通过串口向计算机发送调试命令，并接收计算机传回的调试信息， 如寄存器状态、内存数据、运行提示信息等。
+\end{itemize}
+\subsection{VGA设备}
+VGA(Video Graphics Array)是一种标准的显示接口，在现实中得到广泛应用。本实验所使用的 VGA 设备为光栅扫描显示器，分辨率为 640×480 像素，屏幕刷新率为 60Hz。MIPS CPU 中的 VGA 模块接受 ASCII 码为输入，将 ASCII 码转换为对应的图形点阵，并通过 VGA 接口输出至屏幕上的字 符终端。
+VGA 模块所需实现的具体功能如下:
+\begin{itemize}
+\item 固定 VGA 显示器的分辨率和屏幕刷新率，输出正确的行场像素数据和同步信号，保持图像稳定。 • 支持全部 95 个可显示的 ASCII 字符。
+\item 支持输入行光标的显示和移动。
+\item 支持屏幕平滑滚动和翻页控制(Page Up/Down)。
+全部 95 个 ASCII 字符的像素矩阵会事先存储在计算机的 ROM 区域中。在输出信号正确且稳定 的基础上，VGA 模块将通过接口调用的方式，提供对光标、滚动和翻页等功能的支持。
+\end{itemize}
+\subsection{PS2键盘}
+本实验对于支持键盘输入的需求主要表现为:
+\begin{itemize}
+\item 添加特定硬件模块，对键盘时钟信号和数据信号进行解析，得到输入的 ASCII 码值，随后引发 CPU 硬件中断，将 ASCII 码值传递至操作系统处理。
+\item 为操作系统添加对键盘中断信号的支持，使其能够接受来自键盘的输入并进行处理。
+具体实现中，可在被配置为 UART 的 CPLD 芯片中对键盘信号进行预处理，将提取出的 ASCII 码直接传递给 FPGA 芯片内相应模块。该预处理电路接收来自键盘的串行数据，依据状态机提取扫描 码，最后对键盘数据进行译码和输出
+\end{itemize}
+\section{工具}
+\subsection{设备自动化检测工具}
+\subsection{调试工具}
+
+\section{UCORE需要的46条指令}
+\subsection{算数指令}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$ADDIU~rt,rs,immediate$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{001001} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{immediate} \\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=R[s] + SignedExtend(immediate)$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$ADDU~rd,rs,rt$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd} & \multicolumn{5}{c|}{00000} & \multicolumn{6}{c|}{100001}  \\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[d]<=R[s]+R[t]$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$MULT~rs,rt$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{10}{c|}{0000000000} & \multicolumn{6}{c|}{011000}  \\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[d]<=R[s]+R[t]$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$SLT~rd,rs,rt$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd} & \multicolumn{5}{c|}{00000} & \multicolumn{6}{c|}{101010}  \\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[d]<=R[s]<R[t]$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$SLTI~rt,rs,immediate$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{001010} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{immediate} \\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=R[s] < SignedExtend(immediate)$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{符号数比较} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$SLTIU~rt,rs,immediate$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{001011} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{immediate} \\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=R[s] < SignedExtend(immediate)$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无符号数比较} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$SLTU~rd, rs, rt$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{001011} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd} & \multicolumn{5}{c|}{00000} & \multicolumn{6}{c|}{101011}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=R[s] < R[t]$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$SUBU~rd, rs, rt$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd} & \multicolumn{5}{c|}{00000} & \multicolumn{6}{c|}{100011}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=R[s] - R[t]$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{逻辑指令}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$AND~rd, rs, rt$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd} & \multicolumn{5}{c|}{00000} & \multicolumn{6}{c|}{100100}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=R[s] \& R[t]$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$ANDI~rt,rs,immediate$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{001100} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{immediate} \\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=R[s] < ZeroExtend(immediate)$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$LUI~rt,immediate$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{001100} & \multicolumn{5}{c|}{00000} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{immediate} \\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<= immediate || 0^{16}$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$NOD~rd, rs, rt$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd} & \multicolumn{5}{c|}{00000} & \multicolumn{6}{c|}{100111}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=\sim(R[s] | R[t])$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$OR~rd, rs, rt$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd} & \multicolumn{5}{c|}{00000} & \multicolumn{6}{c|}{100101}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=(R[s] | R[t])$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$ORI~rt,rs,immediate$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{001101} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{immediate}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=(R[s] | ZeroEctend(immediate))$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$XOR~rd, rs, rt$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{001110} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd} & \multicolumn{5}{c|}{00000} & \multicolumn{6}{c|}{100110}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=(R[s] ^ R[t])$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$XORI~rt,rs,immediate$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{001110} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{immediate}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=(R[s] ^ ZeroExtend(immediate))$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{移位指令}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$SLL~rd, rs, sa$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{00000} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd} & \multicolumn{5}{c|}{sa} & \multicolumn{6}{c|}{000000}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[d]<=(R[t]<<sa)$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{sa解释为无符号数} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$SLLV~rd, rs, rs$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd} & \multicolumn{5}{c|}{00000} & \multicolumn{6}{c|}{000100}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[d]<=(R[s]<<R[s]\{4-0\})$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{R[s]\{4-0\}解释为无符号数} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$SRA~rd, rs, sa$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{00000} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd} & \multicolumn{5}{c|}{sa} & \multicolumn{6}{c|}{000011}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[d]<=(R[t]>>_A sa)$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{sa解释为无符号数} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$SRAV~rd, rt, rs$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd} & \multicolumn{5}{c|}{00000} & \multicolumn{6}{c|}{000111}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[d]<=(R[s]>>_A R[s]\{4-0\})$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{R[s]\{4-0\}解释为无符号数} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$SRL~rd, rs, ra$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{00000} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd} & \multicolumn{5}{c|}{ra} & \multicolumn{6}{c|}{000010}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[d]<=(R[s]>>_L R[s]\{4-0\})$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{sa解释为无符号数} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$SRLV~rd, rt, rs$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd} & \multicolumn{5}{c|}{00000} & \multicolumn{6}{c|}{000110}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[d]<=(R[s]>>_L R[s]\{4-0\})$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{R[s]\{4-0\}解释为无符号数} \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{分支跳转指令}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$BEQ~rt,rs,offset$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000100} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{offset}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$if~R[s] = R[t]~then~PC<= PC + SignExtend(offset||00))$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$BGEZ~rs,offset$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000001} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{00001}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{offset}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$if~R[s] \ge 0~then~PC<= PC + SignExtend(offset||00))$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{符号数} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$BGTZ~rs,offset$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000111} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{00000}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{offset}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$if~R[s] > 0~then~PC<= PC + SignExtend(offset||00))$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{符号数} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$BLEZ~rs,offset$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000110} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{00000}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{offset}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$if~R[s] \le 0~then~PC<= PC + SignExtend(offset||00))$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{符号数} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$BLTZ~rs,offset$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000001} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{00000}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{offset}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$if~R[s] < 0~then~PC<= PC + SignExtend(offset||00))$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{符号数} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$BNE~rs,rt,offset$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000001} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{offset}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$if~R[s] \ne R[t]~then~PC<= PC + SignExtend(offset||00))$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$J~instr\_index$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000010} & \multicolumn{10}{c|}{instr\_index}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{instr\_index}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$PC <= PC\{31-28\}||instr\_index || 00$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$JAL~instr\_index$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000010} & \multicolumn{10}{c|}{instr\_index}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{instr\_index}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[31]<=PC+8;PC<=PC\{31-28\}||instr\_index||00$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$JALR~rs(rd=31)or~JALR~rd,rs$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{00000}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd}& \multicolumn{5}{c|}{00000}& \multicolumn{6}{c|}{001001}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[d]<=PC+8;PC<=R[s]$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$JR~rs$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{rs} & \multicolumn{5}{c|}{00000}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{00000}& \multicolumn{5}{c|}{00000}& \multicolumn{6}{c|}{001000}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$PC<=R[s]$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{访存指令}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$LB~rt,offset(base)$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{100000} & \multicolumn{5}{c|}{base} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{offset}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=SignedExtend(MB[base+SignExtend(offset)])$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{可能的异常：TLB Refill; TLB Invalid; Address Error} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$LBU~rt,offset(base)$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{100100} & \multicolumn{5}{c|}{base} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{offset}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=ZeroExtend(MB[base+SignExtend(offset)])$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{可能的异常：TLB Refill; TLB Invalid; Address Error} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$LW~rt,offset(base)$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{100011} & \multicolumn{5}{c|}{base} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{offset}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=MW[base+SignExtend(offset)]$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{可能的异常：TLB Refill; TLB Invalid; Address Error} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$SB~rt,offset(base)$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{101000} & \multicolumn{5}{c|}{base} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{offset}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=M[base+SignExtend(offset)]<=R[t]\{7-0\}$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{可能的异常：TLB Refill; TLB Invalid; TLB Modified; Bus Error; Address Error} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$SW~rt,offset(base)$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{101011} & \multicolumn{5}{c|}{base} & \multicolumn{5}{c|}{rt}\\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{16}{c|}{offset}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=M[base+SignExtend(offset)]<=R[t]$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{可能的异常：TLB Refill; TLB Invalid; TLB Modified; Address Error} \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{移动指令}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$MFHI~rd$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{10}{c|}{0000000000} \\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd}& \multicolumn{5}{c|}{00000}& \multicolumn{6}{c|}{010000}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[d]<=HI$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$MFLO~rd$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{10}{c|}{0000000000} \\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd}& \multicolumn{5}{c|}{00000}& \multicolumn{6}{c|}{010010}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[d]<=LO$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$MTHI~rs$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{rs}& \multicolumn{5}{c|}{00000} \\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{10}{c|}{0000000000}& \multicolumn{6}{c|}{010001}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$HI<=R[s]$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$MTLO~rs$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{5}{c|}{rs}& \multicolumn{5}{c|}{00000} \\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{10}{c|}{0000000000}& \multicolumn{6}{c|}{010011}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$LO<=R[s]$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{陷入指令}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$SYSCALL~rs$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{000000} & \multicolumn{10}{c|}{code} \\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{10}{c|}{code}& \multicolumn{6}{c|}{001100}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{系统调用} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{异常：System Call} \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{特权指令}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$ERET$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{010000} & 1 & \multicolumn{9}{c|}{code} \\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{10}{c|}{0000000000}& \multicolumn{6}{c|}{011000}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{异常返回} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{ERET没有延迟槽} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$MFC0~rt,rd$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{010000} & \multicolumn{5}{c|}{00000} & \multicolumn{5}{c|}{rt} \\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd}& \multicolumn{8}{c|}{00000000}& \multicolumn{3}{c|}{sel(000)}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$R[t]<=CP0[R[d]]$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$MTC0~rt,rd$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{010000} & \multicolumn{5}{c|}{00100} & \multicolumn{5}{c|}{rt} \\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{5}{c|}{rd}& \multicolumn{8}{c|}{00000000}& \multicolumn{3}{c|}{sel(000)}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{$CP0[R[d]] <= R[t]$} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{指令} & \multicolumn{16}{c|}{$TLBWI$} \\
+\hline
+\multirow{2}{*}{\textbf{格式(31-16)}} & 31 & 30 & 29 & 28 & 27 & 26 & 25 & 24 & 23 & 22 & 21 & 20 & 19 & 18 & 17 & 16 \\ 
+\cline{2-17}
+& \multicolumn{6}{c|}{010000} & 1 & \multicolumn{9}{c|}{000000000} \\
+\hline
+\multirow{2}{*}{\textbf{格式(15-0)}} & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+& \multicolumn{10}{c|}{0000000000}& \multicolumn{6}{c|}{000010}\\
+\hline
+\textbf{操作} & \multicolumn{16}{c|}{写TLB} \\
+\hline
+\textbf{其他} & \multicolumn{16}{c|}{无} \\
+\hline
+\end{tabular}
+\end{center}
+
+\end{document}
