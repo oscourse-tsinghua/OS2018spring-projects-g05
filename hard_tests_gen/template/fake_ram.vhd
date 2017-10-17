@@ -5,6 +5,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.{{{TEST_NAME}}}_test_const.all;
+use work.global_const.all;
 
 entity {{{TEST_NAME}}}_fake_ram is
     generic (
@@ -12,18 +13,18 @@ entity {{{TEST_NAME}}}_fake_ram is
     );
     port (
         enable_i, write_i, clk: in std_logic;
-        data_i: in std_logic_vector(RamDataWidth);
-        addr_i: in std_logic_vector(RamAddrWidth);
+        data_i: in std_logic_vector(DataWidth);
+        addr_i: in std_logic_vector(AddrWidth);
         byteSelect_i: in std_logic_vector(3 downto 0);
-        data_o: out std_logic_vector(RamDataWidth)
+        data_o: out std_logic_vector(DataWidth)
     );
 end {{{TEST_NAME}}}_fake_ram;
 
 architecture bhv of {{{TEST_NAME}}}_fake_ram is
-    type WordsArray is array(0 to MAX_RAM_ADDRESS) of std_logic_vector(RamDataWidth);
+    type WordsArray is array(0 to MAX_RAM_ADDRESS) of std_logic_vector(DataWidth);
     signal words: WordsArray;
     signal wordAddr: integer;
-    signal bitSelect: std_logic_vector(RamDataWidth);
+    signal bitSelect: std_logic_vector(DataWidth);
 begin
     wordAddr <= to_integer(unsigned(addr_i(31 downto 2)));
 

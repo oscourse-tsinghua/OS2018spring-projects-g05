@@ -4,6 +4,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 use work.{{{TEST_NAME}}}_test_const.all;
+use work.global_const.all;
 {{{IMPORT}}}
 
 entity {{{TEST_NAME}}}_tb is
@@ -15,14 +16,14 @@ architecture bhv of {{{TEST_NAME}}}_tb is
             rst, clk: in std_logic;
 
             instEnable_o: out std_logic;
-            instData_i: in std_logic_vector(RamDataWidth);
-            instAddr_o: out std_logic_vector(RamAddrWidth);
+            instData_i: in std_logic_vector(DataWidth);
+            instAddr_o: out std_logic_vector(AddrWidth);
 
             dataEnable_o: out std_logic;
             dataWrite_o: out std_logic;
-            dataData_i: in std_logic_vector(RamDataWidth);
-            dataData_o: out std_logic_vector(RamDataWidth);
-            dataAddr_o: out std_logic_vector(RamAddrWidth);
+            dataData_i: in std_logic_vector(DataWidth);
+            dataData_o: out std_logic_vector(DataWidth);
+            dataAddr_o: out std_logic_vector(AddrWidth);
             dataByteSelect_o: out std_logic_vector(3 downto 0);
 
             int_i: in std_logic_vector(intWidth);
@@ -36,10 +37,10 @@ architecture bhv of {{{TEST_NAME}}}_tb is
         );
         port (
             enable_i, write_i, clk: in std_logic;
-            data_i: in std_logic_vector(RamDataWidth);
-            addr_i: in std_logic_vector(RamAddrWidth);
+            data_i: in std_logic_vector(DataWidth);
+            addr_i: in std_logic_vector(AddrWidth);
             byteSelect_i: in std_logic_vector(3 downto 0);
-            data_o: out std_logic_vector(RamDataWidth)
+            data_o: out std_logic_vector(DataWidth)
         );
     end component;
 
@@ -47,14 +48,14 @@ architecture bhv of {{{TEST_NAME}}}_tb is
     signal clk: std_logic := '0';
 
     signal instEnable: std_logic;
-    signal instData: std_logic_vector(RamDataWidth);
-    signal instAddr: std_logic_vector(RamAddrWidth);
+    signal instData: std_logic_vector(DataWidth);
+    signal instAddr: std_logic_vector(AddrWidth);
 
     signal dataEnable: std_logic;
     signal dataWrite: std_logic;
-    signal dataDataSave: std_logic_vector(RamDataWidth);
-    signal dataDataLoad: std_logic_vector(RamDataWidth);
-    signal dataAddr: std_logic_vector(RamAddrWidth);
+    signal dataDataSave: std_logic_vector(DataWidth);
+    signal dataDataLoad: std_logic_vector(DataWidth);
+    signal dataAddr: std_logic_vector(AddrWidth);
     signal dataByteSelect: std_logic_vector(3 downto 0);
 
     signal int: std_logic_vector(intWidth);

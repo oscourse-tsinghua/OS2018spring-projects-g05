@@ -49,7 +49,7 @@ def genAliases(defineCmd):
 def genImports(importCmd):
     stmts = ['-- CODE BELOW IS AUTOMATICALLY GENERATED']
     for package in importCmd:
-        stmts.append('use work.%s.all' % package)
+        stmts.append('use work.%s.all;' % package)
     return '\n'.join(stmts)
 
 ''' Parse test file and return (RUN instructions, ASSERT pairs, DEFINE pairs) '''
