@@ -148,6 +148,13 @@ architecture bhv of cpu is
         );
     end component;
 
+    component conv_endian
+        port (
+            input: in std_logic_vector(31 downto 0);
+            output: out std_logic_vector(31 downto 0)
+        );
+    end component;
+
     -- Labels of components for convenience (especially in quantity naming)
     -- 1: pc_reg
     -- 2: if_id
@@ -158,6 +165,7 @@ architecture bhv of cpu is
     -- 7: ex_mem
     -- 8: mem
     -- 9: men_wb
+    -- x: conv_endian
 
     -- Signals connecting pc_reg and if_id --
     signal pc_12: std_logic_vector(AddrWidth);
@@ -165,6 +173,9 @@ architecture bhv of cpu is
     -- Signals connecting if_id and id --
     signal pc_24: std_logic_vector(AddrWidth);
     signal inst_24: std_logic_vector(InstWidth);
+
+    -- Signals connecting conv_endian and if_id --
+    signal inst_x2: std_logic_vector(InstWidth);
 
     -- Signals connecting regfile and id --
     signal regReadEnable1_43, regReadEnable2_43: std_logic;
@@ -220,11 +231,17 @@ begin
         port map (
             rst => rst, clk => clk,
             pc_i => pc_12,
-            inst_i => instData_i,
+            inst_i => inst_x2,
             pc_o => pc_24,
             inst_o => inst_24
         );
     instAddr_o <= pc_12;
+
+    conv_endian_ist: conv_endian
+        port map (
+            input => instData_i,
+            output => inst_x2
+        );
 
     regfile_ist: regfile
         port map (
