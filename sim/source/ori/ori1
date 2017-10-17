@@ -1,3 +1,4 @@
 RUN ori $2, $0, 0x0020
 RUN ori $0, $2, 0xffff
-RUN ori $3, $2, 0x1234
+RUN ori $3, $3, 0x1234
+RUN ori $2, $2, 0xabcd

@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use work.global_const.all;
+use work.alu_const.all;
 
 entity cpu is
     port (
@@ -68,8 +69,7 @@ architecture bhv of cpu is
             regReadEnable2_o: out std_logic;
             regReadAddr1_o: out std_logic_vector(RegAddrWidth);
             regReadAddr2_o: out std_logic_vector(RegAddrWidth);
-            aluSel_o: out std_logic_vector(AluSelWidth);
-            aluOp_o: out std_logic_vector(AluOpWidth);
+            alut_o: out AluType;
             operand1_o: out std_logic_vector(DataWidth);
             operand2_o: out std_logic_vector(DataWidth);
             toWriteReg_o: out std_logic;
@@ -80,15 +80,13 @@ architecture bhv of cpu is
     component id_ex
         port (
             rst, clk: in std_logic;
-            aluSel_i: in std_logic_vector(AluSelWidth);
-            aluOp_i: in std_logic_vector(AluOpWidth);
+            alut_i: in AluType;
             operand1_i: in std_logic_vector(DataWidth);
             operand2_i: in std_logic_vector(DataWidth);
             toWriteReg_i: in std_logic;
             writeRegAddr_i: in std_logic_vector(RegAddrWidth);
 
-            aluSel_o: out std_logic_vector(AluSelWidth);
-            aluOp_o: out std_logic_vector(AluOpWidth);
+            alut_o: out AluType;
             operand1_o: out std_logic_vector(DataWidth);
             operand2_o: out std_logic_vector(DataWidth);
             toWriteReg_o: out std_logic;
@@ -99,8 +97,7 @@ architecture bhv of cpu is
     component ex
         port (
             rst: in std_logic;
-            aluSel_i: in std_logic_vector(AluSelWidth);
-            aluOp_i: in std_logic_vector(AluOpWidth);
+            alut_i: in AluType;
             operand1_i: in std_logic_vector(DataWidth);
             operand2_i: in std_logic_vector(DataWidth);
             toWriteReg_i: in std_logic;
@@ -183,16 +180,14 @@ architecture bhv of cpu is
     signal regData1_34, regData2_34: std_logic_vector(DataWidth);
 
     -- Signals connecting id and id_ex --
-    signal aluSel_45: std_logic_vector(AluSelWidth);
-    signal aluOp_45: std_logic_vector(AluOpWidth);
+    signal alut_45: AluType;
     signal operand1_45: std_logic_vector(DataWidth);
     signal operand2_45: std_logic_vector(DataWidth);
     signal toWriteReg_45: std_logic;
     signal writeRegAddr_45: std_logic_vector(RegAddrWidth);
 
     -- Signals connecting id_ex and ex --
-    signal aluSel_56: std_logic_vector(AluSelWidth);
-    signal aluOp_56: std_logic_vector(AluOpWidth);
+    signal alut_56: AluType;
     signal operand1_56: std_logic_vector(DataWidth);
     signal operand2_56: std_logic_vector(DataWidth);
     signal toWriteReg_56: std_logic;
@@ -268,8 +263,7 @@ begin
             regReadEnable2_o => regReadEnable2_43,
             regReadAddr1_o => regReadAddr1_43,
             regReadAddr2_o => regReadAddr2_43,
-            aluSel_o => aluSel_45,
-            aluOp_o => aluOp_45,
+            alut_o => alut_45,
             operand1_o => operand1_45,
             operand2_o => operand2_45,
             toWriteReg_o => toWriteReg_45,
@@ -279,14 +273,12 @@ begin
     id_ex_ist: id_ex
         port map (
             rst => rst, clk => clk,
-            aluSel_i => aluSel_45,
-            aluOp_i => aluOp_45,
+            alut_i => alut_45,
             operand1_i => operand1_45,
             operand2_i => operand2_45,
             toWriteReg_i => toWriteReg_45,
             writeRegAddr_i => writeRegAddr_45,
-            aluSel_o => aluSel_56,
-            aluOp_o => aluOp_56,
+            alut_o => alut_56,
             operand1_o => operand1_56,
             operand2_o => operand2_56,
             toWriteReg_o => toWriteReg_56,
@@ -296,8 +288,7 @@ begin
     ex_ist: ex
         port map (
             rst => rst,
-            aluSel_i => aluSel_56,
-            aluOp_i => aluOp_56,
+            alut_i => alut_56,
             operand1_i => operand1_56,
             operand2_i => operand2_56,
             toWriteReg_i => toWriteReg_56,

@@ -6,8 +6,7 @@ use work.alu_const.all;
 entity ex is
     port (
         rst: in std_logic;
-        aluSel_i: in std_logic_vector(AluSelWidth);
-        aluOp_i: in std_logic_vector(AluOpWidth);
+        alut_i: in AluType;
         operand1_i: in std_logic_vector(DataWidth);
         operand2_i: in std_logic_vector(DataWidth);
         toWriteReg_i: in std_logic;
@@ -21,7 +20,7 @@ end ex;
 
 architecture bhv of ex is
 begin
-    process(rst, aluSel_i, aluOp_i, operand1_i, operand2_i,
+    process(rst, alut_i, operand1_i, operand2_i,
             toWriteReg_i, writeRegAddr_i) begin
         if (rst = RST_ENABLE) then
             toWriteReg_o <= NO;
@@ -31,20 +30,12 @@ begin
             toWriteReg_o <= toWriteReg_i;
             writeRegAddr_o <= writeRegAddr_i;
 
-            case aluSel_i is
-
-                -- Logical operation --
-                when ALUSEL_LOGIC =>
-                    case aluOp_i is
-                        when ALUOP_OR => writeRegData_o <= operand1_i or operand2_i;
-                        when ALUOP_AND => writeRegData_o <= operand1_i and operand2_i;
-                        when others => writeRegData_o <= (others => '0');
-                    end case;
-
-                -- Others --
+            case alut_i is
+                when ALU_OR => writeRegData_o <= operand1_i or operand2_i;
+                when ALU_AND => writeRegData_o <= operand1_i and operand2_i;
                 when others => writeRegData_o <= (others => '0');
-
             end case;
+
         end if;
     end process;
 

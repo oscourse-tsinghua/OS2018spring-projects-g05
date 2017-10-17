@@ -16,8 +16,7 @@ entity id is
         regReadEnable2_o: out std_logic;
         regReadAddr1_o: out std_logic_vector(RegAddrWidth);
         regReadAddr2_o: out std_logic_vector(RegAddrWidth);
-        aluSel_o: out std_logic_vector(AluSelWidth);
-        aluOp_o: out std_logic_vector(AluOpWidth);
+        alut_o: out AluType;
         operand1_o: out std_logic_vector(DataWidth);
         operand2_o: out std_logic_vector(DataWidth);
         toWriteReg_o: out std_logic;
@@ -54,8 +53,7 @@ begin
             regReadEnable2_o <= DISABLE;
             regReadAddr1_o <= (others => '0');
             regReadAddr2_o <= (others => '0');
-            aluSel_o <= (others => '0');
-            aluOp_o <= (others => '0');
+            alut_o <= INVALID;
             operand1_o <= (others => '0');
             operand2_o <= (others => '0');
             toWriteReg_o <= NO;
@@ -69,8 +67,7 @@ begin
                     regReadEnable2_o <= DISABLE;
                     regReadAddr1_o <= instRs;
                     regReadAddr2_o <= (others => '0');
-                    aluSel_o <= ALUSEL_LOGIC;
-                    aluOp_o <= ALUOP_OR;
+                    alut_o <= ALU_OR;
                     operand1_o <= regData1_i;
                     operand2_o <= "0000000000000000" & instImm;
                     toWriteReg_o <= YES;
@@ -82,8 +79,7 @@ begin
                     regReadEnable2_o <= DISABLE;
                     regReadAddr1_o <= (others => '0');
                     regReadAddr2_o <= (others => '0');
-                    aluSel_o <= (others => '0');
-                    aluOp_o <= (others => '0');
+                    alut_o <= INVALID;
                     operand1_o <= (others => '0');
                     operand2_o <= (others => '0');
                     toWriteReg_o <= NO;

@@ -10,9 +10,6 @@ package global_const is
     subtype RegAddrWidth is integer range 4 downto 0;
     subtype RegNum is integer range 0 to 31;
 
-    subtype AluOpWidth is integer range 7 downto 0;
-    subtype AluSelWidth is integer range 2 downto 0;
-
     type RegArrayType is array (RegNum) of std_logic_vector(DataWidth);
 
     constant ENABLE: std_logic := '1';
