@@ -65,6 +65,13 @@ architecture bhv of cpu is
             regData1_i: in std_logic_vector(DataWidth);
             regData2_i: in std_logic_vector(DataWidth);
 
+            exToWriteReg_i: in std_logic;
+            exWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
+            exWriteRegData_i: in std_logic_vector(DataWidth);
+            memToWriteReg_i: in std_logic;
+            memWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
+            memWriteRegData_i: in std_logic_vector(DataWidth);
+
             regReadEnable1_o: out std_logic;
             regReadEnable2_o: out std_logic;
             regReadAddr1_o: out std_logic_vector(RegAddrWidth);
@@ -193,6 +200,11 @@ architecture bhv of cpu is
     signal toWriteReg_56: std_logic;
     signal writeRegAddr_56: std_logic_vector(RegAddrWidth);
 
+    -- Signals connecting ex and id --
+    signal exToWriteReg_64: std_logic;
+    signal exWriteRegAddr_64: std_logic_vector(RegAddrWidth);
+    signal exWriteRegData_64: std_logic_vector(DataWidth);
+
     -- Signals connecting ex and ex_mem --
     signal toWriteReg_67: std_logic;
     signal writeRegAddr_67: std_logic_vector(RegAddrWidth);
@@ -202,6 +214,12 @@ architecture bhv of cpu is
     signal toWriteReg_78: std_logic;
     signal writeRegAddr_78: std_logic_vector(RegAddrWidth);
     signal writeRegData_78: std_logic_vector(DataWidth);
+
+    -- Signals connecting mem and id --
+    signal memToWriteReg_84: std_logic;
+    signal memWriteRegAddr_84: std_logic_vector(RegAddrWidth);
+    signal memWriteRegData_84: std_logic_vector(DataWidth);
+
 
     -- Signals connecting mem and mem_wb --
     signal toWriteReg_89: std_logic;
@@ -259,6 +277,12 @@ begin
             inst_i => inst_24,
             regData1_i => regData1_34,
             regData2_i => regData2_34,
+            exToWriteReg_i => exToWriteReg_64,
+            exWriteRegAddr_i => exWriteRegAddr_64,
+            exWriteRegData_i => exWriteRegData_64,
+            memToWriteReg_i => memToWriteReg_84,
+            memWriteRegAddr_i => memWriteRegAddr_84,
+            memWriteRegData_i => memWriteRegData_84,
             regReadEnable1_o => regReadEnable1_43,
             regReadEnable2_o => regReadEnable2_43,
             regReadAddr1_o => regReadAddr1_43,
@@ -297,6 +321,9 @@ begin
             writeRegAddr_o => writeRegAddr_67,
             writeRegData_o => writeRegData_67
         );
+    exToWriteReg_64 <= toWriteReg_67;
+    exWriteRegAddr_64 <= writeRegAddr_67;
+    exWriteRegData_64 <= writeRegData_67;
 
     ex_mem_ist: ex_mem
         port map (
@@ -319,6 +346,9 @@ begin
             writeRegAddr_o => writeRegAddr_89,
             writeRegData_o => writeRegData_89
         );
+    memToWriteReg_84 <= toWriteReg_89;
+    memWriteRegAddr_84 <= writeRegAddr_89;
+    memWriteRegData_84 <= writeRegData_89;
 
     mem_wb_ist: mem_wb
         port map (

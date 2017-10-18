@@ -1,0 +1,6 @@
+# Push Forward
+RUN ori $2, $0, 0x1234
+RUN ori $3, $2, 0x2345
+RUN ori $4, $2, 0x3456
+RUN ori $0, $3, 0xffee
+RUN ori $4, $0, 0x4321

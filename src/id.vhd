@@ -12,6 +12,14 @@ entity id is
         regData1_i: in std_logic_vector(DataWidth);
         regData2_i: in std_logic_vector(DataWidth);
 
+        -- Push Forward --
+        exToWriteReg_i: in std_logic;
+        exWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
+        exWriteRegData_i: in std_logic_vector(DataWidth);
+        memToWriteReg_i: in std_logic;
+        memWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
+        memWriteRegData_i: in std_logic_vector(DataWidth);
+
         regReadEnable1_o: out std_logic;
         regReadEnable2_o: out std_logic;
         regReadAddr1_o: out std_logic_vector(RegAddrWidth);
@@ -46,16 +54,17 @@ begin
     instAddr <= inst_i(InstAddrIdx);
 
     process(rst, pc_i, regData1_i, regData2_i,
+            exToWriteReg_i, exWriteRegAddr_i, exWriteRegData_i,
+            memToWriteReg_i, memWriteRegAddr_i, memWriteRegData_i,
             instOp, instRs, instRt, instRd,
-            instSa, instFunc, instImm, instAddr) begin
+            instSa, instFunc, instImm, instAddr)
+        -- indicates where the operand is from --
+        variable oprSrc1, oprSrc2: OprSrcType := INVALID;
+    begin
         if (rst = RST_ENABLE) then
-            regReadEnable1_o <= DISABLE;
-            regReadEnable2_o <= DISABLE;
-            regReadAddr1_o <= (others => '0');
-            regReadAddr2_o <= (others => '0');
+            oprSrc1 := INVALID;
+            oprSrc2 := INVALID;
             alut_o <= INVALID;
-            operand1_o <= (others => '0');
-            operand2_o <= (others => '0');
             toWriteReg_o <= NO;
             writeRegAddr_o <= (others => '0');
         else
@@ -63,29 +72,82 @@ begin
 
                 -- ori --
                 when OP_ORI =>
-                    regReadEnable1_o <= ENABLE;
-                    regReadEnable2_o <= DISABLE;
-                    regReadAddr1_o <= instRs;
-                    regReadAddr2_o <= (others => '0');
+                    oprSrc1 := REG;
+                    oprSrc2 := IMM;
                     alut_o <= ALU_OR;
-                    operand1_o <= regData1_i;
-                    operand2_o <= "0000000000000000" & instImm;
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
 
                 -- others --
                 when others =>
-                    regReadEnable1_o <= DISABLE;
-                    regReadEnable2_o <= DISABLE;
-                    regReadAddr1_o <= (others => '0');
-                    regReadAddr2_o <= (others => '0');
+                    oprSrc1 := INVALID;
+                    oprSrc2 := INVALID;
                     alut_o <= INVALID;
-                    operand1_o <= (others => '0');
-                    operand2_o <= (others => '0');
                     toWriteReg_o <= NO;
                     writeRegAddr_o <= (others => '0');
 
             end case;
+
+            case oprSrc1 is
+                when REG =>
+                    regReadEnable1_o <= ENABLE;
+                    regReadAddr1_o <= instRs;
+                    operand1_o <= regData1_i;
+
+                    -- Push Forward --
+                    if (memToWriteReg_i = YES and memWriteRegAddr_i = instRs) then
+                        operand1_o <= memWriteRegData_i;
+                        if (instRs = "00000") then
+                            operand1_o <= (others => '0');
+                        end if;
+                    end if;
+                    if (exToWriteReg_i = YES and exWriteRegAddr_i = instRs) then
+                        operand1_o <= exWriteRegData_i;
+                        if (instRs = "00000") then
+                            operand1_o <= (others => '0');
+                        end if;
+                    end if;
+
+                when IMM =>
+                    regReadEnable1_o <= DISABLE;
+                    regReadAddr1_o <= (others => '0');
+                    operand1_o <= "0000000000000000" & instImm;
+                when others =>
+                    regReadEnable1_o <= DISABLE;
+                    regReadAddr1_o <= (others => '0');
+                    operand1_o <= (others => '0');
+            end case;
+
+            case oprSrc2 is
+                when REG =>
+                    regReadEnable2_o <= ENABLE;
+                    regReadAddr2_o <= instRs;
+                    operand2_o <= regData2_i;
+
+                    -- Push Forward --
+                    if (memToWriteReg_i = YES and memWriteRegAddr_i = instRs) then
+                        operand2_o <= memWriteRegData_i;
+                        if (instRs = "00000") then
+                            operand2_o <= (others => '0');
+                        end if;
+                    end if;
+                    if (exToWriteReg_i = YES and exWriteRegAddr_i = instRs) then
+                        operand2_o <= exWriteRegData_i;
+                        if (instRs = "00000") then
+                            operand2_o <= (others => '0');
+                        end if;
+                    end if;
+
+                when IMM =>
+                    regReadEnable2_o <= DISABLE;
+                    regReadAddr2_o <= (others => '0');
+                    operand2_o <= "0000000000000000" & instImm;
+                when others =>
+                    regReadEnable2_o <= DISABLE;
+                    regReadAddr2_o <= (others => '0');
+                    operand2_o <= (others => '0');
+            end case;
+
         end if;
     end process;
 
