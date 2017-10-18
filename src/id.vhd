@@ -78,6 +78,22 @@ begin
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
 
+                -- andi --
+                when OP_ANDI =>
+                    oprSrc1 := REG;
+                    oprSrc2 := IMM;
+                    alut_o <= ALU_AND;
+                    toWriteReg_o <= YES;
+                    writeRegAddr_o <= instRt;
+
+                -- xori --
+                when OP_XORI =>
+                    oprSrc1 := REG;
+                    oprSrc2 := IMM;
+                    alut_o <= ALU_XOR;
+                    toWriteReg_o <= YES;
+                    writeRegAddr_o <= instRt;
+
                 -- others --
                 when others =>
                     oprSrc1 := INVALID;

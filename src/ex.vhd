@@ -33,6 +33,7 @@ begin
             case alut_i is
                 when ALU_OR => writeRegData_o <= operand1_i or operand2_i;
                 when ALU_AND => writeRegData_o <= operand1_i and operand2_i;
+                when ALU_XOR => writeRegData_o <= operand1_i xor operand2_i;
                 when others => writeRegData_o <= (others => '0');
             end case;
 

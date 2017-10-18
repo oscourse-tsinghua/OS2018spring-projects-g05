@@ -28,5 +28,7 @@ package inst_const is
     -- Opcodes
     --
     constant OP_ORI: std_logic_vector(InstOpWidth) := "001101";
+    constant OP_ANDI: std_logic_vector(InstOpWidth) := "001100";
+    constant OP_XORI: std_logic_vector(InstOpWidth) := "001110";
 
 end inst_const;

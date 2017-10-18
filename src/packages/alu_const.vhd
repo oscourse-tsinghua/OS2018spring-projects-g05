@@ -6,7 +6,7 @@ package alu_const is
 
     type AluType is (
         INVALID,
-        ALU_OR, ALU_AND
+        ALU_OR, ALU_AND, ALU_XOR
     );
 
     -- where is the operand from --
