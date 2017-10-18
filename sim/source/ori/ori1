@@ -1,4 +1,13 @@
+IMPORT global_const
+DEFINE reg regfile_ist.regArray: RegArrayType
+
 RUN ori $2, $0, 0x0020
+ASSERT 6 reg(2) 32ux"0020"
+
+# $0 should always be 0
 RUN ori $0, $2, 0xffff
-RUN ori $3, $3, 0x1234
-RUN ori $2, $2, 0xabcd
+ASSERT 7 reg(0) 32ux"0000"
+
+# This should be right after implementing push-forward
+RUN ori $3, $2, 0x1214
+ASSERT 8 reg(3) 32ux"1234"

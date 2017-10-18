@@ -41,7 +41,7 @@ begin
                 words(wordAddr) <= (words(wordAddr) xnor bitSelect) and (data_i xor bitSelect);
             end if;
         else
-            -- The first instruction is at 0x0
+            -- The first instruction is at 0x4
             {{{INIT_INST_RAM}}}
         end if;
     end process;

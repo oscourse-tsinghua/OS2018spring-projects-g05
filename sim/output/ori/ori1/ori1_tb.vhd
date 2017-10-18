@@ -7,6 +7,7 @@ use ieee.std_logic_1164.all;
 use work.ori1_test_const.all;
 use work.global_const.all;
 -- CODE BELOW IS AUTOMATICALLY GENERATED
+use work.global_const.all;
 
 entity ori1_tb is
 end ori1_tb;
@@ -59,7 +60,7 @@ architecture bhv of ori1_tb is
     signal dataAddr: std_logic_vector(AddrWidth);
     signal dataByteSelect: std_logic_vector(3 downto 0);
 
-    signal int: std_logic_vector(intWidth);
+    signal int: std_logic_vector(IntWidth);
     signal timerInt: std_logic;
 begin
     inst_ram: ori1_fake_ram
@@ -111,15 +112,33 @@ begin
         clk <= not clk;
     end process;
 
-    process
-        -- CODE BELOW IS AUTOMATICALLY GENERATED
-    begin
+    process begin
         -- begin reset
         wait for CLK_PERIOD;
         rst <= '0';
-
-        -- CODE BELOW IS AUTOMATICALLY GENERATED
-
         wait;
     end process;
+
+    assertBlk: block
+        -- NOTE: `assertBlk` is also a layer in the herarchical reference
+        -- CODE BELOW IS AUTOMATICALLY GENERATED
+alias user_reg is <<signal ^.cpu_inst.regfile_ist.regArray: RegArrayType>>;
+    begin
+        -- CODE BELOW IS AUTOMATICALLY GENERATED
+process begin
+    wait for CLK_PERIOD; -- resetting
+    wait for 6 * CLK_PERIOD;
+    assert user_reg(2) = 32ux"0020" severity FAILURE;
+end process;
+process begin
+    wait for CLK_PERIOD; -- resetting
+    wait for 7 * CLK_PERIOD;
+    assert user_reg(0) = 32ux"0000" severity FAILURE;
+end process;
+process begin
+    wait for CLK_PERIOD; -- resetting
+    wait for 8 * CLK_PERIOD;
+    assert user_reg(3) = 32ux"1234" severity FAILURE;
+end process;
+    end block assertBlk;
 end bhv;

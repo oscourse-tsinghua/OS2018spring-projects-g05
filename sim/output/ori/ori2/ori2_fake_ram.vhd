@@ -42,7 +42,7 @@ begin
                 words(wordAddr) <= (words(wordAddr) xnor bitSelect) and (data_i xor bitSelect);
             end if;
         else
-            -- The first instruction is at 0x0
+            -- The first instruction is at 0x4
             -- CODE BELOW IS AUTOMATICALLY GENERATED
 words(1) <= x"34_12_02_34"; -- RUN ori $2, $0, 0x1234
 words(2) <= x"45_23_43_34"; -- RUN ori $3, $2, 0x2345

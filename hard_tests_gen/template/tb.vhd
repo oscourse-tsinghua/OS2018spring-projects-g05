@@ -58,7 +58,7 @@ architecture bhv of {{{TEST_NAME}}}_tb is
     signal dataAddr: std_logic_vector(AddrWidth);
     signal dataByteSelect: std_logic_vector(3 downto 0);
 
-    signal int: std_logic_vector(intWidth);
+    signal int: std_logic_vector(IntWidth);
     signal timerInt: std_logic;
 begin
     inst_ram: {{{TEST_NAME}}}_fake_ram
@@ -110,15 +110,17 @@ begin
         clk <= not clk;
     end process;
 
-    process
-        {{{ALIASES}}}
-    begin
+    process begin
         -- begin reset
         wait for CLK_PERIOD;
         rst <= '0';
-
-        {{{ASSERTIONS}}}
-
         wait;
     end process;
+
+    assertBlk: block
+        -- NOTE: `assertBlk` is also a layer in the herarchical reference
+        {{{ALIASES}}}
+    begin
+        {{{ASSERTIONS}}}
+    end block assertBlk;
 end bhv;

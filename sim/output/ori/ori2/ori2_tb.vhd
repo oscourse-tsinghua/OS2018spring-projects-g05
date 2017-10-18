@@ -59,7 +59,7 @@ architecture bhv of ori2_tb is
     signal dataAddr: std_logic_vector(AddrWidth);
     signal dataByteSelect: std_logic_vector(3 downto 0);
 
-    signal int: std_logic_vector(intWidth);
+    signal int: std_logic_vector(IntWidth);
     signal timerInt: std_logic;
 begin
     inst_ram: ori2_fake_ram
@@ -111,15 +111,17 @@ begin
         clk <= not clk;
     end process;
 
-    process
-        -- CODE BELOW IS AUTOMATICALLY GENERATED
-    begin
+    process begin
         -- begin reset
         wait for CLK_PERIOD;
         rst <= '0';
-
-        -- CODE BELOW IS AUTOMATICALLY GENERATED
-
         wait;
     end process;
+
+    assertBlk: block
+        -- NOTE: `assertBlk` is also a layer in the herarchical reference
+        -- CODE BELOW IS AUTOMATICALLY GENERATED
+    begin
+        -- CODE BELOW IS AUTOMATICALLY GENERATED
+    end block assertBlk;
 end bhv;

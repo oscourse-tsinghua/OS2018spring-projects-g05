@@ -44,15 +44,19 @@ def genInitInstRam(runCmd):
 ''' Generate the VHDL statements for {{{ASSERTIONS}}} '''
 def genAssertions(assertCmd):
     stmts = ['-- CODE BELOW IS AUTOMATICALLY GENERATED']
-    for lhs, rhs in assertCmd:
-        stmts.append('wait for CLK_PERIOD;\nassert user_%s = %s severity FAILURE;'%(lhs, rhs))
+    for period, lhs, rhs in assertCmd:
+        stmts.append('process begin')
+        stmts.append('    wait for CLK_PERIOD; -- resetting')
+        stmts.append('    wait for %s * CLK_PERIOD;'%(period))
+        stmts.append('    assert user_%s = %s severity FAILURE;'%(lhs, rhs))
+        stmts.append('end process;')
     return '\n'.join(stmts)
 
 ''' Generate the VHDL statements for {{{ALIASES}}} '''
 def genAliases(defineCmd):
     stmts = ['-- CODE BELOW IS AUTOMATICALLY GENERATED']
     for alias, hierarchy in defineCmd:
-        stmts.append('alias user_%s is <<signal cpu_inst.%s>>;'%(alias, hierarchy))
+        stmts.append('alias user_%s is <<signal ^.cpu_inst.%s>>;'%(alias, hierarchy))
     return '\n'.join(stmts)
 
 def genImports(importCmd):
@@ -61,7 +65,7 @@ def genImports(importCmd):
         stmts.append('use work.%s.all;' % package)
     return '\n'.join(stmts)
 
-''' Parse test file and return (RUN instructions, ASSERT pairs, DEFINE pairs) '''
+''' Parse test file and return (RUN instructions, ASSERT (period #,signal,literal), DEFINE (alias,reference) '''
 def parse(filename):
     runCmd = []
     assertCmd = []
@@ -78,7 +82,7 @@ def parse(filename):
             if op == 'RUN':
                 runCmd.append(param)
             elif op == 'ASSERT':
-                assertCmd.append(param.split(None, 1))
+                assertCmd.append(param.split(None, 2))
             elif op == 'DEFINE':
                 defineCmd.append(param.split(None, 1))
             elif op == 'IMPORT':
