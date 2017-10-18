@@ -45,10 +45,16 @@ def genInitInstRam(runCmd):
 def genAssertions(assertCmd):
     stmts = ['-- CODE BELOW IS AUTOMATICALLY GENERATED']
     for period, lhs, rhs in assertCmd:
-        stmts.append('process begin')
+        stmts.append('process')
+        stmts.append('    variable finished: boolean := false;')
+        stmts.append('begin')
         stmts.append('    wait for CLK_PERIOD; -- resetting')
         stmts.append('    wait for %s * CLK_PERIOD;'%(period))
+        #stmts.append('    if (finished = false) then')
         stmts.append('    assert user_%s = %s severity FAILURE;'%(lhs, rhs))
+        stmts.append('    wait until false;')
+        #stmts.append('        finished := true;')
+        #stmts.append('    end if;')
         stmts.append('end process;')
     return '\n'.join(stmts)
 
