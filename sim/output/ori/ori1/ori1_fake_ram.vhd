@@ -46,7 +46,7 @@ begin
             -- CODE BELOW IS AUTOMATICALLY GENERATED
 words(1) <= x"20_00_02_34"; -- RUN ori $2, $0, 0x0020
 words(2) <= x"ff_ff_40_34"; -- RUN ori $0, $2, 0xffff
-words(3) <= x"34_12_43_34"; -- RUN ori $3, $2, 0x1234
+words(3) <= x"14_12_43_34"; -- RUN ori $3, $2, 0x1214
         end if;
     end process;
 
