@@ -1,0 +1,28 @@
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+RUN ori $1, $2, 0x1234
+ASSERT 6 reg(1) 32ux"1234"
+
+RUN xori $3, $1, 0x8921
+ASSERT 7 reg(3) 32ux"9b15"
+
+RUN andi $4, $1, 0x4fe2
+ASSERT 8 reg(4) 32ux"0220"
+
+RUN andi $5, $1, 0x6543
+ASSERT 9 reg(5) 32ux"0000"
+
+RUN xori $3, $3, 0xfeef
+ASSERT 10 reg(3) 32ux"65fa"
+
+RUN ori $0, $5, 0xffff
+ASSERT 11 reg(0) 32ux"0000"
+
+RUN andi $3, $0, 0x8888
+ASSERT 12 reg(3) 32ux"0000"
+
+RUN xori $2, $0, 0x3333
+ASSERT 13 reg(2) 32ux"3333"
+
+RUN ori $1, $0, 0x6666
+ASSERT 14 reg(1) 32ux"6666"
