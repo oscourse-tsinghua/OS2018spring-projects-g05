@@ -124,45 +124,35 @@ begin
 alias user_reg is <<signal ^.cpu_inst.regfile_ist.regArray: RegArrayType>>;
     begin
         -- CODE BELOW IS AUTOMATICALLY GENERATED
-process
-    variable finished: boolean := false;
-begin
+process begin
     wait for CLK_PERIOD; -- resetting
     wait for 7 * CLK_PERIOD;
     assert user_reg(3) = 32ux"1234" severity FAILURE;
-    wait until false;
+    wait;
 end process;
-process
-    variable finished: boolean := false;
-begin
+process begin
     wait for CLK_PERIOD; -- resetting
     wait for 8 * CLK_PERIOD;
     assert user_reg(4) = 32ux"0000" severity FAILURE;
-    wait until false;
+    wait;
 end process;
-process
-    variable finished: boolean := false;
-begin
+process begin
     wait for CLK_PERIOD; -- resetting
     wait for 9 * CLK_PERIOD;
     assert user_reg(4) = 32ux"1234" severity FAILURE;
-    wait until false;
+    wait;
 end process;
-process
-    variable finished: boolean := false;
-begin
+process begin
     wait for CLK_PERIOD; -- resetting
     wait for 10 * CLK_PERIOD;
     assert user_reg(5) = 32ux"0000" severity FAILURE;
-    wait until false;
+    wait;
 end process;
-process
-    variable finished: boolean := false;
-begin
+process begin
     wait for CLK_PERIOD; -- resetting
     wait for 11 * CLK_PERIOD;
     assert user_reg(6) = 32ux"1234" severity FAILURE;
-    wait until false;
+    wait;
 end process;
     end block assertBlk;
 end bhv;

@@ -373,7 +373,7 @@ begin
             toWriteReg_o => toWriteReg_67,
             writeRegAddr_o => writeRegAddr_67,
             writeRegData_o => writeRegData_67,
-            ----------------------------------------------
+
             hi_i => hiData_a6,
             lo_i => loData_a6,
             memToWriteHi_i => memToWriteHi_86,
