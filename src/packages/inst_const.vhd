@@ -45,6 +45,16 @@ package inst_const is
     constant OP_SRLV: std_logic_vector(InstFuncWidth) := "000110";
     constant OP_SRA: std_logic_vector(InstFuncWidth) := "000011";
     constant OP_SRAV: std_logic_vector(InstFuncWidth) := "000111";
+
+    --
+    -- Move Opcodes
+    --
+    constant OP_MOVN: std_logic_vector(InstFuncWidth) := "001011";
+    constant OP_MOVZ: std_logic_vector(InstFuncWidth) := "001010";
+    constant OP_MFHI: std_logic_vector(InstFuncWidth) := "010000";
+    constant OP_MFLO: std_logic_vector(InstFuncWidth) := "010010";
+    constant OP_MTHI: std_logic_vector(InstFuncWidth) := "010001";
+    constant OP_MTLO: std_logic_vector(InstFuncWidth) := "010011";
     
     --
     -- Special cases(logics 31-25 in this case)

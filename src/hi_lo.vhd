@@ -5,7 +5,7 @@ use work.global_const.all;
 entity hi_lo is
     port (
         rst, clk: in std_logic;
-        writeEnable_i: in std_logic;
+        writeHiEnable_i, writeLoEnable_i: in std_logic;
         writeHiData_i, writeLoData_i: in std_logic_vector(DataWidth);
         readHiData_o, readLoData_o: out std_logic_vector(DataWidth)
     );
@@ -21,8 +21,10 @@ begin
                 hiData <= (others => '0');
                 loData <= (others => '0');
             else
-                if (writeEnable_i = ENABLE) then
+                if (writeHiEnable_i = ENABLE) then
                     hiData <= writeHiData_i;
+                end if;
+                if (writeLoEnable_i = ENABLE) then
                     loData <= writeLoData_i;
                 end if;
             end if;
