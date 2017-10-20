@@ -16,6 +16,8 @@ parser.add_option('-i', '--in',  action='store', type='string', dest='src_dir', 
         help='directory in which source files lie')
 parser.add_option('-o', '--out', action='store', type='string', dest='out_dir', default='output',
         help='directory in which output testcases be put; each testcase a subdirectory')
+parser.add_option('-c', '--case', action='store', type='string', dest='case',
+        help='test case name')
 options, _ = parser.parse_args(sys.argv)
 
 src_dir = options.src_dir + '/'
@@ -45,16 +47,11 @@ def genInitInstRam(runCmd):
 def genAssertions(assertCmd):
     stmts = ['-- CODE BELOW IS AUTOMATICALLY GENERATED']
     for period, lhs, rhs in assertCmd:
-        stmts.append('process')
-        stmts.append('    variable finished: boolean := false;')
-        stmts.append('begin')
+        stmts.append('process begin')
         stmts.append('    wait for CLK_PERIOD; -- resetting')
         stmts.append('    wait for %s * CLK_PERIOD;'%(period))
-        #stmts.append('    if (finished = false) then')
         stmts.append('    assert user_%s = %s severity FAILURE;'%(lhs, rhs))
-        stmts.append('    wait until false;')
-        #stmts.append('        finished := true;')
-        #stmts.append('    end if;')
+        stmts.append('    wait;')
         stmts.append('end process;')
     return '\n'.join(stmts)
 
@@ -104,9 +101,9 @@ for name in templateNames:
     with open(TEMPLATE_DIR + name) as f:
         templates[name] = f.read();
 
-for testCase in os.listdir(src_dir):
+def generate(testCase):
     if testCase[0] == '.': # Might be editor temporary files
-        continue
+        return
     runCmd, assertCmd, defineCmd, importCmd = parse(testCase)
     initInstRam = genInitInstRam(runCmd)
     assertions = genAssertions(assertCmd)
@@ -130,4 +127,10 @@ for testCase in os.listdir(src_dir):
         outputName = name if name != 'template.vhd' else testCase + '.vhd'
         with open("%s/%s/%s"%(out_dir, testCase, "%s_%s"%(testCase, outputName)), 'w') as outFile:
             outFile.write(out)
+
+if options.case:
+    generate(options.case)
+else:
+    for testCase in os.listdir(src_dir):
+        generate(testCase)
 
