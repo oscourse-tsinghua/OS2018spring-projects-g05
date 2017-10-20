@@ -71,13 +71,21 @@ begin
             case (instOp) is
                 when OP_SPECIAL =>
                     case (instSa) is
-                        when (OP_SASPECIAL) =>
+                        when OP_SASPECIAL =>
                             case (instFunc) is
                                 -- or --
                                 when OP_OR =>
                                     oprSrc1 := REG;
                                     oprSrc2 := REG;
                                     alut_o <= ALU_OR;
+                                    toWriteReg_o <= YES;
+                                    writeRegAddr_o <= instRd;
+                                
+                                -- and --
+                                when OP_AND =>
+                                    oprSrc1 := REG;
+                                    oprSrc2 := REG;
+                                    alut_o <= ALU_AND;
                                     toWriteReg_o <= YES;
                                     writeRegAddr_o <= instRd;
                                 
@@ -156,6 +164,7 @@ begin
                     regReadEnable1_o <= DISABLE;
                     regReadAddr1_o <= (others => '0');
                     operand1_o <= "0000000000000000" & instImm;
+
                 when others =>
                     regReadEnable1_o <= DISABLE;
                     regReadAddr1_o <= (others => '0');
@@ -171,13 +180,13 @@ begin
                     -- Push Forward --
                     if (memToWriteReg_i = YES and memWriteRegAddr_i = instRt) then
                         operand2_o <= memWriteRegData_i;
-                        if (instRs = "00000") then
+                        if (instRt = "00000") then
                             operand2_o <= (others => '0');
                         end if;
                     end if;
                     if (exToWriteReg_i = YES and exWriteRegAddr_i = instRt) then
                         operand2_o <= exWriteRegData_i;
-                        if (instRs = "00000") then
+                        if (instRt = "00000") then
                             operand2_o <= (others => '0');
                         end if;
                     end if;
