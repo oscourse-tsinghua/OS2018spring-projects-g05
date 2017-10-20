@@ -57,7 +57,8 @@ begin
     end process;
 
     process(rst, alut_i, operand1_i, operand2_i,
-            toWriteReg_i, writeRegAddr_i) begin
+            toWriteReg_i, writeRegAddr_i,
+            realHiData, realLoData) begin
         if (rst = RST_ENABLE) then
             writeRegAddr_o <= (others => '0');
             writeRegData_o <= (others => '0');

@@ -22,7 +22,8 @@ end mem;
 
 architecture bhv of mem is
 begin
-    process(rst, toWriteReg_i, writeRegAddr_i, writeRegData_i) begin
+    process(rst, toWriteReg_i, writeRegAddr_i, writeRegData_i,
+            toWriteHi_i, toWriteLo_i, writeHiData_i, writeLoData_i) begin
         if (rst = RST_ENABLE) then
             toWriteReg_o <= NO;
             writeRegAddr_o <= (others => '0');
