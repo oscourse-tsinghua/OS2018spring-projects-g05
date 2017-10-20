@@ -21,4 +21,6 @@ package global_const is
     constant YES: std_logic := '1';
     constant NO: std_logic := '0';
 
+    constant ZEROS_32: std_logic_vector(31 downto 0) := (others => '0');
+
 end global_const;

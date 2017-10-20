@@ -1,0 +1,11 @@
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+RUN xori $2, $2, 0x4567
+RUN mfhi $3
+RUN or $2, $2, $3
+RUN mtlo $2
+RUN mthi $2
+RUN mflo $3
+ASSERT 11 reg(3) 32ux"4567"
+RUN movn $4, $3, $2
+ASSERT 12 reg(4) 32ux"4567"

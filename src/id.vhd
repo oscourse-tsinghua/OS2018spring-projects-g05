@@ -150,7 +150,55 @@ begin
                             alut_o <= ALU_SRA;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                                
+
+                        -- movn --
+                        when OP_MOVN =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_MOVN;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
+                        -- movz --
+                        when OP_MOVZ =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_MOVZ;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
+                        -- mfhi --
+                        when OP_MFHI =>
+                            oprSrc1 := INVALID;
+                            oprSrc2 := INVALID;
+                            alut_o <= ALU_MFHI;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
+                        -- mflo --
+                        when OP_MFLO =>
+                            oprSrc1 := INVALID;
+                            oprSrc2 := INVALID;
+                            alut_o <= ALU_MFLO;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
+                        -- mthi --
+                        when OP_MTHI =>
+                            oprSrc1 := REG;
+                            oprSrc2 := INVALID;
+                            alut_o <= ALU_MTHI;
+                            toWriteReg_o <= NO;
+                            writeRegAddr_o <= (others => '0');
+
+                        -- mtlo --
+                        when OP_MTLO =>
+                            oprSrc1 := REG;
+                            oprSrc2 := INVALID;
+                            alut_o <= ALU_MTLO;
+                            toWriteReg_o <= NO;
+                            writeRegAddr_o <= (others => '0');
+
                         -- others --
                         when others =>
                             oprSrc1 := INVALID;
