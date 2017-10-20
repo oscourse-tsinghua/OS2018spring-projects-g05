@@ -124,77 +124,59 @@ begin
 alias user_reg is <<signal ^.cpu_inst.regfile_ist.regArray: RegArrayType>>;
     begin
         -- CODE BELOW IS AUTOMATICALLY GENERATED
-process
-    variable finished: boolean := false;
-begin
+process begin
     wait for CLK_PERIOD; -- resetting
     wait for 6 * CLK_PERIOD;
     assert user_reg(1) = 32ux"1234" severity FAILURE;
-    wait until false;
+    wait;
 end process;
-process
-    variable finished: boolean := false;
-begin
+process begin
     wait for CLK_PERIOD; -- resetting
     wait for 7 * CLK_PERIOD;
     assert user_reg(3) = 32ux"9b15" severity FAILURE;
-    wait until false;
+    wait;
 end process;
-process
-    variable finished: boolean := false;
-begin
+process begin
     wait for CLK_PERIOD; -- resetting
     wait for 8 * CLK_PERIOD;
     assert user_reg(4) = 32ux"0220" severity FAILURE;
-    wait until false;
+    wait;
 end process;
-process
-    variable finished: boolean := false;
-begin
+process begin
     wait for CLK_PERIOD; -- resetting
     wait for 9 * CLK_PERIOD;
     assert user_reg(5) = 32ux"0000" severity FAILURE;
-    wait until false;
+    wait;
 end process;
-process
-    variable finished: boolean := false;
-begin
+process begin
     wait for CLK_PERIOD; -- resetting
     wait for 10 * CLK_PERIOD;
     assert user_reg(3) = 32ux"65fa" severity FAILURE;
-    wait until false;
+    wait;
 end process;
-process
-    variable finished: boolean := false;
-begin
+process begin
     wait for CLK_PERIOD; -- resetting
     wait for 11 * CLK_PERIOD;
     assert user_reg(0) = 32ux"0000" severity FAILURE;
-    wait until false;
+    wait;
 end process;
-process
-    variable finished: boolean := false;
-begin
+process begin
     wait for CLK_PERIOD; -- resetting
     wait for 12 * CLK_PERIOD;
     assert user_reg(3) = 32ux"0000" severity FAILURE;
-    wait until false;
+    wait;
 end process;
-process
-    variable finished: boolean := false;
-begin
+process begin
     wait for CLK_PERIOD; -- resetting
     wait for 13 * CLK_PERIOD;
     assert user_reg(2) = 32ux"3333" severity FAILURE;
-    wait until false;
+    wait;
 end process;
-process
-    variable finished: boolean := false;
-begin
+process begin
     wait for CLK_PERIOD; -- resetting
     wait for 14 * CLK_PERIOD;
     assert user_reg(1) = 32ux"6666" severity FAILURE;
-    wait until false;
+    wait;
 end process;
     end block assertBlk;
 end bhv;
