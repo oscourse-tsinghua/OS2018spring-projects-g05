@@ -70,74 +70,88 @@ begin
         else
             case (instOp) is
                 when OP_SPECIAL =>
-                    case (instSa) is
-                        when OP_SASPECIAL =>
-                            case (instFunc) is
-                                -- or --
-                                when OP_OR =>
-                                    oprSrc1 := REG;
-                                    oprSrc2 := REG;
-                                    alut_o <= ALU_OR;
-                                    toWriteReg_o <= YES;
-                                    writeRegAddr_o <= instRd;
-                                
-                                -- and --
-                                when OP_AND =>
-                                    oprSrc1 := REG;
-                                    oprSrc2 := REG;
-                                    alut_o <= ALU_AND;
-                                    toWriteReg_o <= YES;
-                                    writeRegAddr_o <= instRd;
-                                
-                                -- xor --
-                                when OP_XOR =>
-                                    oprSrc1 := REG;
-                                    oprSrc2 := REG;
-                                    alut_o <= ALU_XOR;
-                                    toWriteReg_o <= YES;
-                                    writeRegAddr_o <= instRd;
+                    case (instFunc) is
+                        -- or --
+                        when OP_OR =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_OR;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
+                        -- and --
+                        when OP_AND =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_AND;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
+                        -- xor --
+                        when OP_XOR =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_XOR;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
                                     
-                                -- nor --
-                                when OP_NOR =>
-                                    oprSrc1 := REG;
-                                    oprSrc2 := REG;
-                                    alut_o <= ALU_NOR;
-                                    toWriteReg_o <= YES;
-                                    writeRegAddr_o <= instRd;
+                        -- nor --
+                        when OP_NOR =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_NOR;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
 
-                                -- sllv --
-                                when OP_SLLV =>
-                                    oprSrc1 := REG;
-                                    oprSrc2 := REG;
-                                    alut_o <= ALU_SLL;
-                                    toWriteReg_o <= YES;
-                                    writeRegAddr_o <= instRd;
+                        -- sll --
+                        when OP_SLL =>
+                            oprSrc1 := SA;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_SLL;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
 
-                                -- srlv --
-                                when OP_SRLV =>
-                                    oprSrc1 := REG;
-                                    oprSrc1 := REG;
-                                    alut_o <= ALU_SRL;
-                                    toWriteReg_o <= YES;
-                                    writeRegAddr_o <= instRd;
+                        -- sllv --
+                        when OP_SLLV =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_SLL;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
 
-                                -- srav --
-                                when OP_SRAV =>
-                                    oprSrc1 := REG;
-                                    oprSrc2 := REG;
-                                    alut_o <= ALU_SRA;
-                                    toWriteReg_o <= YES;
-                                    writeRegAddr_o <= instRd;
-                                
-                                -- others --
-                                when others =>
-                                    oprSrc1 := INVALID;
-                                    oprSrc2 := INVALID;
-                                    alut_o <= INVALID;
-                                    toWriteReg_o <= NO;
-                                    writeRegAddr_o <= (others => '0');
-                            end case;
+                        -- srl --
+                        when OP_SRL =>
+                            oprSrc1 := SA;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_SRL;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
+                        -- srlv --
+                        when OP_SRLV =>
+                            oprSrc1 := REG;
+                            oprSrc1 := REG;
+                            alut_o <= ALU_SRL;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
+                        -- sra --
+                        when OP_SRA =>
+                            oprSrc1 := SA;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_SRA;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
                         
+                        -- srav --
+                        when OP_SRAV =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_SRA;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+                                
+                        -- others --
                         when others =>
                             oprSrc1 := INVALID;
                             oprSrc2 := INVALID;
@@ -199,6 +213,11 @@ begin
                             operand1_o <= (others => '0');
                         end if;
                     end if;
+                
+                when SA =>
+                    regReadEnable1_o <= DISABLE;
+                    regReadAddr1_o <= (others => '0');
+                    operand1_o <= "000000000000000000000000000" & instSa;
 
                 when IMM =>
                     regReadEnable1_o <= DISABLE;
@@ -235,11 +254,6 @@ begin
                     regReadEnable2_o <= DISABLE;
                     regReadAddr2_o <= (others => '0');
                     operand2_o <= "0000000000000000" & instImm;
-                
-                when SA =>
-                    regReadEnable2_o <= DISABLE;
-                    regReadAddr2_o <= (others => '0');
-                    operand2_o <= "000000000000000000000000000" & instSa;
                 
                 when others =>
                     regReadEnable2_o <= DISABLE;
