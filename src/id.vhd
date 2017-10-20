@@ -89,6 +89,22 @@ begin
                                     toWriteReg_o <= YES;
                                     writeRegAddr_o <= instRd;
                                 
+                                -- xor --
+                                when OP_XOR =>
+                                    oprSrc1 := REG;
+                                    oprSrc2 := REG;
+                                    alut_o <= ALU_XOR;
+                                    toWriteReg_o <= YES;
+                                    writeRegAddr_o <= instRd;
+                                    
+                                -- nor --
+                                when OP_NOR =>
+                                    oprSrc1 := REG;
+                                    oprSrc2 := REG;
+                                    alut_o <= ALU_NOR;
+                                    toWriteReg_o <= YES;
+                                    writeRegAddr_o <= instRd;
+                                
                                 -- others --
                                 when others =>
                                     oprSrc1 := INVALID;
