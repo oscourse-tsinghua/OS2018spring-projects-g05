@@ -25,10 +25,31 @@ package inst_const is
     subtype InstAddrWidth  is integer range 25 downto  0;
 
     --
-    -- Opcodes
+    -- Logic Opcodes
     --
-    constant OP_ORI: std_logic_vector(InstOpWidth) := "001101";
+    constant OP_AND: std_logic_vector(InstFuncWidth) := "100100";
+    constant OP_OR: std_logic_vector(InstFuncWidth) := "100101";
+    constant OP_XOR: std_logic_vector(InstFuncWidth) := "100110";
+    constant OP_NOR: std_logic_vector(InstFuncWidth) := "100111";
     constant OP_ANDI: std_logic_vector(InstOpWidth) := "001100";
+    constant OP_ORI: std_logic_vector(InstOpWidth) := "001101";
     constant OP_XORI: std_logic_vector(InstOpWidth) := "001110";
+    constant OP_LUI: std_logic_vector(InstOpWidth) := "001111";
 
+    --
+    -- Algebraic Opcodes
+    --
+    constant OP_SLL: std_logic_vector(InstFuncWidth) := "000000";
+    constant OP_SLLV: std_logic_vector(InstFuncWidth) := "000100";
+    constant OP_SRL: std_logic_vector(InstFuncWidth) := "000010";
+    constant OP_SRLV: std_logic_vector(InstFuncWidth) := "000110";
+    constant OP_SRA: std_logic_vector(InstFuncWidth) := "000011";
+    constant OP_SRAV: std_logic_vector(InstFuncWidth) := "000111";
+    
+    --
+    -- Special cases(logics 31-25 in this case)
+    --
+    constant OP_SPECIAL: std_logic_vector(InstOpWidth) := "000000";
+    --constant OP_11SPECIAL: std_logic_vector(InstRsWidth) := "00000";
+    --constant OP_SASPECIAL: std_logic_vector(InstSaWidth) := "00000";
 end inst_const;
