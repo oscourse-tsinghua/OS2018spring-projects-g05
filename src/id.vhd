@@ -104,6 +104,30 @@ begin
                                     alut_o <= ALU_NOR;
                                     toWriteReg_o <= YES;
                                     writeRegAddr_o <= instRd;
+
+                                -- sllv --
+                                when OP_SLLV =>
+                                    oprSrc1 := REG;
+                                    oprSrc2 := REG;
+                                    alut_o <= ALU_SLL;
+                                    toWriteReg_o <= YES;
+                                    writeRegAddr_o <= instRd;
+
+                                -- srlv --
+                                when OP_SRLV =>
+                                    oprSrc1 := REG;
+                                    oprSrc1 := REG;
+                                    alut_o <= ALU_SRL;
+                                    toWriteReg_o <= YES;
+                                    writeRegAddr_o <= instRd;
+
+                                -- srav --
+                                when OP_SRAV =>
+                                    oprSrc1 := REG;
+                                    oprSrc2 := REG;
+                                    alut_o <= ALU_SRA;
+                                    toWriteReg_o <= YES;
+                                    writeRegAddr_o <= instRd;
                                 
                                 -- others --
                                 when others =>

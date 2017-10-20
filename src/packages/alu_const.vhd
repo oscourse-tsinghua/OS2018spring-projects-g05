@@ -15,5 +15,11 @@ package alu_const is
         INVALID,
         REG, IMM, SA
     );
+    
+    --
+    -- Constants for Bit Operation
+    --
+    subtype RegBitOpIdx    is integer range  4 downto  0;
+    subtype RegBitOpWidth  is integer range  4 downto  0;
 
 end alu_const;
