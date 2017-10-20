@@ -165,17 +165,17 @@ begin
             case oprSrc2 is
                 when REG =>
                     regReadEnable2_o <= ENABLE;
-                    regReadAddr2_o <= instRs;
+                    regReadAddr2_o <= instRt;
                     operand2_o <= regData2_i;
 
                     -- Push Forward --
-                    if (memToWriteReg_i = YES and memWriteRegAddr_i = instRs) then
+                    if (memToWriteReg_i = YES and memWriteRegAddr_i = instRt) then
                         operand2_o <= memWriteRegData_i;
                         if (instRs = "00000") then
                             operand2_o <= (others => '0');
                         end if;
                     end if;
-                    if (exToWriteReg_i = YES and exWriteRegAddr_i = instRs) then
+                    if (exToWriteReg_i = YES and exWriteRegAddr_i = instRt) then
                         operand2_o <= exWriteRegData_i;
                         if (instRs = "00000") then
                             operand2_o <= (others => '0');
