@@ -65,6 +65,8 @@ package inst_const is
     constant OP_SUBU: std_logic_vector(InstFuncWidth) := "100011";
     constant OP_SLT: std_logic_vector(InstFuncWidth) := "101010";
     constant OP_SLTU: std_logic_vector(InstFuncWidth) := "101011";
+    constant OP_MULT: std_logic_vector(InstFuncWidth) := "011000";
+    constant OP_MULTU: std_logic_vector(InstFuncWidth) := "011001";
 
     constant OP_ADDI: std_logic_vector(InstOpWidth) := "001000";
     constant OP_ADDIU: std_logic_vector(InstOpWidth) := "001001";
@@ -73,6 +75,7 @@ package inst_const is
 
     constant OP_CLO: std_logic_vector(InstFuncWidth) := "100001";
     constant OP_CLZ: std_logic_vector(InstFuncWidth) := "100000";
+    constant OP_MUL: std_logic_vector(InstFuncWidth) := "000010";
     
     --
     -- Special cases(logics 31-25 in this case)

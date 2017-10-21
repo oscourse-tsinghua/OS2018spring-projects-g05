@@ -249,6 +249,22 @@ begin
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
 
+                        -- mult --
+                        when OP_MULT =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_MULT;
+                            toWriteReg_o <= NO;
+                            writeRegAddr_o <= (others => '0');
+
+                        -- multu --
+                        when OP_MULTU =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_MULTU;
+                            toWriteReg_o <= NO;
+                            writeRegAddr_o <= (others => '0');
+
                         -- others --
                         when others =>
                             oprSrc1 := INVALID;
@@ -274,6 +290,14 @@ begin
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
                             alut_o <= ALU_CLZ;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
+                        -- mul --
+                        when OP_MUL =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_MUL;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
 
