@@ -36,6 +36,11 @@ architecture bhv of ex is
         return (not x) + 1;
     end complement;
 
+    function complement64(x: std_logic_vector(DoubleDataWidth)) return std_logic_vector is
+    begin
+        return (not x) + 1;
+    end complement64;
+
     function overflow(x, y: std_logic_vector(DataWidth)) return boolean is
         variable res: std_logic_vector(DataWidth);
     begin
@@ -111,7 +116,7 @@ begin
 
         ans := m1 * m2;
         if (neg) then
-            product <= complement(ans);
+            product <= complement64(ans);
         else
             product <= ans;
         end if;
