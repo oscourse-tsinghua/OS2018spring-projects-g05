@@ -69,6 +69,8 @@ begin
             writeRegAddr_o <= (others => '0');
         else
             case (instOp) is
+
+                -- special --
                 when OP_SPECIAL =>
                     case (instFunc) is
                         -- or --
@@ -199,6 +201,82 @@ begin
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
 
+                        -- add --
+                        when OP_ADD =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_ADD;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
+                        -- addu --
+                        when OP_ADDU =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_ADDU;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
+                        -- sub --
+                        when OP_SUB =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_SUB;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
+                        -- subu --
+                        when OP_SUBU =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_SUBU;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
+                        -- slt --
+                        when OP_SLT =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_SLT;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
+                        -- sltu --
+                        when OP_SLTU =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_SLTU;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
+                        -- others --
+                        when others =>
+                            oprSrc1 := INVALID;
+                            oprSrc2 := INVALID;
+                            alut_o <= INVALID;
+                            toWriteReg_o <= NO;
+                            writeRegAddr_o <= (others => '0');
+                    end case;
+
+                -- special2 --
+                when OP_SPECIAL2 =>
+                    case (instFunc) is
+                        -- clo --
+                        when OP_CLO =>
+                            oprSrc1 := REG;
+                            oprSrc2 := INVALID;
+                            alut_o <= ALU_CLO;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
+                        -- clz --
+                        when OP_CLZ =>
+                            oprSrc1 := REG;
+                            oprSrc2 := INVALID;
+                            alut_o <= ALU_CLZ;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+
                         -- others --
                         when others =>
                             oprSrc1 := INVALID;
@@ -231,6 +309,38 @@ begin
                     alut_o <= ALU_XOR;
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
+
+                -- addi --
+                when OP_ADDI =>
+                oprSrc1 := REG;
+                oprSrc2 := SGN_IMM;
+                alut_o <= ALU_ADD;
+                toWriteReg_o <= YES;
+                writeRegAddr_o <= instRt;
+
+                -- addiu --
+                when OP_ADDIU =>
+                oprSrc1 := REG;
+                oprSrc2 := SGN_IMM;
+                alut_o <= ALU_ADDU;
+                toWriteReg_o <= YES;
+                writeRegAddr_o <= instRt;
+
+                -- slti --
+                when OP_SLTI =>
+                oprSrc1 := REG;
+                oprSrc2 := SGN_IMM;
+                alut_o <= ALU_SLT;
+                toWriteReg_o <= YES;
+                writeRegAddr_o <= instRt;
+
+                -- sltiu --
+                when OP_SLTIU =>
+                oprSrc1 := REG;
+                oprSrc2 := SGN_IMM;
+                alut_o <= ALU_SLTU;
+                toWriteReg_o <= YES;
+                writeRegAddr_o <= instRt;
 
                 -- others --
                 when others =>
@@ -272,6 +382,15 @@ begin
                     regReadAddr1_o <= (others => '0');
                     operand1_o <= "0000000000000000" & instImm;
 
+                when SGN_IMM =>
+                    regReadEnable1_o <= DISABLE;
+                    regReadAddr1_o <= (others => '0');
+                    if (instImm(15) = '0') then
+                        operand1_o <= "0000000000000000" & instImm;
+                    else
+                        operand1_o <= "1111111111111111" & instImm;
+                    end if;
+
                 when others =>
                     regReadEnable1_o <= DISABLE;
                     regReadAddr1_o <= (others => '0');
@@ -303,6 +422,15 @@ begin
                     regReadAddr2_o <= (others => '0');
                     operand2_o <= "0000000000000000" & instImm;
                 
+                when SGN_IMM =>
+                    regReadEnable2_o <= DISABLE;
+                    regReadAddr2_o <= (others => '0');
+                    if (instImm(15) = '0') then
+                        operand2_o <= "0000000000000000" & instImm;
+                    else
+                        operand2_o <= "1111111111111111" & instImm;
+                    end if;
+
                 when others =>
                     regReadEnable2_o <= DISABLE;
                     regReadAddr2_o <= (others => '0');
