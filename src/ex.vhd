@@ -46,6 +46,10 @@ architecture bhv of ex is
 
     signal realHiData, realLoData: std_logic_vector(DataWidth) := (others => '0');
     signal clo, clz: std_logic_vector(DataWidth);
+
+    signal multip1, multip2: std_logic_vector(DataWidth);
+    signal calcMult: std_logic := '0';
+    signal product: std_logic_vector(DoubleDataWidth);
 begin
 
     clo <= 32ux"00" when operand1_i(31) = '0' else 32ux"01" when operand1_i(30) = '0' else
@@ -83,6 +87,37 @@ begin
            32ux"1e" when operand1_i( 1) = '1' else 32ux"1f" when operand1_i( 0) = '1' else
            32ux"20";
 
+    -- multiplication --
+    process(multip1, multip2, alut_i, calcMult)
+        variable m1, m2: std_logic_vector(DataWidth);
+        variable ans: std_logic_vector(DoubleDataWidth);
+        variable neg: boolean;
+    begin
+        neg := false;
+        if (calcMult = '1') then
+            if (alut_i /= ALU_MULTU and multip1(31) = '1') then
+                m1 := complement(multip1);
+                neg := not neg;
+            else
+                m1 := multip1;
+            end if;
+            if (alut_i /= ALU_MULTU and multip2(31) = '1') then
+                m2 := complement(multip2);
+                neg := not neg;
+            else
+                m2 := multip2;
+            end if;
+        end if;
+
+        ans := m1 * m2;
+        if (neg) then
+            product <= complement(ans);
+        else
+            product <= ans;
+        end if;
+    end process;
+
+    -- hi lo --
     process(rst, hi_i, lo_i,
             memToWriteHi_i, memToWriteLo_i, memWriteHiData_i, memWriteLoData_i,
             wbToWriteHi_i, wbToWriteLo_i, wbWriteHiData_i, wbWriteLoData_i) begin
@@ -109,17 +144,19 @@ begin
 
     process(rst, alut_i, operand1_i, operand2_i,
             toWriteReg_i, writeRegAddr_i,
-            realHiData, realLoData, clo, clz)
+            realHiData, realLoData, clo, clz, product)
             variable res: std_logic_vector(DataWidth);
         begin
         if (rst = RST_ENABLE) then
             writeRegAddr_o <= (others => '0');
             writeRegData_o <= (others => '0');
+            calcMult <= '0';
         else
             toWriteReg_o <= toWriteReg_i;
             writeRegAddr_o <= writeRegAddr_i;
             toWriteHi_o <= NO;
             toWriteLo_o <= NO;
+            calcMult <= '0';
 
             case alut_i is
                 when ALU_OR => writeRegData_o <= operand1_i or operand2_i;
@@ -184,6 +221,28 @@ begin
                     end if;
                 when ALU_CLO => writeRegData_o <= clo;
                 when ALU_CLZ => writeRegData_o <= clz;
+
+                when ALU_MUL =>
+                    calcMult <= '1';
+                    multip1 <= operand1_i;
+                    multip2 <= operand2_i;
+                    writeRegData_o <= product(LoDataWidth);
+                when ALU_MULT =>
+                    calcMult <= '1';
+                    multip1 <= operand1_i;
+                    multip2 <= operand2_i;
+                    toWriteHi_o <= YES;
+                    writeHiData_o <= product(HiDataWidth);
+                    toWriteLo_o <= YES;
+                    writeLoData_o <= product(LoDataWidth);
+                when ALU_MULTU =>
+                    calcMult <= '1';
+                    multip1 <= operand1_i;
+                    multip2 <= operand2_i;
+                    toWriteHi_o <= YES;
+                    writeHiData_o <= product(HiDataWidth);
+                    toWriteLo_o <= YES;
+                    writeLoData_o <= product(LoDataWidth);
 
                 when others =>
                     toWriteReg_o <= NO;

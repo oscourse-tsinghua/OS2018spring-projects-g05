@@ -6,6 +6,9 @@ package global_const is
     subtype InstWidth is integer range 31 downto 0;
     subtype AddrWidth is integer range 31 downto 0;
     subtype DataWidth is integer range 31 downto 0;
+    subtype DoubleDataWidth is integer range 63 downto 0;
+    subtype HiDataWidth is integer range 63 downto 32;
+    subtype LoDataWidth is integer range 31 downto 0;
     subtype IntWidth is integer range 5 downto 0;
     subtype RegAddrWidth is integer range 4 downto 0;
     subtype RegNum is integer range 0 to 31;
