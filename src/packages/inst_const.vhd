@@ -76,6 +76,11 @@ package inst_const is
     constant OP_CLO: std_logic_vector(InstFuncWidth) := "100001";
     constant OP_CLZ: std_logic_vector(InstFuncWidth) := "100000";
     constant OP_MUL: std_logic_vector(InstFuncWidth) := "000010";
+
+    constant OP_MADD: std_logic_vector(InstFuncWidth) := "000000";
+    constant OP_MADDU: std_logic_vector(InstFuncWidth) := "000001";
+    constant OP_MSUB: std_logic_vector(InstFuncWidth) := "000100";
+    constant OP_MSUBU: std_logic_vector(InstFuncWidth) := "000101";
     
     --
     -- Special cases(logics 31-25 in this case)

@@ -302,6 +302,38 @@ begin
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
 
+                        -- madd --
+                        when OP_MADD =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_MADD;
+                            toWriteReg_o <= NO;
+                            writeRegAddr_o <= (others => '0');
+
+                        -- maddu --
+                        when OP_MADDU =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_MADDU;
+                            toWriteReg_o <= NO;
+                            writeRegAddr_o <= (others => '0');
+
+                        -- msub --
+                        when OP_MSUB =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_MSUB;
+                            toWriteReg_o <= NO;
+                            writeRegAddr_o <= (others => '0');
+
+                        -- msubu --
+                        when OP_MSUBU =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_MSUBU;
+                            toWriteReg_o <= NO;
+                            writeRegAddr_o <= (others => '0');
+
                         -- others --
                         when others =>
                             oprSrc1 := INVALID;
