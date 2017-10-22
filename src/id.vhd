@@ -20,6 +20,7 @@ entity id is
         memWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
         memWriteRegData_i: in std_logic_vector(DataWidth);
 
+        toStall_o: out std_logic;
         regReadEnable1_o: out std_logic;
         regReadEnable2_o: out std_logic;
         regReadAddr1_o: out std_logic_vector(RegAddrWidth);

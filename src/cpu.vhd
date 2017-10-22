@@ -27,6 +27,7 @@ architecture bhv of cpu is
     component pc_reg
         port (
             rst, clk: in std_logic;
+            stall_i: in std_logic_vector(StallWidth);
             pc_o: out std_logic_vector(AddrWidth);
             pcEnable_o: out std_logic
         );
@@ -35,6 +36,7 @@ architecture bhv of cpu is
     component if_id
         port (
             rst, clk: in std_logic;
+            stall_i: in std_logic_vector(StallWidth);
             pc_i: in std_logic_vector(AddrWidth);
             inst_i: in std_logic_vector(InstWidth);
             pc_o: out std_logic_vector(AddrWidth);
@@ -72,6 +74,7 @@ architecture bhv of cpu is
             memWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
             memWriteRegData_i: in std_logic_vector(DataWidth);
 
+            toStall_o: out std_logic;
             regReadEnable1_o: out std_logic;
             regReadEnable2_o: out std_logic;
             regReadAddr1_o: out std_logic_vector(RegAddrWidth);
@@ -87,6 +90,7 @@ architecture bhv of cpu is
     component id_ex
         port (
             rst, clk: in std_logic;
+            stall_i: in std_logic_vector(StallWidth);
             alut_i: in AluType;
             operand1_i: in std_logic_vector(DataWidth);
             operand2_i: in std_logic_vector(DataWidth);
@@ -110,6 +114,7 @@ architecture bhv of cpu is
             toWriteReg_i: in std_logic;
             writeRegAddr_i: in std_logic_vector(RegAddrWidth);
 
+            toStall_o: out std_logic;
             toWriteReg_o: out std_logic;
             writeRegAddr_o: out std_logic_vector(RegAddrWidth);
             writeRegData_o: out std_logic_vector(DataWidth);
@@ -127,6 +132,7 @@ architecture bhv of cpu is
     component ex_mem
         port (
             rst, clk: in std_logic;
+            stall_i: in std_logic_vector(StallWidth);
             toWriteReg_i: in std_logic;
             writeRegAddr_i: in std_logic_vector(RegAddrWidth);
             writeRegData_i: in std_logic_vector(DataWidth);
@@ -161,6 +167,7 @@ architecture bhv of cpu is
     component mem_wb
         port (
             rst, clk: in std_logic;
+            stall_i: in std_logic_vector(StallWidth);
             toWriteReg_i: in std_logic;
             writeRegAddr_i: in std_logic_vector(RegAddrWidth);
             writeRegData_i: in std_logic_vector(DataWidth);
@@ -184,6 +191,14 @@ architecture bhv of cpu is
         );
     end component;
 
+    component ctrl is
+        port (
+            rst: in std_logic;
+            idToStall_i, exToStall_i: in std_logic;
+            stall_o: out std_logic_vector(StallWidth)
+        );
+    end component;
+
     component conv_endian
         port (
             input: in std_logic_vector(31 downto 0);
@@ -202,6 +217,7 @@ architecture bhv of cpu is
     -- 8: mem
     -- 9: mem_wb
     -- a: hi_lo
+    -- b: ctrl
     -- x: conv_endian
 
     -- Signals connecting pc_reg and if_id --
@@ -284,11 +300,21 @@ architecture bhv of cpu is
     -- Signals connecting hi_lo and ex --
     signal hiData_a6, loData_a6: std_logic_vector(DataWidth);
 
+    -- Signals connecting id and ctrl --
+    signal idToStall_4b: std_logic;
+
+    -- Signals connecting ex and ctrl --
+    signal exToStall_6b: std_logic;
+
+    -- Signals connecting ctrl and others --
+    signal stall: std_logic_vector(StallWidth);
+
 begin
 
     pc_reg_ist: pc_reg
         port map (
            rst => rst, clk => clk,
+           stall_i => stall,
            pc_o => pc_12,
            pcEnable_o => instEnable_o
         );
@@ -296,6 +322,7 @@ begin
     if_id_ist: if_id
         port map (
             rst => rst, clk => clk,
+            stall_i => stall,
             pc_i => pc_12,
             inst_i => inst_x2,
             pc_o => pc_24,
@@ -336,6 +363,7 @@ begin
             memToWriteReg_i => memToWriteReg_84,
             memWriteRegAddr_i => memWriteRegAddr_84,
             memWriteRegData_i => memWriteRegData_84,
+            toStall_o => idToStall_4b,
             regReadEnable1_o => regReadEnable1_43,
             regReadEnable2_o => regReadEnable2_43,
             regReadAddr1_o => regReadAddr1_43,
@@ -350,6 +378,7 @@ begin
     id_ex_ist: id_ex
         port map (
             rst => rst, clk => clk,
+            stall_i => stall,
             alut_i => alut_45,
             operand1_i => operand1_45,
             operand2_i => operand2_45,
@@ -370,6 +399,7 @@ begin
             operand2_i => operand2_56,
             toWriteReg_i => toWriteReg_56,
             writeRegAddr_i => writeRegAddr_56,
+            toStall_o => exToStall_6b,
             toWriteReg_o => toWriteReg_67,
             writeRegAddr_o => writeRegAddr_67,
             writeRegData_o => writeRegData_67,
@@ -396,6 +426,7 @@ begin
     ex_mem_ist: ex_mem
         port map (
             rst => rst, clk => clk,
+            stall_i => stall,
             toWriteReg_i => toWriteReg_67,
             writeRegAddr_i => writeRegAddr_67,
             writeRegData_i => writeRegData_67,
@@ -443,6 +474,7 @@ begin
     mem_wb_ist: mem_wb
         port map (
             rst => rst, clk => clk,
+            stall_i => stall,
             toWriteReg_i => toWriteReg_89,
             writeRegAddr_i => writeRegAddr_89,
             writeRegData_i => writeRegData_89,
@@ -473,6 +505,14 @@ begin
             writeLoData_i => writeLoData_9a,
             readHiData_o => hiData_a6,
             readLoData_o => loData_a6
+        );
+
+    ctrl_ist: ctrl
+        port map(
+            rst => rst,
+            idToStall_i => idToStall_4b,
+            exToStall_i => exToStall_6b,
+            stall_o => stall
         );
 
 end bhv;

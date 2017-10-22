@@ -14,6 +14,7 @@ entity ex is
         toWriteReg_i: in std_logic;
         writeRegAddr_i: in std_logic_vector(RegAddrWidth);
 
+        toStall_o: out std_logic;
         toWriteReg_o: out std_logic;
         writeRegAddr_o: out std_logic_vector(RegAddrWidth);
         writeRegData_o: out std_logic_vector(DataWidth);

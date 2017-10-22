@@ -7,6 +7,7 @@ use work.inst_const.all;
 entity pc_reg is
     port (
         rst, clk: in std_logic;
+        stall_i: in std_logic_vector(StallWidth);
         pc_o: out std_logic_vector(AddrWidth);
         pcEnable_o: out std_logic
     );
@@ -20,7 +21,7 @@ begin
             if (rst = RST_ENABLE) then
                 pcEnable_o <= DISABLE;
                 pc <= (others => '0');
-            else
+            elsif (stall_i(PC_STOP_IDX) = PIPELINE_NONSTOP) then
                 pcEnable_o <= ENABLE;
                 pc <= pc + 4;
             end if;
