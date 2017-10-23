@@ -69,6 +69,7 @@ begin
         memt_o <= INVALID;
         toWriteReg_o <= NO;
         writeRegAddr_o <= (others => '0');
+        toStall_o <= PIPELINE_NONSTOP;
 
         if (rst = RST_ENABLE) then
             oprSrc1 := INVALID;

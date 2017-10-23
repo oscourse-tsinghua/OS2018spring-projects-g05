@@ -138,7 +138,7 @@ architecture bhv of cpu is
 
             memt_o: out MemType;
             memAddr_o: out std_logic_vector(AddrWidth);
-            memData_o: out std_logic_vector(DataWidth)
+            memData_o: out std_logic_vector(DataWidth);
 
             tempProduct_i: in std_logic_vector(DoubleDataWidth);
             cnt_i: in std_logic_vector(CntWidth);
@@ -168,7 +168,7 @@ architecture bhv of cpu is
             memData_i: in std_logic_vector(DataWidth);
             memt_o: out MemType;
             memAddr_o: out std_logic_vector(AddrWidth);
-            memData_o: out std_logic_vector(DataWidth)
+            memData_o: out std_logic_vector(DataWidth);
 
             tempProduct_i: in std_logic_vector(DoubleDataWidth);
             cnt_i: in std_logic_vector(CntWidth);

@@ -36,7 +36,7 @@ entity ex is
         -- Memory --
         memt_o: out MemType;
         memAddr_o: out std_logic_vector(AddrWidth);
-        memData_o: out std_logic_vector(DataWidth)
+        memData_o: out std_logic_vector(DataWidth);
 
         -- multi-period --
         tempProduct_i: in std_logic_vector(DoubleDataWidth);
