@@ -138,7 +138,7 @@ begin
                         -- srlv --
                         when OP_SRLV =>
                             oprSrc1 := REG;
-                            oprSrc1 := REG;
+                            oprSrc2 := REG;
                             alut_o <= ALU_SRL;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;

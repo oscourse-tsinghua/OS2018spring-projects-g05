@@ -87,6 +87,10 @@ begin
                         savingData_o <= memData_i(7 downto 0) & 24b"0";
                         loadedByte := loadedData_i(31 downto 24);
                         dataByteSelect_o <= "1000";
+                    when others =>
+                        -- Although there is actually no other cases
+                        -- But the simulator thinks someting like 'Z' should be considered
+                        null;
                 end case;
             end if;
 
