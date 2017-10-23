@@ -17,7 +17,7 @@ entity ex_mem is
         toWriteHi_i, toWriteLo_i: in std_logic;
         writeHiData_i, writeLoData_i: in std_logic_vector(DataWidth);
         toWriteHi_o, toWriteLo_o: out std_logic;
-        writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth)
+        writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth);
 
         -- Memory --
         memt_i: in MemType;
@@ -25,7 +25,7 @@ entity ex_mem is
         memData_i: in std_logic_vector(DataWidth);
         memt_o: out MemType;
         memAddr_o: out std_logic_vector(AddrWidth);
-        memData_o: out std_logic_vector(DataWidth);
+        memData_o: out std_logic_vector(DataWidth)
     );
 end ex_mem;
 

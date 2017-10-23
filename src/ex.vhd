@@ -1,6 +1,9 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
+-- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_unsigned
+--       Use numeric_std if signed number is needed (different API)
 use work.global_const.all;
 use work.alu_const.all;
 use work.mem_const.all;
@@ -27,12 +30,12 @@ entity ex is
         wbToWriteHi_i, wbToWriteLo_i: in std_logic;
         wbWriteHiData_i, wbWriteLoData_i: in std_logic_vector(DataWidth);
         toWriteHi_o, toWriteLo_o: out std_logic;
-        writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth)
+        writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth);
 
         -- Memory --
         memt_o: out MemType;
         memAddr_o: out std_logic_vector(AddrWidth);
-        memData_o: out std_logic_vector(DataWidth);
+        memData_o: out std_logic_vector(DataWidth)
     );
 end ex;
 
@@ -65,17 +68,16 @@ begin
     end process;
 
     process(all) begin
-        if (rst = RST_ENABLE) then
-            writeRegAddr_o <= (others => '0');
-            writeRegData_o <= (others => '0');
-        else
-            toWriteReg_o <= toWriteReg_i;
+        toWriteHi_o <= NO;
+        toWriteLo_o <= NO;
+        toWriteReg_o <= toWriteReg_i;
+        memAddr_o <= (others => '0');
+        memData_o <= (others => '0');
+        writeRegAddr_o <= (others => '0');
+        writeRegData_o <= (others => '0');
+        if (rst = RST_DISABLE) then
             writeRegAddr_o <= writeRegAddr_i;
             writeRegData_o <= (others => '0');
-            toWriteHi_o <= NO;
-            toWriteLo_o <= NO;
-            memAddr_o: <= (others => '0');
-            memData_o: <= (others => '0');
 
             case alut_i is
                 when ALU_OR => writeRegData_o <= operand1_i or operand2_i;

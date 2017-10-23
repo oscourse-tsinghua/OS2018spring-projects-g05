@@ -17,7 +17,7 @@ entity mem is
         toWriteHi_i, toWriteLo_i: in std_logic;
         writeHiData_i, writeLoData_i: in std_logic_vector(DataWidth);
         toWriteHi_o, toWriteLo_o: out std_logic;
-        writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth)
+        writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth);
 
         -- Memory --
         memt_i: in MemType;
@@ -28,7 +28,7 @@ entity mem is
         memAddr_o: out std_logic_vector(AddrWidth);
         dataEnable_o: out std_logic;
         dataWrite_o: out std_logic;
-        dataByteSelect_o: out std_logic_vector(3 downto 0);
+        dataByteSelect_o: out std_logic_vector(3 downto 0)
     );
 end mem;
 
@@ -65,11 +65,11 @@ begin
             writeLoData_o <= writeLoData_i;
 
             -- Byte selection --
-            if ((memt_i = MEM_LW) or (memt_i = MEM_SW))
+            if ((memt_i = MEM_LW) or (memt_i = MEM_SW)) then
                 savingData_o <= memData_i;
                 dataByteSelect_o <= "1111";
             end if;
-            if ((memt_i = MEM_LB) or (memt_i = MEM_LBU) or (memt_i = MEM_SB))
+            if ((memt_i = MEM_LB) or (memt_i = MEM_LBU) or (memt_i = MEM_SB)) then
                 case memAddr_i(1 downto 0) is
                     when "00" =>
                         savingData_o <= 24b"0" & memData_i(7 downto 0);
