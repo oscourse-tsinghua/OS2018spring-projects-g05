@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 package inst_const is
-    
+
     --
     -- Format of instructions, classified into R type, I type and J type
     --
@@ -14,7 +14,7 @@ package inst_const is
     subtype InstFuncIdx    is integer range  5 downto  0;
     subtype InstImmIdx     is integer range 15 downto  0;
     subtype InstAddrIdx    is integer range 25 downto  0;
-    
+
     subtype InstOpWidth    is integer range  5 downto  0;
     subtype InstRsWidth    is integer range  4 downto  0;
     subtype InstRtWidth    is integer range  4 downto  0;
@@ -55,7 +55,16 @@ package inst_const is
     constant OP_MFLO: std_logic_vector(InstFuncWidth) := "010010";
     constant OP_MTHI: std_logic_vector(InstFuncWidth) := "010001";
     constant OP_MTLO: std_logic_vector(InstFuncWidth) := "010011";
-    
+
+    --
+    -- Memory Opcodes
+    --
+    constant OP_LB: std_logic_vector(InstOpWidth) := "100000";
+    constant OP_LBU: std_logic_vector(InstOpWidth) := "100100";
+    constant OP_LW: std_logic_vector(InstOpWidth) := "100011";
+    constant OP_SB: std_logic_vector(InstOpWidth) := "101000";
+    constant OP_SW: std_logic_vector(InstOpWidth) := "101011";
+
     --
     -- Special cases(logics 31-25 in this case)
     --

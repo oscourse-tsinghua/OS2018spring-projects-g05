@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use work.global_const.all;
 use work.alu_const.all;
+use work.mem_const.all;
 
 entity cpu is
     port (
@@ -23,7 +24,7 @@ entity cpu is
 end cpu;
 
 architecture bhv of cpu is
-    
+
     component pc_reg
         port (
             rst, clk: in std_logic;
@@ -77,8 +78,10 @@ architecture bhv of cpu is
             regReadAddr1_o: out std_logic_vector(RegAddrWidth);
             regReadAddr2_o: out std_logic_vector(RegAddrWidth);
             alut_o: out AluType;
+            memt_o: out MemType;
             operand1_o: out std_logic_vector(DataWidth);
             operand2_o: out std_logic_vector(DataWidth);
+            operandX_o: out std_logic_vector(DataWidth);
             toWriteReg_o: out std_logic;
             writeRegAddr_o: out std_logic_vector(RegAddrWidth)
         );
@@ -88,14 +91,18 @@ architecture bhv of cpu is
         port (
             rst, clk: in std_logic;
             alut_i: in AluType;
+            memt_i: in MemType;
             operand1_i: in std_logic_vector(DataWidth);
             operand2_i: in std_logic_vector(DataWidth);
+            operandX_i: in std_logic_vector(DataWidth);
             toWriteReg_i: in std_logic;
             writeRegAddr_i: in std_logic_vector(RegAddrWidth);
 
             alut_o: out AluType;
+            memt_o: out MemType;
             operand1_o: out std_logic_vector(DataWidth);
             operand2_o: out std_logic_vector(DataWidth);
+            operandX_o: out std_logic_vector(DataWidth);
             toWriteReg_o: out std_logic;
             writeRegAddr_o: out std_logic_vector(RegAddrWidth)
         );
@@ -105,8 +112,10 @@ architecture bhv of cpu is
         port (
             rst: in std_logic;
             alut_i: in AluType;
+            memt_i: in MemType;
             operand1_i: in std_logic_vector(DataWidth);
             operand2_i: in std_logic_vector(DataWidth);
+            operandX_i: in std_logic_vector(DataWidth);
             toWriteReg_i: in std_logic;
             writeRegAddr_i: in std_logic_vector(RegAddrWidth);
 
@@ -120,7 +129,11 @@ architecture bhv of cpu is
             wbToWriteHi_i, wbToWriteLo_i: in std_logic;
             wbWriteHiData_i, wbWriteLoData_i: in std_logic_vector(DataWidth);
             toWriteHi_o, toWriteLo_o: out std_logic;
-            writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth)
+            writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth);
+
+            memt_o: out MemType;
+            memAddr_o: out std_logic_vector(AddrWidth);
+            memData_o: out std_logic_vector(DataWidth)
         );
     end component;
 
@@ -137,7 +150,14 @@ architecture bhv of cpu is
             toWriteHi_i, toWriteLo_i: in std_logic;
             writeHiData_i, writeLoData_i: in std_logic_vector(DataWidth);
             toWriteHi_o, toWriteLo_o: out std_logic;
-            writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth)
+            writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth);
+
+            memt_i: in MemType;
+            memAddr_i: in std_logic_vector(AddrWidth);
+            memData_i: in std_logic_vector(DataWidth);
+            memt_o: out MemType;
+            memAddr_o: out std_logic_vector(AddrWidth);
+            memData_o: out std_logic_vector(DataWidth)
         );
     end component;
 
@@ -154,7 +174,17 @@ architecture bhv of cpu is
             toWriteHi_i, toWriteLo_i: in std_logic;
             writeHiData_i, writeLoData_i: in std_logic_vector(DataWidth);
             toWriteHi_o, toWriteLo_o: out std_logic;
-            writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth)
+            writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth);
+
+            memt_i: in MemType;
+            memAddr_i: in std_logic_vector(AddrWidth);
+            memData_i: in std_logic_vector(DataWidth); -- Data to store
+            loadedData_i: in std_logic_vector(DataWidth); -- Data loaded from RAM
+            savingData_o: out std_logic_vector(DataWidth);
+            memAddr_o: out std_logic_vector(AddrWidth);
+            dataEnable_o: out std_logic;
+            dataWrite_o: out std_logic;
+            dataByteSelect_o: out std_logic_vector(3 downto 0)
         );
     end component;
 
@@ -221,15 +251,19 @@ architecture bhv of cpu is
 
     -- Signals connecting id and id_ex --
     signal alut_45: AluType;
+    signal memt_45: MemType;
     signal operand1_45: std_logic_vector(DataWidth);
     signal operand2_45: std_logic_vector(DataWidth);
+    signal operandX_45: std_logic_vector(DataWidth);
     signal toWriteReg_45: std_logic;
     signal writeRegAddr_45: std_logic_vector(RegAddrWidth);
 
     -- Signals connecting id_ex and ex --
     signal alut_56: AluType;
+    signal memt_56: MemType;
     signal operand1_56: std_logic_vector(DataWidth);
     signal operand2_56: std_logic_vector(DataWidth);
+    signal operandX_56: std_logic_vector(DataWidth);
     signal toWriteReg_56: std_logic;
     signal writeRegAddr_56: std_logic_vector(RegAddrWidth);
 
@@ -244,6 +278,9 @@ architecture bhv of cpu is
     signal writeRegData_67: std_logic_vector(DataWidth);
     signal toWriteHi_67, toWriteLo_67: std_logic;
     signal writeHiData_67, writeLoData_67: std_logic_vector(DataWidth);
+    signal memt_67: MemType;
+    signal memAddr_67: std_logic_vector(AddrWidth);
+    signal memData_67: std_logic_vector(DataWidth);
 
     -- Signals connecting ex_mem and mem --
     signal toWriteReg_78: std_logic;
@@ -251,6 +288,9 @@ architecture bhv of cpu is
     signal writeRegData_78: std_logic_vector(DataWidth);
     signal toWriteHi_78, toWriteLo_78: std_logic;
     signal writeHiData_78, writeLoData_78: std_logic_vector(DataWidth);
+    signal memt_78: MemType;
+    signal memAddr_78: std_logic_vector(AddrWidth);
+    signal memData_78: std_logic_vector(DataWidth);
 
     -- Signals connecting mem and id --
     signal memToWriteReg_84: std_logic;
@@ -341,23 +381,29 @@ begin
             regReadAddr1_o => regReadAddr1_43,
             regReadAddr2_o => regReadAddr2_43,
             alut_o => alut_45,
+            memt_o => memt_45,
             operand1_o => operand1_45,
             operand2_o => operand2_45,
+            operandX_o => operandX_45,
             toWriteReg_o => toWriteReg_45,
             writeRegAddr_o => writeRegAddr_45
-        ); 
+        );
 
     id_ex_ist: id_ex
         port map (
             rst => rst, clk => clk,
             alut_i => alut_45,
+            memt_i => memt_45,
             operand1_i => operand1_45,
             operand2_i => operand2_45,
+            operandX_i => operandX_45,
             toWriteReg_i => toWriteReg_45,
             writeRegAddr_i => writeRegAddr_45,
             alut_o => alut_56,
+            memt_o => memt_56,
             operand1_o => operand1_56,
             operand2_o => operand2_56,
+            operandX_o => operandX_56,
             toWriteReg_o => toWriteReg_56,
             writeRegAddr_o => writeRegAddr_56
         );
@@ -366,8 +412,10 @@ begin
         port map (
             rst => rst,
             alut_i => alut_56,
+            memt_i => memt_56,
             operand1_i => operand1_56,
             operand2_i => operand2_56,
+            operandX_i => operandX_56,
             toWriteReg_i => toWriteReg_56,
             writeRegAddr_i => writeRegAddr_56,
             toWriteReg_o => toWriteReg_67,
@@ -387,7 +435,10 @@ begin
             toWriteHi_o => toWriteHi_67,
             toWriteLo_o => toWriteLo_67,
             writeHiData_o => writeHiData_67,
-            writeLoData_o => writeLoData_67
+            writeLoData_o => writeLoData_67,
+            memt_o => memt_67,
+            memAddr_o => memAddr_67,
+            memData_o => memData_67
         );
     exToWriteReg_64 <= toWriteReg_67;
     exWriteRegAddr_64 <= writeRegAddr_67;
@@ -410,7 +461,14 @@ begin
             toWriteHi_o => toWriteHi_78,
             toWriteLo_o => toWriteLo_78,
             writeHiData_o => writeHiData_78,
-            writeLoData_o => writeLoData_78
+            writeLoData_o => writeLoData_78,
+
+            memt_i => memt_67,
+            memAddr_i => memAddr_67,
+            memData_i => memData_67,
+            memt_o => memt_78,
+            memAddr_o => memAddr_78,
+            memData_o => memData_78
         );
 
     mem_ist: mem
@@ -422,7 +480,7 @@ begin
             toWriteReg_o => toWriteReg_89,
             writeRegAddr_o => writeRegAddr_89,
             writeRegData_o => writeRegData_89,
-            
+
             toWriteHi_i => toWriteHi_78,
             toWriteLo_i => toWriteLo_78,
             writeHiData_i => writeHiData_78,
@@ -430,7 +488,17 @@ begin
             toWriteHi_o => toWriteHi_89,
             toWriteLo_o => toWriteLo_89,
             writeHiData_o => writeHiData_89,
-            writeLoData_o => writeLoData_89
+            writeLoData_o => writeLoData_89,
+
+            memt_i => memt_78,
+            memAddr_i => memAddr_78,
+            memData_i => memData_78,
+            dataEnable_o => dataEnable_o,
+            dataWrite_o => dataWrite_o,
+            loadedData_i => dataData_i,
+            savingData_o => dataData_o,
+            memAddr_o => dataAddr_o,
+            dataByteSelect_o => dataByteSelect_o
         );
     memToWriteReg_84 <= toWriteReg_89;
     memWriteRegAddr_84 <= writeRegAddr_89;
@@ -449,7 +517,7 @@ begin
             toWriteReg_o => toWriteReg_93,
             writeRegAddr_o => writeRegAddr_93,
             writeRegData_o => writeRegData_93,
-            
+
             toWriteHi_i => toWriteHi_89,
             toWriteLo_i => toWriteLo_89,
             writeHiData_i => writeHiData_89,

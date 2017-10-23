@@ -24,7 +24,7 @@ begin
     process(clk) begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then
-                regArray <= (others => (others => '0'));                
+                regArray <= (others => (others => '0'));
             else
                 if (writeEnable_i = ENABLE and writeAddr_i /= "00000") then
                     regArray(conv_integer(writeAddr_i)) <= writeData_i;
@@ -33,7 +33,7 @@ begin
         end if;
     end process;
 
-    process(rst, readEnable1_i, readAddr1_i, writeData_i) begin
+    process(all) begin
         if (rst = RST_ENABLE) then
             readData1_o <= (others => '0');
         else
@@ -49,7 +49,7 @@ begin
         end if;
     end process;
 
-    process(rst, readEnable2_i, readAddr2_i, writeData_i) begin
+    process(all) begin
         if (rst = RST_ENABLE) then
             readData2_o <= (others => '0');
         else

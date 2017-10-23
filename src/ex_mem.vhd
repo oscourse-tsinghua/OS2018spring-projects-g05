@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use work.global_const.all;
+use work.mem_const.all;
 
 entity ex_mem is
     port (
@@ -17,6 +18,14 @@ entity ex_mem is
         writeHiData_i, writeLoData_i: in std_logic_vector(DataWidth);
         toWriteHi_o, toWriteLo_o: out std_logic;
         writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth)
+
+        -- Memory --
+        memt_i: in MemType;
+        memAddr_i: in std_logic_vector(AddrWidth);
+        memData_i: in std_logic_vector(DataWidth);
+        memt_o: out MemType;
+        memAddr_o: out std_logic_vector(AddrWidth);
+        memData_o: out std_logic_vector(DataWidth);
     );
 end ex_mem;
 
@@ -33,6 +42,10 @@ begin
                 toWriteLo_o <= NO;
                 writeHiData_o <= (others => '0');
                 writeLoData_o <= (others => '0');
+
+                memt_o <= INVALID;
+                memAddr_o <= (others => '0');
+                memData_o <= (others => '0');
             else
                 toWriteReg_o <= toWriteReg_i;
                 writeRegAddr_o <= writeRegAddr_i;
@@ -42,6 +55,10 @@ begin
                 toWriteLo_o <= toWriteLo_i;
                 writeHiData_o <= writeHiData_i;
                 writeLoData_o <= writeLoData_i;
+
+                memt_o <= memt_i;
+                memAddr_o <= memAddr_i;
+                memData_o <= memData_i;
             end if;
         end if;
     end process;

@@ -8,7 +8,8 @@ package alu_const is
     type AluType is (
         INVALID,
         ALU_OR, ALU_AND, ALU_XOR, ALU_NOR, ALU_SLL, ALU_SRL, ALU_SRA,
-        ALU_MOVN, ALU_MOVZ, ALU_MFHI, ALU_MFLO, ALU_MTHI, ALU_MTLO
+        ALU_MOVN, ALU_MOVZ, ALU_MFHI, ALU_MFLO, ALU_MTHI, ALU_MTLO,
+        ALU_LOAD, ALU_STORE
     );
 
     -- where is the operand from --
@@ -16,7 +17,13 @@ package alu_const is
         INVALID,
         REG, IMM, SA
     );
-    
+
+    -- Extra operand invented for offset (memory)
+    type XOprSrcType is (
+        INVALID,
+        IMM
+    );
+
     --
     -- Constants for Bit Operation
     --

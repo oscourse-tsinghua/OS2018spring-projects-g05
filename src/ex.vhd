@@ -3,13 +3,16 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.global_const.all;
 use work.alu_const.all;
+use work.mem_const.all;
 
 entity ex is
     port (
         rst: in std_logic;
         alut_i: in AluType;
+        memt_i: in MemType;
         operand1_i: in std_logic_vector(DataWidth);
         operand2_i: in std_logic_vector(DataWidth);
+        operandX_i: in std_logic_vector(DataWidth);
         toWriteReg_i: in std_logic;
         writeRegAddr_i: in std_logic_vector(RegAddrWidth);
 
@@ -25,6 +28,11 @@ entity ex is
         wbWriteHiData_i, wbWriteLoData_i: in std_logic_vector(DataWidth);
         toWriteHi_o, toWriteLo_o: out std_logic;
         writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth)
+
+        -- Memory --
+        memt_o: out MemType;
+        memAddr_o: out std_logic_vector(AddrWidth);
+        memData_o: out std_logic_vector(DataWidth);
     );
 end ex;
 
@@ -32,9 +40,9 @@ architecture bhv of ex is
     signal realHiData, realLoData: std_logic_vector(DataWidth) := (others => '0');
 begin
 
-    process(rst, hi_i, lo_i,
-            memToWriteHi_i, memToWriteLo_i, memWriteHiData_i, memWriteLoData_i,
-            wbToWriteHi_i, wbToWriteLo_i, wbWriteHiData_i, wbWriteLoData_i) begin
+    memt_o <= memt_i;
+
+    process(all) begin
         if (rst = RST_ENABLE) then
             realHiData <= (others => '0');
             realLoData <= (others => '0');
@@ -56,17 +64,18 @@ begin
         end if;
     end process;
 
-    process(rst, alut_i, operand1_i, operand2_i,
-            toWriteReg_i, writeRegAddr_i,
-            realHiData, realLoData) begin
+    process(all) begin
         if (rst = RST_ENABLE) then
             writeRegAddr_o <= (others => '0');
             writeRegData_o <= (others => '0');
         else
             toWriteReg_o <= toWriteReg_i;
             writeRegAddr_o <= writeRegAddr_i;
+            writeRegData_o <= (others => '0');
             toWriteHi_o <= NO;
             toWriteLo_o <= NO;
+            memAddr_o: <= (others => '0');
+            memData_o: <= (others => '0');
 
             case alut_i is
                 when ALU_OR => writeRegData_o <= operand1_i or operand2_i;
@@ -100,7 +109,15 @@ begin
                     toWriteLo_o <= YES;
                     writeLoData_o <= operand1_i;
 
-                when others => writeRegData_o <= (others => '0');
+                when ALU_LOAD =>
+                    memAddr_o <= operand1_i + operandX_i;
+
+                when ALU_STORE =>
+                    memAddr_o <= operand1_i + operandX_i;
+                    memData_o <= operand2_i;
+
+                when others =>
+                    null;
             end case;
 
         end if;
