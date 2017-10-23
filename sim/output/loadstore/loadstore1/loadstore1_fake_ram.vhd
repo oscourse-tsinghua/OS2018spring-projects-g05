@@ -5,10 +5,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.ori2_test_const.all;
+use work.loadstore1_test_const.all;
 use work.global_const.all;
 
-entity ori2_fake_ram is
+entity loadstore1_fake_ram is
     generic (
         isInst: boolean := false -- The RAM will be initialized with instructions when true
     );
@@ -19,9 +19,9 @@ entity ori2_fake_ram is
         byteSelect_i: in std_logic_vector(3 downto 0);
         data_o: out std_logic_vector(DataWidth)
     );
-end ori2_fake_ram;
+end loadstore1_fake_ram;
 
-architecture bhv of ori2_fake_ram is
+architecture bhv of loadstore1_fake_ram is
     type WordsArray is array(0 to MAX_RAM_ADDRESS) of std_logic_vector(DataWidth);
     signal words: WordsArray;
     signal wordAddr: integer;
@@ -44,11 +44,17 @@ begin
         else
             -- The first instruction is at 0x4
             -- CODE BELOW IS AUTOMATICALLY GENERATED
-words(1) <= x"34_12_02_34"; -- RUN ori $2, $0, 0x1234
-words(2) <= x"45_23_43_34"; -- RUN ori $3, $2, 0x2345
-words(3) <= x"56_34_44_34"; -- RUN ori $4, $2, 0x3456
-words(4) <= x"ee_ff_60_34"; -- RUN ori $0, $3, 0xffee
-words(5) <= x"21_43_04_34"; -- RUN ori $4, $0, 0x4321
+words(1) <= x"ff_ee_03_34"; -- RUN ori $3, $0, 0xeeff
+words(2) <= x"03_00_03_a0"; -- RUN sb  $3, 0x3($0)
+words(3) <= x"02_1a_03_00"; -- RUN srl $3, $3, 8
+words(4) <= x"02_00_03_a0"; -- RUN sb  $3, 0x2($0)
+words(5) <= x"dd_cc_03_34"; -- RUN ori $3, $0, 0xccdd
+words(6) <= x"01_00_03_a0"; -- RUN sb  $3, 0x1($0)
+words(7) <= x"02_1a_03_00"; -- RUN srl $3, $3, 8
+words(8) <= x"00_00_03_a0"; -- RUN sb  $3, 0x0($0)
+words(9) <= x"03_00_01_80"; -- RUN lb  $1, 0x3($0)
+words(10) <= x"02_00_01_90"; -- RUN lbu $1, 0x2($0)
+words(11) <= x"00_00_01_8c"; -- RUN lw  $1, 0x0($0)
         end if;
     end process;
 

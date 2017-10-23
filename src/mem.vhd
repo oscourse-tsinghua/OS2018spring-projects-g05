@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 use work.global_const.all;
 use work.mem_const.all;
 
@@ -96,10 +97,10 @@ begin
 
             case memt_i is
                 when MEM_LB => -- toWriteReg_o is already YES
-                    writeRegData_o <= (31 downto 8 => loadedByte(7), 7 downto 0 => loadedByte);
+                    writeRegData_o <= std_logic_vector(resize(signed(loadedByte), 32));
                     dataEnable_o <= ENABLE;
                 when MEM_LBU =>
-                    writeRegData_o <= (31 downto 8 => '0', 7 downto 0 => loadedByte);
+                    writeRegData_o <= std_logic_vector(resize(unsigned(loadedByte), 32));
                     dataEnable_o <= ENABLE;
                 when MEM_LW =>
                     writeRegData_o <= loadedData_i;
