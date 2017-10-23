@@ -26,7 +26,13 @@ entity ex is
         wbToWriteHi_i, wbToWriteLo_i: in std_logic;
         wbWriteHiData_i, wbWriteLoData_i: in std_logic_vector(DataWidth);
         toWriteHi_o, toWriteLo_o: out std_logic;
-        writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth)
+        writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth);
+
+        -- multi-period --
+        tempProduct_i: in std_logic_vector(DoubleDataWidth);
+        cnt_i: in std_logic_vector(CntWidth);
+        tempProduct_o: out std_logic_vector(DoubleDataWidth);
+        cnt_o: out std_logic_vector(CntWidth)
     );
 end ex;
 
@@ -97,17 +103,24 @@ begin
     process(multip1, multip2, alut_i, calcMult)
         variable m1, m2: std_logic_vector(DataWidth);
         variable ans: std_logic_vector(DoubleDataWidth);
+        variable sgnMul: boolean;
         variable neg: boolean;
     begin
+        if (alut_i = ALU_MULTU or alut_i = ALU_MADDU or alut_i = ALU_MSUBU) then
+            sgnMul := false;
+        else
+            sgnMul := true;
+        end if;
+
         neg := false;
         if (calcMult = '1') then
-            if (alut_i /= ALU_MULTU and multip1(31) = '1') then
+            if (sgnMul and multip1(31) = '1') then
                 m1 := complement(multip1);
                 neg := not neg;
             else
                 m1 := multip1;
             end if;
-            if (alut_i /= ALU_MULTU and multip2(31) = '1') then
+            if (sgnMul and multip2(31) = '1') then
                 m2 := complement(multip2);
                 neg := not neg;
             else
@@ -148,21 +161,28 @@ begin
         end if;
     end process;
 
-    process(rst, alut_i, operand1_i, operand2_i,
-            toWriteReg_i, writeRegAddr_i,
-            realHiData, realLoData, clo, clz, product)
+    process(all)
             variable res: std_logic_vector(DataWidth);
+            variable res64: std_logic_vector(DoubleDataWidth);
         begin
         if (rst = RST_ENABLE) then
             writeRegAddr_o <= (others => '0');
             writeRegData_o <= (others => '0');
+            toWriteHi_o <= NO;
+            toWriteLo_o <= NO;
             calcMult <= '0';
+            toStall_o <= PIPELINE_NONSTOP;
+            tempProduct_o <= (others => '0');
+            cnt_o <= (others => '0');
         else
             toWriteReg_o <= toWriteReg_i;
             writeRegAddr_o <= writeRegAddr_i;
             toWriteHi_o <= NO;
             toWriteLo_o <= NO;
             calcMult <= '0';
+            toStall_o <= PIPELINE_NONSTOP;
+            tempProduct_o <= (others => '0');
+            cnt_o <= (others => '0');
 
             case alut_i is
                 when ALU_OR => writeRegData_o <= operand1_i or operand2_i;
@@ -249,6 +269,30 @@ begin
                     writeHiData_o <= product(HiDataWidth);
                     toWriteLo_o <= YES;
                     writeLoData_o <= product(LoDataWidth);
+
+                when ALU_MADD|ALU_MADDU|ALU_MSUB|ALU_MSUBU =>
+                    if (cnt_i = "00") then
+                        calcMult <= '1';
+                        multip1 <= operand1_i;
+                        multip2 <= operand2_i;
+                        tempProduct_o <= product;
+                        cnt_o <= "01";
+                        toStall_o <= PIPELINE_STOP;
+                    elsif (cnt_i = "01") then
+                        calcMult <= '0';
+                        tempProduct_o <= (others => '0');
+                        cnt_o <= "00";
+                        toStall_o <= PIPELINE_NONSTOP;
+                        toWriteHi_o <= YES;
+                        toWriteLo_o <= YES;
+                        if (alut_i = ALU_MADD or alut_i = ALU_MADDU) then
+                            res64 := (realHiData & realLoData) + tempProduct_i;
+                        elsif (alut_i = ALU_MSUB or alut_i = ALU_MSUBU) then
+                            res64 := (realHiData & realLoData) - tempProduct_i;
+                        end if;
+                        writeHiData_o <= res64(HiDataWidth);
+                        writeLoData_o <= res64(LoDataWidth);
+                    end if;
 
                 when others =>
                     toWriteReg_o <= NO;

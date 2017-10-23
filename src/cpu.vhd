@@ -125,7 +125,12 @@ architecture bhv of cpu is
             wbToWriteHi_i, wbToWriteLo_i: in std_logic;
             wbWriteHiData_i, wbWriteLoData_i: in std_logic_vector(DataWidth);
             toWriteHi_o, toWriteLo_o: out std_logic;
-            writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth)
+            writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth);
+
+            tempProduct_i: in std_logic_vector(DoubleDataWidth);
+            cnt_i: in std_logic_vector(CntWidth);
+            tempProduct_o: out std_logic_vector(DoubleDataWidth);
+            cnt_o: out std_logic_vector(CntWidth)
         );
     end component;
 
@@ -143,7 +148,12 @@ architecture bhv of cpu is
             toWriteHi_i, toWriteLo_i: in std_logic;
             writeHiData_i, writeLoData_i: in std_logic_vector(DataWidth);
             toWriteHi_o, toWriteLo_o: out std_logic;
-            writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth)
+            writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth);
+
+            tempProduct_i: in std_logic_vector(DoubleDataWidth);
+            cnt_i: in std_logic_vector(CntWidth);
+            tempProduct_o: out std_logic_vector(DoubleDataWidth);
+            cnt_o: out std_logic_vector(CntWidth)
         );
     end component;
 
@@ -260,6 +270,8 @@ architecture bhv of cpu is
     signal writeRegData_67: std_logic_vector(DataWidth);
     signal toWriteHi_67, toWriteLo_67: std_logic;
     signal writeHiData_67, writeLoData_67: std_logic_vector(DataWidth);
+    signal tempProduct_67, tempProduct_76: std_logic_vector(DoubleDataWidth);
+    signal cnt_67, cnt_76: std_logic_vector(CntWidth);
 
     -- Signals connecting ex_mem and mem --
     signal toWriteReg_78: std_logic;
@@ -417,7 +429,12 @@ begin
             toWriteHi_o => toWriteHi_67,
             toWriteLo_o => toWriteLo_67,
             writeHiData_o => writeHiData_67,
-            writeLoData_o => writeLoData_67
+            writeLoData_o => writeLoData_67,
+
+            tempProduct_i => tempProduct_76,
+            cnt_i => cnt_76,
+            tempProduct_o => tempProduct_67,
+            cnt_o => cnt_67
         );
     exToWriteReg_64 <= toWriteReg_67;
     exWriteRegAddr_64 <= writeRegAddr_67;
@@ -441,7 +458,12 @@ begin
             toWriteHi_o => toWriteHi_78,
             toWriteLo_o => toWriteLo_78,
             writeHiData_o => writeHiData_78,
-            writeLoData_o => writeLoData_78
+            writeLoData_o => writeLoData_78,
+
+            tempProduct_i => tempProduct_67,
+            cnt_i => cnt_67,
+            tempProduct_o => tempProduct_76,
+            cnt_o => cnt_76
         );
 
     mem_ist: mem

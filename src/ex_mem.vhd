@@ -17,7 +17,13 @@ entity ex_mem is
         toWriteHi_i, toWriteLo_i: in std_logic;
         writeHiData_i, writeLoData_i: in std_logic_vector(DataWidth);
         toWriteHi_o, toWriteLo_o: out std_logic;
-        writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth)
+        writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth);
+
+        -- multi-period --
+        tempProduct_i: in std_logic_vector(DoubleDataWidth);
+        cnt_i: in std_logic_vector(CntWidth);
+        tempProduct_o: out std_logic_vector(DoubleDataWidth);
+        cnt_o: out std_logic_vector(CntWidth)
     );
 end ex_mem;
 
@@ -34,6 +40,9 @@ begin
                 toWriteLo_o <= NO;
                 writeHiData_o <= (others => '0');
                 writeLoData_o <= (others => '0');
+
+                tempProduct_o <= (others => '0');
+                cnt_o <= (others => '0');
             elsif (stall_i(EX_STOP_IDX) = PIPELINE_STOP and stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
@@ -43,6 +52,9 @@ begin
                 toWriteLo_o <= NO;
                 writeHiData_o <= (others => '0');
                 writeLoData_o <= (others => '0');
+
+                tempProduct_o <= tempProduct_i;
+                cnt_o <= cnt_i;
             elsif (stall_i(EX_STOP_IDX) = PIPELINE_NONSTOP) then
                 toWriteReg_o <= toWriteReg_i;
                 writeRegAddr_o <= writeRegAddr_i;
@@ -52,6 +64,9 @@ begin
                 toWriteLo_o <= toWriteLo_i;
                 writeHiData_o <= writeHiData_i;
                 writeLoData_o <= writeLoData_i;
+
+                tempProduct_o <= (others => '0');
+                cnt_o <= (others => '0');
             end if;
         end if;
     end process;
