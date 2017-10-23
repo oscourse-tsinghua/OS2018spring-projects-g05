@@ -235,6 +235,14 @@ begin
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
 
+                -- lui --
+                when OP_LUI =>
+                    oprSrc1 := IMM;
+                    oprSrc2 := INVALID;
+                    alut_o <= ALU_LUI;
+                    toWriteReg_o <= YES;
+                    writeRegAddr_o <= instRt;
+
                 -- lb --
                 when OP_LB =>
                     oprSrc1 := REG;
