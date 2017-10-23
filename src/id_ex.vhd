@@ -7,6 +7,7 @@ use work.mem_const.all;
 entity id_ex is
     port (
         rst, clk: in std_logic;
+        stall_i: in std_logic_vector(StallWidth);
         alut_i: in AluType;
         memt_i: in MemType;
         operand1_i: in std_logic_vector(DataWidth);
@@ -37,7 +38,13 @@ begin
                 operandX_o <= (others => '0');
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
-            else
+            elsif (stall_i(ID_STOP_IDX) = PIPELINE_STOP and stall_i(EX_STOP_IDX) = PIPELINE_NONSTOP) then
+                alut_o <= INVALID;
+                operand1_o <= (others => '0');
+                operand2_o <= (others => '0');
+                toWriteReg_o <= NO;
+                writeRegAddr_o <= (others => '0');
+            elsif (stall_i(ID_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= alut_i;
                 memt_o <= memt_i;
                 operand1_o <= operand1_i;

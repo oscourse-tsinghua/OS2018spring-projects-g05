@@ -66,34 +66,36 @@ begin
             writeLoData_o <= writeLoData_i;
 
             -- Byte selection --
-            if ((memt_i = MEM_LW) or (memt_i = MEM_SW)) then
-                savingData_o <= memData_i;
-                dataByteSelect_o <= "1111";
-            end if;
-            if ((memt_i = MEM_LB) or (memt_i = MEM_LBU) or (memt_i = MEM_SB)) then
-                case memAddr_i(1 downto 0) is
-                    when "00" =>
-                        savingData_o <= 24b"0" & memData_i(7 downto 0);
-                        loadedByte := loadedData_i(7 downto 0);
-                        dataByteSelect_o <= "0001";
-                    when "01" =>
-                        savingData_o <= 16b"0" & memData_i(7 downto 0) & 8b"0";
-                        loadedByte := loadedData_i(15 downto 8);
-                        dataByteSelect_o <= "0010";
-                    when "10" =>
-                        savingData_o <= 8b"0" & memData_i(7 downto 0) & 16b"0";
-                        loadedByte := loadedData_i(23 downto 16);
-                        dataByteSelect_o <= "0100";
-                    when "11" =>
-                        savingData_o <= memData_i(7 downto 0) & 24b"0";
-                        loadedByte := loadedData_i(31 downto 24);
-                        dataByteSelect_o <= "1000";
-                    when others =>
-                        -- Although there is actually no other cases
-                        -- But the simulator thinks someting like 'Z' should be considered
-                        null;
-                end case;
-            end if;
+            case memt_i is
+                when MEM_LW|MEM_SW =>
+                    savingData_o <= memData_i;
+                    dataByteSelect_o <= "1111";
+                when MEM_LB|MEM_LBU|MEM_SB =>
+                    case memAddr_i(1 downto 0) is
+                        when "00" =>
+                            savingData_o <= 24b"0" & memData_i(7 downto 0);
+                            loadedByte := loadedData_i(7 downto 0);
+                            dataByteSelect_o <= "0001";
+                        when "01" =>
+                            savingData_o <= 16b"0" & memData_i(7 downto 0) & 8b"0";
+                            loadedByte := loadedData_i(15 downto 8);
+                            dataByteSelect_o <= "0010";
+                        when "10" =>
+                            savingData_o <= 8b"0" & memData_i(7 downto 0) & 16b"0";
+                            loadedByte := loadedData_i(23 downto 16);
+                            dataByteSelect_o <= "0100";
+                        when "11" =>
+                            savingData_o <= memData_i(7 downto 0) & 24b"0";
+                            loadedByte := loadedData_i(31 downto 24);
+                            dataByteSelect_o <= "1000";
+                        when others =>
+                            -- Although there is actually no other cases
+                            -- But the simulator thinks someting like 'Z' should be considered
+                            null;
+                    end case;
+                when others =>
+                    null;
+            end case;
 
             case memt_i is
                 when MEM_LB => -- toWriteReg_o is already YES

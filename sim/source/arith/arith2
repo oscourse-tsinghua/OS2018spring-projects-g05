@@ -1,0 +1,26 @@
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+RUN addiu $2, $2, 0x3567
+RUN addiu $2, $2, 0xffff
+ASSERT 7 reg(2) 32ux"3566"
+RUN sll $2, $2, 0x10
+ASSERT 8 reg(2) 32ux"35660000"
+RUN subu $3, $0, 0x333
+ASSERT 9 reg(3) 32ux"fffffccd"
+RUN add $4, $2, $3
+ASSERT 10 reg(4) 32ux"3565fccd"
+RUN addu $4, $2, $3
+ASSERT 11 reg(4) 32ux"3565fccd"
+RUN add $4, $4, $4
+ASSERT 12 reg(4) 32ux"6acbf99a"
+RUN add $4, $4, $4
+ASSERT 13 reg(4) 32ux"6acbf99a"
+RUN ori $4, $0, 0x1
+RUN sll $4, $4, 0x1f
+RUN addi $5, $4, 0xffff
+ASSERT 16 reg(5) 32ux"0"
+RUN ori $6, $0, 0x1
+RUN sub $7, $4, $6
+ASSERT 18 reg(7) 32ux"0"
+RUN subu $7, $4, $6
+ASSERT 19 reg(7) 32ux"7fffffff"
