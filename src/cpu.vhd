@@ -82,6 +82,7 @@ architecture bhv of cpu is
             regReadAddr2_o: out std_logic_vector(RegAddrWidth);
             alut_o: out AluType;
             memt_o: out MemType;
+            lastMemt_i: in MemType;
             operand1_o: out std_logic_vector(DataWidth);
             operand2_o: out std_logic_vector(DataWidth);
             operandX_o: out std_logic_vector(DataWidth);
@@ -297,6 +298,7 @@ architecture bhv of cpu is
     signal exToWriteReg_64: std_logic;
     signal exWriteRegAddr_64: std_logic_vector(RegAddrWidth);
     signal exWriteRegData_64: std_logic_vector(DataWidth);
+    signal lastMemt_64: MemType;
 
     -- Signals connecting ex and ex_mem --
     signal toWriteReg_67: std_logic;
@@ -423,6 +425,7 @@ begin
             regReadAddr2_o => regReadAddr2_43,
             alut_o => alut_45,
             memt_o => memt_45,
+            lastMemt_i => lastMemt_64,
             operand1_o => operand1_45,
             operand2_o => operand2_45,
             operandX_o => operandX_45,
@@ -492,6 +495,7 @@ begin
     exToWriteReg_64 <= toWriteReg_67;
     exWriteRegAddr_64 <= writeRegAddr_67;
     exWriteRegData_64 <= writeRegData_67;
+    lastMemt_64 <= memt_67;
 
     ex_mem_ist: ex_mem
         port map (

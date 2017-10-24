@@ -28,6 +28,7 @@ entity id is
         regReadAddr2_o: out std_logic_vector(RegAddrWidth);
         alut_o: out AluType;
         memt_o: out MemType;
+        lastMemt_i: in MemType; -- memt of last instruction, used to determine stalling
         operand1_o: out std_logic_vector(DataWidth);
         operand2_o: out std_logic_vector(DataWidth);
         operandX_o: out std_logic_vector(DataWidth);
@@ -479,6 +480,8 @@ begin
                         operand1_o <= exWriteRegData_i;
                         if (instRs = "00000") then
                             operand1_o <= (others => '0');
+                        elsif (lastMemt_i /= INVALID) then
+                            toStall_o <= PIPELINE_STOP;
                         end if;
                     end if;
 
@@ -524,6 +527,8 @@ begin
                         operand2_o <= exWriteRegData_i;
                         if (instRt = "00000") then
                             operand2_o <= (others => '0');
+                        elsif (lastMemt_i /= INVALID) then
+                            toStall_o <= PIPELINE_STOP;
                         end if;
                     end if;
 
