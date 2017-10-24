@@ -1,0 +1,36 @@
+# Line starting with '#' is comment
+# The comment should be in seperated lines
+
+# Import a package
+# Grammar: "IMPORT <packageName>"
+# "IMPORT" should be in UPPER CASE, same below
+IMPORT alu_const
+
+# Define a signal to be checked
+# Grammar: "DEFINE <signalName> <sub_instace_name.sub_sub_instance_name.(...).signal_name>: <type>"
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+# Execute an assembly instruction
+# Grammar: "RUN <assembly>"
+RUN ori $3, $0, 0xeeff
+# period 6
+RUN sb  $3, 0x3($0)
+# period 7
+RUN srl $3, $3, 8
+# period 8
+RUN sb  $3, 0x2($0)
+# period 9
+RUN ori $3, $0, 0xccdd
+# period 10
+RUN sb  $3, 0x1($0)
+# period 11
+RUN srl $3, $3, 8
+# period 12
+RUN sb  $3, 0x0($0)
+# period 13
+RUN lb  $1, 0x3($0)
+ASSERT 14 reg(1) x"ffffffff"
+RUN lbu $1, 0x2($0)
+ASSERT 15 reg(1) x"000000ee"
+RUN lw  $1, 0x0($0)
+ASSERT 16 reg(1) x"ffeeddcc"

@@ -5,6 +5,7 @@ use work.global_const.all;
 entity mem_wb is
     port (
         rst, clk: in std_logic;
+        stall_i: in std_logic_vector(StallWidth);
         toWriteReg_i: in std_logic;
         writeRegAddr_i: in std_logic_vector(RegAddrWidth);
         writeRegData_i: in std_logic_vector(DataWidth);
@@ -33,7 +34,16 @@ begin
                 toWriteLo_o <= NO;
                 writeHiData_o <= (others => '0');
                 writeLoData_o <= (others => '0');
-            else
+            elsif (stall_i(MEM_STOP_IDX) = PIPELINE_STOP and stall_i(WB_STOP_IDX) = PIPELINE_NONSTOP) then
+                toWriteReg_o <= NO;
+                writeRegAddr_o <= (others => '0');
+                writeRegData_o <= (others => '0');
+
+                toWriteHi_o <= NO;
+                toWriteLo_o <= NO;
+                writeHiData_o <= (others => '0');
+                writeLoData_o <= (others => '0');
+            elsif (stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                 toWriteReg_o <= toWriteReg_i;
                 writeRegAddr_o <= writeRegAddr_i;
                 writeRegData_o <= writeRegData_i;

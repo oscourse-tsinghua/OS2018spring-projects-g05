@@ -38,7 +38,7 @@ begin
     process (clk) begin
         if (not isInst) then
             if (rising_edge(clk) and (enable_i = '1') and (write_i = '1')) then
-                words(wordAddr) <= (words(wordAddr) xnor bitSelect) and (data_i xor bitSelect);
+                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
             end if;
         else
             -- The first instruction is at 0x4
