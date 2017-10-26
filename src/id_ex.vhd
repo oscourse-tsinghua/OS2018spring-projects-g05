@@ -15,6 +15,9 @@ entity id_ex is
         operandX_i: in std_logic_vector(DataWidth);
         toWriteReg_i: in std_logic;
         writeRegAddr_i: in std_logic_vector(RegAddrWidth);
+        idLinkAddress_i: in std_logic_vector(AddrWidth);
+        idIsInDelaySlot_i: in std_logic;
+        nextInstInDelaySlot_i: in std_logic;
 
         alut_o: out AluType;
         memt_o: out MemType;
@@ -22,7 +25,10 @@ entity id_ex is
         operand2_o: out std_logic_vector(DataWidth);
         operandX_o: out std_logic_vector(DataWidth);
         toWriteReg_o: out std_logic;
-        writeRegAddr_o: out std_logic_vector(RegAddrWidth)
+        writeRegAddr_o: out std_logic_vector(RegAddrWidth);
+        exLinkAddress_o: out std_logic_vector(AddrWidth);
+        exIsInDelaySlot_o: out std_logic;
+        isInDelaySlot_o: out std_logic
     );
 end id_ex;
 
@@ -44,6 +50,8 @@ begin
                 operand2_o <= (others => '0');
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
+                exLinkAddress_o <= BRANCH_ZERO_WORD;
+                exIsInDelaySlot_o <= NOT_IN_DELAY_SLOT_FLAG;
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= alut_i;
                 memt_o <= memt_i;
@@ -52,6 +60,9 @@ begin
                 operandX_o <= operandX_i;
                 toWriteReg_o <= toWriteReg_i;
                 writeRegAddr_o <= writeRegAddr_i;
+                exLinkAddress_o <= idLinkAddress_i;
+                exIsInDelaySlot_o <= idIsInDelaySlot_i;
+                isInDelaySlot_o <= nextInstInDelaySlot_i;
             end if;
         end if;
     end process;

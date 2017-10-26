@@ -18,6 +18,8 @@ entity ex is
         operandX_i: in std_logic_vector(DataWidth);
         toWriteReg_i: in std_logic;
         writeRegAddr_i: in std_logic_vector(RegAddrWidth);
+        linkAddress_i: in std_logic_vector(AddrWidth);
+        isInDelaySlot_i: in std_logic;
 
         toStall_o: out std_logic;
         toWriteReg_o: out std_logic;
