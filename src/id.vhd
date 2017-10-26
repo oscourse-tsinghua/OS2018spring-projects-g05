@@ -1,9 +1,11 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 use work.global_const.all;
 use work.inst_const.all;
 use work.alu_const.all;
 use work.mem_const.all;
+use ieee.numeric_std.all;
 
 entity id is
     port (
@@ -56,6 +58,7 @@ architecture bhv of id is
     signal instAddr: std_logic_vector(InstAddrWidth);
     signal pcPlus8:  std_logic_vector(AddrWidth);
     signal pcPlus4:  std_logic_vector(AddrWidth);
+    signal immInstrAddr: std_logic_vector(AddrWidth);
 begin
 
     -- Segment the instruction --
@@ -68,8 +71,10 @@ begin
     instImm  <= inst_i(InstImmIdx);
     instAddr <= inst_i(InstAddrIdx);
     
-    pcPlus8 <= pc_i + to_integer("1000");
+    -- calculated the addresses that maybe used by jmp instructions first --
+    pcPlus8 <= pc_i + "1000";
     pcPlus4 <= pc_i + "100";
+    immInstrAddr <= pc_i(InstJmpUnchangeIdx) & inst_i(InstImmInstrIdx) & "00";
     process(all)
         -- indicates where the operand is from --
         variable oprSrc1, oprSrc2: OprSrcType;
@@ -90,6 +95,10 @@ begin
             alut_o <= INVALID;
             toWriteReg_o <= NO;
             writeRegAddr_o <= (others => '0');
+            linkAddr_o <= BRANCH_ZERO_WORD;
+            branchTargetAddress_o <= BRANCH_ZERO_WORD;
+            branchFlag_o <= NOT_BRANCH_FLAG;
+            nextInstInDelaySlot_o <= NOT_IN_DELAY_SLOT_FLAG;
         else
             case (instOp) is
 
