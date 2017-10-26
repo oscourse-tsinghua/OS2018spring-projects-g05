@@ -13,9 +13,11 @@ package inst_const is
     subtype InstSaIdx               is integer range 10 downto  6;
     subtype InstFuncIdx             is integer range  5 downto  0;
     subtype InstImmIdx              is integer range 15 downto  0;
+    subtype InstUnsignedImmIdx      is integer range 14 downto  0;
+    subtype InstImmSignIdx          is integer range 15 downto 15;
     subtype InstAddrIdx             is integer range 25 downto  0;
     subtype InstJmpUnchangeIdx      is integer range 31 downto 28;
-    subtype InstImmAddrIdx         is integer range 25 downto  0;
+    subtype InstImmAddrIdx          is integer range 25 downto  0;
 
     subtype InstOpWidth             is integer range  5 downto  0;
     subtype InstRsWidth             is integer range  4 downto  0;
@@ -24,9 +26,12 @@ package inst_const is
     subtype InstSaWidth             is integer range  4 downto  0;
     subtype InstFuncWidth           is integer range  5 downto  0;
     subtype InstImmWidth            is integer range 15 downto  0;
+    subtype InstUnsignedImmWidth    is integer range 14 downto  0;
+    subtype InstImmSignWidth        is integer range 15 downto 15;
     subtype InstAddrWidth           is integer range 25 downto  0;
     subtype InstJmpUnchangeWidth    is integer range  3 downto  0;
-    subtype InstImmAddrWidth       is integer range 25 downto  0;
+    subtype InstImmAddrWidth        is integer range 25 downto  0;
+    subtype InstOffsetImmWidth      is integer range 17 downto  0;
 
     --
     -- Logic Opcodes

@@ -60,6 +60,9 @@ architecture bhv of id is
     signal pcPlus4:  std_logic_vector(AddrWidth);
     signal immInstrAddr: std_logic_vector(AddrWidth);
     signal jumpToRs: std_logic;
+    signal condjump: std_logic;
+    signal instImmSign: std_logic_vector(InstOffsetImmWidth);
+    signal instOffsetImm: std_logic_vector(InstOffsetImmWidth);
 begin
 
     -- Segment the instruction --
@@ -71,6 +74,8 @@ begin
     instFunc <= inst_i(InstFuncIdx);
     instImm  <= inst_i(InstImmIdx);
     instAddr <= inst_i(InstAddrIdx);
+    instImmSign <= inst_i(InstImmSignIdx) & "00000000000000000";
+    instOffsetImm <= "0" & inst_i(InstUnsignedImmIdx) & "00";
     
     -- calculated the addresses that maybe used by jmp instructions first --
     pcPlus8 <= pc_i + "1000";
@@ -91,9 +96,11 @@ begin
         toStall_o <= PIPELINE_NONSTOP;
         jumpToRs <= NO;
         linkAddr_o <= BRANCH_ZERO_WORD;
+        branchTargetAddress_o <= BRANCH_ZERO_WORD;
         branchFlag_o <= NOT_BRANCH_FLAG;
         alut_o <= ALU_JR;
         nextInstInDelaySlot_o <= NOT_IN_DELAY_SLOT_FLAG;
+        condJump <= NO;
 
         if (rst = RST_ENABLE) then
             oprSrc1 := INVALID;
@@ -105,9 +112,10 @@ begin
             branchTargetAddress_o <= BRANCH_ZERO_WORD;
             branchFlag_o <= NOT_BRANCH_FLAG;
             nextInstInDelaySlot_o <= NOT_IN_DELAY_SLOT_FLAG;
+            condJump <= NO;
+            jumpToRs <= NO;
         else
             case (instOp) is
-
                 -- special --
                 when OP_SPECIAL =>
                     case (instFunc) is
@@ -536,7 +544,50 @@ begin
                 
                 -- beq --
                 when JMP_BEQ =>
-                    null;
+                    condJump <= YES;
+                    oprSrc1 := REG;
+                    oprSrc2 := REG;
+                    alut_o <= ALU_BEQ;
+                    toWriteReg_o <= NO;
+                    writeRegAddr_o <= (others => '0');
+                
+                when OP_JMPSPECIAL =>
+                    case (instRt) is
+                        -- bltz --
+                        when JMP_BLTZ =>
+                            condJump <= YES;
+                            oprSrc1 := REG;
+                            oprSrc2 := INVALID;
+                            alut_o <= ALU_BLTZ;
+                        -- bgez --
+                        when JMP_BGEZ =>
+                            condJump <= YES;
+                            oprSrc1 := REG;
+                            oprSrc2 := INVALID;
+                            alut_o <= ALU_BGEZ;
+                        when others =>
+                            null;
+                    end case;
+                -- bgtz --
+                when JMP_BGTZ =>
+                    condJump <= YES;
+                    oprSrc1 := REG;
+                    oprSrc2 := INVALID;
+                    alut_o <= ALU_BGTZ;
+                
+                -- blez --
+                when JMP_BLEZ =>
+                    condJump <= YES;
+                    oprSrc1 := REG;
+                    oprSrc2 := INVALID;
+                    alut_o <= ALU_BLEZ;
+                
+                -- bne --
+                when JMP_BNE =>
+                    condJump <= YES;
+                    oprSrc1 := REG;
+                    oprSrc2 := REG;
+                    alut_o <= ALU_BNE;
 
                 when others =>
                     null;
@@ -640,6 +691,54 @@ begin
 
                 when others =>
                     operandX_o <= (others => '0');
+            end case;
+        end if;
+   
+        if (condJump = YES) then
+            case (instOp) is
+                when OP_JMPSPECIAL =>
+                    case (instRt) is
+                        when JMP_BGEZ =>
+                            if (operand1_o(31) = '0') then
+                                branchTargetAddress_o <= pc_i + instOffsetImm - instImmSign;
+                                branchFlag_o <= BRANCH_FLAG;
+                                nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
+                            end if;
+                        when JMP_BLTZ =>
+                            if (operand1_o(31) = '1') then
+                                branchTargetAddress_o <= pc_i + instOffsetImm - instImmSign;
+                                branchFlag_o <= BRANCH_FLAG;
+                                nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
+                            end if;
+                        when others =>
+                            null;
+                    end case;
+                when JMP_BEQ =>
+                    if (operand1_o = operand2_o) then
+                        branchTargetAddress_o <= pc_i + instOffsetImm - instImmSign;
+                        branchFlag_o <= BRANCH_FLAG;
+                        nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
+                    end if;
+                when JMP_BGTZ =>
+                    if (operand1_o(31) = '0' and operand1_o /= "00000000000000000000000000000000") then
+                        branchTargetAddress_o <= pc_i + instOffsetImm - instImmSign;
+                        branchFlag_o <= BRANCH_FLAG;
+                        nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
+                    end if;
+                when JMP_BLEZ =>
+                    if (operand1_o(31) = '1' or operand1_o = "00000000000000000000000000000000") then
+                        branchTargetAddress_o <= pc_i + instOffsetImm - instImmSign;
+                        branchFlag_o <= BRANCH_FLAG;
+                        nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
+                    end if;
+                when JMP_BNE =>
+                    if (operand1_o /= operand2_o) then
+                        branchTargetAddress_o <= pc_i + instOffsetImm - instImmSign;
+                        branchFlag_o <= BRANCH_FLAG;
+                        nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
+                    end if;
+                when others =>
+                    null;
             end case;
         end if;
     end process;
