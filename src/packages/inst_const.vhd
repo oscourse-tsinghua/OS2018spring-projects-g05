@@ -15,7 +15,7 @@ package inst_const is
     subtype InstImmIdx              is integer range 15 downto  0;
     subtype InstAddrIdx             is integer range 25 downto  0;
     subtype InstJmpUnchangeIdx      is integer range 31 downto 28;
-    subtype InstImmInstrIdx         is integer range 25 downto  0;
+    subtype InstImmAddrIdx         is integer range 25 downto  0;
 
     subtype InstOpWidth             is integer range  5 downto  0;
     subtype InstRsWidth             is integer range  4 downto  0;
@@ -26,7 +26,7 @@ package inst_const is
     subtype InstImmWidth            is integer range 15 downto  0;
     subtype InstAddrWidth           is integer range 25 downto  0;
     subtype InstJmpUnchangeWidth    is integer range  3 downto  0;
-    subtype InstImmInstrWidth       is integer range 25 downto  0;
+    subtype InstImmAddrWidth       is integer range 25 downto  0;
 
     --
     -- Logic Opcodes
@@ -107,7 +107,7 @@ package inst_const is
     constant JMP_BEQ: std_logic_vector(InstOpWidth) := "000100";
     constant JMP_BGTZ: std_logic_vector(InstOpWidth) := "000111";
     constant JMP_BLEZ: std_logic_vector(InstOpWidth) := "000110";
-    constant JMP_J: std_logic_vector(InstOpWidth) := "000101";
+    constant JMP_J: std_logic_vector(InstOpWidth) := "000010";
     constant JMP_JAL: std_logic_vector(InstOpWidth) := "000011";
     constant JMP_BNE: std_logic_vector(InstOpWidth) := "000101";
     

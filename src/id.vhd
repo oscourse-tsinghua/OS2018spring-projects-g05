@@ -60,7 +60,6 @@ architecture bhv of id is
     signal pcPlus4:  std_logic_vector(AddrWidth);
     signal immInstrAddr: std_logic_vector(AddrWidth);
     signal jumpToRs: std_logic;
-    signal jumpToRt: std_logic;
 begin
 
     -- Segment the instruction --
@@ -76,7 +75,7 @@ begin
     -- calculated the addresses that maybe used by jmp instructions first --
     pcPlus8 <= pc_i + "1000";
     pcPlus4 <= pc_i + "100";
-    immInstrAddr <= pc_i(InstJmpUnchangeIdx) & inst_i(InstImmInstrIdx) & "00";
+    immInstrAddr <= pc_i(InstJmpUnchangeIdx) & inst_i(InstImmAddrIdx) & "00";
     process(all)
         -- indicates where the operand is from --
         variable oprSrc1, oprSrc2: OprSrcType;
@@ -91,7 +90,6 @@ begin
         writeRegAddr_o <= (others => '0');
         toStall_o <= PIPELINE_NONSTOP;
         jumpToRs <= NO;
-        jumpToRt <= YES;
         linkAddr_o <= BRANCH_ZERO_WORD;
         branchFlag_o <= NOT_BRANCH_FLAG;
         alut_o <= ALU_JR;
@@ -313,8 +311,21 @@ begin
                             branchFlag_o <= BRANCH_FLAG;
                             alut_o <= ALU_JR;
                             nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
+                            linkAddr_o <= BRANCH_ZERO_WORD;
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
+
+                        -- jalr --
+                        when JMP_JALR =>
+                            oprSrc1 := REG;
+                            oprSrc2 := INVALID;
+                            jumpToRs <= YES;
+                            branchFlag_o <= BRANCH_FLAG;
+                            alut_o <= ALU_JALR;
+                            nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
+                            linkAddr_o <= pcPlus8;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
 
                         -- others --
                         when others =>
@@ -498,6 +509,34 @@ begin
                     alut_o <= ALU_SLTU;
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
+                    
+                -- j --
+                when JMP_J =>
+                    oprSrc1 := INVALID;
+                    oprSrc2 := INVALID;
+                    branchFlag_o <= BRANCH_FLAG;
+                    alut_o <= ALU_J;
+                    nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
+                    linkAddr_o <= BRANCH_ZERO_WORD;
+                    branchTargetAddress_o <= immInstrAddr;
+                    toWriteReg_o <= NO;
+                    writeRegAddr_o <= (others => '0');
+                    
+                -- jal --
+                when JMP_JAL =>
+                    oprSrc1 := INVALID;
+                    oprSrc1 := INVALID;
+                    branchFlag_o <= BRANCH_FLAG;
+                    alut_o <= ALU_JAL;
+                    nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
+                    linkAddr_o <= pcPlus8;
+                    branchTargetAddress_o <= immInstrAddr;
+                    toWriteReg_o <= YES;
+                    writeRegAddr_o <= "11111";
+                
+                -- beq --
+                when JMP_BEQ =>
+                    null;
 
                 when others =>
                     null;

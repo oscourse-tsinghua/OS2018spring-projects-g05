@@ -12,7 +12,7 @@ package alu_const is
         ALU_LOAD, ALU_STORE,
         ALU_ADD, ALU_ADDU, ALU_SUB, ALU_SUBU, ALU_SLT, ALU_SLTU, ALU_CLO, ALU_CLZ,
         ALU_MUL, ALU_MULT, ALU_MULTU, ALU_MADD, ALU_MADDU, ALU_MSUB, ALU_MSUBU,
-        ALU_JR
+        ALU_JR, ALU_JALR, ALU_J, ALU_JAL
     );
 
     -- where is the operand from --
