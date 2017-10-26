@@ -59,6 +59,8 @@ architecture bhv of id is
     signal pcPlus8:  std_logic_vector(AddrWidth);
     signal pcPlus4:  std_logic_vector(AddrWidth);
     signal immInstrAddr: std_logic_vector(AddrWidth);
+    signal jumpToRs: std_logic;
+    signal jumpToRt: std_logic;
 begin
 
     -- Segment the instruction --
@@ -88,6 +90,12 @@ begin
         toWriteReg_o <= NO;
         writeRegAddr_o <= (others => '0');
         toStall_o <= PIPELINE_NONSTOP;
+        jumpToRs <= NO;
+        jumpToRt <= YES;
+        linkAddr_o <= BRANCH_ZERO_WORD;
+        branchFlag_o <= NOT_BRANCH_FLAG;
+        alut_o <= ALU_JR;
+        nextInstInDelaySlot_o <= NOT_IN_DELAY_SLOT_FLAG;
 
         if (rst = RST_ENABLE) then
             oprSrc1 := INVALID;
@@ -294,6 +302,17 @@ begin
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_MULTU;
+                            toWriteReg_o <= NO;
+                            writeRegAddr_o <= (others => '0');
+                        
+                        -- jr --
+                        when JMP_JR =>
+                            oprSrc1 := REG;
+                            oprSrc2 := INVALID;
+                            jumpToRs <= YES;
+                            branchFlag_o <= BRANCH_FLAG;
+                            alut_o <= ALU_JR;
+                            nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
 
@@ -504,6 +523,9 @@ begin
                         elsif (lastMemt_i /= INVALID) then
                             toStall_o <= PIPELINE_STOP;
                         end if;
+                    end if;
+                    if (jumpToRs = YES) then
+                        branchTargetAddress_o <= operand1_o;
                     end if;
 
                 when SA =>
