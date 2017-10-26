@@ -33,7 +33,15 @@ entity id is
         operand2_o: out std_logic_vector(DataWidth);
         operandX_o: out std_logic_vector(DataWidth);
         toWriteReg_o: out std_logic;
-        writeRegAddr_o: out std_logic_vector(RegAddrWidth)
+        writeRegAddr_o: out std_logic_vector(RegAddrWidth);
+        
+        -- For ju instructions --
+        isInDelaySlot_i: in std_logic;
+        nextInstInDelaySlot_o: out std_logic;
+        branchFlag_o: out std_logic;
+        branchTargetAddress_o: out std_logic_vector(AddrWidth);
+        linkAddr_o: out std_logic_vector(AddrWidth);
+        isInDelaySlot_o: out std_logic
     );
 end id;
 
@@ -46,6 +54,8 @@ architecture bhv of id is
     signal instFunc: std_logic_vector(InstFuncWidth);
     signal instImm:  std_logic_vector(InstImmWidth);
     signal instAddr: std_logic_vector(InstAddrWidth);
+    signal pcPlus8:  std_logic_vector(AddrWidth);
+    signal pcPlus4:  std_logic_vector(AddrWidth);
 begin
 
     -- Segment the instruction --
@@ -57,7 +67,9 @@ begin
     instFunc <= inst_i(InstFuncIdx);
     instImm  <= inst_i(InstImmIdx);
     instAddr <= inst_i(InstAddrIdx);
-
+    
+    pcPlus8 <= pc_i + to_integer("1000");
+    pcPlus4 <= pc_i + "100";
     process(all)
         -- indicates where the operand is from --
         variable oprSrc1, oprSrc2: OprSrcType;

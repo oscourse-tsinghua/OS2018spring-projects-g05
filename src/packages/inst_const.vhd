@@ -95,6 +95,8 @@ package inst_const is
     --
     constant OP_SPECIAL: std_logic_vector(InstOpWidth) := "000000";
     constant OP_SPECIAL2: std_logic_vector(InstOpWidth) := "011100";
-    --constant OP_11SPECIAL: std_logic_vector(InstRsWidth) := "00000";
-    --constant OP_SASPECIAL: std_logic_vector(InstSaWidth) := "00000";
+    
+    --
+    -- For Branch instuctions
+    constant BRANCH_FLAG: std_logic := '1';
 end inst_const;
