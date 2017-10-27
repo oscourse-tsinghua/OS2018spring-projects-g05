@@ -18,6 +18,8 @@ entity ex is
         operandX_i: in std_logic_vector(DataWidth);
         toWriteReg_i: in std_logic;
         writeRegAddr_i: in std_logic_vector(RegAddrWidth);
+        linkAddress_i: in std_logic_vector(AddrWidth);
+        isInDelaySlot_i: in std_logic;
 
         toStall_o: out std_logic;
         toWriteReg_o: out std_logic;
@@ -199,6 +201,8 @@ begin
                 when ALU_SRL => writeRegData_o <= operand2_i srl to_integer(unsigned(operand1_i));
                 when ALU_SRA => writeRegData_o <= to_stdlogicvector(to_bitvector(operand2_i) sra to_integer(unsigned(operand1_i)));
                 when ALU_LUI => writeRegData_o <= operand1_i(15 downto 0) & 16b"0";
+                when ALU_JALR => writeRegData_o <= linkAddress_i;
+                when ALU_JAL => writeRegData_o <= linkAddress_i;
 
                 when ALU_MOVN =>
                     if (operand2_i /= ZEROS_32) then

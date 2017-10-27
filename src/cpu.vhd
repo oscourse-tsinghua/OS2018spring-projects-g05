@@ -30,7 +30,9 @@ architecture bhv of cpu is
             rst, clk: in std_logic;
             stall_i: in std_logic_vector(StallWidth);
             pc_o: out std_logic_vector(AddrWidth);
-            pcEnable_o: out std_logic
+            pcEnable_o: out std_logic;
+            branchFlag_i: in std_logic;
+            branchTargetAddress_i: in std_logic_vector(AddrWidth)
         );
     end component;
 
@@ -74,6 +76,7 @@ architecture bhv of cpu is
             memToWriteReg_i: in std_logic;
             memWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
             memWriteRegData_i: in std_logic_vector(DataWidth);
+            isInDelaySlot_i: in std_logic;
 
             toStall_o: out std_logic;
             regReadEnable1_o: out std_logic;
@@ -87,7 +90,13 @@ architecture bhv of cpu is
             operand2_o: out std_logic_vector(DataWidth);
             operandX_o: out std_logic_vector(DataWidth);
             toWriteReg_o: out std_logic;
-            writeRegAddr_o: out std_logic_vector(RegAddrWidth)
+            writeRegAddr_o: out std_logic_vector(RegAddrWidth);
+            
+            branchTargetAddress_o: out std_logic_vector(AddrWidth);
+            branchFlag_o: out std_logic;
+            linkAddr_o: out std_logic_vector(AddrWidth);
+            isInDelaySlot_o: out std_logic;
+            nextInstInDelaySlot_o: out std_logic
         );
     end component;
 
@@ -102,6 +111,9 @@ architecture bhv of cpu is
             operandX_i: in std_logic_vector(DataWidth);
             toWriteReg_i: in std_logic;
             writeRegAddr_i: in std_logic_vector(RegAddrWidth);
+            idIsInDelaySlot_i: in std_logic;
+            idLinkAddress_i: in std_logic_vector(AddrWidth);
+            nextInstInDelaySlot_i: in std_logic;
 
             alut_o: out AluType;
             memt_o: out MemType;
@@ -109,7 +121,10 @@ architecture bhv of cpu is
             operand2_o: out std_logic_vector(DataWidth);
             operandX_o: out std_logic_vector(DataWidth);
             toWriteReg_o: out std_logic;
-            writeRegAddr_o: out std_logic_vector(RegAddrWidth)
+            writeRegAddr_o: out std_logic_vector(RegAddrWidth);
+            exIsInDelaySlot_o: out std_logic;
+            exLinkAddress_o: out std_logic_vector(AddrWidth);
+            isInDelaySlot_o: out std_logic
         );
     end component;
 
@@ -123,6 +138,8 @@ architecture bhv of cpu is
             operandX_i: in std_logic_vector(DataWidth);
             toWriteReg_i: in std_logic;
             writeRegAddr_i: in std_logic_vector(RegAddrWidth);
+            isInDelaySlot_i: in std_logic;
+            linkAddress_i: in std_logic_vector(AddrWidth);
 
             toStall_o: out std_logic;
             toWriteReg_o: out std_logic;
@@ -284,6 +301,10 @@ architecture bhv of cpu is
     signal operandX_45: std_logic_vector(DataWidth);
     signal toWriteReg_45: std_logic;
     signal writeRegAddr_45: std_logic_vector(RegAddrWidth);
+    signal isInDelaySlot_45: std_logic;
+    signal linkAddr_45: std_logic_vector(AddrWidth);
+    signal nextInstInDelaySlot_45: std_logic;
+    signal isInDelaySlot_54: std_logic;
 
     -- Signals connecting id_ex and ex --
     signal alut_56: AluType;
@@ -293,6 +314,8 @@ architecture bhv of cpu is
     signal operandX_56: std_logic_vector(DataWidth);
     signal toWriteReg_56: std_logic;
     signal writeRegAddr_56: std_logic_vector(RegAddrWidth);
+    signal exIsInDelaySlot_56: std_logic;
+    signal exLinkAddress_56: std_logic_vector(AddrWidth);
 
     -- Signals connecting ex and id --
     signal exToWriteReg_64: std_logic;
@@ -363,6 +386,10 @@ architecture bhv of cpu is
 
     -- Signals connecting ctrl and others --
     signal stall: std_logic_vector(StallWidth);
+    
+    -- Signals connecting id and pc
+    signal branchTargetAddress_41: std_logic_vector(AddrWidth);
+    signal branchFlag_41: std_logic;
 
 begin
 
@@ -371,7 +398,9 @@ begin
            rst => rst, clk => clk,
            stall_i => stall,
            pc_o => pc_12,
-           pcEnable_o => instEnable_o
+           pcEnable_o => instEnable_o,
+           branchFlag_i => branchFlag_41,
+           branchTargetAddress_i => branchTargetAddress_41
         );
 
     if_id_ist: if_id
@@ -418,6 +447,7 @@ begin
             memToWriteReg_i => memToWriteReg_84,
             memWriteRegAddr_i => memWriteRegAddr_84,
             memWriteRegData_i => memWriteRegData_84,
+            isInDelaySlot_i => isInDelaySlot_54,
             toStall_o => idToStall_4b,
             regReadEnable1_o => regReadEnable1_43,
             regReadEnable2_o => regReadEnable2_43,
@@ -430,7 +460,12 @@ begin
             operand2_o => operand2_45,
             operandX_o => operandX_45,
             toWriteReg_o => toWriteReg_45,
-            writeRegAddr_o => writeRegAddr_45
+            writeRegAddr_o => writeRegAddr_45,
+            isInDelaySlot_o => isInDelaySlot_45,
+            linkAddr_o => linkAddr_45,
+            nextInstInDelaySlot_o => nextInstInDelaySlot_45,
+            branchTargetAddress_o => branchTargetAddress_41,
+            branchFlag_o => branchFlag_41
         );
 
     id_ex_ist: id_ex
@@ -444,13 +479,19 @@ begin
             operandX_i => operandX_45,
             toWriteReg_i => toWriteReg_45,
             writeRegAddr_i => writeRegAddr_45,
+            idIsInDelaySlot_i => isInDelaySlot_45,
+            idLinkAddress_i => linkAddr_45,
+            nextInstInDelaySlot_i => nextInstInDelaySlot_45,
             alut_o => alut_56,
             memt_o => memt_56,
             operand1_o => operand1_56,
             operand2_o => operand2_56,
             operandX_o => operandX_56,
             toWriteReg_o => toWriteReg_56,
-            writeRegAddr_o => writeRegAddr_56
+            writeRegAddr_o => writeRegAddr_56,
+            isInDelaySlot_o => isInDelaySlot_54,
+            exIsInDelaySlot_o => exIsInDelaySlot_56,
+            exLinkAddress_o => exLinkAddress_56
         );
 
     ex_ist: ex
@@ -463,6 +504,8 @@ begin
             operandX_i => operandX_56,
             toWriteReg_i => toWriteReg_56,
             writeRegAddr_i => writeRegAddr_56,
+            isInDelaySlot_i => exIsInDelaySlot_56,
+            linkAddress_i => exLinkAddress_56,
             toStall_o => exToStall_6b,
             toWriteReg_o => toWriteReg_67,
             writeRegAddr_o => writeRegAddr_67,

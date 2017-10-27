@@ -8,6 +8,8 @@ entity pc_reg is
     port (
         rst, clk: in std_logic;
         stall_i: in std_logic_vector(StallWidth);
+        branchTargetAddress_i: in std_logic_vector(AddrWidth);
+        branchFlag_i: in std_logic;
         pc_o: out std_logic_vector(AddrWidth);
         pcEnable_o: out std_logic
     );
@@ -23,7 +25,11 @@ begin
                 pc <= (others => '0');
             elsif (stall_i(PC_STOP_IDX) = PIPELINE_NONSTOP) then
                 pcEnable_o <= ENABLE;
-                pc <= pc + 4;
+                if (branchFlag_i = BRANCH_FLAG) then
+                    pc <= branchTargetAddress_i;
+                else
+                    pc <= pc + 4;
+                end if;
             end if;
         end if;
     end process;
