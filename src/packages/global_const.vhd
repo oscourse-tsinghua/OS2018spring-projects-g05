@@ -48,5 +48,10 @@ package global_const is
     constant BRANCH_ZERO_WORD: std_logic_vector(AddrWidth) := "00000000000000000000000000000000";
     constant IN_DELAY_SLOT_FLAG: std_logic := '1';
     constant NOT_IN_DELAY_SLOT_FLAG: std_logic := '0';
+    
+    --
+    -- For cp0 coprecessors
+    --
+    constant CP0_ZERO_WORD: std_logic_vector(DataWidth) := "00000000000000000000000000000000";
 
 end global_const;
