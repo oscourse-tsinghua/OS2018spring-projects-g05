@@ -80,6 +80,10 @@ begin
                     memt_o <= memt_i;
                     memAddr_o <= memAddr_i;
                     memData_o <= memData_i;
+                    
+                    memCP0RegWe_o <= exCP0RegWe_i;
+                    memCP0RegWriteAddr_o <= exCP0RegWriteAddr_i;
+                    memCP0RegData_o <= exCP0RegData_i;
                 end if;
             end if;
         end if;

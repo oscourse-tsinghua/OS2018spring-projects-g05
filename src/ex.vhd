@@ -189,6 +189,7 @@ begin
     process(all)
         variable res: std_logic_vector(DataWidth);
         variable res64: std_logic_vector(DoubleDataWidth);
+        variable cp0ReadValue: std_logic_vector(DataWidth);
     begin
         toWriteHi_o <= NO;
         toWriteLo_o <= NO;
@@ -201,10 +202,13 @@ begin
         calcMult <= '0';
         tempProduct_o <= (others => '0');
         cnt_o <= (others => '0');
+        cp0RegWe_o <= NO;
+        cp0ReadValue <= (others => '0');
+        cp0RegWriteAddr_o <= (others => '0');
+        cp0RegData_o <= (others => '0');
 
         if (rst = RST_DISABLE) then
             writeRegAddr_o <= writeRegAddr_i;
-
             case alut_i is
                 when ALU_OR => writeRegData_o <= operand1_i or operand2_i;
                 when ALU_AND => writeRegData_o <= operand1_i and operand2_i;
@@ -224,6 +228,7 @@ begin
                         toWriteReg_o <= NO;
                         writeRegData_o <= (others => '0');
                     end if;
+
                 when ALU_MOVZ =>
                     if (operand2_i = ZEROS_32) then
                         writeRegData_o <= operand1_i;
@@ -231,11 +236,17 @@ begin
                         toWriteReg_o <= NO;
                         writeRegData_o <= (others => '0');
                     end if;
-                when ALU_MFHI => writeRegData_o <= realHiData;
-                when ALU_MFLO => writeRegData_o <= realLoData;
+
+                when ALU_MFHI =>
+                    writeRegData_o <= realHiData;
+
+                when ALU_MFLO =>
+                    writeRegData_o <= realLoData;
+
                 when ALU_MTHI =>
                     toWriteHi_o <= YES;
                     writeHiData_o <= operand1_i;
+
                 when ALU_MTLO =>
                     toWriteLo_o <= YES;
                     writeLoData_o <= operand1_i;
@@ -254,7 +265,10 @@ begin
                     else
                         writeRegData_o <= operand1_i + operand2_i;
                     end if;
-                when ALU_ADDU => writeRegData_o <= operand1_i + operand2_i;
+
+                when ALU_ADDU =>
+                    writeRegData_o <= operand1_i + operand2_i;
+
                 when ALU_SUB =>
                     if (overflow(operand1_i, complement(operand2_i))) then
                         toWriteReg_o <= NO;
@@ -262,7 +276,10 @@ begin
                     else
                         writeRegData_o <= operand1_i - operand2_i;
                     end if;
-                when ALU_SUBU => writeRegData_o <= operand1_i - operand2_i;
+
+                when ALU_SUBU =>
+                    writeRegData_o <= operand1_i - operand2_i;
+
                 when ALU_SLT =>
                     res := operand1_i - operand2_i;
                     if (not overflow(operand1_i, complement(operand2_i))) then
@@ -270,13 +287,16 @@ begin
                     else
                         writeRegData_o <= ZEROS_31 & (not res(31));
                     end if;
+
                 when ALU_SLTU =>
                     if (operand1_i < operand2_i) then
                         writeRegData_o <= ZEROS_31 & '1';
                     else
                         writeRegData_o <= ZEROS_31 & '0';
                     end if;
+
                 when ALU_CLO => writeRegData_o <= clo;
+
                 when ALU_CLZ => writeRegData_o <= clz;
 
                 when ALU_MUL =>
@@ -284,6 +304,7 @@ begin
                     multip1 <= operand1_i;
                     multip2 <= operand2_i;
                     writeRegData_o <= product(LoDataWidth);
+
                 when ALU_MULT =>
                     calcMult <= '1';
                     multip1 <= operand1_i;
@@ -292,6 +313,7 @@ begin
                     writeHiData_o <= product(HiDataWidth);
                     toWriteLo_o <= YES;
                     writeLoData_o <= product(LoDataWidth);
+
                 when ALU_MULTU =>
                     calcMult <= '1';
                     multip1 <= operand1_i;
@@ -324,6 +346,22 @@ begin
                         writeHiData_o <= res64(HiDataWidth);
                         writeLoData_o <= res64(LoDataWidth);
                     end if;
+
+                when ALU_MFC0 =>
+                    cp0RegReadAddr_o <= operand1_i(4 downto 0);
+                    cp0ReadValue <= cp0RegData_i;
+
+                    -- Push forward for cp0 --
+                    if (memCP0RegWe_i = YES and memCP0RegWriteAddr_i = operand1_i(4 downto 0))
+                        cp0ReadValue <= memCP0RegData_i;
+                    elsif (wbCP0RegWe_i = YES and wbCP0RegWriteAddr_i = operand1_i(4 downto 0))
+                        cp0ReadValue <= memCP0RegData_i;
+                    end if;
+                
+                when ALU_MTC0 =>
+                    cp0RegWriteAddr_o <= operand1_i(4 downto 0);
+                    cp0RegWe_o <= YES;
+                    cp0RegData_o <= operand2_i;
 
                 when others =>
                     toWriteReg_o <= NO;

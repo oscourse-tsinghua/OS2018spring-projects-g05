@@ -13,13 +13,13 @@ package alu_const is
         ALU_ADD, ALU_ADDU, ALU_SUB, ALU_SUBU, ALU_SLT, ALU_SLTU, ALU_CLO, ALU_CLZ,
         ALU_MUL, ALU_MULT, ALU_MULTU, ALU_MADD, ALU_MADDU, ALU_MSUB, ALU_MSUBU,
         ALU_JR, ALU_JALR, ALU_J, ALU_JAL, ALU_BEQ, ALU_BGEZ, ALU_BGTZ, ALU_BLEZ,
-        ALU_BLTZ, ALU_BNE
+        ALU_BLTZ, ALU_BNE, ALU_MFC0, ALU_MTC0
     );
 
     -- where is the operand from --
     type OprSrcType is (
         INVALID,
-        REG, IMM, SGN_IMM, SA
+        REG, IMM, SGN_IMM, SA, REGID
     );
 
     -- Extra operand invented for offset (memory)

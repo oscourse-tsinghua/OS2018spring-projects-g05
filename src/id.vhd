@@ -568,6 +568,7 @@ begin
                         when others =>
                             null;
                     end case;
+
                 -- bgtz --
                 when JMP_BGTZ =>
                     condJump <= YES;
@@ -592,6 +593,14 @@ begin
                 when others =>
                     null;
             end case;
+
+            if (inst(InstOpRsIdx) = "01000000000" and inst(InstSaFuncIdx) = "00000000000") then
+                alut_o <= ALU_MTC0;
+                oprSrc1 <= REGID;
+                oprSrc2 <= REG;
+                toWriteReg_o <= NO;
+                writeRegAddr_o <= INVALID;
+            end if;
 
             case oprSrc1 is
                 when REG =>
@@ -636,6 +645,9 @@ begin
                     else
                         operand1_o <= "1111111111111111" & instImm;
                     end if;
+
+                when REGID =>
+                    operand1 <= "000000000000000000000000000" & instRd;
 
                 when others =>
                     regReadEnable1_o <= DISABLE;
@@ -740,6 +752,13 @@ begin
                 when others =>
                     null;
             end case;
+        end if;
+
+        if (inst(InstOpRsIdx) = "01000000000" and inst(InstSaFuncIdx) = "00000000000") then
+            alut_o <= ALU_MFC0;
+            operand1_o <= "000000000000000000000000000" & instRt;
+            toWriteReg_o <= YES;
+            writeRegAddr_o <= instRd;
         end if;
     end process;
 

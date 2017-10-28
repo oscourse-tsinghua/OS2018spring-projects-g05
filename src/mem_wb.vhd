@@ -25,7 +25,7 @@ entity mem_wb is
         memCP0RegWe_i: in std_logic;
         wbCP0RegData_o: out std_logic_vector(DataWidth);
         wbCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
-        wbCP0RegWE_o: out std_logic
+        wbCP0RegWe_o: out std_logic
     );
 end mem_wb;
 
@@ -42,6 +42,10 @@ begin
                 toWriteLo_o <= NO;
                 writeHiData_o <= (others => '0');
                 writeLoData_o <= (others => '0');
+
+                wbCP0RegWe_o <= NO;
+                wbCP0RegData_o <= (others => '0');
+                wbCP0RegData_o <= (others => '0');
             elsif (stall_i(MEM_STOP_IDX) = PIPELINE_STOP and stall_i(WB_STOP_IDX) = PIPELINE_NONSTOP) then
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
@@ -51,6 +55,10 @@ begin
                 toWriteLo_o <= NO;
                 writeHiData_o <= (others => '0');
                 writeLoData_o <= (others => '0');
+
+                wbCP0RegWe_o <= NO;
+                wbCP0RegWriteAddr_o <= (others => '0');
+                wbCP0RegData_o <= (others => '0');
             elsif (stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                 toWriteReg_o <= toWriteReg_i;
                 writeRegAddr_o <= writeRegAddr_i;
@@ -60,6 +68,10 @@ begin
                 toWriteLo_o <= toWriteLo_i;
                 writeHiData_o <= writeHiData_i;
                 writeLoData_o <= writeLoData_i;
+
+                wbCP0RegWe_o <= memCP0RegWe_i;
+                wbCP0RegWriteAddr_o <= memCP0RegWriteAddr_i;
+                wbCP0RegData_o <= memCP0RegData_i;
             end if;
         end if;
     end process;
