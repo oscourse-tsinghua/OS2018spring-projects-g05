@@ -161,7 +161,20 @@ architecture bhv of cpu is
             tempProduct_i: in std_logic_vector(DoubleDataWidth);
             cnt_i: in std_logic_vector(CntWidth);
             tempProduct_o: out std_logic_vector(DoubleDataWidth);
-            cnt_o: out std_logic_vector(CntWidth)
+            cnt_o: out std_logic_vector(CntWidth);
+
+            -- for cp0 coprocessor --
+            cp0RegData_i: in std_logic_vector(DataWidth);
+            wbCP0RegData_i: in std_logic_vector(DataWidth);
+            wbCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
+            wbCP0RegWe_i: in std_logic;
+            memCP0RegData_i: in std_logic_vector(DataWidth);
+            memCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
+            memCP0RegWe_i: in std_logic;
+            cp0RegReadAddr_o: out std_logic_vector(CP0RegAddrWidth);
+            cp0RegData_o: out std_logic_vector(DataWidth);
+            cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
+            cp0RegWe_o: out std_logic
         );
     end component;
 
@@ -191,7 +204,15 @@ architecture bhv of cpu is
             tempProduct_i: in std_logic_vector(DoubleDataWidth);
             cnt_i: in std_logic_vector(CntWidth);
             tempProduct_o: out std_logic_vector(DoubleDataWidth);
-            cnt_o: out std_logic_vector(CntWidth)
+            cnt_o: out std_logic_vector(CntWidth);
+
+            -- for cp0 coprocessor --
+            exCP0RegData_i: in std_logic_vector(DataWidth);
+            exCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
+            exCP0RegWe_i: in std_logic;
+            memCP0RegData_o: out std_logic_vector(DataWidth);
+            memCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
+            memCP0RegWe_o: out std_logic
         );
     end component;
 
@@ -218,7 +239,15 @@ architecture bhv of cpu is
             memAddr_o: out std_logic_vector(AddrWidth);
             dataEnable_o: out std_logic;
             dataWrite_o: out std_logic;
-            dataByteSelect_o: out std_logic_vector(3 downto 0)
+            dataByteSelect_o: out std_logic_vector(3 downto 0);
+
+            -- for cp0 coprocessor --
+            cp0RegData_i: in std_logic_vector(DataWidth);
+            cp0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
+            cp0RegWe_i: in std_logic;
+            cp0RegData_o: out std_logic_vector(DataWidth);
+            cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
+            cp0RegWe_o: out std_logic
         );
     end component;
 
@@ -236,7 +265,15 @@ architecture bhv of cpu is
             toWriteHi_i, toWriteLo_i: in std_logic;
             writeHiData_i, writeLoData_i: in std_logic_vector(DataWidth);
             toWriteHi_o, toWriteLo_o: out std_logic;
-            writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth)
+            writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth);
+
+            -- for cp0 coprocessor --
+            memCP0RegData_i: in std_logic_vector(DataWidth);
+            memCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
+            memCP0RegWe_i: in std_logic;
+            wbCP0RegData_o: out std_logic_vector(DataWidth);
+            wbCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
+            wbCP0RegWe_o: out std_logic
         );
     end component;
 
@@ -254,6 +291,26 @@ architecture bhv of cpu is
             rst: in std_logic;
             idToStall_i, exToStall_i: in std_logic;
             stall_o: out std_logic_vector(StallWidth)
+        );
+    end component;
+
+    component cp0
+        port (
+                clk, rst: in std_logic;
+                raddr_i: in std_logic_vector(CP0RegAddrWidth);
+                data_i: in std_logic_vector(DataWidth);
+                we_i: in std_logic;
+                int_i: in std_logic_vector(intWidth);
+
+                data_o: out std_logic_vector(DataWidth);
+                status_o: out std_logic_vector(DataWidth);
+                count_o: out std_logic_vector(DataWidth);
+                compare_o: out std_logic_vector(DataWidth);
+                cause_o: out std_logic_vector(DataWidth);
+                epc_o: out std_logic_vector(DataWidth);
+                config_o: out std_logic_vector(DataWidth);
+                prid_o: out std_logic_vector(DataWidth);
+                timerInt_o: out std_logic
         );
     end component;
 
@@ -276,6 +333,7 @@ architecture bhv of cpu is
     -- 9: mem_wb
     -- a: hi_lo
     -- b: ctrl
+    -- c: cp0
     -- x: conv_endian
 
     -- Signals connecting pc_reg and if_id --
@@ -332,9 +390,14 @@ architecture bhv of cpu is
     signal memt_67: MemType;
     signal memAddr_67: std_logic_vector(AddrWidth);
     signal memData_67: std_logic_vector(DataWidth);
-
+    signal cp0RegData_67: std_logic_vector(DataWidth);
+    signal cp0RegWriteAddr_67: std_logic_vector(CP0RegAddrWidth);
+    signal cp0RegWe_67: std_logic;
     signal tempProduct_67, tempProduct_76: std_logic_vector(DoubleDataWidth);
     signal cnt_67, cnt_76: std_logic_vector(CntWidth);
+
+    -- Signals connecting ex and cp0 --
+    signal cp0RegReadAddr_6c: std_logic_vector(CP0RegAddrWidth);
 
     -- Signals connecting ex_mem and mem --
     signal toWriteReg_78: std_logic;
@@ -345,6 +408,10 @@ architecture bhv of cpu is
     signal memt_78: MemType;
     signal memAddr_78: std_logic_vector(AddrWidth);
     signal memData_78: std_logic_vector(DataWidth);
+    signal memCP0RegData_78: std_logic_vector(DataWidth);
+    signal memCP0RegWriteAddr_78: std_logic_vector(CP0RegAddrWidth);
+    signal memCP0RegWe_78: std_logic;
+
 
     -- Signals connecting mem and id --
     signal memToWriteReg_84: std_logic;
@@ -354,6 +421,9 @@ architecture bhv of cpu is
     -- Signals connecting mem and ex --
     signal memToWriteHi_86, memToWriteLo_86: std_logic;
     signal memWriteHiData_86, memWriteLoData_86: std_logic_vector(DataWidth);
+    signal cp0RegData_86: std_logic_vector(DataWidth);
+    signal cp0RegWriteAddr_86: std_logic_vector(CP0RegAddrWidth);
+    signal cp0RegWe_86: std_logic;
 
     -- Signals connecting mem and mem_wb --
     signal toWriteReg_89: std_logic;
@@ -361,6 +431,9 @@ architecture bhv of cpu is
     signal writeRegData_89: std_logic_vector(DataWidth);
     signal toWriteHi_89, toWriteLo_89: std_logic;
     signal writeHiData_89, writeLoData_89: std_logic_vector(DataWidth);
+    signal cp0RegData_89: std_logic_vector(DataWidth);
+    signal cp0RegWriteAddr_89: std_logic_vector(CP0RegAddrWidth);
+    signal cp0RegWe_89: std_logic;
 
     -- Signals connecting mem_wb and regfile --
     signal toWriteReg_93: std_logic;
@@ -374,6 +447,14 @@ architecture bhv of cpu is
     -- Signals connecting mem_wb and ex --
     signal wbToWriteHi_96, wbToWriteLo_96: std_logic;
     signal wbWriteHiData_96, wbWriteLoData_96: std_logic_vector(DataWidth);
+    signal wbCP0RegData_96: std_logic_vector(DataWidth);
+    signal wbCP0RegWriteAddr_96: std_logic_vector(CP0RegAddrWidth);
+    signal wbCP0RegWe_96: std_logic;
+
+    -- Signals connecting mem_wb and cp0 --
+    signal wbCP0RegData_9c: std_logic_vector(DataWidth);
+    signal wbCP0RegWriteAddr_9c: std_logic_vector(CP0RegAddrWidth);
+    signal wbCP0RegWe_9c: std_logic;
 
     -- Signals connecting hi_lo and ex --
     signal hiData_a6, loData_a6: std_logic_vector(DataWidth);
@@ -387,9 +468,12 @@ architecture bhv of cpu is
     -- Signals connecting ctrl and others --
     signal stall: std_logic_vector(StallWidth);
     
-    -- Signals connecting id and pc
+    -- Signals connecting id and pc --
     signal branchTargetAddress_41: std_logic_vector(AddrWidth);
     signal branchFlag_41: std_logic;
+
+    -- Signals connecting cp0 and ex --
+    signal data_c6: std_logic_vector(DataWidth);
 
 begin
 
@@ -534,6 +618,18 @@ begin
             cnt_i => cnt_76,
             tempProduct_o => tempProduct_67,
             cnt_o => cnt_67
+
+            cp0RegAddr_i => data_c6,
+            wbCP0RegData_i => wbCP0RegData_96,
+            wbCP0RegWriteAddr_i => wbCP0RegWriteAddr_96,
+            wbCP0RegWe_i => wbCP0RegWe_96,
+            memCP0RegData_i => cp0RegData_86,
+            memCP0RegWriteAddr_i => cp0RegWriteAddr_86,
+            memCP0RegWe_i => cp0RegWe_86,
+            cp0RegAddr_o => cp0RegAddr_6c,
+            cp0RegData_o => cp0RegData_67,
+            cp0RegWriteAddr_o => cp0RegWriteAddr_67,
+            cp0RegWe_o => cp0RegWe_67
         );
     exToWriteReg_64 <= toWriteReg_67;
     exWriteRegAddr_64 <= writeRegAddr_67;
@@ -571,6 +667,13 @@ begin
             cnt_i => cnt_67,
             tempProduct_o => tempProduct_76,
             cnt_o => cnt_76
+
+            exCP0RegData_i => cp0RegData_67,
+            exCP0RegWriteAddr_i => CP0RegWriteAddr_67,
+            exCP0RegWe_i => cp0RegWe_67,
+            memCP0RegData_o => memCP0RegData_78,
+            memCP0RegWriteAddr_o => memCP0RegWriteAddr_78,
+            memCP0RegWe_o => memCP0RegWe_78
         );
 
     mem_ist: mem
@@ -601,6 +704,16 @@ begin
             savingData_o => dataData_o,
             memAddr_o => dataAddr_o,
             dataByteSelect_o => dataByteSelect_o
+
+            cp0RegAddr_i => memCP0RegData_78,
+            cp0RegWriteAddr_i => memCP0RegWriteAddr_78,
+            cp0RegWe_i => memCP0RegWe_78,
+            cp0RegAddr_o => cp0RegWriteAddr_89,
+            cp0RegAddr_o => cp0RegWriteAddr_86,
+            cp0RegWriteAddr_o => cp0RegWriteAddr_89,
+            cp0RegWriteAddr_o => cp0RegWriteAddr_86,
+            cp0RegWe_o => cp0RegWe_89,
+            cp0RegWe_o => cp0RegWe_86
         );
     memToWriteReg_84 <= toWriteReg_89;
     memWriteRegAddr_84 <= writeRegAddr_89;
@@ -629,6 +742,16 @@ begin
             toWriteLo_o => toWriteLo_9a,
             writeHiData_o => writeHiData_9a,
             writeLoData_o => writeLoData_9a
+
+            memCP0RegData_i => cp0RegData_89,
+            memCP0RegWriteAddr_i => cp0RegWriteAddr_89,
+            memCP0RegWe_i => cp0RegWe_89,
+            wbCP0RegData_o => wbCP0RegData_9c,
+            wbCP0RegData_o => wbCP0RegData_96,
+            wbCP0RegWriteAddr_o => wbCP0RegWriteAddr_9c,
+            wbCP0RegWriteAddr_o => wbCP0RegWriteAddr_96,
+            wbCP0RegWe_o => wbCP0RegWe_9c,
+            wbCP0RegWe_o => wbCP0RegWe_96
         );
     wbToWriteHi_96 <= toWriteHi_9a;
     wbToWriteLo_96 <= toWriteLo_9a;
@@ -652,5 +775,16 @@ begin
             idToStall_i => idToStall_4b,
             exToStall_i => exToStall_6b,
             stall_o => stall
+        );
+
+    cp0_ist: cp0
+        port map(
+            rst => rst,
+            clk => clk,
+            raddr_i => cp0RegReadAddr_6c,
+            data_i => wbCP0RegData_9c,
+            waddr_i => wbCP0RegWriteAddr_9c,
+            we_i => wbCP0RegWe_9c,
+            data_o => data_c6
         );
 end bhv;

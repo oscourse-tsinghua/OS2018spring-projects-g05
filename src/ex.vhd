@@ -54,10 +54,10 @@ entity ex is
         memCP0RegData_i: in std_logic_vector(DataWidth);
         memCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
         memCP0RegWe_i: in std_logic;
-        CP0RegReadAddr_o: out std_logic_vector(CP0RegAddrWidth);
-        CP0RegData_o: out std_logic_vector(DataWidth);
-        CP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
-        CP0RegWe_o: out std_logic
+        cp0RegReadAddr_o: out std_logic_vector(CP0RegAddrWidth);
+        cp0RegData_o: out std_logic_vector(DataWidth);
+        cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
+        cp0RegWe_o: out std_logic
     );
 end ex;
 
