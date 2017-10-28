@@ -28,7 +28,7 @@ entity cp0_reg is
         epc_o: out std_logic_vector(DataWidth);
         config_o: out std_logic_vector(DataWidth);
         prid_o: out std_logic_vector(DataWidth);
-        timer_int_o: out std_logic
+        timerInt_o: out std_logic
     );
 end cp0_reg;
 
@@ -44,14 +44,14 @@ begin
                 epc_o <= CP0_ZERO_WORD;
                 config_o <= "00000000000000001000000000000000";
                 prid_o <= "00000000010011000000000100000010";
-                timer_int_o <= INTERRUPT_NOT_ASSERT;
+                timerInt_o <= INTERRUPT_NOT_ASSERT;
             else
                 count_o <= count_o + 1;
                 cause_o(ExternalInterruptAssertIdx) <= int_i;
-                if (compare_o /= CP0_ZERO_WORD and count_o = compare_o)
-                    timer_int_o <= INTERRUPT_ASSERT;
+                if (compare_o /= CP0_ZERO_WORD and count_o = compare_o) then
+                    timerInt_o <= INTERRUPT_ASSERT;
                 end if;
-                if (we_i = ENABLE)
+                if (we_i = ENABLE) then
                     case (waddr_i) is
                         -- count processor --
                         when COUNT_PROCESSOR =>
@@ -60,7 +60,7 @@ begin
                         -- compare proessor --                        
                         when COMPARE_PROCESSOR =>
                             compare_o <= data_i;
-                            timer_int_o <= INTERRUPT_NOT_ASSERT;
+                            timerInt_o <= INTERRUPT_NOT_ASSERT;
 
                         -- status processor --
                         when STATUS_PROCESSOR =>
@@ -80,6 +80,7 @@ begin
                         when others =>
                             null;
                     end case;
+                end if;
             end if;
         end if;
     end process;
@@ -119,6 +120,7 @@ begin
 
                 when others =>
                     null;
+            end case;
         end if;
     end process;
 end bhv;

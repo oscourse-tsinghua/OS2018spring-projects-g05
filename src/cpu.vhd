@@ -3,6 +3,7 @@ use ieee.std_logic_1164.all;
 use work.global_const.all;
 use work.alu_const.all;
 use work.mem_const.all;
+use work.cp0_const.all;
 
 entity cpu is
     port (
@@ -294,11 +295,12 @@ architecture bhv of cpu is
         );
     end component;
 
-    component cp0
+    component cp0_reg
         port (
                 clk, rst: in std_logic;
                 raddr_i: in std_logic_vector(CP0RegAddrWidth);
                 data_i: in std_logic_vector(DataWidth);
+                waddr_i: in std_logic_vector(CP0RegAddrWidth);
                 we_i: in std_logic;
                 int_i: in std_logic_vector(intWidth);
 
@@ -617,16 +619,16 @@ begin
             tempProduct_i => tempProduct_76,
             cnt_i => cnt_76,
             tempProduct_o => tempProduct_67,
-            cnt_o => cnt_67
+            cnt_o => cnt_67,
 
-            cp0RegAddr_i => data_c6,
+            cp0RegData_i => data_c6,
             wbCP0RegData_i => wbCP0RegData_96,
             wbCP0RegWriteAddr_i => wbCP0RegWriteAddr_96,
             wbCP0RegWe_i => wbCP0RegWe_96,
             memCP0RegData_i => cp0RegData_86,
             memCP0RegWriteAddr_i => cp0RegWriteAddr_86,
             memCP0RegWe_i => cp0RegWe_86,
-            cp0RegAddr_o => cp0RegAddr_6c,
+            cp0RegReadAddr_o => cp0RegReadAddr_6c,
             cp0RegData_o => cp0RegData_67,
             cp0RegWriteAddr_o => cp0RegWriteAddr_67,
             cp0RegWe_o => cp0RegWe_67
@@ -666,7 +668,7 @@ begin
             tempProduct_i => tempProduct_67,
             cnt_i => cnt_67,
             tempProduct_o => tempProduct_76,
-            cnt_o => cnt_76
+            cnt_o => cnt_76,
 
             exCP0RegData_i => cp0RegData_67,
             exCP0RegWriteAddr_i => CP0RegWriteAddr_67,
@@ -703,17 +705,14 @@ begin
             loadedData_i => dataData_i,
             savingData_o => dataData_o,
             memAddr_o => dataAddr_o,
-            dataByteSelect_o => dataByteSelect_o
+            dataByteSelect_o => dataByteSelect_o,
 
-            cp0RegAddr_i => memCP0RegData_78,
+            cp0RegData_i => memCP0RegData_78,
             cp0RegWriteAddr_i => memCP0RegWriteAddr_78,
             cp0RegWe_i => memCP0RegWe_78,
-            cp0RegAddr_o => cp0RegWriteAddr_89,
-            cp0RegAddr_o => cp0RegWriteAddr_86,
+            cp0RegData_o => cp0RegData_89,
             cp0RegWriteAddr_o => cp0RegWriteAddr_89,
-            cp0RegWriteAddr_o => cp0RegWriteAddr_86,
-            cp0RegWe_o => cp0RegWe_89,
-            cp0RegWe_o => cp0RegWe_86
+            cp0RegWe_o => cp0RegWe_89
         );
     memToWriteReg_84 <= toWriteReg_89;
     memWriteRegAddr_84 <= writeRegAddr_89;
@@ -722,6 +721,9 @@ begin
     memToWriteLo_86 <= toWriteLo_89;
     memWriteHiData_86 <= writeHiData_89;
     memWriteLoData_86 <= writeLoData_89;
+    cp0RegData_86 <= cp0RegData_89;
+    cp0RegWriteAddr_86 <= cp0RegWriteAddr_89;
+    cp0RegWe_86 <= cp0RegWe_89;
 
     mem_wb_ist: mem_wb
         port map (
@@ -741,22 +743,22 @@ begin
             toWriteHi_o => toWriteHi_9a,
             toWriteLo_o => toWriteLo_9a,
             writeHiData_o => writeHiData_9a,
-            writeLoData_o => writeLoData_9a
+            writeLoData_o => writeLoData_9a,
 
             memCP0RegData_i => cp0RegData_89,
             memCP0RegWriteAddr_i => cp0RegWriteAddr_89,
             memCP0RegWe_i => cp0RegWe_89,
             wbCP0RegData_o => wbCP0RegData_9c,
-            wbCP0RegData_o => wbCP0RegData_96,
             wbCP0RegWriteAddr_o => wbCP0RegWriteAddr_9c,
-            wbCP0RegWriteAddr_o => wbCP0RegWriteAddr_96,
-            wbCP0RegWe_o => wbCP0RegWe_9c,
-            wbCP0RegWe_o => wbCP0RegWe_96
+            wbCP0RegWe_o => wbCP0RegWe_9c
         );
     wbToWriteHi_96 <= toWriteHi_9a;
     wbToWriteLo_96 <= toWriteLo_9a;
     wbWriteHiData_96 <= writeHiData_9a;
     wbWriteLoData_96 <= writeLoData_9a;
+    wbCP0RegData_96 <= wbCP0RegData_9c;
+    wbCP0RegWriteAddr_96 <= wbCP0RegWriteAddr_9c;
+    wbCP0RegWe_96 <= wbCP0RegWe_9c;
 
     hi_lo_ist: hi_lo
         port map(
@@ -777,10 +779,11 @@ begin
             stall_o => stall
         );
 
-    cp0_ist: cp0
+    cp0_reg_ist: cp0_reg
         port map(
             rst => rst,
             clk => clk,
+            int_i => int_i,
             raddr_i => cp0RegReadAddr_6c,
             data_i => wbCP0RegData_9c,
             waddr_i => wbCP0RegWriteAddr_9c,

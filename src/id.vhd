@@ -743,4 +743,11 @@ begin
         end if;
     end process;
 
+    process(all) begin
+        if (rst = RST_ENABLE) then
+            isInDelaySlot_o <= NOT_IN_DELAY_SLOT_FLAG;
+        else
+            isInDelaySlot_o <= isInDelaySlot_i;
+        end if;
+    end process;
 end bhv;

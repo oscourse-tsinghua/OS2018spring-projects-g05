@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use work.global_const.all;
 
 package cp0_const is
 
@@ -18,13 +19,13 @@ package cp0_const is
     -- ids of special usage processors.
     --
     
-    constant COUNT_PROCESSOR: std_logic_vector(CP0ProcessorIdWidth) := "01001";
-    constant COMPARE_PROCESSOR: std_logic_vector(CP0ProcessorIdWidth) := "01011";
-    constant STATUS_PROCESSOR: std_logic_vector(CP0ProcessorIdWidth) := "01100";
-    constant CAUSE_PROCESSOR: std_logic_vector(CP0ProcessorIdWidth) := "01101";
-    constant EPC_PROCESSOR: std_logic_vector(CP0ProcessorIdWidth) := "01110";
-    constant PRID_PROCESSOR: std_logic_vector(CP0ProcessorIdWidth) := "01111";
-    constant CONFIG_PROCESSOR: std_logic_vector(CP0ProcessorIdWidth) := "10000";
+    constant COUNT_PROCESSOR: std_logic_vector(CP0RegAddrWidth) := "01001";
+    constant COMPARE_PROCESSOR: std_logic_vector(CP0RegAddrWidth) := "01011";
+    constant STATUS_PROCESSOR: std_logic_vector(CP0RegAddrWidth) := "01100";
+    constant CAUSE_PROCESSOR: std_logic_vector(CP0RegAddrWidth) := "01101";
+    constant EPC_PROCESSOR: std_logic_vector(CP0RegAddrWidth) := "01110";
+    constant PRID_PROCESSOR: std_logic_vector(CP0RegAddrWidth) := "01111";
+    constant CONFIG_PROCESSOR: std_logic_vector(CP0RegAddrWidth) := "10000";
     
     --
     -- assert constant
