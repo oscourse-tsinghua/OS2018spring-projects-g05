@@ -17,7 +17,15 @@ entity mem_wb is
         toWriteHi_i, toWriteLo_i: in std_logic;
         writeHiData_i, writeLoData_i: in std_logic_vector(DataWidth);
         toWriteHi_o, toWriteLo_o: out std_logic;
-        writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth)
+        writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth);
+
+        -- interact with CP0 --
+        memCP0RegData_i: in std_logic_vector(DataWidth);
+        memCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
+        memCP0RegWe_i: in std_logic;
+        wbCP0RegData_o: out std_logic_vector(DataWidth);
+        wbCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
+        wbCP0RegWE_o: out std_logic
     );
 end mem_wb;
 

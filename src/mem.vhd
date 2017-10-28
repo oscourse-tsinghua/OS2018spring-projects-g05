@@ -29,7 +29,15 @@ entity mem is
         memAddr_o: out std_logic_vector(AddrWidth);
         dataEnable_o: out std_logic;
         dataWrite_o: out std_logic;
-        dataByteSelect_o: out std_logic_vector(3 downto 0)
+        dataByteSelect_o: out std_logic_vector(3 downto 0);
+
+        -- interact with cp0 --
+        cp0RegData_i: in std_logic_vector(DataWidth);
+        cp0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
+        cp0RegWe_i: in std_logic;
+        cp0RegData_o: out std_logic_vector(DataWidth);
+        cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
+        cp0RegWe_o: out std_logic
     );
 end mem;
 

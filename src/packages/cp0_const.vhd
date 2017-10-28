@@ -7,9 +7,12 @@ package cp0_const is
     -- consts for cp0
     --
     subtype ExternalInterruptAssertIdx      is integer range 15 downto 10;
+    subtype CP0IP10Idx                      is integer range  9 downto  8;
+    subtype CP0IVIdx                        is integer range 23 downto 23;
+    subtype CP0WPIdx                        is integer range 22 downto 22;
     
-    subtype CP0ProcessorIdWidth             is integer range  4 downto  0;
     subtype CP0Assert                       is std_logic;
+    subtype CP0IP10Width                    is integer range  1 downto  0;
     
     --
     -- ids of special usage processors.

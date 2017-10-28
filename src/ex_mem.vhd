@@ -32,7 +32,15 @@ entity ex_mem is
         tempProduct_i: in std_logic_vector(DoubleDataWidth);
         cnt_i: in std_logic_vector(CntWidth);
         tempProduct_o: out std_logic_vector(DoubleDataWidth);
-        cnt_o: out std_logic_vector(CntWidth)
+        cnt_o: out std_logic_vector(CntWidth);
+
+        -- interact with cp0 --
+        exCP0RegData_i: in std_logic_vector(DataWidth);
+        exCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
+        exCP0RegWe_i: in std_logic;
+        memCP0RegData_o: out std_logic_vector(DataWidth);
+        memCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
+        memCP0RegWe_o: out std_logic
     );
 end ex_mem;
 
