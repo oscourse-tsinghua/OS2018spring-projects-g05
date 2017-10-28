@@ -700,13 +700,13 @@ begin
                     case (instRt) is
                         when JMP_BGEZ =>
                             if (operand1_o(31) = '0') then
-                                branchTargetAddress_o <= pc_i + instOffsetImm - instImmSign;
+                                branchTargetAddress_o <= pcPlus4 + instOffsetImm - instImmSign;
                                 branchFlag_o <= BRANCH_FLAG;
                                 nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                             end if;
                         when JMP_BLTZ =>
                             if (operand1_o(31) = '1') then
-                                branchTargetAddress_o <= pc_i + instOffsetImm - instImmSign;
+                                branchTargetAddress_o <= pcPlus4 + instOffsetImm - instImmSign;
                                 branchFlag_o <= BRANCH_FLAG;
                                 nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                             end if;
@@ -715,25 +715,25 @@ begin
                     end case;
                 when JMP_BEQ =>
                     if (operand1_o = operand2_o) then
-                        branchTargetAddress_o <= pc_i + instOffsetImm - instImmSign;
+                        branchTargetAddress_o <= pcPlus4 + instOffsetImm - instImmSign;
                         branchFlag_o <= BRANCH_FLAG;
                         nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                     end if;
                 when JMP_BGTZ =>
                     if (operand1_o(31) = '0' and operand1_o /= "00000000000000000000000000000000") then
-                        branchTargetAddress_o <= pc_i + instOffsetImm - instImmSign;
+                        branchTargetAddress_o <= pcPlus4 + instOffsetImm - instImmSign;
                         branchFlag_o <= BRANCH_FLAG;
                         nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                     end if;
                 when JMP_BLEZ =>
                     if (operand1_o(31) = '1' or operand1_o = "00000000000000000000000000000000") then
-                        branchTargetAddress_o <= pc_i + instOffsetImm - instImmSign;
+                        branchTargetAddress_o <= pcPlus4 + instOffsetImm - instImmSign;
                         branchFlag_o <= BRANCH_FLAG;
                         nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                     end if;
                 when JMP_BNE =>
                     if (operand1_o /= operand2_o) then
-                        branchTargetAddress_o <= pc_i + instOffsetImm - instImmSign;
+                        branchTargetAddress_o <= pcPlus4 + instOffsetImm - instImmSign;
                         branchFlag_o <= BRANCH_FLAG;
                         nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                     end if;
