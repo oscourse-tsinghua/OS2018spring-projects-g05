@@ -87,6 +87,7 @@ architecture bhv of ex is
     signal multip1, multip2: std_logic_vector(DataWidth);
     signal calcMult: std_logic := '0';
     signal product: std_logic_vector(DoubleDataWidth);
+    signal cp0ReadValue: std_logic_vector(DataWidth);
 begin
 
     memt_o <= memt_i;
@@ -189,7 +190,6 @@ begin
     process(all)
         variable res: std_logic_vector(DataWidth);
         variable res64: std_logic_vector(DoubleDataWidth);
-        variable cp0ReadValue: std_logic_vector(DataWidth);
     begin
         toWriteHi_o <= NO;
         toWriteLo_o <= NO;
@@ -352,11 +352,13 @@ begin
                     cp0ReadValue <= cp0RegData_i;
 
                     -- Push forward for cp0 --
-                    if (memCP0RegWe_i = YES and memCP0RegWriteAddr_i = operand1_i(4 downto 0))
+                    if (memCP0RegWe_i = YES and memCP0RegWriteAddr_i = operand1_i(4 downto 0)) then
                         cp0ReadValue <= memCP0RegData_i;
-                    elsif (wbCP0RegWe_i = YES and wbCP0RegWriteAddr_i = operand1_i(4 downto 0))
-                        cp0ReadValue <= memCP0RegData_i;
+                    elsif (wbCP0RegWe_i = YES and wbCP0RegWriteAddr_i = operand1_i(4 downto 0)) then
+                        cp0ReadValue <= wbCP0RegData_i;
                     end if;
+
+                    writeRegData_o <= cp0ReadValue;
                 
                 when ALU_MTC0 =>
                     cp0RegWriteAddr_o <= operand1_i(4 downto 0);
