@@ -13,6 +13,7 @@ package global_const is
     subtype RegAddrWidth is integer range 4 downto 0;
     subtype RegNum is integer range 0 to 31;
     subtype CntWidth is integer range 1 downto 0;
+    subtype CP0RegAddrWidth is integer range 4 downto 0;
 
     type RegArrayType is array (RegNum) of std_logic_vector(DataWidth);
 
@@ -48,5 +49,10 @@ package global_const is
     constant BRANCH_ZERO_WORD: std_logic_vector(AddrWidth) := "00000000000000000000000000000000";
     constant IN_DELAY_SLOT_FLAG: std_logic := '1';
     constant NOT_IN_DELAY_SLOT_FLAG: std_logic := '0';
+    
+    --
+    -- For cp0 coprecessors
+    --
+    constant CP0_ZERO_WORD: std_logic_vector(DataWidth) := "00000000000000000000000000000000";
 
 end global_const;

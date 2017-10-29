@@ -29,7 +29,15 @@ entity mem is
         memAddr_o: out std_logic_vector(AddrWidth);
         dataEnable_o: out std_logic;
         dataWrite_o: out std_logic;
-        dataByteSelect_o: out std_logic_vector(3 downto 0)
+        dataByteSelect_o: out std_logic_vector(3 downto 0);
+
+        -- interact with cp0 --
+        cp0RegData_i: in std_logic_vector(DataWidth);
+        cp0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
+        cp0RegWe_i: in std_logic;
+        cp0RegData_o: out std_logic_vector(DataWidth);
+        cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
+        cp0RegWe_o: out std_logic
     );
 end mem;
 
@@ -55,6 +63,10 @@ begin
             toWriteLo_o <= NO;
             writeHiData_o <= (others => '0');
             writeLoData_o <= (others => '0');
+
+            cp0RegWe_o <= NO;
+            cp0RegWriteAddr_o <= (others => '0');
+            cp0RegData_o <= (others => '0');
         else
             toWriteReg_o <= toWriteReg_i;
             writeRegAddr_o <= writeRegAddr_i;
@@ -64,6 +76,10 @@ begin
             toWriteLo_o <= toWriteLo_i;
             writeHiData_o <= writeHiData_i;
             writeLoData_o <= writeLoData_i;
+
+            cp0RegWe_o <= cp0RegWe_i;
+            cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
+            cp0RegData_o <= cp0RegData_i;
 
             -- Byte selection --
             case memt_i is
