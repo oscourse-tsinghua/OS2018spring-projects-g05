@@ -5,10 +5,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.jump_instructions_test_test_const.all;
+use work.jump1_test_const.all;
 use work.global_const.all;
 
-entity jump_instructions_test_fake_ram is
+entity jump1_fake_ram is
     generic (
         isInst: boolean := false -- The RAM will be initialized with instructions when true
     );
@@ -19,9 +19,9 @@ entity jump_instructions_test_fake_ram is
         byteSelect_i: in std_logic_vector(3 downto 0);
         data_o: out std_logic_vector(DataWidth)
     );
-end jump_instructions_test_fake_ram;
+end jump1_fake_ram;
 
-architecture bhv of jump_instructions_test_fake_ram is
+architecture bhv of jump1_fake_ram is
     type WordsArray is array(0 to MAX_RAM_ADDRESS) of std_logic_vector(DataWidth);
     signal words: WordsArray;
     signal wordAddr: integer;
@@ -45,8 +45,9 @@ begin
             -- The first instruction is at 0x4
             -- CODE BELOW IS AUTOMATICALLY GENERATED
 words(1) <= x"04_00_42_38"; -- RUN xori $2, $2, 0x0004
-words(2) <= x"01_00_40_18"; -- RUN blez $2, 0x0004
-words(3) <= x"01_00_00_08"; -- RUN j 0x0004
+words(2) <= x"02_00_40_18"; -- RUN blez $2, 0x0008
+words(3) <= x"00_00_63_34"; -- RUN ori $3, $3, 0x0000
+words(4) <= x"01_00_00_08"; -- RUN j 0x0004
         end if;
     end process;
 

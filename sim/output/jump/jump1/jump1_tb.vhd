@@ -4,15 +4,15 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.jump_instructions_test_test_const.all;
+use work.jump1_test_const.all;
 use work.global_const.all;
 -- CODE BELOW IS AUTOMATICALLY GENERATED
 use work.alu_const.all;
 
-entity jump_instructions_test_tb is
-end jump_instructions_test_tb;
+entity jump1_tb is
+end jump1_tb;
 
-architecture bhv of jump_instructions_test_tb is
+architecture bhv of jump1_tb is
     component cpu
         port (
             rst, clk: in std_logic;
@@ -33,7 +33,7 @@ architecture bhv of jump_instructions_test_tb is
         );
     end component;
 
-    component jump_instructions_test_fake_ram is
+    component jump1_fake_ram is
         generic (
             isInst: boolean := false -- The RAM will be initialized with instructions when true
         );
@@ -63,7 +63,7 @@ architecture bhv of jump_instructions_test_tb is
     signal int: std_logic_vector(IntWidth);
     signal timerInt: std_logic;
 begin
-    inst_ram: jump_instructions_test_fake_ram
+    inst_ram: jump1_fake_ram
         generic map (
             isInst => true
         )
@@ -77,7 +77,7 @@ begin
             data_o => instData
         );
 
-    data_ram: jump_instructions_test_fake_ram
+    data_ram: jump1_fake_ram
         port map (
             enable_i =>dataEnable,
             write_i => dataWrite,
@@ -125,5 +125,23 @@ begin
 alias user_reg is <<signal ^.cpu_inst.regfile_ist.regArray: RegArrayType>>;
     begin
         -- CODE BELOW IS AUTOMATICALLY GENERATED
+process begin
+    wait for CLK_PERIOD; -- resetting
+    wait for 6 * CLK_PERIOD;
+    assert user_reg(2) = x"00000004" severity FAILURE;
+    wait;
+end process;
+process begin
+    wait for CLK_PERIOD; -- resetting
+    wait for 11 * CLK_PERIOD;
+    assert user_reg(2) = x"00000000" severity FAILURE;
+    wait;
+end process;
+process begin
+    wait for CLK_PERIOD; -- resetting
+    wait for 16 * CLK_PERIOD;
+    assert user_reg(2) = x"00000000" severity FAILURE;
+    wait;
+end process;
     end block assertBlk;
 end bhv;

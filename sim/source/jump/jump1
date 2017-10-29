@@ -18,6 +18,9 @@ DEFINE reg regfile_ist.regArray: RegArrayType
 # Grammar: "RUN <assembly>"
 RUN xori $2, $2, 0x0004
 # it depends on specific instructions
-RUN blez $2, 0x0004
+RUN blez $2, 0x0008
+RUN ori $3, $3, 0x0000
 RUN j 0x0004
-# can switch J and JAL here
+ASSERT 6 reg(2) x"00000004"
+ASSERT 11 reg(2) x"00000000"
+ASSERT 16 reg(2) x"00000000"
