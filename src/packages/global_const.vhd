@@ -65,5 +65,11 @@ package global_const is
     constant INTERRUPT_NOT_ASSERT: std_logic := '0';
     constant TRAP_ASSERT: std_logic := '1';
     constant TRAP_NOT_ASSERT: std_logic := '0';
+    constant EXCEPTION_ZERO_WORD: std_logic_vector(DataWidth) := "00000000000000000000000000000000";
+    constant EXTERNALEXCEPTION: std_logic_vector(ExceptionWidth) := "00000000000000000000000000000001";
+    constant SYSCALLEXCEPTION: std_logic_vector(ExceptionWidth) := "00000000000000000000000000000100";
+    constant INVALIDINSTEXCEPTION: std_logic_vector(ExceptionWidth) := "00000000000000000000000000001010";
+    constant OVERFLOWEXCEPTION: std_logic_vector(ExceptionWidth) := "00000000000000000000000000001101";
+    constant ERETEXCEPTION: std_logic_vector(ExceptionWidth) := "00000000000000000000000000001110"
 
 end global_const;

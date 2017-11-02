@@ -32,4 +32,5 @@ package cp0_const is
     --
     constant INTERRUPT_ASSERT: CP0Assert := '1';
     constant INTERRUPT_NOT_ASSERT: CP0Assert := '0';
+
 end cp0_const;
