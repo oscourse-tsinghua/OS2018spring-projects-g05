@@ -236,9 +236,9 @@ architecture bhv of cpu is
 
             -- for exception --
             flush_i: in std_logic;
-            exExcepType_o: std_logic_vector(ExceptionWidth);
-            exCurrentInstAddr_o: std_logic_vector(AddrWidth);
-            exIsInDelaySlot_o: std_logic;
+            exExceptType_i: in std_logic_vector(ExceptionWidth);
+            exCurrentInstAddr_i: in std_logic_vector(AddrWidth);
+            exIsInDelaySlot_i: in std_logic;
             memExceptType_o: out std_logic_vector(ExceptionWidth);
             memCurrentInstAddress_o: out std_logic_vector(AddrWidth);
             memIsInDelaySlot_o: out std_logic
@@ -419,6 +419,8 @@ architecture bhv of cpu is
     signal linkAddr_45: std_logic_vector(AddrWidth);
     signal nextInstInDelaySlot_45: std_logic;
     signal isInDelaySlot_54: std_logic;
+    signal exceptType_45: std_logic_vector(ExceptionWidth);
+    signal currentInstAddr_45: std_logic_vector(ExceptionWidth);
 
     -- Signals connecting id_ex and ex --
     signal alut_56: AluType;
@@ -430,6 +432,8 @@ architecture bhv of cpu is
     signal writeRegAddr_56: std_logic_vector(RegAddrWidth);
     signal exIsInDelaySlot_56: std_logic;
     signal exLinkAddress_56: std_logic_vector(AddrWidth);
+    signal exExcepType_56: std_logic_vector(ExceptionWidth);
+    signal exCurrentInstAddr_56: std_logic_vector(AddrWidth);
 
     -- Signals connecting ex and id --
     signal exToWriteReg_64: std_logic;
@@ -451,6 +455,9 @@ architecture bhv of cpu is
     signal cp0RegWe_67: std_logic;
     signal tempProduct_67, tempProduct_76: std_logic_vector(DoubleDataWidth);
     signal cnt_67, cnt_76: std_logic_vector(CntWidth);
+    signal exceptType_67: std_logic_vector(ExceptionWidth);
+    signal currentInstAddr_67: std_logic_vector(AddrWidth);
+    signal isInDelaySlot_67: std_logic;
 
     -- Signals connecting ex and cp0 --
     signal cp0RegReadAddr_6c: std_logic_vector(CP0RegAddrWidth);
@@ -467,7 +474,9 @@ architecture bhv of cpu is
     signal memCP0RegData_78: std_logic_vector(DataWidth);
     signal memCP0RegWriteAddr_78: std_logic_vector(CP0RegAddrWidth);
     signal memCP0RegWe_78: std_logic;
-
+    signal memExceptType_78: std_logic_vector(ExceptionWidth);
+    signal memCurrentInstAddress_78: std_logic_vector(AddrWidth);
+    signal memIsInDelaySlot_78: std_logic;
 
     -- Signals connecting mem and id --
     signal memToWriteReg_84: std_logic;
@@ -490,6 +499,9 @@ architecture bhv of cpu is
     signal cp0RegData_89: std_logic_vector(DataWidth);
     signal cp0RegWriteAddr_89: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWe_89: std_logic;
+    signal wbCP0RegWe_98: std_logic;
+    signal wbCP0RegWriteAddr_98: std_logic_vector(AddrWidth);
+    signal wbCP0RegData_98: std_logic_vector(DataWidth);
 
     -- Signals connecting mem_wb and regfile --
     signal toWriteReg_93: std_logic;
@@ -522,6 +534,12 @@ architecture bhv of cpu is
     -- Signals connecting ctrl and if_id --
     signal flush_b2: std_logic;
 
+    -- Signals connecting ctrl and id_ex --
+    signal flush_b5: std_logic;
+
+    -- Signals connecting ctrl and ex_mem --
+    signal flush_b7: std_logic;
+
     -- Signals connecting id and ctrl --
     signal idToStall_4b: std_logic;
 
@@ -537,6 +555,18 @@ architecture bhv of cpu is
 
     -- Signals connecting cp0 and ex --
     signal data_c6: std_logic_vector(DataWidth);
+
+    -- Signals connecting cp0 and mem --
+    signal status_c8: std_logic_vector(DataWidth);
+    signal cause_c8: std_logic_vector(DataWidth);
+    signal epc_c8: std_logic_vector(DataWidth);
+    signal exceptType_8c: std_logic_vector(ExceptionWidth);
+    signal currentInstAddr_8c: std_logic_vector(AddrWidth);
+    signal isInDelaySlot_8c: std_logic;
+
+    -- Signals connecting cp0 and ctrl --
+    signal cp0Epc_8b: std_logic_vector(DataWidth);
+    signal exceptType_8b: std_logic_vector(ExceptionWidth);
 
 begin
 
@@ -615,7 +645,9 @@ begin
             linkAddr_o => linkAddr_45,
             nextInstInDelaySlot_o => nextInstInDelaySlot_45,
             branchTargetAddress_o => branchTargetAddress_41,
-            branchFlag_o => branchFlag_41
+            branchFlag_o => branchFlag_41,
+            exceptType_o => exceptType_45,
+            currentInstAddr_o => currentInstAddr_45
         );
 
     id_ex_ist: id_ex
@@ -632,6 +664,9 @@ begin
             idIsInDelaySlot_i => isInDelaySlot_45,
             idLinkAddress_i => linkAddr_45,
             nextInstInDelaySlot_i => nextInstInDelaySlot_45,
+            flush_i => flush_b5,
+            idExceptType_i => exceptType_45,
+            idCurrentInstAddr_i => currentInstAddr_45,
             alut_o => alut_56,
             memt_o => memt_56,
             operand1_o => operand1_56,
@@ -641,7 +676,9 @@ begin
             writeRegAddr_o => writeRegAddr_56,
             isInDelaySlot_o => isInDelaySlot_54,
             exIsInDelaySlot_o => exIsInDelaySlot_56,
-            exLinkAddress_o => exLinkAddress_56
+            exLinkAddress_o => exLinkAddress_56,
+            exExcepType_o => exExcepType_56,
+            exCurrentInstAddr_o => exCurrentInstAddr_56
         );
 
     ex_ist: ex
@@ -695,7 +732,13 @@ begin
             cp0RegReadAddr_o => cp0RegReadAddr_6c,
             cp0RegData_o => cp0RegData_67,
             cp0RegWriteAddr_o => cp0RegWriteAddr_67,
-            cp0RegWe_o => cp0RegWe_67
+            cp0RegWe_o => cp0RegWe_67,
+
+            exceptType_i => exExcepType_56,
+            currentInstAddr_i => exCurrentInstAddr_56,
+            exceptType_o => exceptType_67,
+            currentInstAddr_o => currentInstAddr_67,
+            isInDelaySlot_o => isInDelaySlot_67
         );
     exToWriteReg_64 <= toWriteReg_67;
     exWriteRegAddr_64 <= writeRegAddr_67;
@@ -739,7 +782,15 @@ begin
             exCP0RegWe_i => cp0RegWe_67,
             memCP0RegData_o => memCP0RegData_78,
             memCP0RegWriteAddr_o => memCP0RegWriteAddr_78,
-            memCP0RegWe_o => memCP0RegWe_78
+            memCP0RegWe_o => memCP0RegWe_78,
+
+            flush_i => flush_b7,
+            exExcepType_i => exceptType_67,
+            exCurrentInstAddr_i => currentInstAddr_67,
+            exIsInDelaySlot_i => isInDelaySlot_67,
+            memExceptType_o => memExceptType_78,
+            memCurrentInstAddress_o => memCurrentInstAddress_78,
+            memIsInDelaySlot_o => memIsInDelaySlot_78
         );
 
     mem_ist: mem
@@ -776,7 +827,21 @@ begin
             cp0RegWe_i => memCP0RegWe_78,
             cp0RegData_o => cp0RegData_89,
             cp0RegWriteAddr_o => cp0RegWriteAddr_89,
-            cp0RegWe_o => cp0RegWe_89
+            cp0RegWe_o => cp0RegWe_89,
+            exceptType_i => memExceptType_78,
+            currentInstAddr_i => memCurrentInstAddress_78,
+            isInDelaySlot_i => memIsInDelaySlot_78
+
+            cp0Status_i => status_c8;
+            cp0Cause_i => cause_c8;
+            cp0Epc_i => epc_c8;
+            wbCP0RegWe_i => wbCP0RegWe_98;
+            wbCP0RegWriteAddr_i => wbCP0RegWriteAddr_98;
+            wbCP0RegData_i => wbCP0RegData_98,
+            cp0EPC_o => cp0EPC_8b,
+            exceptType_o => exceptType_8c,
+            currentInstAddr_o => currentInstAddr_8c,
+            isInDelaySlot_o => isInDelaySlot_8c
         );
     memToWriteReg_84 <= toWriteReg_89;
     memWriteRegAddr_84 <= writeRegAddr_89;
@@ -788,6 +853,7 @@ begin
     cp0RegData_86 <= cp0RegData_89;
     cp0RegWriteAddr_86 <= cp0RegWriteAddr_89;
     cp0RegWe_86 <= cp0RegWe_89;
+    exceptType_8b <= exceptType_8c;
 
     mem_wb_ist: mem_wb
         port map (
@@ -823,6 +889,9 @@ begin
     wbCP0RegData_96 <= wbCP0RegData_9c;
     wbCP0RegWriteAddr_96 <= wbCP0RegWriteAddr_9c;
     wbCP0RegWe_96 <= wbCP0RegWe_9c;
+    wbCP0RegData_98 <= wbCP0RegData_96;
+    wbCP0RegWriteAddr_98 <= wbCP0RegWriteAddr_96;
+    wbCP0RegWe_98 <= wbCP0RegWe_96;
 
     hi_lo_ist: hi_lo
         port map(
@@ -842,9 +911,13 @@ begin
             exToStall_i => exToStall_6b,
             stall_o => stall;
             flush_o => flush_b1;
-            newPC_o => newPC_b1
+            newPC_o => newPC_b1;
+            exceptType_o => exceptType_8b,
+            cp0Epc_i => cp0EPC_8b
         );
     flush_b2 <= flush_b1;
+    flush_b5 <= flush_b1;
+    flush_b7 <= flush_b1;
     
     cp0_reg_ist: cp0_reg
         port map(
@@ -855,6 +928,9 @@ begin
             data_i => wbCP0RegData_9c,
             waddr_i => wbCP0RegWriteAddr_9c,
             we_i => wbCP0RegWe_9c,
-            data_o => data_c6
+            data_o => data_c6,
+            exceptType_i => exceptType_8c,
+            currentInstAddr_i => currentInstAddr_8c,
+            isInDelaySlot_o => isInDelaySlot_8c
         );
 end bhv;
