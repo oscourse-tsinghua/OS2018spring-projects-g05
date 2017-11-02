@@ -41,7 +41,7 @@ entity mem is
         cp0RegWe_o: out std_logic;
 
         -- for exception --
-        excepttype_i: in std_logic_vector(ExceptionWidth);
+        exceptType_i: in std_logic_vector(ExceptionWidth);
         isInDelaySlot_i: in std_logic;
         currentInstAddress_i: in std_logic_vector(AddrWidth);
         cp0Status_i: in std_logic_vector(DataWidth);
@@ -51,7 +51,7 @@ entity mem is
         wbCP0RegWriteAddr_i: in std_logic_vector(RegAddrWidth);
         wbCP0RegData_i: in std_logic_vector(DataWidth);
 
-        excepttype_o: out std_logic_vector(ExceptionWidth);
+        exceptType_o: out std_logic_vector(ExceptionWidth);
         cp0Epc_o: out std_logic_vector(DataWidth);
         isInDelaySlot_o: out std_logic;
         currentInstAddress_o: out std_logic_vector(AddrWidth)

@@ -16,8 +16,8 @@ entity ctrl is
         idToStall_i, exToStall_i: in std_logic;
         stall_o: out std_logic_vector(StallWidth);
         exceptType_i: in std_logic_vector(ExceptionWidth);
-        cp0Epc_i: in std_logic_vector();
-        newPC_o: out std_logic_vector(DataWidth);
+        cp0Epc_i: in std_logic_vector(DataWidth);
+        newPC_o: out std_logic_vector(AddrWidth);
         flush_o: out std_logic
     );
 end ctrl;

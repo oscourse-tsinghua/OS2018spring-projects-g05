@@ -43,10 +43,10 @@ entity ex_mem is
         memCP0RegWe_o: out std_logic;
 
         -- for exception --
-        exExcepttype_i: in std_logic_vector(ExceptionWidth);
+        exExceptType_i: in std_logic_vector(ExceptionWidth);
         exIsInDelaySlot_i: in std_logic;
         exCurrentInstAddress_i: in std_logic_vector(AddrWidth);
-        memExcepttype_o: out std_logic_vector(ExceptionWidth);
+        memExceptType_o: out std_logic_vector(ExceptionWidth);
         memIsInDelaySlot_o: out std_logic;
         memCurrentInstAddress_o: out std_logic_vector(AddrWidth)
     );

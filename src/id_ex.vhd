@@ -20,7 +20,7 @@ entity id_ex is
         nextInstInDelaySlot_i: in std_logic;
         flush_i: in std_logic;
         idCurrentInstAddress_i: in std_logic_vector(AddrWidth);
-        idExcepttype_i: in std_logic_vector(ExceptionWidth);
+        idExceptType_i: in std_logic_vector(ExceptionWidth);
 
         alut_o: out AluType;
         memt_o: out MemType;
@@ -33,7 +33,7 @@ entity id_ex is
         exIsInDelaySlot_o: out std_logic;
         isInDelaySlot_o: out std_logic;
         exCurrentInstAddress_o: out std_logic_vector(AddrWidth);
-        exExcepttype_o: out std_logic_vector(ExceptionWidth)
+        exExceptType_o: out std_logic_vector(ExceptionWidth)
     );
 end id_ex;
 

@@ -10,7 +10,7 @@ entity pc_reg is
         stall_i: in std_logic_vector(StallWidth);
         branchTargetAddress_i: in std_logic_vector(AddrWidth);
         branchFlag_i: in std_logic;
-        flush: in std_logic;
+        flush_i: in std_logic;
         newPc_i: in std_logic(AddrWidth);
         pc_o: out std_logic_vector(AddrWidth);
         pcEnable_o: out std_logic
@@ -25,7 +25,7 @@ begin
             if (rst = RST_ENABLE) then
                 pcEnable_o <= DISABLE;
                 pc <= (others => '0');
-            elsif (flush = YES) then
+            elsif (flush_i = YES) then
                 pc <= newPc_i;
             elsif (stall_i(PC_STOP_IDX) = PIPELINE_NONSTOP) then
                 pcEnable_o <= ENABLE;

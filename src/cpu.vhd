@@ -33,7 +33,9 @@ architecture bhv of cpu is
             pc_o: out std_logic_vector(AddrWidth);
             pcEnable_o: out std_logic;
             branchFlag_i: in std_logic;
-            branchTargetAddress_i: in std_logic_vector(AddrWidth)
+            branchTargetAddress_i: in std_logic_vector(AddrWidth);
+            flush_i: in std_logic;
+            newPC_i: in std_logic_vector(AddrWidth)
         );
     end component;
 
@@ -44,7 +46,8 @@ architecture bhv of cpu is
             pc_i: in std_logic_vector(AddrWidth);
             inst_i: in std_logic_vector(InstWidth);
             pc_o: out std_logic_vector(AddrWidth);
-            inst_o: out std_logic_vector(InstWidth)
+            inst_o: out std_logic_vector(InstWidth);
+            flush_i: in std_logic
         );
     end component;
 
@@ -97,7 +100,10 @@ architecture bhv of cpu is
             branchFlag_o: out std_logic;
             linkAddr_o: out std_logic_vector(AddrWidth);
             isInDelaySlot_o: out std_logic;
-            nextInstInDelaySlot_o: out std_logic
+            nextInstInDelaySlot_o: out std_logic;
+
+            exceptType_o: out std_logic_vector(ExceptionWidth);
+            currentInstAddr_o: out std_logic_vector(AddrWidth)
         );
     end component;
 
@@ -125,7 +131,13 @@ architecture bhv of cpu is
             writeRegAddr_o: out std_logic_vector(RegAddrWidth);
             exIsInDelaySlot_o: out std_logic;
             exLinkAddress_o: out std_logic_vector(AddrWidth);
-            isInDelaySlot_o: out std_logic
+            isInDelaySlot_o: out std_logic;
+
+            flush_i: in std_logic;
+            idExceptType_i: in std_logic_vector(ExceptionWidth);
+            idCurrentInstAddr_i: in std_logic_vector(AddrWidth);
+            exExceptType_o: out std_logic_vector(ExceptionWidth);
+            exCurrentInstAddr_o: out std_logic_vector(AddrWidth)
         );
     end component;
 
@@ -175,7 +187,14 @@ architecture bhv of cpu is
             cp0RegReadAddr_o: out std_logic_vector(CP0RegAddrWidth);
             cp0RegData_o: out std_logic_vector(DataWidth);
             cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
-            cp0RegWe_o: out std_logic
+            cp0RegWe_o: out std_logic;
+
+            -- for exception --
+            exceptType_i: in std_logic_vector(ExceptionWidth);
+            currentInstAddr_i: in std_logic_vector(AddrWidth);
+            exceptType_o: out std_logic_vector(ExceptionWidth);
+            currentInstAddr_o: out std_logic_vector(AddrWidth);
+            isInDelaySlot_o: out std_logic
         );
     end component;
 
@@ -213,7 +232,16 @@ architecture bhv of cpu is
             exCP0RegWe_i: in std_logic;
             memCP0RegData_o: out std_logic_vector(DataWidth);
             memCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
-            memCP0RegWe_o: out std_logic
+            memCP0RegWe_o: out std_logic;
+
+            -- for exception --
+            flush_i: in std_logic;
+            exExcepType_o: std_logic_vector(ExceptionWidth);
+            exCurrentInstAddr_o: std_logic_vector(AddrWidth);
+            exIsInDelaySlot_o: std_logic;
+            memExceptType_o: out std_logic_vector(ExceptionWidth);
+            memCurrentInstAddress_o: out std_logic_vector(AddrWidth);
+            memIsInDelaySlot_o: out std_logic
         );
     end component;
 
@@ -248,7 +276,22 @@ architecture bhv of cpu is
             cp0RegWe_i: in std_logic;
             cp0RegData_o: out std_logic_vector(DataWidth);
             cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
-            cp0RegWe_o: out std_logic
+            cp0RegWe_o: out std_logic;
+
+            -- for exception --
+            exceptType_i: in std_logic_vector(ExceptionWidth);
+            currentInstAddr_i: in std_logic_vector(ExceptionWidth);
+            isInDelaySlot_i: in std_logic_vector(ExceptionWidth);
+            cp0Status_i: in std_logic_vector(DataWidth);
+            cp0Cause_i: in std_logic_vector(DataWidth);
+            cp0Epc_i: in std_logic_vector(DataWidth);
+            wbCP0RegWe_i: in std_logic;
+            wbCP0RegWriteAddr_i: in std_logic_vector(AddrWidth);
+            wbCP0RegData_i: in std_logic_vector(DataWidth);
+            cp0EPC_o: out std_logic_vector(DataWidth);
+            exceptType_o: out std_logic_vector(ExceptionWidth);
+            currentInstAddr_o: out std_logic_vector(AddrWidth);
+            isInDelaySlot_o: out std_logic
         );
     end component;
 
@@ -274,7 +317,10 @@ architecture bhv of cpu is
             memCP0RegWe_i: in std_logic;
             wbCP0RegData_o: out std_logic_vector(DataWidth);
             wbCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
-            wbCP0RegWe_o: out std_logic
+            wbCP0RegWe_o: out std_logic;
+
+            -- for exception --
+            flush_i: in std_logic
         );
     end component;
 
@@ -291,28 +337,36 @@ architecture bhv of cpu is
         port (
             rst: in std_logic;
             idToStall_i, exToStall_i: in std_logic;
-            stall_o: out std_logic_vector(StallWidth)
+            stall_o: out std_logic_vector(StallWidth);
+            cp0Epc_i: in std_logic_vector(DataWidth);
+            exceptType_i: in std_logic_vector(ExceptionWidth);
+            newPC_o: out std_logic_vector(AddrWidth);
+            flush: out std_logic
         );
     end component;
 
     component cp0_reg
         port (
-                clk, rst: in std_logic;
-                raddr_i: in std_logic_vector(CP0RegAddrWidth);
-                data_i: in std_logic_vector(DataWidth);
-                waddr_i: in std_logic_vector(CP0RegAddrWidth);
-                we_i: in std_logic;
-                int_i: in std_logic_vector(intWidth);
+            clk, rst: in std_logic;
+            raddr_i: in std_logic_vector(CP0RegAddrWidth);
+            data_i: in std_logic_vector(DataWidth);
+            waddr_i: in std_logic_vector(CP0RegAddrWidth);
+            we_i: in std_logic;
+            int_i: in std_logic_vector(intWidth);
 
-                data_o: out std_logic_vector(DataWidth);
-                status_o: out std_logic_vector(DataWidth);
-                count_o: out std_logic_vector(DataWidth);
-                compare_o: out std_logic_vector(DataWidth);
-                cause_o: out std_logic_vector(DataWidth);
-                epc_o: out std_logic_vector(DataWidth);
-                config_o: out std_logic_vector(DataWidth);
-                prid_o: out std_logic_vector(DataWidth);
-                timerInt_o: out std_logic
+            data_o: out std_logic_vector(DataWidth);
+            status_o: out std_logic_vector(DataWidth);
+            count_o: out std_logic_vector(DataWidth);
+            compare_o: out std_logic_vector(DataWidth);
+            cause_o: out std_logic_vector(DataWidth);
+            epc_o: out std_logic_vector(DataWidth);
+            config_o: out std_logic_vector(DataWidth);
+            prid_o: out std_logic_vector(DataWidth);
+            timerInt_o: out std_logic;
+
+            exceptType_i: in std_logic_vector(ExceptionWidth);
+            currentInstAddr_i: in std_logic_vector(AddrWidth);
+            isInDelaySlot_i: in std_logic
         );
     end component;
 
@@ -461,6 +515,13 @@ architecture bhv of cpu is
     -- Signals connecting hi_lo and ex --
     signal hiData_a6, loData_a6: std_logic_vector(DataWidth);
 
+    -- Signals connecting ctrl and pc --
+    signal flush_b1: std_logic;
+    signal newPC_b1: std_logic_vector(AddrWidth);
+
+    -- Signals connecting ctrl and if_id --
+    signal flush_b2: std_logic;
+
     -- Signals connecting id and ctrl --
     signal idToStall_4b: std_logic;
 
@@ -486,7 +547,9 @@ begin
            pc_o => pc_12,
            pcEnable_o => instEnable_o,
            branchFlag_i => branchFlag_41,
-           branchTargetAddress_i => branchTargetAddress_41
+           branchTargetAddress_i => branchTargetAddress_41;
+           flush_i => flush_b1,
+           newPC_i => newPC_b1
         );
 
     if_id_ist: if_id
@@ -496,7 +559,8 @@ begin
             pc_i => pc_12,
             inst_i => inst_x2,
             pc_o => pc_24,
-            inst_o => inst_24
+            inst_o => inst_24,
+            flush_i => flush_b2
         );
     instAddr_o <= pc_12;
 
@@ -776,9 +840,12 @@ begin
             rst => rst,
             idToStall_i => idToStall_4b,
             exToStall_i => exToStall_6b,
-            stall_o => stall
+            stall_o => stall;
+            flush_o => flush_b1;
+            newPC_o => newPC_b1
         );
-
+    flush_b2 <= flush_b1;
+    
     cp0_reg_ist: cp0_reg
         port map(
             rst => rst,

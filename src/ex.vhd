@@ -60,9 +60,9 @@ entity ex is
         cp0RegWe_o: out std_logic;
 
         -- for exception --
-        excepttype_i: in std_logic_vector(ExceptionWidth);
+        exceptType_i: in std_logic_vector(ExceptionWidth);
         currentInstAddress_i: in std_logic_vector(ExceptionWidth);
-        excepttype_o: out std_logic_vector(ExceptionWidth);
+        exceptType_o: out std_logic_vector(ExceptionWidth);
         isInDelaySlot_o: out std_logic;
         currentInstAddress_o: out std_logic_vector(AddrWidth)
     );

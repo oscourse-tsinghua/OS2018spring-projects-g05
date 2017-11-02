@@ -31,7 +31,7 @@ entity cp0_reg is
         timerInt_o: out std_logic;
 
         -- for exception --
-        excepttype_i: in std_logic_vector(ExceptionWidth);
+        excepType_i: in std_logic_vector(ExceptionWidth);
         currentInstAddr_i: in std_logic_vector(AddrWidth);
         isIndelaySlot_i: in std_logic
     );
@@ -140,7 +140,7 @@ begin
 
                     when ERETEXCEPTION =>
                         status_o(1) <= '0';
-                    
+
                     when others =>
                         null;
                 end case;

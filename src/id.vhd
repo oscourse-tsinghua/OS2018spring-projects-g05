@@ -46,7 +46,7 @@ entity id is
         isInDelaySlot_o: out std_logic;
 
         -- For Exceptions --
-        excepttype_o: out std_logic_vector(ExceptionWidth);
+        exceptType_o: out std_logic_vector(ExceptionWidth);
         currentInstAddress_o: out std_logic_vector(AddrWidth) 
     );
 end id;
