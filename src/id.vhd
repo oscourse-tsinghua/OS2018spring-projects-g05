@@ -44,6 +44,10 @@ entity id is
         branchTargetAddress_o: out std_logic_vector(AddrWidth);
         linkAddr_o: out std_logic_vector(AddrWidth);
         isInDelaySlot_o: out std_logic
+
+        -- For Exceptions --
+        excepttype_o: out std_logic(ExceptionWidth);
+        currentInstAddress_o: out std_logic(AddrWidth) 
     );
 end id;
 
@@ -63,6 +67,9 @@ architecture bhv of id is
     signal condjump: std_logic;
     signal instImmSign: std_logic_vector(InstOffsetImmWidth);
     signal instOffsetImm: std_logic_vector(InstOffsetImmWidth);
+    signal exceptTypeIsSyscall: std_logic;
+    signal exceptTypeIsEret: std_logic;
+    signal isValid: std_logic;
 begin
 
     -- Segment the instruction --
@@ -81,6 +88,8 @@ begin
     pcPlus8 <= pc_i + "1000";
     pcPlus4 <= pc_i + "100";
     immInstrAddr <= pc_i(InstJmpUnchangeIdx) & inst_i(InstImmAddrIdx) & "00";
+    excepttype_o <= "0000000000000000000" & exceptTypeIsEret & "00" & isValid & exceptTypeIsSyscall & "00000000";
+
     process(all)
         -- indicates where the operand is from --
         variable oprSrc1, oprSrc2: OprSrcType;
@@ -101,6 +110,9 @@ begin
         alut_o <= ALU_JR;
         nextInstInDelaySlot_o <= NOT_IN_DELAY_SLOT_FLAG;
         condJump <= NO;
+        exceptTypeIsSyscall <= NO;
+        exceptTypeIsEret <= NO;
+        isValid <= INSTINVALID;
 
         if (rst = RST_ENABLE) then
             oprSrc1 := INVALID;
@@ -334,6 +346,14 @@ begin
                             linkAddr_o <= pcPlus8;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
+
+                        when EXE_SYSCALL =>
+                            oprSrc1 <= INVALID;
+                            oprSrc2 <= INVALID;
+                            isValid <= INSTVALID;
+                            alut_o <= ALU_SYSCALL;
+                            toWriteReg_o <= NO;
+                            exceptTypeIsSyscall <= YES;
 
                         -- others --
                         when others =>
@@ -760,6 +780,13 @@ begin
             operand2_o <= (others => '0');
             toWriteReg_o <= YES;
             writeRegAddr_o <= instRt;
+        end if;
+
+        if (inst_i = EXE_ERET) then
+            toWriteReg_o <= NO;
+            alut_o <= ALU_ERET;
+            isValid <= INSTVALID;
+            exceptTypeIsEret <= YES;
         end if;
     end process;
 
