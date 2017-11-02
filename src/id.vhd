@@ -43,11 +43,11 @@ entity id is
         branchFlag_o: out std_logic;
         branchTargetAddress_o: out std_logic_vector(AddrWidth);
         linkAddr_o: out std_logic_vector(AddrWidth);
-        isInDelaySlot_o: out std_logic
+        isInDelaySlot_o: out std_logic;
 
         -- For Exceptions --
-        excepttype_o: out std_logic(ExceptionWidth);
-        currentInstAddress_o: out std_logic(AddrWidth) 
+        excepttype_o: out std_logic_vector(ExceptionWidth);
+        currentInstAddress_o: out std_logic_vector(AddrWidth) 
     );
 end id;
 
