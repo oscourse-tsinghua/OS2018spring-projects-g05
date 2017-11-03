@@ -140,8 +140,9 @@ begin
            32ux"1e" when operand1_i( 1) = '1' else 32ux"1f" when operand1_i( 0) = '1' else
            32ux"20";
 
-    excepttype_o <= excepttype_i(31 downto 12) & ovAssert & trapAssert & excepttype_i(9 downto 8) & "00000000";
+    excepttype_o <= excepttype_i(31 downto 12) & ovAssert & '0' & excepttype_i(9 downto 8) & "00000000";
     isInDelaySlot_o <= isInDelaySlot_i;
+    currentInstAddr_o <= currentInstAddr_i;
 
     -- multiplication --
     process(multip1, multip2, alut_i, calcMult)

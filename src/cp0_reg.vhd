@@ -110,7 +110,7 @@ begin
                             end if;
                         end if;
                         status_o(1) <= '1';
-                        cause_o(6 downto 2) <= "00000";
+                        cause_o(6 downto 2) <= "01000";
 
                     when INVALIDINSTEXCEPTION =>
                         if (status_o(1) = '0') then
