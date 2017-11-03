@@ -1,3 +1,4 @@
+import re
 import ctypes
 import sys
 
@@ -16,7 +17,8 @@ single_period = [
     'add', 'addu', 'sub', 'subu', 'slt', 'sltu',
     'addi', 'addiu', 'slti', 'sltiu', 'clo', 'clz', 'multu', 'mult', 'mul',
     'jr', 'jalr', 'j', 'jal',
-    'b', 'bal', 'beq', 'bgez', 'bgezal', 'bgtz', 'blez', 'bltz', 'bltzal', 'bne'
+    'b', 'bal', 'beq', 'bgez', 'bgezal', 'bgtz', 'blez', 'bltz', 'bltzal', 'bne',
+    'lb', 'lbu', 'lh', 'lhu', 'lw', 'sb', 'sh', 'sw'
 ]
 
 two_periods = [
@@ -28,7 +30,8 @@ write_to_simple_reg = [
     'sll', 'sllv', 'srl', 'sra', 'srlv', 'srav',
     'mfhi', 'mflo', 'movn', 'movz',
     'add', 'addu', 'sub', 'subu', 'slt', 'sltu',
-    'addi', 'addiu', 'slti', 'sltiu', 'clo', 'clz', 'mul'
+    'addi', 'addiu', 'slti', 'sltiu', 'clo', 'clz', 'mul',
+    'lb', 'lbu', 'lh', 'lhu', 'lw'
 ]
 
 write_to_hi_lo = [
@@ -41,6 +44,13 @@ jump = [
 ]
 branch = [
     'b', 'bal', 'beq', 'bgez', 'bgezal', 'bgtz', 'blez', 'bltz', 'bltzal', 'bne'
+]
+
+load = [
+    'lb', 'lbu', 'lh', 'lhu', 'lw'
+]
+store = [
+    'sb', 'sh', 'sw'
 ]
 
 insts = [None]
@@ -86,6 +96,9 @@ class Instruct():
                 if s.startswith('$'):
                     return int(s[1:])
                 else:
+                    if self.opcode in load or self.opcode in store and '(' in s:
+                        offset, base, _ = re.split(r'\(|\)', s)
+                        return (int(base[1:]), self._extend(int(offset, 16), True, 16))
                     x = int(s, 16)
                     if self.opcode in imm_to_signed_extend:
                         x = self._extend(x, True, 16)
@@ -226,6 +239,26 @@ class Instruct():
                     reg[self.operands[0]] = ret_addr
                 else:
                     reg[31] = ret_addr
+        if self.opcode in load or self.opcode in store:
+            mem_addr = self._cut(reg[self.operands[1][0]] + self.operands[1][1])
+            if self.opcode in load:
+                if 'b' in self.opcode:
+                    val = self._load_bytes_from_mem(mem_addr, 1)
+                    reg[self.operands[0]] = self._extend(val, not self.opcode.endswith('u'), 8)
+                if 'h' in self.opcode:
+                    val = self._load_bytes_from_mem(mem_addr, 2)
+                    reg[self.operands[0]] = self._extend(val, not self.opcode.endswith('u'), 16)
+                if 'w' in self.opcode:
+                    val = self._load_bytes_from_mem(mem_addr, 4)
+                    reg[self.operands[0]] = val
+            else:
+                if self.opcode == 'sb':
+                    self._store_bytes_to_mem(mem_addr, reg[self.operands[0]] & 0xff, 1)
+                if self.opcode == 'sh':
+                    self._store_bytes_to_mem(mem_addr, reg[self.operands[0]] & 0xffff, 2)
+                if self.opcode == 'sw':
+                    self._store_bytes_to_mem(mem_addr, reg[self.operands[0]], 4)
+
 
         if self.opcode in single_period:
             periods_inc = 1
@@ -234,6 +267,8 @@ class Instruct():
 
         if self.opcode == 'nop':
             finish_one(1, 'none')
+        elif self.opcode in store:
+            finish_one(periods_inc, 'none')
         elif self.opcode in write_to_simple_reg:
             finish_one(periods_inc, 'reg', self.operands[0])
         elif self.opcode in write_to_hi_lo:
@@ -305,6 +340,26 @@ class Instruct():
             res = Instruct._complement(res, 64)
         return res
 
+    @staticmethod
+    def _load_byte_from_mem(addr):
+        return memory.get(addr) or 0
+
+    @staticmethod
+    def _store_byte_to_mem(addr, x):
+        memory[addr] = x
+
+    @staticmethod
+    def _load_bytes_from_mem(addr, bytes_num):
+        res = 0
+        for k in range(bytes_num):
+            res += Instruct._load_byte_from_mem(addr + k) << (8 * k)
+        return res
+
+    @staticmethod
+    def _store_bytes_to_mem(addr, x, bytes_num):
+        for k in range(bytes_num):
+            Instruct._store_byte_to_mem(addr + k, x & 0xff)
+            x >>= 8
 
 
 if __name__ == '__main__':
