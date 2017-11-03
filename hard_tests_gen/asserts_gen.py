@@ -14,7 +14,9 @@ single_period = [
     'sll', 'sllv', 'srl', 'sra', 'srlv', 'srav', 'nop',
     'mfhi', 'mflo', 'mthi', 'mtlo', 'movn', 'movz',
     'add', 'addu', 'sub', 'subu', 'slt', 'sltu',
-    'addi', 'addiu', 'slti', 'sltiu', 'clo', 'clz', 'multu', 'mult', 'mul'
+    'addi', 'addiu', 'slti', 'sltiu', 'clo', 'clz', 'multu', 'mult', 'mul',
+    'jr', 'jalr', 'j', 'jal',
+    'b', 'bal', 'beq', 'bgez', 'bgezal', 'bgtz', 'blez', 'bltz', 'bltzal', 'bne'
 ]
 
 two_periods = [
@@ -34,11 +36,20 @@ write_to_hi_lo = [
     'madd', 'maddu', 'msub', 'msubu'
 ]
 
+jump = [
+    'jr', 'jalr', 'j', 'jal'
+]
+branch = [
+    'b', 'bal', 'beq', 'bgez', 'bgezal', 'bgtz', 'blez', 'bltz', 'bltzal', 'bne'
+]
+
 insts = [None]
 reg = [0] * 32
 hi, lo = (0, 0)
 memory = dict()
 now_period = 5
+is_delay_slot = False
+j_b_dest = None
 pc = 1
 
 def finish_one(periods_inc, dest_type, pos=0):
@@ -64,25 +75,30 @@ class Instruct():
         'mfhi', 'mflo',
         'mfhi', 'mflo',
         'mfhi', 'mflo'
-        self.opcode, self.operands = s.strip().split(' ', 1)
-        self.operands = self.operands.strip().split(',')
+        if s.strip() == 'nop':
+            self.opcode, self.operands = 'nop', []
+        else:
+            self.opcode, self.operands = s.strip().split(' ', 1)
+            self.operands = self.operands.strip().split(',')
 
-        def _proc_operands(s):
-            s = s.strip()
-            if s.startswith('$'):
-                return int(s[1:])
-            else:
-                x = int(s, 16)
-                if self.opcode in imm_to_signed_extend:
-                    x = self._extend(x, True, 16)
-                elif self.opcode in imm_to_unsigned_extend:
-                    x = self._extend(x, False, 16)
-                return x
-        self.operands = list(map(_proc_operands, self.operands))
+            def _proc_operands(s):
+                s = s.strip()
+                if s.startswith('$'):
+                    return int(s[1:])
+                else:
+                    x = int(s, 16)
+                    if self.opcode in imm_to_signed_extend:
+                        x = self._extend(x, True, 16)
+                    elif self.opcode in imm_to_unsigned_extend:
+                        x = self._extend(x, False, 16)
+                    return x
+            self.operands = list(map(_proc_operands, self.operands))
 
     def execute(self):
-        global pc, hi, lo
+        global pc, hi, lo, j_b_dest
         pc += 1
+        success_j_b = False
+        #print self.opcode, self.operands
 
         if self.opcode == 'ori':
             reg[self.operands[0]] = reg[self.operands[1]] | self.operands[2]
@@ -181,7 +197,35 @@ class Instruct():
                     product = self._complement(product, 64)
                 hilo = self._cut(hilo + product, 64)
                 hi, lo = hilo >> 32, self._cut(hilo)
-
+        if self.opcode in jump or self.opcode in branch:
+            if self.opcode in jump:
+                success_j_b = True
+                if self.opcode.endswith('r'):
+                    j_b_dest = reg[self.operands[-1]] >> 2
+                else:
+                    j_b_dest = self.operands[0] >> 2
+            else:
+                success_j_b = True
+                if 'eq' in self.opcode:
+                    success_j_b = reg[self.operands[0]] == reg[self.operands[1]]
+                if 'ne' in self.opcode:
+                    success_j_b = reg[self.operands[0]] != reg[self.operands[1]]
+                if 'gez' in self.opcode:
+                    success_j_b = reg[self.operands[0]] >> 31 == 0
+                if 'gtz' in self.opcode:
+                    success_j_b = (reg[self.operands[0]] != 0 and reg[self.operands[0]] >> 31 == 0)
+                if 'lez' in self.opcode:
+                    success_j_b = (reg[self.operands[0]] == 0 or reg[self.operands[0]] >> 31 == 1)
+                if 'ltz' in self.opcode:
+                    success_j_b = reg[self.operands[0]] >> 31 == 1
+                if success_j_b:
+                    j_b_dest = pc + (self.operands[-1] >> 2)
+            if success_j_b and 'al' in self.opcode:
+                ret_addr = (pc + 1) << 2
+                if self.opcode == 'jalr' and len(self.operands) == 2:
+                    reg[self.operands[0]] = ret_addr
+                else:
+                    reg[31] = ret_addr
 
         if self.opcode in single_period:
             periods_inc = 1
@@ -195,6 +239,19 @@ class Instruct():
         elif self.opcode in write_to_hi_lo:
             finish_one(periods_inc, 'hi')
             finish_one(0, 'lo')
+        elif self.opcode in jump or self.opcode in branch:
+            if self.opcode == 'jalr' and len(self.operands) == 2:
+                finish_one(periods_inc, 'reg', self.operands[0])
+            else:
+                finish_one(periods_inc, 'reg', 31)
+
+        global is_delay_slot
+        if success_j_b:
+            is_delay_slot = True
+        else:
+            if is_delay_slot == True:
+                pc = j_b_dest
+            is_delay_slot = False
 
 
     @staticmethod
@@ -251,6 +308,8 @@ class Instruct():
 
 
 if __name__ == '__main__':
+    if len(sys.argv) >= 3:
+        max_periods = int(sys.argv[2])
     with open(sys.argv[1], 'r') as fin:
         lines = fin.read().split('\n')
         order = 1
@@ -259,6 +318,10 @@ if __name__ == '__main__':
                 break
             insts.append(Instruct(line.strip(), order))
             order += 1
+        insts.append(Instruct('nop', order))
+        insts.append(Instruct('nop', order))
 
         while pc < len(insts):
+            if now_period >= max_periods:
+                break
             insts[pc].execute()
