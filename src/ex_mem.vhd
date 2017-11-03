@@ -40,7 +40,16 @@ entity ex_mem is
         exCP0RegWe_i: in std_logic;
         memCP0RegData_o: out std_logic_vector(DataWidth);
         memCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
-        memCP0RegWe_o: out std_logic
+        memCP0RegWe_o: out std_logic;
+
+        -- for exception --
+        exExceptType_i: in std_logic_vector(ExceptionWidth);
+        exIsInDelaySlot_i: in std_logic;
+        exCurrentInstAddr_i: in std_logic_vector(AddrWidth);
+        memExceptType_o: out std_logic_vector(ExceptionWidth);
+        memIsInDelaySlot_o: out std_logic;
+        memCurrentInstAddr_o: out std_logic_vector(AddrWidth);
+        flush_i: in std_logic
     );
 end ex_mem;
 
@@ -63,7 +72,16 @@ begin
 
             tempProduct_o <= (others => '0');
             cnt_o <= (others => '0');
-            if (rst /= RST_ENABLE) then
+            memExcepttype_o <= (others => '0');
+            memIsInDelaySlot_o <= NO;
+            memCurrentInstAddr_o <= (others => '0');
+
+            memCP0RegWe_o <= NO;
+            memCP0RegData_o <= (others => '0');
+            memCP0RegWriteAddr_o <= (others => '0');
+            if (flush_i = YES) then
+                -- nothing to be done here --
+            elsif (rst /= RST_ENABLE) then
                 if (stall_i(EX_STOP_IDX) = PIPELINE_STOP and stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                     tempProduct_o <= tempProduct_i;
                     cnt_o <= cnt_i;
@@ -84,6 +102,10 @@ begin
                     memCP0RegWe_o <= exCP0RegWe_i;
                     memCP0RegWriteAddr_o <= exCP0RegWriteAddr_i;
                     memCP0RegData_o <= exCP0RegData_i;
+
+                    memExcepttype_o <= exExcepttype_i;
+                    memIsInDelaySlot_o <= exIsInDelaySlot_i;
+                    memCurrentInstAddr_o <= exCurrentInstAddr_i;
                 end if;
             end if;
         end if;

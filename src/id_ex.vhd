@@ -18,6 +18,9 @@ entity id_ex is
         idLinkAddress_i: in std_logic_vector(AddrWidth);
         idIsInDelaySlot_i: in std_logic;
         nextInstInDelaySlot_i: in std_logic;
+        flush_i: in std_logic;
+        idCurrentInstAddr_i: in std_logic_vector(AddrWidth);
+        idExceptType_i: in std_logic_vector(ExceptionWidth);
 
         alut_o: out AluType;
         memt_o: out MemType;
@@ -28,7 +31,9 @@ entity id_ex is
         writeRegAddr_o: out std_logic_vector(RegAddrWidth);
         exLinkAddress_o: out std_logic_vector(AddrWidth);
         exIsInDelaySlot_o: out std_logic;
-        isInDelaySlot_o: out std_logic
+        isInDelaySlot_o: out std_logic;
+        exCurrentInstAddr_o: out std_logic_vector(AddrWidth);
+        exExceptType_o: out std_logic_vector(ExceptionWidth)
     );
 end id_ex;
 
@@ -44,6 +49,17 @@ begin
                 operandX_o <= (others => '0');
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
+            elsif (flush_i = YES) then
+                alut_o <= ALU_NOP;
+                operand1_o <= (others => '0');
+                operand2_o <= (others => '0');
+                toWriteReg_o <= NO;
+                writeRegAddr_o <= (others => '0');
+                exExcepttype_o <= (others => '0');
+                exLinkAddress_o <= (others => '0');
+                exIsInDelaySlot_o <= NO;
+                isInDelaySlot_o <= NO;
+                exCurrentInstAddr_o <= (others => '0');
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_STOP and stall_i(EX_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= INVALID;
                 operand1_o <= (others => '0');
@@ -63,6 +79,8 @@ begin
                 exLinkAddress_o <= idLinkAddress_i;
                 exIsInDelaySlot_o <= idIsInDelaySlot_i;
                 isInDelaySlot_o <= nextInstInDelaySlot_i;
+                exExcepttype_o <= idExcepttype_i;
+                exCurrentInstAddr_o <= idCurrentInstAddr_i;
             end if;
         end if;
     end process;
