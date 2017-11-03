@@ -24,22 +24,24 @@ end ctrl;
 
 architecture bhv of ctrl is
 begin
-    process(rst, idToStall_i, exToStall_i) begin
+    process(all) begin
         if (rst = RST_ENABLE) then
             stall_o <= (others => '0');
             flush_o <= '0';
             newPC_o <= (others => '0');
         else
             if (exceptType_i /= EXCEPTION_ZERO_WORD) then
+                flush_o <= '1';
+                stall_o <= (others => '0');
                 case (exceptType_i) is
                     when EXTERNALEXCEPTION =>
-                        newPC_o <= "00000000000000000000000000100000";
+                        newPC_o <= EXTERNALEXCEPTIONBRANCHADDR;
                     when SYSCALLEXCEPTION =>
-                        newPC_o <= "00000000000000000000000001000000";
+                        newPC_o <= SYSCALLEXCEPTIONBRANCHADDR;
                     when INVALIDINSTEXCEPTION =>
-                        newPC_o <= "00000000000000000000000010000000";
+                        newPC_o <= INVALIDINSTEXCEPTIONBRANCHADDR;
                     when OVERFLOWEXCEPTION =>
-                        newPC_o <= "00000000000000000000000010000000";
+                        newPC_o <= OVERFLOWEXCEPTIONBRANCHADDR;
                     when ERETEXCEPTION =>
                         newPC_o <= cp0Epc_i;
                     when others =>
@@ -47,10 +49,13 @@ begin
                 end case;
             elsif (exToStall_i = PIPELINE_STOP) then
                 stall_o <= "111100";
+                flush_o <= '0';
             elsif (idToStall_i = PIPELINE_STOP) then
                 stall_o <= "111000";
+                flush_o <= '0';
             else
                 stall_o <= "000000";
+                flush_o <= '0';
             end if;
         end if;
     end process;

@@ -196,18 +196,18 @@ begin
             excepttype_o <= (others => '0');
         else
             excepttype_o <= (others => '0');
-            if (currentInstAddr_i /= CP0_ZERO_WORD) then
-                if (((cp0Cause(15 downto 8) & cp0Status(15 downto 8)) /= "00000000") and (cp0Status(1) /= NO) and (cp0Status(0) /= YES)) then
+            if ((currentInstAddr_i /= CP0_ZERO_WORD)) then
+                if (((cp0Cause(15 downto 8) & cp0Status(15 downto 8)) /= "00000000") and (cp0Status(1) = NO) and (cp0Status(0) = YES)) then
                     excepttype_o <= "00000000000000000000000000000001";
                 elsif (excepttype_i(8) = YES) then
                     excepttype_o <= "00000000000000000000000000001000";
                 elsif (excepttype_i(9) = YES) then
                     excepttype_o <= "00000000000000000000000000001010";
-                elsif (excepttype_o(10) = YES) then
+                elsif (excepttype_i(10) = YES) then
                     excepttype_o <= "00000000000000000000000000001101";
-                elsif (excepttype_o(11) = YES) then
+                elsif (excepttype_i(11) = YES) then
                     excepttype_o <= "00000000000000000000000000001100";
-                elsif (excepttype_o(12) = YES) then
+                elsif (excepttype_i(12) = YES) then
                     excepttype_o <= "00000000000000000000000000001110";
                 end if;
             end if;

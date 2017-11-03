@@ -562,7 +562,7 @@ architecture bhv of cpu is
     -- Signals connecting cp0 and mem --
     signal status_c8: std_logic_vector(DataWidth);
     signal cause_c8: std_logic_vector(DataWidth);
-    signal epc_c8: std_logic_vector(DataWidth);
+    signal epc_c8: std_logic_vector(AddrWidth);
     signal exceptType_8c: std_logic_vector(ExceptionWidth);
     signal currentInstAddr_8c: std_logic_vector(AddrWidth);
     signal isInDelaySlot_8c: std_logic;
@@ -936,6 +936,9 @@ begin
             data_o => data_c6,
             exceptType_i => exceptType_8c,
             currentInstAddr_i => currentInstAddr_8c,
-            isInDelaySlot_i => isInDelaySlot_8c
+            isInDelaySlot_i => isInDelaySlot_8c,
+            epc_o => epc_c8,
+            status_o => status_c8,
+            cause_o => cause_c8
         );
 end bhv;
