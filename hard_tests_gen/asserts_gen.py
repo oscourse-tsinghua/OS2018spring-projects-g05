@@ -54,6 +54,7 @@ store = [
 ]
 
 insts = [None]
+last_inst = None
 reg = [0] * 32
 hi, lo = (0, 0)
 memory = dict()
@@ -94,18 +95,20 @@ class Instruct():
             def _proc_operands(s):
                 s = s.strip()
                 if s.startswith('$'):
-                    return int(s[1:])
+                    return int(s[1:]), 'reg'
                 else:
                     if self.opcode in load or self.opcode in store and '(' in s:
                         offset, base, _ = re.split(r'\(|\)', s)
-                        return (int(base[1:]), self._extend(int(offset, 16), True, 16))
+                        return (int(base[1:]), self._extend(int(offset, 16), True, 16)), 'addr'
                     x = int(s, 16)
                     if self.opcode in imm_to_signed_extend:
                         x = self._extend(x, True, 16)
                     elif self.opcode in imm_to_unsigned_extend:
                         x = self._extend(x, False, 16)
-                    return x
+                    return x, 'imm'
             self.operands = list(map(_proc_operands, self.operands))
+            self.operands_types = list(map(lambda item: item[1], self.operands))
+            self.operands = list(map(lambda item: item[0], self.operands))
 
     def execute(self):
         global pc, hi, lo, j_b_dest
@@ -262,6 +265,8 @@ class Instruct():
 
         if self.opcode in single_period:
             periods_inc = 1
+            if last_inst and last_inst.opcode in load and last_inst.operands[0] in self._reg_to_use():
+                periods_inc += 1
         elif self.opcode in two_periods:
             periods_inc = 2
 
@@ -288,6 +293,12 @@ class Instruct():
                 pc = j_b_dest
             is_delay_slot = False
 
+    def _reg_to_use(self):
+        res = [self.operands[k] for k in range(len(self.operands)) if self.operands_types[k] == 'reg']
+        # exclude reg to write
+        if self.opcode in write_to_simple_reg or (self.opcode == 'jalr' and len(self.operands) == 2):
+            res = res[1:]
+        return res
 
     @staticmethod
     def _cut(x, bits=32):
@@ -379,4 +390,7 @@ if __name__ == '__main__':
         while pc < len(insts):
             if now_period >= max_periods:
                 break
-            insts[pc].execute()
+            current_inst = insts[pc]
+            current_inst.execute()
+            global last_inst
+            last_inst = current_inst
