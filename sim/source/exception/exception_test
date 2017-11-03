@@ -32,3 +32,29 @@ RUN SYSCALL
 RUN ori $2, $0, 0xfffe
 
 ASSERT 10 reg(2) x"0000ffff"
+
+RUN xori $2, $0, 0xffff
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ERET
+
+RUN ori $6, $0, 0xffff
+
+ASSERT 20 reg(6) x"00000000"

@@ -131,5 +131,11 @@ process begin
     assert user_reg(2) = x"0000ffff" severity FAILURE;
     wait;
 end process;
+process begin
+    wait for CLK_PERIOD; -- resetting
+    wait for 20 * CLK_PERIOD;
+    assert user_reg(6) = x"00000000" severity FAILURE;
+    wait;
+end process;
     end block assertBlk;
 end bhv;

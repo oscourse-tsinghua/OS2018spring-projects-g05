@@ -49,6 +49,18 @@ words(2) <= x"ff_ff_62_34"; -- RUN ori $2, $3, 0xffff
 words(3) <= x"fe_ff_42_34"; -- RUN ori $2, $2, 0xfffe
 words(4) <= x"0c_00_00_00"; -- RUN SYSCALL
 words(5) <= x"fe_ff_02_34"; -- RUN ori $2, $0, 0xfffe
+words(6) <= x"ff_ff_02_38"; -- RUN xori $2, $0, 0xffff
+words(7) <= x"00_00_06_34"; -- RUN ori $6, $0, 0x0000
+words(8) <= x"00_00_06_34"; -- RUN ori $6, $0, 0x0000
+words(9) <= x"00_00_06_34"; -- RUN ori $6, $0, 0x0000
+words(10) <= x"00_00_06_34"; -- RUN ori $6, $0, 0x0000
+words(11) <= x"00_00_06_34"; -- RUN ori $6, $0, 0x0000
+words(12) <= x"00_00_06_34"; -- RUN ori $6, $0, 0x0000
+words(13) <= x"00_00_06_34"; -- RUN ori $6, $0, 0x0000
+words(14) <= x"00_00_06_34"; -- RUN ori $6, $0, 0x0000
+words(15) <= x"00_00_06_34"; -- RUN ori $6, $0, 0x0000
+words(16) <= x"18_00_00_42"; -- RUN ERET
+words(17) <= x"ff_ff_06_34"; -- RUN ori $6, $0, 0xffff
         end if;
     end process;
 
