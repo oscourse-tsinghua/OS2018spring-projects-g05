@@ -2,6 +2,13 @@ import re
 import ctypes
 import sys
 
+output = '''DEFINE reg regfile_ist.regArray: RegArrayType
+DEFINE hi hi_lo_ist.hiData: std_logic_vector(DataWidth)
+DEFINE lo hi_lo_ist.loData: std_logic_vector(DataWidth)
+
+'''
+
+
 imm_to_signed_extend = [
     'addi', 'addiu', 'slti', 'sltiu'
 ]
@@ -63,6 +70,7 @@ is_delay_slot = False
 j_b_dest = None
 pc = 1
 
+
 def finish_one(periods_inc, dest_type, pos=0):
     global now_period
     now_period += periods_inc
@@ -78,7 +86,9 @@ def finish_one(periods_inc, dest_type, pos=0):
         assert_object = 'lo'
         assert_value = lo
     if dest_type != 'none':
-        print 'ASSERT %d %s 32ux"%x"' % (now_period, assert_object, assert_value)
+        global output
+        output += 'ASSERT %d %s 32ux"%x"\n' % (now_period, assert_object, assert_value)
+
 
 class Instruct():
     def __init__(self, s, order):
@@ -262,7 +272,6 @@ class Instruct():
                 if self.opcode == 'sw':
                     self._store_bytes_to_mem(mem_addr, reg[self.operands[0]], 4)
 
-
         if self.opcode in single_period:
             periods_inc = 1
             if last_inst and last_inst.opcode in load and last_inst.operands[0] in self._reg_to_use():
@@ -313,7 +322,6 @@ class Instruct():
         slb = bits - 1
         return (((x >> slb) == 0 and (y >> slb) == 0 and (res >> slb) == 1) or
                 ((x >> slb) == 1 and (y >> slb) == 1 and (res >> slb) == 0))
-
 
     @staticmethod
     def _extend(x, signed, origin_bits=16):
@@ -382,6 +390,8 @@ if __name__ == '__main__':
         for line in lines:
             if line == '':
                 break
+            global output
+            output += 'RUN %s\n' % line.strip()
             insts.append(Instruct(line.strip(), order))
             order += 1
         insts.append(Instruct('nop', order))
@@ -394,3 +404,5 @@ if __name__ == '__main__':
             current_inst.execute()
             global last_inst
             last_inst = current_inst
+
+    print output
