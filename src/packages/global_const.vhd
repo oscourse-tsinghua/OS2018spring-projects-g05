@@ -70,6 +70,6 @@ package global_const is
     constant SYSCALLEXCEPTION: std_logic_vector(ExceptionWidth) := "00000000000000000000000000000100";
     constant INVALIDINSTEXCEPTION: std_logic_vector(ExceptionWidth) := "00000000000000000000000000001010";
     constant OVERFLOWEXCEPTION: std_logic_vector(ExceptionWidth) := "00000000000000000000000000001101";
-    constant ERETEXCEPTION: std_logic_vector(ExceptionWidth) := "00000000000000000000000000001110"
+    constant ERETEXCEPTION: std_logic_vector(ExceptionWidth) := "00000000000000000000000000001110";
 
 end global_const;

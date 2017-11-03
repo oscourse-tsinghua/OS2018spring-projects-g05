@@ -61,10 +61,10 @@ entity ex is
 
         -- for exception --
         exceptType_i: in std_logic_vector(ExceptionWidth);
-        currentInstAddress_i: in std_logic_vector(ExceptionWidth);
+        currentInstAddr_i: in std_logic_vector(AddrWidth);
         exceptType_o: out std_logic_vector(ExceptionWidth);
         isInDelaySlot_o: out std_logic;
-        currentInstAddress_o: out std_logic_vector(AddrWidth)
+        currentInstAddr_o: out std_logic_vector(AddrWidth)
     );
 end ex;
 
@@ -229,8 +229,9 @@ begin
             else
                 reg2IMux <= operand2_i;
             end if;
-            resultSum <= to_stdlogicvector(to_integer(operand1_i) + to_integer(reg2IMux)); 
-            ovSum <= ((not operand1_i(31) and not(reg2IMux(31)) and resultSum(31)) or ((operand1_i(31)) and (reg2IMux(31))) and (not(resultSum(31))));
+            resultSum <= operand1_i + reg2IMux; 
+            ovSum <= (((not operand1_i(31)) and (not reg2IMux(31))) and resultSum(31)) 
+                        or ((operand1_i(31) and reg2IMux(31)) and (not resultSum(31)));
             writeRegAddr_o <= writeRegAddr_i;
             case alut_i is
                 when ALU_OR => writeRegData_o <= operand1_i or operand2_i;

@@ -45,10 +45,11 @@ entity ex_mem is
         -- for exception --
         exExceptType_i: in std_logic_vector(ExceptionWidth);
         exIsInDelaySlot_i: in std_logic;
-        exCurrentInstAddress_i: in std_logic_vector(AddrWidth);
+        exCurrentInstAddr_i: in std_logic_vector(AddrWidth);
         memExceptType_o: out std_logic_vector(ExceptionWidth);
         memIsInDelaySlot_o: out std_logic;
-        memCurrentInstAddress_o: out std_logic_vector(AddrWidth)
+        memCurrentInstAddr_o: out std_logic_vector(AddrWidth);
+        flush_i: in std_logic
     );
 end ex_mem;
 
@@ -73,7 +74,7 @@ begin
             cnt_o <= (others => '0');
             memExcepttype_o <= (others => '0');
             memIsInDelaySlot_o <= NO;
-            memCurrentInstAddress_o <= (others => '0');
+            memCurrentInstAddr_o <= (others => '0');
 
             memCP0RegWe_o <= NO;
             memCP0RegData_o <= (others => '0');
@@ -104,7 +105,7 @@ begin
 
                     memExcepttype_o <= exExcepttype_i;
                     memIsInDelaySlot_o <= exIsInDelaySlot_i;
-                    memCurrentInstAddress_o <= exCurrentInstAddress_i;
+                    memCurrentInstAddr_o <= exCurrentInstAddr_i;
                 end if;
             end if;
         end if;

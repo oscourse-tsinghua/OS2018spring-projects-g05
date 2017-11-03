@@ -31,7 +31,7 @@ entity cp0_reg is
         timerInt_o: out std_logic;
 
         -- for exception --
-        excepType_i: in std_logic_vector(ExceptionWidth);
+        exceptType_i: in std_logic_vector(ExceptionWidth);
         currentInstAddr_i: in std_logic_vector(AddrWidth);
         isIndelaySlot_i: in std_logic
     );
@@ -87,7 +87,7 @@ begin
                     end case;
                 end if;
 
-                case (excepttype_i) is
+                case (exceptType_i) is
                     when EXTERNALEXCEPTION =>
                         if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
                             epc_o <= currentInstAddr_i - 4;
@@ -97,7 +97,7 @@ begin
                             cause_o(31) <= '0';
                         end if;
                         status_o(1) <= '1';
-                        cause_o(6 downto 2) <= '00000';
+                        cause_o(6 downto 2) <= "00000";
 
                     when SYSCALLEXCEPTION =>
                         if (status_o(1) = '0') then
@@ -110,7 +110,7 @@ begin
                             end if;
                         end if;
                         status_o(1) <= '1';
-                        cause_o(6 downto 2) <= '01000';
+                        cause_o(6 downto 2) <= "00000";
 
                     when INVALIDINSTEXCEPTION =>
                         if (status_o(1) = '0') then
@@ -123,7 +123,7 @@ begin
                             end if;
                         end if;
                         status_o(1) <= '1';
-                        cause_o(6 downto 2) <= '01010';
+                        cause_o(6 downto 2) <= "01010";
 
                     when OVERFLOWEXCEPTION =>
                         if (status_o(1) = '0') then
@@ -136,7 +136,7 @@ begin
                             end if;
                         end if;
                         status_o(1) <= '1';
-                        cause_o(6 downto 2) <= '01100';
+                        cause_o(6 downto 2) <= "01100";
 
                     when ERETEXCEPTION =>
                         status_o(1) <= '0';

@@ -47,7 +47,7 @@ entity id is
 
         -- For Exceptions --
         exceptType_o: out std_logic_vector(ExceptionWidth);
-        currentInstAddress_o: out std_logic_vector(AddrWidth) 
+        currentInstAddr_o: out std_logic_vector(AddrWidth) 
     );
 end id;
 
@@ -348,8 +348,8 @@ begin
                             writeRegAddr_o <= instRd;
 
                         when EXE_SYSCALL =>
-                            oprSrc1 <= INVALID;
-                            oprSrc2 <= INVALID;
+                            oprSrc1 := INVALID;
+                            oprSrc2 := INVALID;
                             isValid <= INSTVALID;
                             alut_o <= ALU_SYSCALL;
                             toWriteReg_o <= NO;

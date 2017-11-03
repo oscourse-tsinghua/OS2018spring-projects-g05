@@ -11,7 +11,7 @@ entity pc_reg is
         branchTargetAddress_i: in std_logic_vector(AddrWidth);
         branchFlag_i: in std_logic;
         flush_i: in std_logic;
-        newPc_i: in std_logic(AddrWidth);
+        newPc_i: in std_logic_vector(AddrWidth);
         pc_o: out std_logic_vector(AddrWidth);
         pcEnable_o: out std_logic
     );

@@ -43,18 +43,18 @@ entity mem is
         -- for exception --
         exceptType_i: in std_logic_vector(ExceptionWidth);
         isInDelaySlot_i: in std_logic;
-        currentInstAddress_i: in std_logic_vector(AddrWidth);
+        currentInstAddr_i: in std_logic_vector(AddrWidth);
         cp0Status_i: in std_logic_vector(DataWidth);
         cp0Cause_i: in std_logic_vector(AddrWidth);
         cp0Epc_i: in std_logic_vector(DataWidth);
         wbCP0RegWe_i: in std_logic;
-        wbCP0RegWriteAddr_i: in std_logic_vector(RegAddrWidth);
+        wbCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
         wbCP0RegData_i: in std_logic_vector(DataWidth);
 
         exceptType_o: out std_logic_vector(ExceptionWidth);
         cp0Epc_o: out std_logic_vector(DataWidth);
         isInDelaySlot_o: out std_logic;
-        currentInstAddress_o: out std_logic_vector(AddrWidth)
+        currentInstAddr_o: out std_logic_vector(AddrWidth)
     );
 end mem;
 
@@ -65,7 +65,7 @@ architecture bhv of mem is
 begin
     memAddr_o <= memAddr_i(31 downto 2) & "00";
     isInDelaySlot_o <= isInDelaySlot_i;
-    currentInstAddress_o <= currentInstAddress_i;
+    currentInstAddr_o <= currentInstAddr_i;
 
     process(all)
         variable loadedByte: std_logic_vector(7 downto 0);
@@ -183,7 +183,7 @@ begin
         if (rst = RST_ENABLE) then
             cp0Cause <= (others => '0');
         elsif ((wbCP0RegWe_i = YES) and (wbCP0RegWriteAddr_i = CAUSE_PROCESSOR)) then
-            cp0Cause(CP0IP10IDX) <= wbCP0RegData_i(CP0CP10IDX);
+            cp0Cause(CP0IP10IDX) <= wbCP0RegData_i(CP0IP10IDX);
             cp0Cause(CP0IVIDX) <= wbCP0RegData_i(CP0IVIDX);
             cp0Cause(CP0WPIDX) <= wbCP0RegData_i(CP0WPIDX);
         else
@@ -196,8 +196,8 @@ begin
             excepttype_o <= (others => '0');
         else
             excepttype_o <= (others => '0');
-            if (currentInstAddress_i /= CP0_ZERO_WORD) then
-                if (((cp0Cause(15 downto 8) and cp0Status(15 downto 8) /= "00000000") and (cp0Status(1) /= NO) and (cp0Status(0) /= YES)) then
+            if (currentInstAddr_i /= CP0_ZERO_WORD) then
+                if ((cp0Cause(15 downto 8) & cp0Status(15 downto 8) /= "00000000") and (cp0Status(1) /= NO) and (cp0Status(0) /= YES)) then
                     excepttype_o <= "00000000000000000000000000000001";
                 elsif (excepttype_i(8) = YES) then
                     excepttype_o <= "00000000000000000000000000000100";

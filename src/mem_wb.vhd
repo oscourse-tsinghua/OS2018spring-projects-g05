@@ -25,7 +25,7 @@ entity mem_wb is
         memCP0RegWe_i: in std_logic;
         wbCP0RegData_o: out std_logic_vector(DataWidth);
         wbCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
-        wbCP0RegWe_o: out std_logic
+        wbCP0RegWe_o: out std_logic;
 
         -- for exception --
         flush_i: in std_logic

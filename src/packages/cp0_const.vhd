@@ -26,11 +26,5 @@ package cp0_const is
     constant EPC_PROCESSOR: std_logic_vector(CP0RegAddrWidth) := "01110";
     constant PRID_PROCESSOR: std_logic_vector(CP0RegAddrWidth) := "01111";
     constant CONFIG_PROCESSOR: std_logic_vector(CP0RegAddrWidth) := "10000";
-    
-    --
-    -- assert constant
-    --
-    constant INTERRUPT_ASSERT: CP0Assert := '1';
-    constant INTERRUPT_NOT_ASSERT: CP0Assert := '0';
 
 end cp0_const;

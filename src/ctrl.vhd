@@ -27,7 +27,7 @@ begin
     process(rst, idToStall_i, exToStall_i) begin
         if (rst = RST_ENABLE) then
             stall_o <= (others => '0');
-            flush_o <= (others => '0');
+            flush_o <= '0';
             newPC_o <= (others => '0');
         else
             if (exceptType_i /= EXCEPTION_ZERO_WORD) then
