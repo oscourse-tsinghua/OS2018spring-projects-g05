@@ -388,11 +388,12 @@ if __name__ == '__main__':
         lines = fin.read().split('\n')
         order = 1
         for line in lines:
-            if line == '':
+            line = line.strip()
+            if line == '' or line.startswith('#'):
                 break
             global output
-            output += 'RUN %s\n' % line.strip()
-            insts.append(Instruct(line.strip(), order))
+            output += 'RUN %s\n' % line
+            insts.append(Instruct(line, order))
             order += 1
         insts.append(Instruct('nop', order))
         insts.append(Instruct('nop', order))
