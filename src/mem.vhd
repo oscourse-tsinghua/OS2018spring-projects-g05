@@ -3,6 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.global_const.all;
 use work.mem_const.all;
+use work.cp0_const.all;
 
 entity mem is
     port (
@@ -37,13 +38,34 @@ entity mem is
         cp0RegWe_i: in std_logic;
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
-        cp0RegWe_o: out std_logic
+        cp0RegWe_o: out std_logic;
+
+        -- for exception --
+        exceptType_i: in std_logic_vector(ExceptionWidth);
+        isInDelaySlot_i: in std_logic;
+        currentInstAddr_i: in std_logic_vector(AddrWidth);
+        cp0Status_i: in std_logic_vector(DataWidth);
+        cp0Cause_i: in std_logic_vector(AddrWidth);
+        cp0Epc_i: in std_logic_vector(DataWidth);
+        wbCP0RegWe_i: in std_logic;
+        wbCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
+        wbCP0RegData_i: in std_logic_vector(DataWidth);
+
+        exceptType_o: out std_logic_vector(ExceptionWidth);
+        cp0Epc_o: out std_logic_vector(DataWidth);
+        isInDelaySlot_o: out std_logic;
+        currentInstAddr_o: out std_logic_vector(AddrWidth)
     );
 end mem;
 
 architecture bhv of mem is
+    signal cp0Status: std_logic_vector(DataWidth);
+    signal cp0Cause: std_logic_vector(AddrWidth);
+    signal cp0EPC: std_logic_vector(DataWidth);
 begin
     memAddr_o <= memAddr_i(31 downto 2) & "00";
+    isInDelaySlot_o <= isInDelaySlot_i;
+    currentInstAddr_o <= currentInstAddr_i;
 
     process(all)
         variable loadedByte: std_logic_vector(7 downto 0);
@@ -134,4 +156,62 @@ begin
             end case;
         end if;
     end process;
+
+    process(all) begin
+        if (rst = RST_ENABLE) then
+            cp0Status <= (others => '0');
+        elsif ((wbCP0RegWe_i = YES) and (wbCP0RegWriteAddr_i = STATUS_PROCESSOR)) then
+            cp0Status <= wbCP0RegData_i;
+        else
+            cp0Status <= cp0Status_i;
+        end if;
+    end process;
+
+    process(all) begin
+        if (rst = RST_ENABLE) then
+            cp0EPC <= (others => '0');
+        elsif ((wbCP0RegWe_i = YES) and (wbCP0RegWriteAddr_i = EPC_PROCESSOR)) then
+            cp0EPC <= wbCP0RegData_i;
+        else
+            cp0EPC <= cp0Epc_i;
+        end if;
+    end process;
+
+    cp0Epc_o <= cp0Epc;
+
+    process(all) begin
+        if (rst = RST_ENABLE) then
+            cp0Cause <= (others => '0');
+        elsif ((wbCP0RegWe_i = YES) and (wbCP0RegWriteAddr_i = CAUSE_PROCESSOR)) then
+            cp0Cause(CP0IP10IDX) <= wbCP0RegData_i(CP0IP10IDX);
+            cp0Cause(CP0IVIDX) <= wbCP0RegData_i(CP0IVIDX);
+            cp0Cause(CP0WPIDX) <= wbCP0RegData_i(CP0WPIDX);
+        else
+            cp0Cause <= cp0Cause_i;
+        end if;
+    end process;
+
+    process(all) begin
+        if (rst = RST_ENABLE) then
+            excepttype_o <= (others => '0');
+        else
+            excepttype_o <= (others => '0');
+            if ((currentInstAddr_i /= CP0_ZERO_WORD)) then
+                if (((cp0Cause(15 downto 8) & cp0Status(15 downto 8)) /= "00000000") and (cp0Status(1) = NO) and (cp0Status(0) = YES)) then
+                    excepttype_o <= "00000000000000000000000000000001";
+                elsif (excepttype_i(8) = YES) then
+                    excepttype_o <= "00000000000000000000000000001000";
+                elsif (excepttype_i(9) = YES) then
+                    excepttype_o <= "00000000000000000000000000001010";
+                elsif (excepttype_i(10) = YES) then
+                    excepttype_o <= "00000000000000000000000000001101";
+                elsif (excepttype_i(11) = YES) then
+                    excepttype_o <= "00000000000000000000000000001100";
+                elsif (excepttype_i(12) = YES) then
+                    excepttype_o <= "00000000000000000000000000001110";
+                end if;
+            end if;
+        end if;
+    end process;
+    -- ASSIGN MEMWE? --
 end bhv;

@@ -28,7 +28,12 @@ entity cp0_reg is
         epc_o: out std_logic_vector(DataWidth);
         config_o: out std_logic_vector(DataWidth);
         prid_o: out std_logic_vector(DataWidth);
-        timerInt_o: out std_logic
+        timerInt_o: out std_logic;
+
+        -- for exception --
+        exceptType_i: in std_logic_vector(ExceptionWidth);
+        currentInstAddr_i: in std_logic_vector(AddrWidth);
+        isIndelaySlot_i: in std_logic
     );
 end cp0_reg;
 
@@ -81,6 +86,64 @@ begin
                             null;
                     end case;
                 end if;
+
+                case (exceptType_i) is
+                    when EXTERNALEXCEPTION =>
+                        if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
+                            epc_o <= currentInstAddr_i - 4;
+                            cause_o(31) <= '1';
+                        else
+                            epc_o <= currentInstAddr_i;
+                            cause_o(31) <= '0';
+                        end if;
+                        status_o(1) <= '1';
+                        cause_o(6 downto 2) <= "00000";
+
+                    when SYSCALLEXCEPTION =>
+                        if (status_o(1) = '0') then
+                            if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
+                                epc_o <= currentInstAddr_i - 4;
+                                cause_o(31) <= '1';
+                            else
+                                epc_o <= currentInstAddr_i;
+                                cause_o(31) <= '0';
+                            end if;
+                        end if;
+                        status_o(1) <= '1';
+                        cause_o(6 downto 2) <= "01000";
+
+                    when INVALIDINSTEXCEPTION =>
+                        if (status_o(1) = '0') then
+                            if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
+                                epc_o <= currentInstAddr_i - 4;
+                                cause_o(31) <= '1';
+                            else
+                                epc_o <= currentInstAddr_i;
+                                cause_o(31) <= '0';
+                            end if;
+                        end if;
+                        status_o(1) <= '1';
+                        cause_o(6 downto 2) <= "01010";
+
+                    when OVERFLOWEXCEPTION =>
+                        if (status_o(1) = '0') then
+                            if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
+                                epc_o <= currentInstAddr_i - 4;
+                                cause_o(31) <= '1';
+                            else
+                                epc_o <= currentInstAddr_i;
+                                cause_o(31) <= '0';
+                            end if;
+                        end if;
+                        status_o(1) <= '1';
+                        cause_o(6 downto 2) <= "01100";
+
+                    when ERETEXCEPTION =>
+                        status_o(1) <= '0';
+
+                    when others =>
+                        null;
+                end case;
             end if;
         end if;
     end process;

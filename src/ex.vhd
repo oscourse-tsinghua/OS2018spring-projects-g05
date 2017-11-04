@@ -57,7 +57,14 @@ entity ex is
         cp0RegReadAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
-        cp0RegWe_o: out std_logic
+        cp0RegWe_o: out std_logic;
+
+        -- for exception --
+        exceptType_i: in std_logic_vector(ExceptionWidth);
+        currentInstAddr_i: in std_logic_vector(AddrWidth);
+        exceptType_o: out std_logic_vector(ExceptionWidth);
+        isInDelaySlot_o: out std_logic;
+        currentInstAddr_o: out std_logic_vector(AddrWidth)
     );
 end ex;
 
@@ -88,6 +95,12 @@ architecture bhv of ex is
     signal calcMult: std_logic := '0';
     signal product: std_logic_vector(DoubleDataWidth);
     signal cp0ReadValue: std_logic_vector(DataWidth);
+    signal trapAssert: std_logic;
+    signal ovAssert: std_logic;
+    signal reg2IMux: std_logic_vector(DataWidth);
+    signal resultSum: std_logic_vector(DataWidth);
+    signal ovSum: std_logic;
+    signal reg1Ltreg2: std_logic;
 begin
 
     memt_o <= memt_i;
@@ -126,6 +139,10 @@ begin
            32ux"1c" when operand1_i( 3) = '1' else 32ux"1d" when operand1_i( 2) = '1' else
            32ux"1e" when operand1_i( 1) = '1' else 32ux"1f" when operand1_i( 0) = '1' else
            32ux"20";
+
+    excepttype_o <= excepttype_i(31 downto 12) & ovAssert & '0' & excepttype_i(9 downto 8) & "00000000";
+    isInDelaySlot_o <= isInDelaySlot_i;
+    currentInstAddr_o <= currentInstAddr_i;
 
     -- multiplication --
     process(multip1, multip2, alut_i, calcMult)
@@ -208,6 +225,14 @@ begin
         cp0RegData_o <= (others => '0');
 
         if (rst = RST_DISABLE) then
+            if (alut_i = ALU_SUB or alut_i = ALU_SUBU or alut_i = ALU_SLT) then
+                reg2IMux <= not(operand2_i) + 1;
+            else
+                reg2IMux <= operand2_i;
+            end if;
+            resultSum <= operand1_i + reg2IMux; 
+            ovSum <= (((not operand1_i(31)) and (not reg2IMux(31))) and resultSum(31)) 
+                        or ((operand1_i(31) and reg2IMux(31)) and (not resultSum(31)));
             writeRegAddr_o <= writeRegAddr_i;
             case alut_i is
                 when ALU_OR => writeRegData_o <= operand1_i or operand2_i;
@@ -368,7 +393,13 @@ begin
                 when others =>
                     toWriteReg_o <= NO;
             end case;
-
+            if (((alut_i = ALU_ADD) or (alut_i = ALU_SUB)) and (ovSum = YES)) then
+                toWriteReg_o <= NO;
+                ovAssert <= YES;
+            else
+                toWriteReg_o <= YES;
+                ovAssert <= NO;
+            end if;
         end if;
     end process;
 

@@ -8,6 +8,7 @@ entity if_id is
         stall_i: in std_logic_vector(StallWidth);
         pc_i: in std_logic_vector(AddrWidth);
         inst_i: in std_logic_vector(InstWidth);
+        flush_i: in std_logic;
         pc_o: out std_logic_vector(AddrWidth);
         inst_o: out std_logic_vector(InstWidth)
     );
@@ -18,6 +19,9 @@ begin
     process(clk) begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then
+                pc_o <= (others => '0');
+                inst_o <= (others => '0');
+            elsif (flush_i = YES) then
                 pc_o <= (others => '0');
                 inst_o <= (others => '0');
             elsif (stall_i(IF_STOP_IDX) = PIPELINE_STOP and stall_i(ID_STOP_IDX) = PIPELINE_NONSTOP) then
