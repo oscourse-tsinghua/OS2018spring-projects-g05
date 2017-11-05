@@ -73,16 +73,14 @@ begin
 
             tempProduct_o <= (others => '0');
             cnt_o <= (others => '0');
-            memExceptCause_o <= (others => '0');
+            memExceptCause_o <= NO_CAUSE;
             memIsInDelaySlot_o <= NO;
             memCurrentInstAddr_o <= (others => '0');
 
             memCP0RegWe_o <= NO;
             memCP0RegData_o <= (others => '0');
             memCP0RegWriteAddr_o <= (others => '0');
-            if (flush_i = YES) then
-                -- nothing to be done here --
-            elsif (rst /= RST_ENABLE) then
+            if (rst /= RST_ENABLE and flush_i = NO) then
                 if (stall_i(EX_STOP_IDX) = PIPELINE_STOP and stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                     tempProduct_o <= tempProduct_i;
                     cnt_o <= cnt_i;

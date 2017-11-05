@@ -42,7 +42,10 @@ architecture bhv of id_ex is
 begin
     process(clk) begin
         if (rising_edge(clk)) then
-            if (rst = RST_ENABLE) then
+            if (
+                (rst = RST_ENABLE) or
+                (flush_i = YES)
+            ) then
                 alut_o <= INVALID;
                 memt_o <= INVALID;
                 operand1_o <= (others => '0');
@@ -50,25 +53,24 @@ begin
                 operandX_o <= (others => '0');
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
-            elsif (flush_i = YES) then
-                alut_o <= INVALID;
-                operand1_o <= (others => '0');
-                operand2_o <= (others => '0');
-                toWriteReg_o <= NO;
-                writeRegAddr_o <= (others => '0');
-                exExceptCause_o <= (others => '0');
+                exExceptCause_o <= NO_CAUSE;
                 exLinkAddress_o <= (others => '0');
                 exIsInDelaySlot_o <= NO;
                 isInDelaySlot_o <= NO;
                 exCurrentInstAddr_o <= (others => '0');
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_STOP and stall_i(EX_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= INVALID;
+                memt_o <= INVALID;
                 operand1_o <= (others => '0');
                 operand2_o <= (others => '0');
+                operandX_o <= (others => '0');
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
+                exExceptCause_o <= NO_CAUSE;
                 exLinkAddress_o <= (others => '0');
-                exIsInDelaySlot_o <= NOT_IN_DELAY_SLOT_FLAG;
+                exIsInDelaySlot_o <= NO;
+                -- Keep `isInDelaySlot_o` as old value
+                exCurrentInstAddr_o <= (others => '0');
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= alut_i;
                 memt_o <= memt_i;
