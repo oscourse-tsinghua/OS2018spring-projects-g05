@@ -193,10 +193,19 @@ begin
         end if;
     end process;
 
-    exceptCause_o <=
-        EXTERNAL_CAUSE
-        when (cp0Cause(CauseIpBits) /= 8ux"0") and (cp0Status(STATUS_EXL_BIT) = NO) and (cp0Status(STATUS_IE_BIT) = YES)
-        else exceptCause_i;
-
-    dataWrite_o <= dataWrite when exceptCause_o /= NO_CAUSE else NO;
+    process (all)
+        variable exceptCause: std_logic_vector(ExceptionCauseWidth);
+    begin
+        if ((cp0Cause(CauseIpBits) /= 8ux"0") and (cp0Status(STATUS_EXL_BIT) = NO) and (cp0Status(STATUS_IE_BIT) = YES)) then
+            exceptCause := EXTERNAL_CAUSE;
+        else
+            exceptCause := exceptCause_i;
+        end if;
+        exceptCause_o <= exceptCause;
+        if (exceptCause = NO_CAUSE) then
+            dataWrite_o <= dataWrite;
+        else
+            dataWrite_o <= NO;
+        end if;
+    end process;
 end bhv;

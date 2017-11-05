@@ -108,7 +108,6 @@ begin
         linkAddr_o <= (others => '0');
         branchTargetAddress_o <= (others => '0');
         branchFlag_o <= NOT_BRANCH_FLAG;
-        alut_o <= ALU_JR;
         nextInstInDelaySlot_o <= NOT_IN_DELAY_SLOT_FLAG;
         jumpToRs := NO;
         condJump := NO;
@@ -342,7 +341,6 @@ begin
                             oprSrc2 := INVALID;
                             jumpToRs := YES;
                             branchFlag_o <= BRANCH_FLAG;
-                            alut_o <= ALU_JR;
                             nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                             linkAddr_o <= (others => '0');
                             toWriteReg_o <= NO;
@@ -577,7 +575,6 @@ begin
                     oprSrc1 := INVALID;
                     oprSrc2 := INVALID;
                     branchFlag_o <= BRANCH_FLAG;
-                    alut_o <= ALU_J;
                     nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                     linkAddr_o <= (others => '0');
                     branchTargetAddress_o <= immInstrAddr;
@@ -603,7 +600,6 @@ begin
                     condJump := YES;
                     oprSrc1 := REG;
                     oprSrc2 := REG;
-                    alut_o <= ALU_BEQ;
                     toWriteReg_o <= NO;
                     writeRegAddr_o <= (others => '0');
                     isInvalid := NO;
@@ -615,7 +611,6 @@ begin
                             condJump := YES;
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
-                            alut_o <= ALU_BLTZ;
                             isInvalid := NO;
 
                         -- bgez --
@@ -623,7 +618,6 @@ begin
                             condJump := YES;
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
-                            alut_o <= ALU_BGEZ;
                             isInvalid := NO;
 
                         when others =>
@@ -635,7 +629,6 @@ begin
                     condJump := YES;
                     oprSrc1 := REG;
                     oprSrc2 := INVALID;
-                    alut_o <= ALU_BGTZ;
                     isInvalid := NO;
 
                 -- blez --
@@ -643,7 +636,6 @@ begin
                     condJump := YES;
                     oprSrc1 := REG;
                     oprSrc2 := INVALID;
-                    alut_o <= ALU_BLEZ;
                     isInvalid := NO;
 
                 -- bne --
@@ -651,7 +643,6 @@ begin
                     condJump := YES;
                     oprSrc1 := REG;
                     oprSrc2 := REG;
-                    alut_o <= ALU_BNE;
                     isInvalid := NO;
 
                 when others =>
