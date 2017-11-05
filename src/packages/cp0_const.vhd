@@ -3,18 +3,6 @@ use ieee.std_logic_1164.all;
 use work.global_const.all;
 
 package cp0_const is
-
-    --
-    -- consts for cp0
-    --
-    subtype ExternalInterruptAssertIdx      is integer range 15 downto 10;
-    subtype CP0IP10Idx                      is integer range  9 downto  8;
-    subtype CP0IVIdx                        is integer range 23 downto 23;
-    subtype CP0WPIdx                        is integer range 22 downto 22;
-
-    subtype CP0Assert                       is std_logic;
-    subtype CP0IP10Width                    is integer range  1 downto  0;
-
     --
     -- ids of special usage processors.
     --
@@ -29,12 +17,18 @@ package cp0_const is
     --
     -- Bits of status register
     --
-    constant STATUS_EXL_BIT: integer := 1;
+    constant STATUS_EXL_BIT: integer := 1; -- Exception level flag
+    constant STATUS_IE_BIT: integer := 0; -- Interrupt enable flag
 
     --
     -- Bits of cause register
     --
-    constant CAUSE_BD_BIT: integer := 31; -- delay branch flag
+    constant CAUSE_BD_BIT: integer := 31; -- Delay branch flag
+    constant CAUSE_IV_BIT: integer := 23; -- Interrupt vector
+    constant CAUSE_WP_BIT: integer := 22; -- Watch pending
+    subtype CauseIpBits is integer range 15 downto 8;
+    subtype CauseIpHardBits is integer range 15 downto 10;
+    subtype CauseIpSoftBits is integer range  9 downto  8;
     subtype CauseExcCodeBits is integer range 6 downto 2;
 
 end cp0_const;

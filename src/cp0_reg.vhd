@@ -54,7 +54,7 @@ begin
                 timerInt_o <= INTERRUPT_NOT_ASSERT;
             else
                 count_o <= count_o + 1;
-                cause_o(ExternalInterruptAssertIdx) <= int_i;
+                cause_o(CauseIpHardBits) <= int_i;
                 if ((compare_o /= 32ux"0") and (count_o = compare_o)) then
                     timerInt_o <= INTERRUPT_ASSERT;
                 end if;
@@ -74,9 +74,9 @@ begin
                             epc_o <= data_i;
 
                         when CAUSE_PROCESSOR =>
-                            cause_o(CP0IP10Idx) <= data_i(CP0IP10Idx);
-                            cause_o(CP0IVIdx) <= data_i(CP0IVIdx);
-                            cause_o(CP0WPIdx) <= data_i(CP0WPIdx);
+                            cause_o(CauseIpSoftBits) <= data_i(CauseIpSoftBits);
+                            cause_o(CAUSE_IV_BIT) <= data_i(CAUSE_IV_BIT);
+                            cause_o(CAUSE_WP_BIT) <= data_i(CAUSE_WP_BIT);
 
                         when others =>
                             null;

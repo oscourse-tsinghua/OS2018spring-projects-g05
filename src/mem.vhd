@@ -185,15 +185,18 @@ begin
         if (rst = RST_ENABLE) then
             cp0Cause <= (others => '0');
         elsif ((wbCP0RegWe_i = YES) and (wbCP0RegWriteAddr_i = CAUSE_PROCESSOR)) then
-            cp0Cause(CP0IP10IDX) <= wbCP0RegData_i(CP0IP10IDX);
-            cp0Cause(CP0IVIDX) <= wbCP0RegData_i(CP0IVIDX);
-            cp0Cause(CP0WPIDX) <= wbCP0RegData_i(CP0WPIDX);
+            cp0Cause(CauseIpSoftBits) <= wbCP0RegData_i(CauseIpSoftBits);
+            cp0Cause(CAUSE_IV_BIT) <= wbCP0RegData_i(CAUSE_IV_BIT);
+            cp0Cause(CAUSE_WP_BIT) <= wbCP0RegData_i(CAUSE_WP_BIT);
         else
             cp0Cause <= cp0Cause_i;
         end if;
     end process;
 
-    exceptCause_o <= exceptCause_i;
+    exceptCause_o <=
+        EXTERNAL_CAUSE
+        when (cp0Cause(CauseIpBits) /= 8ux"0") and (cp0Status(STATUS_EXL_BIT) = NO) and (cp0Status(STATUS_IE_BIT) = YES)
+        else exceptCause_i;
 
     dataWrite_o <= dataWrite when exceptCause_o /= NO_CAUSE else NO;
 end bhv;
