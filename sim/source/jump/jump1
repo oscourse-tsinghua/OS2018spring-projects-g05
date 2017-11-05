@@ -16,11 +16,22 @@ DEFINE reg regfile_ist.regArray: RegArrayType
 
 # Execute an assembly instruction
 # Grammar: "RUN <assembly>"
+
+# 0x04
 RUN xori $2, $2, 0x0004
-# it depends on specific instructions
+
+# 0x08
 RUN blez $2, 0x0008
+
+# 0x0c
 RUN ori $3, $3, 0x0000
+
+# 0x10
 RUN j 0x0004
+
+# 0x14 This line is necessary, or it will raise INVALID_INST_EXCEPTION
+RUN nop
+
 ASSERT 6 reg(2) x"00000004"
 ASSERT 11 reg(2) x"00000000"
 ASSERT 16 reg(2) x"00000000"

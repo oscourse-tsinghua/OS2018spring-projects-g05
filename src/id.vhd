@@ -1,11 +1,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
+use ieee.numeric_std.all;
 use work.global_const.all;
 use work.inst_const.all;
 use work.alu_const.all;
 use work.mem_const.all;
-use ieee.numeric_std.all;
+use work.except_const.all;
 
 entity id is
     port (
@@ -36,7 +37,7 @@ entity id is
         operandX_o: out std_logic_vector(DataWidth);
         toWriteReg_o: out std_logic;
         writeRegAddr_o: out std_logic_vector(RegAddrWidth);
-        
+
         -- For ju instructions --
         isInDelaySlot_i: in std_logic;
         nextInstInDelaySlot_o: out std_logic;
@@ -46,8 +47,9 @@ entity id is
         isInDelaySlot_o: out std_logic;
 
         -- For Exceptions --
-        exceptType_o: out std_logic_vector(ExceptionWidth);
-        currentInstAddr_o: out std_logic_vector(AddrWidth) 
+        exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        currentInstAddr_o: out std_logic_vector(AddrWidth)
     );
 end id;
 
@@ -63,13 +65,8 @@ architecture bhv of id is
     signal pcPlus8:  std_logic_vector(AddrWidth);
     signal pcPlus4:  std_logic_vector(AddrWidth);
     signal immInstrAddr: std_logic_vector(AddrWidth);
-    signal jumpToRs: std_logic;
-    signal condjump: std_logic;
     signal instImmSign: std_logic_vector(InstOffsetImmWidth);
     signal instOffsetImm: std_logic_vector(InstOffsetImmWidth);
-    signal exceptTypeIsSyscall: std_logic;
-    signal exceptTypeIsEret: std_logic;
-    signal isInvalid: std_logic;
 begin
 
     -- Segment the instruction --
@@ -83,19 +80,22 @@ begin
     instAddr <= inst_i(InstAddrIdx);
     instImmSign <= inst_i(InstImmSignIdx) & "00000000000000000";
     instOffsetImm <= "0" & inst_i(InstUnsignedImmIdx) & "00";
-    
+
     -- calculated the addresses that maybe used by jmp instructions first --
     pcPlus8 <= pc_i + "1000";
     pcPlus4 <= pc_i + "100";
     immInstrAddr <= pc_i(InstJmpUnchangeIdx) & inst_i(InstImmAddrIdx) & "00";
     -- Address used by exception instructions
-    excepttype_o <= "0000000000000000000" & exceptTypeIsEret & "00" & isInvalid & exceptTypeIsSyscall & "00000000";
     currentInstAddr_o <= pc_i;
-    
+
+    isInDelaySlot_o <= isInDelaySlot_i;
+
     process(all)
         -- indicates where the operand is from --
         variable oprSrc1, oprSrc2: OprSrcType;
         variable oprSrcX: XOprSrcType;
+        variable operand1, operand2, operandX: std_logic_vector(DataWidth);
+        variable isInvalid, jumpToRs, condJump: std_logic;
     begin
         oprSrc1 := INVALID;
         oprSrc2 := INVALID;
@@ -105,30 +105,16 @@ begin
         toWriteReg_o <= NO;
         writeRegAddr_o <= (others => '0');
         toStall_o <= PIPELINE_NONSTOP;
-        jumpToRs <= NO;
-        linkAddr_o <= BRANCH_ZERO_WORD;
-        branchTargetAddress_o <= BRANCH_ZERO_WORD;
+        linkAddr_o <= (others => '0');
+        branchTargetAddress_o <= (others => '0');
         branchFlag_o <= NOT_BRANCH_FLAG;
-        alut_o <= ALU_JR;
         nextInstInDelaySlot_o <= NOT_IN_DELAY_SLOT_FLAG;
-        condJump <= NO;
+        jumpToRs := NO;
+        condJump := NO;
+        exceptCause_o <= exceptCause_i;
 
-        if (rst = RST_ENABLE) then
-            oprSrc1 := INVALID;
-            oprSrc2 := INVALID;
-            alut_o <= INVALID;
-            toWriteReg_o <= NO;
-            writeRegAddr_o <= (others => '0');
-            linkAddr_o <= BRANCH_ZERO_WORD;
-            branchTargetAddress_o <= BRANCH_ZERO_WORD;
-            branchFlag_o <= NOT_BRANCH_FLAG;
-            nextInstInDelaySlot_o <= NOT_IN_DELAY_SLOT_FLAG;
-            condJump <= NO;
-            jumpToRs <= NO;
-        else
-            exceptTypeIsSyscall <= NO;
-            exceptTypeIsEret <= NO;
-            isInvalid <= YES;
+        if (rst = RST_DISABLE) then
+            isInvalid := YES;
             case (instOp) is
                 -- special --
                 when OP_SPECIAL =>
@@ -140,7 +126,7 @@ begin
                             alut_o <= ALU_OR;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- and --
                         when OP_AND =>
@@ -149,7 +135,7 @@ begin
                             alut_o <= ALU_AND;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- xor --
                         when OP_XOR =>
@@ -158,7 +144,7 @@ begin
                             alut_o <= ALU_XOR;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- nor --
                         when OP_NOR =>
@@ -167,7 +153,7 @@ begin
                             alut_o <= ALU_NOR;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- sll --
                         when OP_SLL =>
@@ -176,7 +162,7 @@ begin
                             alut_o <= ALU_SLL;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- sllv --
                         when OP_SLLV =>
@@ -185,7 +171,7 @@ begin
                             alut_o <= ALU_SLL;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- srl --
                         when OP_SRL =>
@@ -194,7 +180,7 @@ begin
                             alut_o <= ALU_SRL;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- srlv --
                         when OP_SRLV =>
@@ -203,7 +189,7 @@ begin
                             alut_o <= ALU_SRL;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- sra --
                         when OP_SRA =>
@@ -212,7 +198,7 @@ begin
                             alut_o <= ALU_SRA;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- srav --
                         when OP_SRAV =>
@@ -221,7 +207,7 @@ begin
                             alut_o <= ALU_SRA;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- movn --
                         when OP_MOVN =>
@@ -230,6 +216,7 @@ begin
                             alut_o <= ALU_MOVN;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
+                            isInvalid := NO;
 
                         -- movz --
                         when OP_MOVZ =>
@@ -238,7 +225,7 @@ begin
                             alut_o <= ALU_MOVZ;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- mfhi --
                         when OP_MFHI =>
@@ -247,7 +234,7 @@ begin
                             alut_o <= ALU_MFHI;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- mflo --
                         when OP_MFLO =>
@@ -256,7 +243,7 @@ begin
                             alut_o <= ALU_MFLO;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- mthi --
                         when OP_MTHI =>
@@ -265,7 +252,7 @@ begin
                             alut_o <= ALU_MTHI;
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- mtlo --
                         when OP_MTLO =>
@@ -274,7 +261,7 @@ begin
                             alut_o <= ALU_MTLO;
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- add --
                         when OP_ADD =>
@@ -283,7 +270,7 @@ begin
                             alut_o <= ALU_ADD;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- addu --
                         when OP_ADDU =>
@@ -292,7 +279,7 @@ begin
                             alut_o <= ALU_ADDU;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- sub --
                         when OP_SUB =>
@@ -301,7 +288,7 @@ begin
                             alut_o <= ALU_SUB;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- subu --
                         when OP_SUBU =>
@@ -310,7 +297,7 @@ begin
                             alut_o <= ALU_SUBU;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- slt --
                         when OP_SLT =>
@@ -319,7 +306,7 @@ begin
                             alut_o <= ALU_SLT;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- sltu --
                         when OP_SLTU =>
@@ -328,7 +315,7 @@ begin
                             alut_o <= ALU_SLTU;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- mult --
                         when OP_MULT =>
@@ -337,7 +324,7 @@ begin
                             alut_o <= ALU_MULT;
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- multu --
                         when OP_MULTU =>
@@ -346,42 +333,39 @@ begin
                             alut_o <= ALU_MULTU;
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
-                            isInvalid <= NO;
-                        
+                            isInvalid := NO;
+
                         -- jr --
                         when JMP_JR =>
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
-                            jumpToRs <= YES;
+                            jumpToRs := YES;
                             branchFlag_o <= BRANCH_FLAG;
-                            alut_o <= ALU_JR;
                             nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
-                            linkAddr_o <= BRANCH_ZERO_WORD;
+                            linkAddr_o <= (others => '0');
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- jalr --
                         when JMP_JALR =>
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
-                            jumpToRs <= YES;
+                            jumpToRs := YES;
                             branchFlag_o <= BRANCH_FLAG;
                             alut_o <= ALU_JALR;
                             nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                             linkAddr_o <= pcPlus8;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
-                        when EXE_SYSCALL =>
+                        when OP_SYSCALL =>
                             oprSrc1 := INVALID;
                             oprSrc2 := INVALID;
-                            isInvalid <= NO;
-                            alut_o <= ALU_SYSCALL;
                             toWriteReg_o <= NO;
-                            exceptTypeIsSyscall <= YES;
-                            isInvalid <= NO;
+                            exceptCause_o <= SYSCALL_CAUSE;
+                            isInvalid := NO;
 
                         -- others --
                         when others =>
@@ -402,7 +386,7 @@ begin
                             alut_o <= ALU_CLO;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- clz --
                         when OP_CLZ =>
@@ -411,7 +395,7 @@ begin
                             alut_o <= ALU_CLZ;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- mul --
                         when OP_MUL =>
@@ -420,7 +404,7 @@ begin
                             alut_o <= ALU_MUL;
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- madd --
                         when OP_MADD =>
@@ -429,7 +413,7 @@ begin
                             alut_o <= ALU_MADD;
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- maddu --
                         when OP_MADDU =>
@@ -438,7 +422,7 @@ begin
                             alut_o <= ALU_MADDU;
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- msub --
                         when OP_MSUB =>
@@ -447,7 +431,7 @@ begin
                             alut_o <= ALU_MSUB;
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- msubu --
                         when OP_MSUBU =>
@@ -456,7 +440,7 @@ begin
                             alut_o <= ALU_MSUBU;
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
-                            isInvalid <= NO;
+                            isInvalid := NO;
 
                         -- others --
                         when others =>
@@ -470,7 +454,7 @@ begin
                     alut_o <= ALU_OR;
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
-                    isInvalid <= NO;
+                    isInvalid := NO;
 
                 -- andi --
                 when OP_ANDI =>
@@ -479,7 +463,7 @@ begin
                     alut_o <= ALU_AND;
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
-                    isInvalid <= NO;
+                    isInvalid := NO;
 
                 -- xori --
                 when OP_XORI =>
@@ -488,7 +472,7 @@ begin
                     alut_o <= ALU_XOR;
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
-                    isInvalid <= NO;
+                    isInvalid := NO;
 
                 -- lui --
                 when OP_LUI =>
@@ -497,7 +481,7 @@ begin
                     alut_o <= ALU_LUI;
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
-                    isInvalid <= NO;
+                    isInvalid := NO;
 
                 -- lb --
                 when OP_LB =>
@@ -508,7 +492,7 @@ begin
                     memt_o <= MEM_LB;
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
-                    isInvalid <= NO;
+                    isInvalid := NO;
 
                 -- lbu --
                 when OP_LBU =>
@@ -519,7 +503,7 @@ begin
                     memt_o <= MEM_LBU;
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
-                    isInvalid <= NO;
+                    isInvalid := NO;
 
                 -- lw --
                 when OP_LW =>
@@ -530,7 +514,7 @@ begin
                     memt_o <= MEM_LW;
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
-                    isInvalid <= NO;
+                    isInvalid := NO;
 
                 -- sb --
                 when OP_SB =>
@@ -539,7 +523,7 @@ begin
                     oprSrcX := IMM;
                     alut_o <= ALU_STORE;
                     memt_o <= MEM_SB;
-                    isInvalid <= NO;
+                    isInvalid := NO;
 
                 -- sw --
                 when OP_SW =>
@@ -548,7 +532,7 @@ begin
                     oprSrcX := IMM;
                     alut_o <= ALU_STORE;
                     memt_o <= MEM_SW;
-                    isInvalid <= NO;
+                    isInvalid := NO;
 
                 -- addi --
                 when OP_ADDI =>
@@ -557,7 +541,7 @@ begin
                     alut_o <= ALU_ADD;
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
-                    isInvalid <= NO;
+                    isInvalid := NO;
 
                 -- addiu --
                 when OP_ADDIU =>
@@ -566,7 +550,7 @@ begin
                     alut_o <= ALU_ADDU;
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
-                    isInvalid <= NO;
+                    isInvalid := NO;
 
                 -- slti --
                 when OP_SLTI =>
@@ -575,7 +559,7 @@ begin
                     alut_o <= ALU_SLT;
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
-                    isInvalid <= NO;
+                    isInvalid := NO;
 
                 -- sltiu --
                 when OP_SLTIU =>
@@ -584,21 +568,20 @@ begin
                     alut_o <= ALU_SLTU;
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
-                    isInvalid <= NO;
-                    
+                    isInvalid := NO;
+
                 -- j --
                 when JMP_J =>
                     oprSrc1 := INVALID;
                     oprSrc2 := INVALID;
                     branchFlag_o <= BRANCH_FLAG;
-                    alut_o <= ALU_J;
                     nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
-                    linkAddr_o <= BRANCH_ZERO_WORD;
+                    linkAddr_o <= (others => '0');
                     branchTargetAddress_o <= immInstrAddr;
                     toWriteReg_o <= NO;
                     writeRegAddr_o <= (others => '0');
-                    isInvalid <= NO;
-                    
+                    isInvalid := NO;
+
                 -- jal --
                 when JMP_JAL =>
                     oprSrc1 := INVALID;
@@ -610,63 +593,57 @@ begin
                     branchTargetAddress_o <= immInstrAddr;
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= "11111";
-                    isInvalid <= NO;
-                
+                    isInvalid := NO;
+
                 -- beq --
                 when JMP_BEQ =>
-                    condJump <= YES;
+                    condJump := YES;
                     oprSrc1 := REG;
                     oprSrc2 := REG;
-                    alut_o <= ALU_BEQ;
                     toWriteReg_o <= NO;
                     writeRegAddr_o <= (others => '0');
-                    isInvalid <= NO;
-                
+                    isInvalid := NO;
+
                 when OP_JMPSPECIAL =>
                     case (instRt) is
                         -- bltz --
                         when JMP_BLTZ =>
-                            condJump <= YES;
+                            condJump := YES;
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
-                            alut_o <= ALU_BLTZ;
-                            isInvalid <= NO;
-                            
+                            isInvalid := NO;
+
                         -- bgez --
                         when JMP_BGEZ =>
-                            condJump <= YES;
+                            condJump := YES;
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
-                            alut_o <= ALU_BGEZ;
-                            isInvalid <= NO;
-                            
+                            isInvalid := NO;
+
                         when others =>
                             null;
                     end case;
 
                 -- bgtz --
                 when JMP_BGTZ =>
-                    condJump <= YES;
+                    condJump := YES;
                     oprSrc1 := REG;
                     oprSrc2 := INVALID;
-                    alut_o <= ALU_BGTZ;
-                    isInvalid <= NO;
-                
+                    isInvalid := NO;
+
                 -- blez --
                 when JMP_BLEZ =>
-                    condJump <= YES;
+                    condJump := YES;
                     oprSrc1 := REG;
                     oprSrc2 := INVALID;
-                    alut_o <= ALU_BLEZ;
-                    isInvalid <= NO;
-                
+                    isInvalid := NO;
+
                 -- bne --
                 when JMP_BNE =>
-                    condJump <= YES;
+                    condJump := YES;
                     oprSrc1 := REG;
                     oprSrc2 := REG;
-                    alut_o <= ALU_BNE;
-                    isInvalid <= NO;
+                    isInvalid := NO;
 
                 when others =>
                     null;
@@ -678,79 +655,95 @@ begin
                 oprSrc2 := REG;
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
-                isInvalid <= NO;
+                isInvalid := NO;
+            end if;
+
+            if ((inst_i(InstOpRsIdx) = "01000000000") and (inst_i(InstSaFuncIdx) = "00000000000")) then
+                alut_o <= ALU_MFC0;
+                oprSrc1 := REGID;
+                oprSrc2 := INVALID;
+                toWriteReg_o <= YES;
+                writeRegAddr_o <= instRt;
+                isInvalid := NO;
+            end if;
+
+            if (inst_i = INST_ERET) then
+                toWriteReg_o <= NO;
+                isInvalid := NO;
+                exceptCause_o <= ERET_CAUSE;
+            end if;
+
+            if (isInvalid = YES) then
+                exceptCause_o <= INVALID_INST_CAUSE;
             end if;
 
             case oprSrc1 is
                 when REG =>
                     regReadEnable1_o <= ENABLE;
                     regReadAddr1_o <= instRs;
-                    operand1_o <= regData1_i;
+                    operand1 := regData1_i;
 
                     -- Push Forward --
                     if (memToWriteReg_i = YES and memWriteRegAddr_i = instRs) then
-                        operand1_o <= memWriteRegData_i;
+                        operand1 := memWriteRegData_i;
                         if (instRs = "00000") then
-                            operand1_o <= (others => '0');
+                            operand1 := (others => '0');
                         end if;
                     end if;
                     if (exToWriteReg_i = YES and exWriteRegAddr_i = instRs) then
-                        operand1_o <= exWriteRegData_i;
+                        operand1 := exWriteRegData_i;
                         if (instRs = "00000") then
-                            operand1_o <= (others => '0');
+                            operand1 := (others => '0');
                         elsif (lastMemt_i /= INVALID) then
                             toStall_o <= PIPELINE_STOP;
                         end if;
-                    end if;
-                    if (jumpToRs = YES) then
-                        branchTargetAddress_o <= operand1_o;
                     end if;
 
                 when SA =>
                     regReadEnable1_o <= DISABLE;
                     regReadAddr1_o <= (others => '0');
-                    operand1_o <= "000000000000000000000000000" & instSa;
+                    operand1 := "000000000000000000000000000" & instSa;
 
                 when IMM =>
                     regReadEnable1_o <= DISABLE;
                     regReadAddr1_o <= (others => '0');
-                    operand1_o <= "0000000000000000" & instImm;
+                    operand1 := "0000000000000000" & instImm;
 
                 when SGN_IMM =>
                     regReadEnable1_o <= DISABLE;
                     regReadAddr1_o <= (others => '0');
                     if (instImm(15) = '0') then
-                        operand1_o <= "0000000000000000" & instImm;
+                        operand1 := "0000000000000000" & instImm;
                     else
-                        operand1_o <= "1111111111111111" & instImm;
+                        operand1 := "1111111111111111" & instImm;
                     end if;
 
                 when REGID =>
-                    operand1_o <= "000000000000000000000000000" & instRd;
+                    operand1 := "000000000000000000000000000" & instRd;
 
                 when others =>
                     regReadEnable1_o <= DISABLE;
                     regReadAddr1_o <= (others => '0');
-                    operand1_o <= (others => '0');
+                    operand1 := (others => '0');
             end case;
 
             case oprSrc2 is
                 when REG =>
                     regReadEnable2_o <= ENABLE;
                     regReadAddr2_o <= instRt;
-                    operand2_o <= regData2_i;
+                    operand2 := regData2_i;
 
                     -- Push Forward --
                     if (memToWriteReg_i = YES and memWriteRegAddr_i = instRt) then
-                        operand2_o <= memWriteRegData_i;
+                        operand2 := memWriteRegData_i;
                         if (instRt = "00000") then
-                            operand2_o <= (others => '0');
+                            operand2 := (others => '0');
                         end if;
                     end if;
                     if (exToWriteReg_i = YES and exWriteRegAddr_i = instRt) then
-                        operand2_o <= exWriteRegData_i;
+                        operand2 := exWriteRegData_i;
                         if (instRt = "00000") then
-                            operand2_o <= (others => '0');
+                            operand2 := (others => '0');
                         elsif (lastMemt_i /= INVALID) then
                             toStall_o <= PIPELINE_STOP;
                         end if;
@@ -759,44 +752,48 @@ begin
                 when IMM =>
                     regReadEnable2_o <= DISABLE;
                     regReadAddr2_o <= (others => '0');
-                    operand2_o <= "0000000000000000" & instImm;
+                    operand2 := "0000000000000000" & instImm;
 
                 when SGN_IMM =>
                     regReadEnable2_o <= DISABLE;
                     regReadAddr2_o <= (others => '0');
                     if (instImm(15) = '0') then
-                        operand2_o <= "0000000000000000" & instImm;
+                        operand2 := "0000000000000000" & instImm;
                     else
-                        operand2_o <= "1111111111111111" & instImm;
+                        operand2 := "1111111111111111" & instImm;
                     end if;
 
                 when others =>
                     regReadEnable2_o <= DISABLE;
                     regReadAddr2_o <= (others => '0');
-                    operand2_o <= (others => '0');
+                    operand2 := (others => '0');
             end case;
 
             case oprSrcX is
                 when IMM =>
-                    operandX_o <= "0000000000000000" & instImm;
+                    operandX := "0000000000000000" & instImm;
 
                 when others =>
-                    operandX_o <= (others => '0');
+                    operandX := (others => '0');
             end case;
         end if;
-   
+
+        if (jumpToRs = YES) then
+            branchTargetAddress_o <= operand1;
+        end if;
+
         if (condJump = YES) then
             case (instOp) is
                 when OP_JMPSPECIAL =>
                     case (instRt) is
                         when JMP_BGEZ =>
-                            if (operand1_o(31) = '0') then
+                            if (operand1(31) = '0') then
                                 branchTargetAddress_o <= pcPlus4 + instOffsetImm - instImmSign;
                                 branchFlag_o <= BRANCH_FLAG;
                                 nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                             end if;
                         when JMP_BLTZ =>
-                            if (operand1_o(31) = '1') then
+                            if (operand1(31) = '1') then
                                 branchTargetAddress_o <= pcPlus4 + instOffsetImm - instImmSign;
                                 branchFlag_o <= BRANCH_FLAG;
                                 nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
@@ -805,25 +802,25 @@ begin
                             null;
                     end case;
                 when JMP_BEQ =>
-                    if (operand1_o = operand2_o) then
+                    if (operand1 = operand2) then
                         branchTargetAddress_o <= pcPlus4 + instOffsetImm - instImmSign;
                         branchFlag_o <= BRANCH_FLAG;
                         nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                     end if;
                 when JMP_BGTZ =>
-                    if (operand1_o(31) = '0' and operand1_o /= "00000000000000000000000000000000") then
+                    if (operand1(31) = '0' and operand1 /= "00000000000000000000000000000000") then
                         branchTargetAddress_o <= pcPlus4 + instOffsetImm - instImmSign;
                         branchFlag_o <= BRANCH_FLAG;
                         nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                     end if;
                 when JMP_BLEZ =>
-                    if (operand1_o(31) = '1' or operand1_o = "00000000000000000000000000000000") then
+                    if (operand1(31) = '1' or operand1 = "00000000000000000000000000000000") then
                         branchTargetAddress_o <= pcPlus4 + instOffsetImm - instImmSign;
                         branchFlag_o <= BRANCH_FLAG;
                         nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                     end if;
                 when JMP_BNE =>
-                    if (operand1_o /= operand2_o) then
+                    if (operand1 /= operand2) then
                         branchTargetAddress_o <= pcPlus4 + instOffsetImm - instImmSign;
                         branchFlag_o <= BRANCH_FLAG;
                         nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
@@ -833,29 +830,8 @@ begin
             end case;
         end if;
 
-        if ((inst_i(InstOpRsIdx) = "01000000000") and (inst_i(InstSaFuncIdx) = "00000000000")) then
-            alut_o <= ALU_MFC0;
-            operand1_o <= "000000000000000000000000000" & instRd;
-            operand2_o <= (others => '0');
-            toWriteReg_o <= YES;
-            writeRegAddr_o <= instRt;
-            isInvalid <= NO;
-        end if;
-
-        if (inst_i = EXE_ERET) then
-            toWriteReg_o <= NO;
-            alut_o <= ALU_ERET;
-            isInvalid <= NO;
-            exceptTypeIsEret <= YES;
-            isInvalid <= NO;
-        end if;
-    end process;
-
-    process(all) begin
-        if (rst = RST_ENABLE) then
-            isInDelaySlot_o <= NOT_IN_DELAY_SLOT_FLAG;
-        else
-            isInDelaySlot_o <= isInDelaySlot_i;
-        end if;
+        operand1_o <= operand1;
+        operand2_o <= operand2;
+        operandX_o <= operandX;
     end process;
 end bhv;

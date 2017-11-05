@@ -14,7 +14,6 @@ package global_const is
     subtype RegNum is integer range 0 to 31;
     subtype CntWidth is integer range 1 downto 0;
     subtype CP0RegAddrWidth is integer range 4 downto 0;
-    subtype ExceptionWidth is integer range 31 downto 0;
 
     type RegArrayType is array (RegNum) of std_logic_vector(DataWidth);
 
@@ -40,43 +39,13 @@ package global_const is
 
     constant ZEROS_32: std_logic_vector(31 downto 0) := (others => '0');
     constant ZEROS_31: std_logic_vector(30 downto 0) := (others => '0');
-    
-        
+
     --
     -- For Branch instuctions
     --
     constant BRANCH_FLAG: std_logic := '1';
     constant NOT_BRANCH_FLAG: std_logic := '0';
-    constant BRANCH_ZERO_WORD: std_logic_vector(AddrWidth) := "00000000000000000000000000000000";
     constant IN_DELAY_SLOT_FLAG: std_logic := '1';
     constant NOT_IN_DELAY_SLOT_FLAG: std_logic := '0';
-    
-    --
-    -- For cp0 coprecessors
-    --
-    constant CP0_ZERO_WORD: std_logic_vector(DataWidth) := "00000000000000000000000000000000";
-
-    --
-    -- For Exceptions
-    --
-    constant INTERRUPT_ASSERT: std_logic := '1';
-    constant INTERRUPT_NOT_ASSERT: std_logic := '0';
-    constant TRAP_ASSERT: std_logic := '1';
-    constant TRAP_NOT_ASSERT: std_logic := '0';
-    constant EXCEPTION_ZERO_WORD: std_logic_vector(ExceptionWidth) := "00000000000000000000000000000000";
-    constant EXTERNALEXCEPTION: std_logic_vector(ExceptionWidth) := "00000000000000000000000000000001";
-    constant SYSCALLEXCEPTION: std_logic_vector(ExceptionWidth) := "00000000000000000000000000001000";
-    constant INVALIDINSTEXCEPTION: std_logic_vector(ExceptionWidth) := "00000000000000000000000000001010";
-    constant OVERFLOWEXCEPTION: std_logic_vector(ExceptionWidth) := "00000000000000000000000000001101";
-    constant ERETEXCEPTION: std_logic_vector(ExceptionWidth) := "00000000000000000000000000001110";
-    
-    --
-    -- Branch Target Address when Exception happens, needs future implementation here.
-    --
-    
-    constant EXTERNALEXCEPTIONBRANCHADDR: std_logic_vector(ExceptionWidth) := "00000000000000000000000000100000";
-    constant SYSCALLEXCEPTIONBRANCHADDR: std_logic_vector(ExceptionWidth) := "00000000000000000000000001000000";
-    constant INVALIDINSTEXCEPTIONBRANCHADDR: std_logic_vector(ExceptionWidth) := "00000000000000000000000001000000";
-    constant OVERFLOWEXCEPTIONBRANCHADDR: std_logic_vector(ExceptionWidth) := "00000000000000000000000001000000";
 
 end global_const;

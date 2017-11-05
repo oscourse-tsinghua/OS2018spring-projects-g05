@@ -36,7 +36,11 @@ architecture bhv of mem_wb is
 begin
     process(clk) begin
         if (rising_edge(clk)) then
-            if (rst = RST_ENABLE) then
+            if (
+                (rst = RST_ENABLE) or
+                (flush_i = YES) or
+                (stall_i(MEM_STOP_IDX) = PIPELINE_STOP and stall_i(WB_STOP_IDX) = PIPELINE_NONSTOP)
+            ) then
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
                 writeRegData_o <= (others => '0');
@@ -49,32 +53,6 @@ begin
                 wbCP0RegWe_o <= NO;
                 wbCP0RegData_o <= (others => '0');
                 wbCP0RegWriteAddr_o <= (others => '0');
-            elsif (flush_i = YES) then
-                toWriteReg_o <= NO;
-                writeRegAddr_o <= (others => '0');
-                writeRegData_o <= (others => '0');
-
-                toWriteHi_o <= NO;
-                toWriteLo_o <= NO;
-                writeHiData_o <= (others => '0');
-                writeLoData_o <= (others => '0');
-
-                wbCP0RegWe_o <= NO;
-                wbCP0RegData_o <= (others => '0');
-                wbCP0RegWriteAddr_o <= (others => '0');
-            elsif (stall_i(MEM_STOP_IDX) = PIPELINE_STOP and stall_i(WB_STOP_IDX) = PIPELINE_NONSTOP) then
-                toWriteReg_o <= NO;
-                writeRegAddr_o <= (others => '0');
-                writeRegData_o <= (others => '0');
-
-                toWriteHi_o <= NO;
-                toWriteLo_o <= NO;
-                writeHiData_o <= (others => '0');
-                writeLoData_o <= (others => '0');
-
-                wbCP0RegWe_o <= NO;
-                wbCP0RegWriteAddr_o <= (others => '0');
-                wbCP0RegData_o <= (others => '0');
             elsif (stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                 toWriteReg_o <= toWriteReg_i;
                 writeRegAddr_o <= writeRegAddr_i;
