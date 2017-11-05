@@ -11,14 +11,13 @@ package cp0_const is
     subtype CP0IP10Idx                      is integer range  9 downto  8;
     subtype CP0IVIdx                        is integer range 23 downto 23;
     subtype CP0WPIdx                        is integer range 22 downto 22;
-    
+
     subtype CP0Assert                       is std_logic;
     subtype CP0IP10Width                    is integer range  1 downto  0;
-    
+
     --
     -- ids of special usage processors.
     --
-    
     constant COUNT_PROCESSOR: std_logic_vector(CP0RegAddrWidth) := "01001";
     constant COMPARE_PROCESSOR: std_logic_vector(CP0RegAddrWidth) := "01011";
     constant STATUS_PROCESSOR: std_logic_vector(CP0RegAddrWidth) := "01100";
@@ -26,5 +25,16 @@ package cp0_const is
     constant EPC_PROCESSOR: std_logic_vector(CP0RegAddrWidth) := "01110";
     constant PRID_PROCESSOR: std_logic_vector(CP0RegAddrWidth) := "01111";
     constant CONFIG_PROCESSOR: std_logic_vector(CP0RegAddrWidth) := "10000";
+
+    --
+    -- Bits of status register
+    --
+    constant STATUS_EXL_BIT: integer := 1;
+
+    --
+    -- Bits of cause register
+    --
+    constant CAUSE_BD_BIT: integer := 31; -- delay branch flag
+    subtype CauseExcCodeBits is integer range 6 downto 2;
 
 end cp0_const;

@@ -1,11 +1,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
+use ieee.numeric_std.all;
 use work.global_const.all;
 use work.inst_const.all;
 use work.alu_const.all;
 use work.mem_const.all;
-use ieee.numeric_std.all;
+use work.except_const.all;
 
 entity id is
     port (
@@ -36,7 +37,7 @@ entity id is
         operandX_o: out std_logic_vector(DataWidth);
         toWriteReg_o: out std_logic;
         writeRegAddr_o: out std_logic_vector(RegAddrWidth);
-        
+
         -- For ju instructions --
         isInDelaySlot_i: in std_logic;
         nextInstInDelaySlot_o: out std_logic;
@@ -46,8 +47,9 @@ entity id is
         isInDelaySlot_o: out std_logic;
 
         -- For Exceptions --
-        exceptType_o: out std_logic_vector(ExceptionWidth);
-        currentInstAddr_o: out std_logic_vector(AddrWidth) 
+        exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        currentInstAddr_o: out std_logic_vector(AddrWidth)
     );
 end id;
 
@@ -67,8 +69,6 @@ architecture bhv of id is
     signal condjump: std_logic;
     signal instImmSign: std_logic_vector(InstOffsetImmWidth);
     signal instOffsetImm: std_logic_vector(InstOffsetImmWidth);
-    signal exceptTypeIsSyscall: std_logic;
-    signal exceptTypeIsEret: std_logic;
     signal isInvalid: std_logic;
 begin
 
@@ -83,15 +83,14 @@ begin
     instAddr <= inst_i(InstAddrIdx);
     instImmSign <= inst_i(InstImmSignIdx) & "00000000000000000";
     instOffsetImm <= "0" & inst_i(InstUnsignedImmIdx) & "00";
-    
+
     -- calculated the addresses that maybe used by jmp instructions first --
     pcPlus8 <= pc_i + "1000";
     pcPlus4 <= pc_i + "100";
     immInstrAddr <= pc_i(InstJmpUnchangeIdx) & inst_i(InstImmAddrIdx) & "00";
     -- Address used by exception instructions
-    excepttype_o <= "0000000000000000000" & exceptTypeIsEret & "00" & isInvalid & exceptTypeIsSyscall & "00000000";
     currentInstAddr_o <= pc_i;
-    
+
     process(all)
         -- indicates where the operand is from --
         variable oprSrc1, oprSrc2: OprSrcType;
@@ -106,28 +105,15 @@ begin
         writeRegAddr_o <= (others => '0');
         toStall_o <= PIPELINE_NONSTOP;
         jumpToRs <= NO;
-        linkAddr_o <= BRANCH_ZERO_WORD;
-        branchTargetAddress_o <= BRANCH_ZERO_WORD;
+        linkAddr_o <= (others => '0');
+        branchTargetAddress_o <= (others => '0');
         branchFlag_o <= NOT_BRANCH_FLAG;
         alut_o <= ALU_JR;
         nextInstInDelaySlot_o <= NOT_IN_DELAY_SLOT_FLAG;
         condJump <= NO;
+        exceptCause_o <= exceptCause_i;
 
-        if (rst = RST_ENABLE) then
-            oprSrc1 := INVALID;
-            oprSrc2 := INVALID;
-            alut_o <= INVALID;
-            toWriteReg_o <= NO;
-            writeRegAddr_o <= (others => '0');
-            linkAddr_o <= BRANCH_ZERO_WORD;
-            branchTargetAddress_o <= BRANCH_ZERO_WORD;
-            branchFlag_o <= NOT_BRANCH_FLAG;
-            nextInstInDelaySlot_o <= NOT_IN_DELAY_SLOT_FLAG;
-            condJump <= NO;
-            jumpToRs <= NO;
-        else
-            exceptTypeIsSyscall <= NO;
-            exceptTypeIsEret <= NO;
+        if (rst = RST_DISABLE) then
             isInvalid <= YES;
             case (instOp) is
                 -- special --
@@ -347,7 +333,7 @@ begin
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
                             isInvalid <= NO;
-                        
+
                         -- jr --
                         when JMP_JR =>
                             oprSrc1 := REG;
@@ -356,7 +342,7 @@ begin
                             branchFlag_o <= BRANCH_FLAG;
                             alut_o <= ALU_JR;
                             nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
-                            linkAddr_o <= BRANCH_ZERO_WORD;
+                            linkAddr_o <= (others => '0');
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
                             isInvalid <= NO;
@@ -374,13 +360,12 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid <= NO;
 
-                        when EXE_SYSCALL =>
+                        when OP_SYSCALL =>
                             oprSrc1 := INVALID;
                             oprSrc2 := INVALID;
                             isInvalid <= NO;
-                            alut_o <= ALU_SYSCALL;
                             toWriteReg_o <= NO;
-                            exceptTypeIsSyscall <= YES;
+                            exceptCause_o <= SYSCALL_CAUSE;
                             isInvalid <= NO;
 
                         -- others --
@@ -585,7 +570,7 @@ begin
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= instRt;
                     isInvalid <= NO;
-                    
+
                 -- j --
                 when JMP_J =>
                     oprSrc1 := INVALID;
@@ -593,12 +578,12 @@ begin
                     branchFlag_o <= BRANCH_FLAG;
                     alut_o <= ALU_J;
                     nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
-                    linkAddr_o <= BRANCH_ZERO_WORD;
+                    linkAddr_o <= (others => '0');
                     branchTargetAddress_o <= immInstrAddr;
                     toWriteReg_o <= NO;
                     writeRegAddr_o <= (others => '0');
                     isInvalid <= NO;
-                    
+
                 -- jal --
                 when JMP_JAL =>
                     oprSrc1 := INVALID;
@@ -611,7 +596,7 @@ begin
                     toWriteReg_o <= YES;
                     writeRegAddr_o <= "11111";
                     isInvalid <= NO;
-                
+
                 -- beq --
                 when JMP_BEQ =>
                     condJump <= YES;
@@ -621,7 +606,7 @@ begin
                     toWriteReg_o <= NO;
                     writeRegAddr_o <= (others => '0');
                     isInvalid <= NO;
-                
+
                 when OP_JMPSPECIAL =>
                     case (instRt) is
                         -- bltz --
@@ -631,7 +616,7 @@ begin
                             oprSrc2 := INVALID;
                             alut_o <= ALU_BLTZ;
                             isInvalid <= NO;
-                            
+
                         -- bgez --
                         when JMP_BGEZ =>
                             condJump <= YES;
@@ -639,7 +624,7 @@ begin
                             oprSrc2 := INVALID;
                             alut_o <= ALU_BGEZ;
                             isInvalid <= NO;
-                            
+
                         when others =>
                             null;
                     end case;
@@ -651,7 +636,7 @@ begin
                     oprSrc2 := INVALID;
                     alut_o <= ALU_BGTZ;
                     isInvalid <= NO;
-                
+
                 -- blez --
                 when JMP_BLEZ =>
                     condJump <= YES;
@@ -659,7 +644,7 @@ begin
                     oprSrc2 := INVALID;
                     alut_o <= ALU_BLEZ;
                     isInvalid <= NO;
-                
+
                 -- bne --
                 when JMP_BNE =>
                     condJump <= YES;
@@ -784,7 +769,7 @@ begin
                     operandX_o <= (others => '0');
             end case;
         end if;
-   
+
         if (condJump = YES) then
             case (instOp) is
                 when OP_JMPSPECIAL =>
@@ -842,12 +827,10 @@ begin
             isInvalid <= NO;
         end if;
 
-        if (inst_i = EXE_ERET) then
+        if (inst_i = INST_ERET) then
             toWriteReg_o <= NO;
-            alut_o <= ALU_ERET;
             isInvalid <= NO;
-            exceptTypeIsEret <= YES;
-            isInvalid <= NO;
+            exceptCause_o <= ERET_CAUSE;
         end if;
     end process;
 

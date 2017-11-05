@@ -7,6 +7,7 @@ use ieee.numeric_std.all;
 use work.global_const.all;
 use work.alu_const.all;
 use work.mem_const.all;
+use work.except_const.all;
 
 entity ex is
     port (
@@ -60,9 +61,9 @@ entity ex is
         cp0RegWe_o: out std_logic;
 
         -- for exception --
-        exceptType_i: in std_logic_vector(ExceptionWidth);
+        exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         currentInstAddr_i: in std_logic_vector(AddrWidth);
-        exceptType_o: out std_logic_vector(ExceptionWidth);
+        exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         isInDelaySlot_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth)
     );
@@ -96,7 +97,6 @@ architecture bhv of ex is
     signal product: std_logic_vector(DoubleDataWidth);
     signal cp0ReadValue: std_logic_vector(DataWidth);
     signal trapAssert: std_logic;
-    signal ovAssert: std_logic;
     signal reg2IMux: std_logic_vector(DataWidth);
     signal resultSum: std_logic_vector(DataWidth);
     signal ovSum: std_logic;
@@ -140,7 +140,6 @@ begin
            32ux"1e" when operand1_i( 1) = '1' else 32ux"1f" when operand1_i( 0) = '1' else
            32ux"20";
 
-    excepttype_o <= excepttype_i(31 downto 12) & ovAssert & '0' & excepttype_i(9 downto 8) & "00000000";
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;
 
@@ -224,14 +223,16 @@ begin
         cp0RegWriteAddr_o <= (others => '0');
         cp0RegData_o <= (others => '0');
 
+        exceptCause_o <= exceptCause_i;
+
         if (rst = RST_DISABLE) then
             if (alut_i = ALU_SUB or alut_i = ALU_SUBU or alut_i = ALU_SLT) then
                 reg2IMux <= not(operand2_i) + 1;
             else
                 reg2IMux <= operand2_i;
             end if;
-            resultSum <= operand1_i + reg2IMux; 
-            ovSum <= (((not operand1_i(31)) and (not reg2IMux(31))) and resultSum(31)) 
+            resultSum <= operand1_i + reg2IMux;
+            ovSum <= (((not operand1_i(31)) and (not reg2IMux(31))) and resultSum(31))
                         or ((operand1_i(31) and reg2IMux(31)) and (not resultSum(31)));
             writeRegAddr_o <= writeRegAddr_i;
             case alut_i is
@@ -384,7 +385,7 @@ begin
                     end if;
 
                     writeRegData_o <= cp0ReadValue;
-                
+
                 when ALU_MTC0 =>
                     cp0RegWriteAddr_o <= operand1_i(4 downto 0);
                     cp0RegWe_o <= YES;
@@ -395,10 +396,10 @@ begin
             end case;
             if (((alut_i = ALU_ADD) or (alut_i = ALU_SUB)) and (ovSum = YES)) then
                 toWriteReg_o <= NO;
-                ovAssert <= YES;
+                -- No need to care about priority. If there is already an exception, we will not be here
+                exceptCause_o <= OVERFLOW_CAUSE;
             else
                 toWriteReg_o <= YES;
-                ovAssert <= NO;
             end if;
         end if;
     end process;

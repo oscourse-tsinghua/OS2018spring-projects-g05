@@ -79,7 +79,7 @@ package inst_const is
     constant OP_LW: std_logic_vector(InstOpWidth) := "100011";
     constant OP_SB: std_logic_vector(InstOpWidth) := "101000";
     constant OP_SW: std_logic_vector(InstOpWidth) := "101011";
-    
+
     --
     -- Arith Opcodes
     --
@@ -111,17 +111,17 @@ package inst_const is
     --
     constant JMP_JALR: std_logic_vector(InstFuncWidth) := "001001";
     constant JMP_JR: std_logic_vector(InstFuncWidth):= "001000";
-    
+
     constant JMP_BLTZ: std_logic_vector(InstRtWidth) := "00000";
     constant JMP_BGEZ: std_logic_vector(InstRtWidth) := "00001";
-    
+
     constant JMP_BEQ: std_logic_vector(InstOpWidth) := "000100";
     constant JMP_BGTZ: std_logic_vector(InstOpWidth) := "000111";
     constant JMP_BLEZ: std_logic_vector(InstOpWidth) := "000110";
     constant JMP_J: std_logic_vector(InstOpWidth) := "000010";
     constant JMP_JAL: std_logic_vector(InstOpWidth) := "000011";
     constant JMP_BNE: std_logic_vector(InstOpWidth) := "000101";
-    
+
     --
     -- Special cases(logics 31-25 in this case)
     --
@@ -132,7 +132,7 @@ package inst_const is
     --
     -- Exceptions
     --
-    constant EXE_SYSCALL: std_logic_vector(InstOpWidth) := "001100";
-    constant EXE_ERET: std_logic_vector(InstIdxWidth) := "01000010000000000000000000011000";
-    
+    constant OP_SYSCALL: std_logic_vector(InstOpWidth) := "001100";
+    constant INST_ERET: std_logic_vector(InstIdxWidth) := "01000010000000000000000000011000";
+
 end inst_const;
