@@ -9,11 +9,9 @@ use work.ori1_test_const.all;
 use work.global_const.all;
 
 entity ori1_fake_ram is
-    generic (
-        isInst: boolean := false -- The RAM will be initialized with instructions when true
-    );
     port (
-        enable_i, write_i, clk: in std_logic;
+        clk, rst: in std_logic;
+        enable_i, write_i: in std_logic;
         data_i: in std_logic_vector(DataWidth);
         addr_i: in std_logic_vector(AddrWidth);
         byteSelect_i: in std_logic_vector(3 downto 0);
@@ -37,16 +35,15 @@ begin
     );
 
     process (clk) begin
-        if (not isInst) then
-            if (rising_edge(clk) and (enable_i = '1') and (write_i = '1')) then
-                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
-            end if;
-        else
-            -- The first instruction is at 0x4
-            -- CODE BELOW IS AUTOMATICALLY GENERATED
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                -- CODE BELOW IS AUTOMATICALLY GENERATED
 words(1) <= x"20_00_02_34"; -- RUN ori $2, $0, 0x0020
 words(2) <= x"ff_ff_40_34"; -- RUN ori $0, $2, 0xffff
 words(3) <= x"14_12_43_34"; -- RUN ori $3, $2, 0x1214
+            elsif ((enable_i = '1') and (write_i = '1')) then
+                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
+            end if;
         end if;
     end process;
 

@@ -9,11 +9,9 @@ use work.arith2_test_const.all;
 use work.global_const.all;
 
 entity arith2_fake_ram is
-    generic (
-        isInst: boolean := false -- The RAM will be initialized with instructions when true
-    );
     port (
-        enable_i, write_i, clk: in std_logic;
+        clk, rst: in std_logic;
+        enable_i, write_i: in std_logic;
         data_i: in std_logic_vector(DataWidth);
         addr_i: in std_logic_vector(AddrWidth);
         byteSelect_i: in std_logic_vector(3 downto 0);
@@ -37,13 +35,9 @@ begin
     );
 
     process (clk) begin
-        if (not isInst) then
-            if (rising_edge(clk) and (enable_i = '1') and (write_i = '1')) then
-                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
-            end if;
-        else
-            -- The first instruction is at 0x4
-            -- CODE BELOW IS AUTOMATICALLY GENERATED
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                -- CODE BELOW IS AUTOMATICALLY GENERATED
 words(1) <= x"67_35_42_24"; -- RUN addiu $2, $2, 0x3567
 words(2) <= x"ff_ff_42_24"; -- RUN addiu $2, $2, 0xffff
 words(3) <= x"00_14_02_00"; -- RUN sll $2, $2, 0x10
@@ -61,6 +55,9 @@ words(14) <= x"00_00_00_00"; -- RUN nop
 words(15) <= x"00_00_00_00"; -- RUN nop
 words(16) <= x"01_00_06_34"; -- RUN ori $6, $0, 0x1
 words(17) <= x"23_38_86_00"; -- RUN subu $7, $4, $6
+            elsif ((enable_i = '1') and (write_i = '1')) then
+                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
+            end if;
         end if;
     end process;
 
