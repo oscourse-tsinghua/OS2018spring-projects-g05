@@ -39,7 +39,7 @@ begin
     port map (
         clka => clk, ena => '1',
         wea => we, dina => din,
-        addra => addr, douta => dout
+        addra => addr(20 downto 2), douta => dout
     );
 
     process
