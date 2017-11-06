@@ -52,29 +52,40 @@ begin
 
     process(clk)
     begin
-        current_state <= next_state;
+        if (rst = RST_ENABLE) then
+            current_state <= FINISHED_READ2;
+        else
+            current_state <= next_state;
+        end if;
     end process;
 
-    process(current_state)
+    process(current_state, rst)
     begin
-        case current_state is
-            when FINISHED_WRITE =>    -- READY_READ1
-                we <= "0000";
-                addr <= readAddr1_i;
-                next_state <= FINISHED_READ1;
-            when FINISHED_READ1 =>    -- READY_READ2
-                we <= "0000";
-                readData1_o <= dout;
-                addr <= readAddr2_i;
-                next_state <= FINISHED_READ2;
-            when FINISHED_READ2 =>    -- READY_WRITE
-                we <= "1111";
-                readData2_o <= dout;
-                din <= writeData_i;
-                addr <= writeAddr_i;
-            when others =>
-                next_state <= FINISHED_READ2;
-        end case;
+        if (rst = RST_ENABLE) then
+            we <= "0000";
+            addr <= (others => '0');
+            din <= (others => '0');
+            dout <= (others => '0');
+        else
+            case current_state is
+                when FINISHED_WRITE =>    -- READY_READ1
+                    we <= "0000";
+                    addr <= readAddr1_i;
+                    next_state <= FINISHED_READ1;
+                when FINISHED_READ1 =>    -- READY_READ2
+                    we <= "0000";
+                    readData1_o <= dout;
+                    addr <= readAddr2_i;
+                    next_state <= FINISHED_READ2;
+                when FINISHED_READ2 =>    -- READY_WRITE
+                    we <= "1111";
+                    readData2_o <= dout;
+                    din <= writeData_i;
+                    addr <= writeAddr_i;
+                when others =>
+                    next_state <= FINISHED_READ2;
+            end case;
+        end if;
     end process;
 
 end bhv;
