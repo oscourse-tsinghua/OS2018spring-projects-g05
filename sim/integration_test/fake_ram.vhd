@@ -29,10 +29,12 @@ architecture bhv of fake_ram is
 
     type state is (FINISHED_WRITE, FINISHED_READ1, FINISHED_READ2);
     signal clk: std_logic;
+    signal sample_clk: std_logic;     -- eliminating jitter
     signal current_state, next_state: state := FINISHED_READ2;
     signal we: std_logic_vector(3 downto 0);
-    signal addr: std_logic_vector(18 downto 0);
+    signal addr: std_logic_vector(AddrWidth);
     signal din, dout: std_logic_vector(DataWidth);
+    signal rdata1, rdata2: std_logic_vector(DataWidth);
 begin
 
     ram_ist: ram
@@ -45,9 +47,17 @@ begin
     process
     begin
         clk <= '0';
-        wait for 1 ns;
+        wait for 0.3 ns;
         clk <= '1';
-        wait for 1 ns;
+        wait for 0.3 ns;
+    end process;
+
+    process
+    begin
+        sample_clk <= '0';
+        wait for 1.3 ns;
+        sample_clk <= '1';
+        wait for 1.3 ns;
     end process;
 
     process(clk)
@@ -55,17 +65,18 @@ begin
         if (rst = RST_ENABLE) then
             current_state <= FINISHED_READ2;
         else
-            current_state <= next_state;
+            if (rising_edge(clk)) then
+                current_state <= next_state;
+            end if;
         end if;
     end process;
 
-    process(current_state, rst)
+    process(all)
     begin
         if (rst = RST_ENABLE) then
             we <= "0000";
             addr <= (others => '0');
             din <= (others => '0');
-            dout <= (others => '0');
         else
             case current_state is
                 when FINISHED_WRITE =>    -- READY_READ1
@@ -75,9 +86,9 @@ begin
                 when FINISHED_READ1 =>    -- READY_READ2
                     we <= "0000";
                     if (readEnable1_i = ENABLE) then
-                        readData1_o <= dout;
+                        rdata1 <= dout;
                     else
-                        readData1_o <= (others => '0');
+                        rdata1 <= (others => '0');
                     end if;
                     addr <= readAddr2_i;
                     next_state <= FINISHED_READ2;
@@ -88,15 +99,25 @@ begin
                         we <= "0000";
                     end if;
                     if (readEnable2_i = ENABLE) then
-                        readData2_o <= dout;
+                        rdata2 <= dout;
                     else
-                        readData2_o <= (others => '0');
+                        rdata2 <= (others => '0');
                     end if;
                     din <= writeData_i;
                     addr <= writeAddr_i;
+                    next_state <= FINISHED_WRITE;
                 when others =>
                     next_state <= FINISHED_READ2;
             end case;
+        end if;
+    end process;
+
+    -- eliminate jitter of rdata by sampling --
+    process(sample_clk)
+    begin
+        if (rising_edge(sample_clk)) then
+            readData1_o <= rdata1;
+            readData2_o <= rdata2;
         end if;
     end process;
 
