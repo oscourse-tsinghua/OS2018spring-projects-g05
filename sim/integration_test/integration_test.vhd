@@ -10,7 +10,8 @@ architecture bhv of integration_test is
 
     component cpu
         generic (
-            instEntranceAddr: std_logic_vector(AddrWidth)
+            instEntranceAddr: std_logic_vector(AddrWidth);
+            instConvEndian: boolean
         );
         port (
             rst, clk: in std_logic;
@@ -93,7 +94,8 @@ begin
 
     cpu_ist: cpu
         generic map (
-            instEntranceAddr => INST_ENTRANCE_ADDR
+            instEntranceAddr => INST_ENTRANCE_ADDR,
+            instConvEndian => false
         )
         port map (
             rst => rst,

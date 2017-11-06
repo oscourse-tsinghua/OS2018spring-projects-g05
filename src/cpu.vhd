@@ -8,7 +8,8 @@ use work.except_const.all;
 
 entity cpu is
     generic (
-        instEntranceAddr: std_logic_vector(AddrWidth) := 32ux"4"
+        instEntranceAddr: std_logic_vector(AddrWidth) := 32ux"4";
+        instConvEndian: boolean := true
     );
     port (
         rst, clk: in std_logic;
@@ -407,8 +408,11 @@ architecture bhv of cpu is
     signal pc_24: std_logic_vector(AddrWidth);
     signal inst_24: std_logic_vector(InstWidth);
 
-    -- Signals connecting conv_endian and if_id --
-    signal inst_x2: std_logic_vector(InstWidth);
+    -- Signals from conv_endian --
+    signal inst_x: std_logic_vector(InstWidth);
+
+    -- Signals into if_id --
+    signal inst_2: std_logic_vector(InstWidth);
 
     -- Signals connecting regfile and id --
     signal regReadEnable1_43, regReadEnable2_43: std_logic;
@@ -601,7 +605,7 @@ begin
             rst => rst, clk => clk,
             stall_i => stall,
             pc_i => pc_12,
-            inst_i => inst_x2,
+            inst_i => inst_2,
             pc_o => pc_24,
             inst_o => inst_24,
             flush_i => flush_b2
@@ -611,8 +615,10 @@ begin
     conv_endian_ist: conv_endian
         port map (
             input => instData_i,
-            output => inst_x2
+            output => inst_x
         );
+
+    inst_2 <= inst_x when instConvEndian else instData_i;
 
     regfile_ist: regfile
         port map (
