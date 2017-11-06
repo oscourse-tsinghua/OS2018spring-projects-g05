@@ -49,6 +49,7 @@ words(2) <= x"02_00_40_04"; -- RUN bltz $2, 0x0008
 words(3) <= x"00_00_63_34"; -- RUN ori $3, $3, 0x0000
 words(4) <= x"00_00_63_34"; -- RUN ori $3, $3, 0x0000
 words(5) <= x"01_00_00_08"; -- RUN j 0x0004
+words(6) <= x"00_00_00_00"; -- RUN nop
         end if;
     end process;
 

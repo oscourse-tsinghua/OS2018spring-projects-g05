@@ -162,25 +162,13 @@ process begin
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
-    wait for 13 * CLK_PERIOD;
-    assert user_reg(4) = 32ux"6acbf99a" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
     wait for 16 * CLK_PERIOD;
     assert user_reg(5) = 32ux"0" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
-    wait for 18 * CLK_PERIOD;
-    assert user_reg(7) = 32ux"0" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 19 * CLK_PERIOD;
+    wait for 21 * CLK_PERIOD;
     assert user_reg(7) = 32ux"7fffffff" severity FAILURE;
     wait;
 end process;

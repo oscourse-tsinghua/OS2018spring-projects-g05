@@ -51,13 +51,16 @@ words(4) <= x"cd_fc_03_24"; -- RUN subu $3, $0, 0x333
 words(5) <= x"20_20_43_00"; -- RUN add $4, $2, $3
 words(6) <= x"21_20_43_00"; -- RUN addu $4, $2, $3
 words(7) <= x"20_20_84_00"; -- RUN add $4, $4, $4
-words(8) <= x"20_20_84_00"; -- RUN add $4, $4, $4
-words(9) <= x"01_00_04_34"; -- RUN ori $4, $0, 0x1
-words(10) <= x"c0_27_04_00"; -- RUN sll $4, $4, 0x1f
-words(11) <= x"ff_ff_85_20"; -- RUN addi $5, $4, 0xffff
-words(12) <= x"01_00_06_34"; -- RUN ori $6, $0, 0x1
-words(13) <= x"22_38_86_00"; -- RUN sub $7, $4, $6
-words(14) <= x"23_38_86_00"; -- RUN subu $7, $4, $6
+words(8) <= x"01_00_04_34"; -- RUN ori $4, $0, 0x1
+words(9) <= x"c0_27_04_00"; -- RUN sll $4, $4, 0x1f
+words(10) <= x"ff_ff_85_20"; -- RUN addi $5, $4, 0xffff
+words(11) <= x"00_00_00_00"; -- RUN nop
+words(12) <= x"00_00_00_00"; -- RUN nop
+words(13) <= x"00_00_00_00"; -- RUN nop
+words(14) <= x"00_00_00_00"; -- RUN nop
+words(15) <= x"00_00_00_00"; -- RUN nop
+words(16) <= x"01_00_06_34"; -- RUN ori $6, $0, 0x1
+words(17) <= x"23_38_86_00"; -- RUN subu $7, $4, $6
         end if;
     end process;
 

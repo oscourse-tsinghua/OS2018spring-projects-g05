@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use work.global_const.all;
 use work.mem_const.all;
+use work.except_const.all;
 
 entity ex_mem is
     port (
@@ -43,10 +44,10 @@ entity ex_mem is
         memCP0RegWe_o: out std_logic;
 
         -- for exception --
-        exExceptType_i: in std_logic_vector(ExceptionWidth);
+        exExceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         exIsInDelaySlot_i: in std_logic;
         exCurrentInstAddr_i: in std_logic_vector(AddrWidth);
-        memExceptType_o: out std_logic_vector(ExceptionWidth);
+        memExceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         memIsInDelaySlot_o: out std_logic;
         memCurrentInstAddr_o: out std_logic_vector(AddrWidth);
         flush_i: in std_logic
@@ -72,16 +73,14 @@ begin
 
             tempProduct_o <= (others => '0');
             cnt_o <= (others => '0');
-            memExcepttype_o <= (others => '0');
+            memExceptCause_o <= NO_CAUSE;
             memIsInDelaySlot_o <= NO;
             memCurrentInstAddr_o <= (others => '0');
 
             memCP0RegWe_o <= NO;
             memCP0RegData_o <= (others => '0');
             memCP0RegWriteAddr_o <= (others => '0');
-            if (flush_i = YES) then
-                -- nothing to be done here --
-            elsif (rst /= RST_ENABLE) then
+            if (rst /= RST_ENABLE and flush_i = NO) then
                 if (stall_i(EX_STOP_IDX) = PIPELINE_STOP and stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                     tempProduct_o <= tempProduct_i;
                     cnt_o <= cnt_i;
@@ -98,12 +97,12 @@ begin
                     memt_o <= memt_i;
                     memAddr_o <= memAddr_i;
                     memData_o <= memData_i;
-                    
+
                     memCP0RegWe_o <= exCP0RegWe_i;
                     memCP0RegWriteAddr_o <= exCP0RegWriteAddr_i;
                     memCP0RegData_o <= exCP0RegData_i;
 
-                    memExcepttype_o <= exExcepttype_i;
+                    memExceptCause_o <= exExceptCause_i;
                     memIsInDelaySlot_o <= exIsInDelaySlot_i;
                     memCurrentInstAddr_o <= exCurrentInstAddr_i;
                 end if;
