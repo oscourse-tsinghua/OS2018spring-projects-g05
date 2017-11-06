@@ -46,11 +46,11 @@ begin
             if (rst = RST_ENABLE) then
                 count_o <= (others => '0');
                 compare_o <= (others => '0');
-                status_o <= "00010000000000000000000000000000";
+                status_o <= (28 => '1', others => '0');
                 cause_o <= (others => '0');
                 epc_o <= (others => '0');
-                config_o <= "00000000000000001000000000000000";
-                prid_o <= "00000000010011000000000100000010";
+                config_o <= (15 => '1', others => '0');
+                prid_o <= (22 => '1', 19 => '1', 18 => '1', 8 => '1', 1 => '1', others => '0');
                 timerInt_o <= INTERRUPT_NOT_ASSERT;
             else
                 count_o <= count_o + 1;
