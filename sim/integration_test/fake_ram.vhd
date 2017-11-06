@@ -8,6 +8,7 @@ entity fake_ram is
         writeEnable_i, readEnable1_i, readEnable2_i: in std_logic;
         writeAddr_i: in std_logic_vector(AddrWidth);
         writeData_i: in std_logic_vector(DataWidth);
+        byteSelect_i: in std_logic_vector(3 downto 0);
         readAddr1_i: in std_logic_vector(AddrWidth);
         readAddr2_i: in std_logic_vector(AddrWidth);
         readData1_o: out std_logic_vector(DataWidth);
@@ -35,6 +36,7 @@ architecture bhv of fake_ram is
     signal addr: std_logic_vector(AddrWidth);
     signal din, dout: std_logic_vector(DataWidth);
     signal rdata1, rdata2: std_logic_vector(DataWidth);
+
 begin
 
     ram_ist: ram
@@ -94,7 +96,7 @@ begin
                     next_state <= FINISHED_READ2;
                 when FINISHED_READ2 =>    -- READY_WRITE
                     if (writeEnable_i = ENABLE) then
-                        we <= "1111";
+                        we <= byteSelect_i;
                     else
                         we <= "0000";
                     end if;

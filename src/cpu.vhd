@@ -7,6 +7,9 @@ use work.cp0_const.all;
 use work.except_const.all;
 
 entity cpu is
+    generic (
+        instEntranceAddr: std_logic_vector(AddrWidth) := 32ux"4"
+    );
     port (
         rst, clk: in std_logic;
         instData_i: in std_logic_vector(InstWidth);
@@ -28,6 +31,9 @@ end cpu;
 architecture bhv of cpu is
 
     component pc_reg
+        generic (
+            instEntranceAddr: std_logic_vector(AddrWidth)
+        );
         port (
             rst, clk: in std_logic;
             stall_i: in std_logic_vector(StallWidth);
@@ -576,6 +582,9 @@ architecture bhv of cpu is
 begin
 
     pc_reg_ist: pc_reg
+        generic map (
+            instEntranceAddr => instEntranceAddr
+        )
         port map (
            rst => rst, clk => clk,
            stall_i => stall,

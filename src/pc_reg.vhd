@@ -5,6 +5,9 @@ use work.global_const.all;
 use work.inst_const.all;
 
 entity pc_reg is
+    generic (
+        instEntranceAddr: std_logic_vector(AddrWidth)
+    );
     port (
         rst, clk: in std_logic;
         stall_i: in std_logic_vector(StallWidth);
@@ -24,7 +27,7 @@ begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then
                 pcEnable_o <= DISABLE;
-                pc <= (others => '0');
+                pc <= instEntranceAddr - 4;
             elsif (flush_i = YES) then
                 pc <= newPc_i;
             elsif (stall_i(PC_STOP_IDX) = PIPELINE_NONSTOP) then
