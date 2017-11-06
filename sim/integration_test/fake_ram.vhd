@@ -74,12 +74,24 @@ begin
                     next_state <= FINISHED_READ1;
                 when FINISHED_READ1 =>    -- READY_READ2
                     we <= "0000";
-                    readData1_o <= dout;
+                    if (readEnable1_i = ENABLE) then
+                        readData1_o <= dout;
+                    else
+                        readData1_o <= (others => '0');
+                    end if;
                     addr <= readAddr2_i;
                     next_state <= FINISHED_READ2;
                 when FINISHED_READ2 =>    -- READY_WRITE
-                    we <= "1111";
-                    readData2_o <= dout;
+                    if (writeEnable_i = ENABLE) then
+                        we <= "1111";
+                    else
+                        we <= "0000";
+                    end if;
+                    if (readEnable2_i = ENABLE) then
+                        readData2_o <= dout;
+                    else
+                        readData2_o <= (others => '0');
+                    end if;
                     din <= writeData_i;
                     addr <= writeAddr_i;
                 when others =>
