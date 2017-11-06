@@ -9,11 +9,9 @@ use work.logic3_test_const.all;
 use work.global_const.all;
 
 entity logic3_fake_ram is
-    generic (
-        isInst: boolean := false -- The RAM will be initialized with instructions when true
-    );
     port (
-        enable_i, write_i, clk: in std_logic;
+        clk, rst: in std_logic;
+        enable_i, write_i: in std_logic;
         data_i: in std_logic_vector(DataWidth);
         addr_i: in std_logic_vector(AddrWidth);
         byteSelect_i: in std_logic_vector(3 downto 0);
@@ -37,13 +35,9 @@ begin
     );
 
     process (clk) begin
-        if (not isInst) then
-            if (rising_edge(clk) and (enable_i = '1') and (write_i = '1')) then
-                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
-            end if;
-        else
-            -- The first instruction is at 0x4
-            -- CODE BELOW IS AUTOMATICALLY GENERATED
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                -- CODE BELOW IS AUTOMATICALLY GENERATED
 words(1) <= x"00_f2_03_34"; -- RUN ori $3, $0, 0xf200
 words(2) <= x"10_00_02_34"; -- RUN ori $2, $0, 0x0010
 words(3) <= x"00_24_03_00"; -- RUN sll $4, $3, 0x10
@@ -52,6 +46,9 @@ words(5) <= x"03_2c_04_00"; -- RUN sra $5, $4, 0x10
 words(6) <= x"04_20_43_00"; -- RUN sllv $4, $3, $2
 words(7) <= x"06_28_44_00"; -- RUN srlv $5, $4, $2
 words(8) <= x"07_28_44_00"; -- RUN srav $5, $4, $2
+            elsif ((enable_i = '1') and (write_i = '1')) then
+                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
+            end if;
         end if;
     end process;
 

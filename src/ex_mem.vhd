@@ -36,20 +36,21 @@ entity ex_mem is
         cnt_o: out std_logic_vector(CntWidth);
 
         -- interact with cp0 --
-        exCP0RegData_i: in std_logic_vector(DataWidth);
-        exCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
-        exCP0RegWe_i: in std_logic;
-        memCP0RegData_o: out std_logic_vector(DataWidth);
-        memCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
-        memCP0RegWe_o: out std_logic;
+        cp0RegData_i: in std_logic_vector(DataWidth);
+        cp0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
+        cp0RegWe_i: in std_logic;
+        cp0RegData_o: out std_logic_vector(DataWidth);
+        cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
+        cp0RegWe_o: out std_logic;
 
         -- for exception --
-        exExceptCause_i: in std_logic_vector(ExceptionCauseWidth);
-        exIsInDelaySlot_i: in std_logic;
-        exCurrentInstAddr_i: in std_logic_vector(AddrWidth);
-        memExceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-        memIsInDelaySlot_o: out std_logic;
-        memCurrentInstAddr_o: out std_logic_vector(AddrWidth);
+        exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        isInDelaySlot_i: in std_logic;
+        currentInstAddr_i: in std_logic_vector(AddrWidth);
+        exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        isInDelaySlot_o: out std_logic;
+        currentInstAddr_o: out std_logic_vector(AddrWidth);
+
         flush_i: in std_logic
     );
 end ex_mem;
@@ -73,13 +74,13 @@ begin
 
             tempProduct_o <= (others => '0');
             cnt_o <= (others => '0');
-            memExceptCause_o <= NO_CAUSE;
-            memIsInDelaySlot_o <= NO;
-            memCurrentInstAddr_o <= (others => '0');
+            exceptCause_o <= NO_CAUSE;
+            isInDelaySlot_o <= NO;
+            currentInstAddr_o <= (others => '0');
 
-            memCP0RegWe_o <= NO;
-            memCP0RegData_o <= (others => '0');
-            memCP0RegWriteAddr_o <= (others => '0');
+            cp0RegWe_o <= NO;
+            cp0RegData_o <= (others => '0');
+            cp0RegWriteAddr_o <= (others => '0');
             if (rst /= RST_ENABLE and flush_i = NO) then
                 if (stall_i(EX_STOP_IDX) = PIPELINE_STOP and stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                     tempProduct_o <= tempProduct_i;
@@ -98,13 +99,13 @@ begin
                     memAddr_o <= memAddr_i;
                     memData_o <= memData_i;
 
-                    memCP0RegWe_o <= exCP0RegWe_i;
-                    memCP0RegWriteAddr_o <= exCP0RegWriteAddr_i;
-                    memCP0RegData_o <= exCP0RegData_i;
+                    cp0RegWe_o <= cp0RegWe_i;
+                    cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
+                    cp0RegData_o <= cp0RegData_i;
 
-                    memExceptCause_o <= exExceptCause_i;
-                    memIsInDelaySlot_o <= exIsInDelaySlot_i;
-                    memCurrentInstAddr_o <= exCurrentInstAddr_i;
+                    exceptCause_o <= exceptCause_i;
+                    isInDelaySlot_o <= isInDelaySlot_i;
+                    currentInstAddr_o <= currentInstAddr_i;
                 end if;
             end if;
         end if;

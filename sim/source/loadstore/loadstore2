@@ -20,7 +20,7 @@ RUN ori $4, $0, 0x0004
 # period 8
 RUN ori $5, $0, 0x0005
 # period 9
-RUN sw  $3, 0x4($4)
+RUN sw  $3, 0x104($4)
 # period 10
-RUN lw  $1, 0x3($5)
+RUN lw  $1, 0x103($5)
 ASSERT 11 reg(1) x"44556677"

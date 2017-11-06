@@ -14,7 +14,7 @@ use work.except_const.all;
 entity ctrl is
     port (
         rst: in std_logic;
-        idToStall_i, exToStall_i: in std_logic;
+        ifToStall_i, idToStall_i, exToStall_i, memToStall_i: in std_logic;
         stall_o: out std_logic_vector(StallWidth);
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         cp0Epc_i: in std_logic_vector(DataWidth);
@@ -48,15 +48,19 @@ begin
                     when others =>
                         null;
                 end case;
-            elsif (exToStall_i = PIPELINE_STOP) then
-                stall_o <= "111100";
-                flush_o <= '0';
-            elsif (idToStall_i = PIPELINE_STOP) then
-                stall_o <= "111000";
-                flush_o <= '0';
             else
-                stall_o <= "000000";
                 flush_o <= '0';
+                if (memToStall_i = PIPELINE_STOP) then
+                    stall_o <= "111110";
+                elsif (exToStall_i = PIPELINE_STOP) then
+                    stall_o <= "111100";
+                elsif (idToStall_i = PIPELINE_STOP) then
+                    stall_o <= "111000";
+                elsif (ifToStall_i = PIPELINE_STOP) then
+                    stall_o <= "110000";
+                else
+                    stall_o <= "000000";
+                end if;
             end if;
         end if;
     end process;

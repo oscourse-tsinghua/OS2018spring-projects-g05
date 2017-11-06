@@ -9,11 +9,9 @@ use work.loadstore2_test_const.all;
 use work.global_const.all;
 
 entity loadstore2_fake_ram is
-    generic (
-        isInst: boolean := false -- The RAM will be initialized with instructions when true
-    );
     port (
-        enable_i, write_i, clk: in std_logic;
+        clk, rst: in std_logic;
+        enable_i, write_i: in std_logic;
         data_i: in std_logic_vector(DataWidth);
         addr_i: in std_logic_vector(AddrWidth);
         byteSelect_i: in std_logic_vector(3 downto 0);
@@ -37,19 +35,18 @@ begin
     );
 
     process (clk) begin
-        if (not isInst) then
-            if (rising_edge(clk) and (enable_i = '1') and (write_i = '1')) then
-                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
-            end if;
-        else
-            -- The first instruction is at 0x4
-            -- CODE BELOW IS AUTOMATICALLY GENERATED
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                -- CODE BELOW IS AUTOMATICALLY GENERATED
 words(1) <= x"55_44_03_3c"; -- RUN lui $3, 0x4455
 words(2) <= x"77_66_63_34"; -- RUN ori $3, $3, 0x6677
 words(3) <= x"04_00_04_34"; -- RUN ori $4, $0, 0x0004
 words(4) <= x"05_00_05_34"; -- RUN ori $5, $0, 0x0005
-words(5) <= x"04_00_83_ac"; -- RUN sw  $3, 0x4($4)
-words(6) <= x"03_00_a1_8c"; -- RUN lw  $1, 0x3($5)
+words(5) <= x"04_01_83_ac"; -- RUN sw  $3, 0x104($4)
+words(6) <= x"03_01_a1_8c"; -- RUN lw  $1, 0x103($5)
+            elsif ((enable_i = '1') and (write_i = '1')) then
+                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
+            end if;
         end if;
     end process;
 

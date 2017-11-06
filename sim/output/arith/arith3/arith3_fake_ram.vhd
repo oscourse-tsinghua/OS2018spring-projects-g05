@@ -9,11 +9,9 @@ use work.arith3_test_const.all;
 use work.global_const.all;
 
 entity arith3_fake_ram is
-    generic (
-        isInst: boolean := false -- The RAM will be initialized with instructions when true
-    );
     port (
-        enable_i, write_i, clk: in std_logic;
+        clk, rst: in std_logic;
+        enable_i, write_i: in std_logic;
         data_i: in std_logic_vector(DataWidth);
         addr_i: in std_logic_vector(AddrWidth);
         byteSelect_i: in std_logic_vector(3 downto 0);
@@ -37,13 +35,9 @@ begin
     );
 
     process (clk) begin
-        if (not isInst) then
-            if (rising_edge(clk) and (enable_i = '1') and (write_i = '1')) then
-                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
-            end if;
-        else
-            -- The first instruction is at 0x4
-            -- CODE BELOW IS AUTOMATICALLY GENERATED
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                -- CODE BELOW IS AUTOMATICALLY GENERATED
 words(1) <= x"ff_ff_02_28"; -- RUN slti $2, $0, 0xffff
 words(2) <= x"ff_ff_02_2c"; -- RUN sltiu $2, $0, 0xffff
 words(3) <= x"fe_ff_63_34"; -- RUN ori $3, $3, 0xfffe
@@ -53,6 +47,9 @@ words(6) <= x"2a_10_64_00"; -- RUN slt $2, $3, $4
 words(7) <= x"2b_10_64_00"; -- RUN sltu $2, $3, $4
 words(8) <= x"2a_10_84_00"; -- RUN slt $2, $4, $4
 words(9) <= x"2b_10_84_00"; -- RUN sltu $2, $4, $4
+            elsif ((enable_i = '1') and (write_i = '1')) then
+                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
+            end if;
         end if;
     end process;
 
