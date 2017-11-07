@@ -1,0 +1,8 @@
+testlist
+convert
+*.a
+*.s
+*.lds
+main.*
+*.coe
+*.mif
