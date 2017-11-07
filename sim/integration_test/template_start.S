@@ -1,5 +1,3 @@
-#/* $Id: start.S,v 1.1.1.1 2006/09/14 01:59:08 root Exp $ */
-
 /*
  * Copyright (c) 2001 Opsycon AB  (www.opsycon.se)
  * 
@@ -273,14 +271,14 @@ locate:
 
 inst_test:
 {% for test in tests %}{% if test.ex %}
-    la v0, {{ test.name }}
+    la v0, {{ test.name }}_test
     jalr v0
     nop
     addiu s7, s7, 1
     jal wait_1s
     nop
 {% else %}
-    jal {{ test.name }}
+    jal {{ test.name }}_test
     nop
     addiu s7, s7, 1
     jal wait_1s
