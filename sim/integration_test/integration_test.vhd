@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 use work.global_const.all;
 use work.integration_test_const.all;
 
@@ -48,6 +49,7 @@ architecture bhv of integration_test is
 
     signal rst: std_logic := '1';
     signal clk: std_logic := '0';
+    signal judge_clk: std_logic := '0';
 
     signal instEnable: std_logic;
     signal instData: std_logic_vector(DataWidth);
@@ -63,6 +65,7 @@ architecture bhv of integration_test is
     signal int: std_logic_vector(IntWidth);
     signal timerInt: std_logic;
 
+    signal judgeRes: std_logic;
 begin
 
     process begin
@@ -114,5 +117,34 @@ begin
         );
 
     int <= (0 => timerInt, others => '0');
+
+    process begin
+        wait for JUDGE_CLK_PERIOD / 2;
+        judge_clk <= not judge_clk;
+    end process;
+
+    process(judge_clk)
+        variable testCnt, correctCnt: integer := 0;
+        variable nowTestCnt, nowCorrectCnt: integer;
+        variable nowDelta :integer := 0;
+        alias reg is <<signal cpu_ist.regfile_ist.regArray: RegArrayType>>;
+    begin
+        if (rising_edge(judge_clk)) then
+            nowTestCnt := conv_integer(reg(23));
+            nowCorrectCnt := conv_integer(reg(19));
+            if (nowTestCnt > testCnt) then
+                if (nowTestCnt - nowCorrectCnt > nowDelta) then
+                    judgeRes <= '0';
+                    report "test " & integer'image(nowTestCnt) & " failed";
+                else
+                    judgeRes <= '1';
+                    report "test " & integer'image(nowTestCnt) & " passed";
+                end if;
+                testCnt := nowTestCnt;
+                correctCnt := nowCorrectCnt;
+                nowDelta := nowTestCnt - nowCorrectCnt;
+            end if;
+        end if;
+    end process;
 
 end bhv;
