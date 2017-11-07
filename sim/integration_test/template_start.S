@@ -270,18 +270,22 @@ locate:
     lui s3, 0
     sw s3, 0(s1)
     xor s7, s7, s7
+
 inst_test:
-    {% for test in tests %}{% if test.ex %}la v0, {{ test.name }}
+{% for test in tests %}{% if test.ex %}
+    la v0, {{ test.name }}
     jalr v0
     nop
     addiu s7, s7, 1
     jal wait_1s
-    nop{% else %}
+    nop
+{% else %}
     jal {{ test.name }}
     nop
     addiu s7, s7, 1
     jal wait_1s
-    nop{% endif %}{% endfor %}
+    nop
+{% endif %}{% endfor %}
 
 
 test_end:
