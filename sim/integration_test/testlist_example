@@ -1,0 +1,91 @@
+n1_add
+n2_addi
+n3_addu
+n4_addiu
+n5_sub
+n6_subu
+n7_slt
+n8_slti
+n9_sltu
+n10_sltiu
+n11_div
+n12_divu
+n13_mult
+n14_multu
+n15_and
+n16_andi
+n17_lui
+n18_nor
+n19_or
+n20_ori
+n21_xor
+n22_xori
+n23_sll
+n24_sllv
+n25_sra
+n26_srav
+n27_srl
+n28_srlv
+n29_beq
+n30_bne
+n31_bgez
+n32_bgtz
+n33_blez
+n34_bltz
+n35_bltzal
+n36_bgezal
+n37_j
+n38_jal
+n39_jr
+n40_jalr
+n41_mfhi
+n42_mflo
+n43_mthi
+n44_mtlo
+n45_break
+n46_syscall
+n47_lb
+n48_lbu
+n49_lh
+n50_lhu
+n51_lw
+n52_sb
+n53_sh
+n54_sw
+n55_eret
+n56_mfc0
+n57_mtc0
+n58_add_ex *
+n59_addi_ex *
+n60_sub_ex *
+n61_lh_ex *
+n62_lhu_ex *
+n63_lw_ex *
+n64_sh_ex *
+n65_sw_ex *
+n66_eret_ex *
+n67_reserved_instruction_ex *
+n68_beq_ds *
+n69_bne_ds *
+n70_bgez_ds *
+n71_bgtz_ds *
+n72_blez_ds *
+n73_bltz_ds *
+n74_bltzal_ds *
+n75_bgezal_ds *
+n76_j_ds *
+n77_jal_ds *
+n78_jr_ds *
+n79_jalr_ds *
+n80_beq_ex_ds *
+n81_bne_ex_ds *
+n82_bgez_ex_ds *
+n83_bgtz_ex_ds *
+n84_blez_ex_ds *
+n85_bltz_ex_ds *
+n86_bltzal_ex_ds *
+n87_bgezal_ex_ds *
+n88_j_ex_ds *
+n89_jal_ex_ds *
+n90_jr_ex_ds *
+n91_jalr_ex_ds *
