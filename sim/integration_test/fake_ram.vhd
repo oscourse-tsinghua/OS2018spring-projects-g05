@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use work.global_const.all;
+use work.integration_test_const.all;
 
 entity fake_ram is
     port (
@@ -23,7 +24,7 @@ architecture bhv of fake_ram is
             clka, ena: in std_logic;
             wea: in std_logic_vector(3 downto 0);
             dina: in std_logic_vector(31 downto 0);
-            addra: in std_logic_vector(18 downto 0);
+            addra: in std_logic_vector(RamAddrWidth);
             douta: out std_logic_vector(31 downto 0)
         );
     end component;
@@ -43,7 +44,7 @@ begin
     port map (
         clka => clk, ena => '1',
         wea => we, dina => din,
-        addra => addr(20 downto 2), douta => dout
+        addra => addr(RamAddrSliceWidth), douta => dout
     );
 
     process
