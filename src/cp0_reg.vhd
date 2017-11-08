@@ -4,9 +4,10 @@ use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 -- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_unsigned
 --       Use numeric_std if signed number is needed (different API)
-use work.cp0_const.all;
 use work.global_const.all;
 use work.except_const.all;
+use work.cp0_const.all;
+use work.mmu_const.all;
 
 entity cp0_reg is
     port(
@@ -19,10 +20,11 @@ entity cp0_reg is
         data_i: in std_logic_vector(DataWidth);
         int_i: in std_logic_vector(IntWidth);
 
+        data_o: out std_logic_vector(DataWidth);
+
         -- output signals for CP0 processor
         -- refers to page 295 in that book still
         -- NOTE: These are REGISTERS
-        data_o: out std_logic_vector(DataWidth);
         count_o: out std_logic_vector(DataWidth);
         compare_o: out std_logic_vector(DataWidth);
         status_o: out std_logic_vector(DataWidth);
@@ -35,7 +37,14 @@ entity cp0_reg is
         -- for exception --
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         currentInstAddr_i: in std_logic_vector(AddrWidth);
-        isIndelaySlot_i: in std_logic
+        isIndelaySlot_i: in std_logic;
+
+        -- To MMU
+        isKernalMode_o: out std_logic;
+        entryIndex_o: out std_logic_vector(TLBIndexWidth);
+        entryWrite_o: out std_logic;
+        entry_i: in TLBEntry;
+        entry_o: out TLBEntry
     );
 end cp0_reg;
 
@@ -60,20 +69,20 @@ begin
                 end if;
                 if (we_i = ENABLE) then
                     case (waddr_i) is
-                        when COUNT_PROCESSOR =>
+                        when COUNT_REG =>
                             count_o <= data_i;
 
-                        when COMPARE_PROCESSOR =>
+                        when COMPARE_REG =>
                             compare_o <= data_i;
                             timerInt_o <= INTERRUPT_NOT_ASSERT;
 
-                        when STATUS_PROCESSOR =>
+                        when STATUS_REG =>
                             status_o <= data_i;
 
-                        when EPC_PROCESSOR =>
+                        when EPC_REG =>
                             epc_o <= data_i;
 
-                        when CAUSE_PROCESSOR =>
+                        when CAUSE_REG =>
                             cause_o(CauseIpSoftBits) <= data_i(CauseIpSoftBits);
                             cause_o(CAUSE_IV_BIT) <= data_i(CAUSE_IV_BIT);
                             cause_o(CAUSE_WP_BIT) <= data_i(CAUSE_WP_BIT);
@@ -107,25 +116,25 @@ begin
             data_o <= (others => '0');
         else
             case (raddr_i) is
-                when COUNT_PROCESSOR =>
+                when COUNT_REG =>
                     data_o <= count_o;
 
-                when COMPARE_PROCESSOR =>
+                when COMPARE_REG =>
                     data_o <= compare_o;
 
-                when STATUS_PROCESSOR =>
+                when STATUS_REG =>
                     data_o <= status_o;
 
-                when CAUSE_PROCESSOR =>
+                when CAUSE_REG =>
                     data_o <= cause_o;
 
-                when EPC_PROCESSOR =>
+                when EPC_REG =>
                     data_o <= epc_o;
 
-                when PRID_PROCESSOR =>
+                when PRID_REG =>
                     data_o <= prid_o;
 
-                when CONFIG_PROCESSOR =>
+                when CONFIG_REG =>
                     data_o <= config_o;
 
                 when others =>
