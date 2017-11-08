@@ -19,6 +19,8 @@ package cp0_const is
     constant EPC_REG: std_logic_vector(CP0RegAddrWidth) := 5ud"14";
     constant PRID_REG: std_logic_vector(CP0RegAddrWidth) := 5ud"15";
     constant CONFIG_REG: std_logic_vector(CP0RegAddrWidth) := 5ud"16";
+    -- Max implemented ID of CP0 registers
+    constant CP0_MAX_ID: integer := 16;
 
     --
     -- Bits of EntryHi register

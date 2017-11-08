@@ -16,16 +16,15 @@ entity mmu is
         addr_o: out std_logic_vector(AddrWidth);
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
 
-        -- Load/save TLB entry
+        -- Update TLB entry
         index_i: in std_logic_vector(TLBIndexWidth);
         entryWrite_i: in std_logic;
         entry_i: in TLBEntry;
-        entry_o: out TLBEntry
     );
 end mmu;
 
 architecture bhv of mmu is
-    type EntryArr is array (0 to TLBEntryNum - 1) of TLBEntry;
+    type EntryArr is array (0 to TLB_ENTRY_NUM - 1) of TLBEntry;
     signal entries: EntryArr;
 begin
     -- Traslation
@@ -47,7 +46,7 @@ begin
             tlbExcept := false;
         else
             -- kuseg, kseg2 (mapped)
-            for i in 0 to TLBEntryNum - 1 loop
+            for i in 0 to TLB_ENTRY_NUM - 1 loop
                 if (entries(i).hi(EntryHiVPN2Bits) = addr_i(EntryHiVPN2Bits)) then
                     -- VPN match
                     if (
@@ -88,9 +87,6 @@ begin
             end if;
         end if;
     end process;
-
-    -- Load entry
-    entry_o <= entries(conv_integer(index_i));
 
     -- Store entry
     process (clk) begin

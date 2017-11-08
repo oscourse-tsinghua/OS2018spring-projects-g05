@@ -363,14 +363,11 @@ architecture bhv of cpu is
             int_i: in std_logic_vector(intWidth);
 
             data_o: out std_logic_vector(DataWidth);
+            timerInt_o: out std_logic;
+
             status_o: out std_logic_vector(DataWidth);
-            count_o: out std_logic_vector(DataWidth);
-            compare_o: out std_logic_vector(DataWidth);
             cause_o: out std_logic_vector(DataWidth);
             epc_o: out std_logic_vector(DataWidth);
-            config_o: out std_logic_vector(DataWidth);
-            prid_o: out std_logic_vector(DataWidth);
-            timerInt_o: out std_logic;
 
             exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
             currentInstAddr_i: in std_logic_vector(AddrWidth);
