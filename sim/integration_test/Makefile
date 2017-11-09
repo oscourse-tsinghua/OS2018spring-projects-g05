@@ -19,7 +19,7 @@ export CROSS_COMPILE ?= mipsel-linux-gnu-
 
 all: ram_init_data
 
-ram_init_data: convert main.bin
+ram_init_data: convert main.bin main.text main.data
 	./convert
 
 libinst.a:
