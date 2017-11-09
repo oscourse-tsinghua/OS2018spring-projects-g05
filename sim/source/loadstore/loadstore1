@@ -13,24 +13,47 @@ DEFINE reg regfile_ist.regArray: RegArrayType
 # Execute an assembly instruction
 # Grammar: "RUN <assembly>"
 RUN ori $3, $0, 0xeeff
-# period 6
-RUN sb  $3, 0x3($0)
+# period 6 (See the table below)
+RUN sb  $3, 0x103($0)
 # period 7
 RUN srl $3, $3, 8
 # period 8
-RUN sb  $3, 0x2($0)
+RUN sb  $3, 0x102($0)
 # period 9
 RUN ori $3, $0, 0xccdd
-# period 10
-RUN sb  $3, 0x1($0)
 # period 11
-RUN srl $3, $3, 8
-# period 12
-RUN sb  $3, 0x0($0)
+RUN sb  $3, 0x101($0)
 # period 13
-RUN lb  $1, 0x3($0)
-ASSERT 14 reg(1) x"ffffffff"
-RUN lbu $1, 0x2($0)
-ASSERT 15 reg(1) x"000000ee"
-RUN lw  $1, 0x0($0)
-ASSERT 16 reg(1) x"ffeeddcc"
+RUN srl $3, $3, 8
+# period 14
+RUN sb  $3, 0x100($0)
+# period 15
+RUN lb  $1, 0x103($0)
+ASSERT 17 reg(1) x"ffffffff"
+RUN lbu $1, 0x102($0)
+ASSERT 19 reg(1) x"000000ee"
+RUN lw  $1, 0x100($0)
+ASSERT 21 reg(1) x"ffeeddcc"
+
+# IF	| ID	| EX	| MEM	| WB	| assertion | period
+# ori	|		|		|		|		|			|
+# sb	| ori	|		|		|		|			|
+# srl	| sb	| ori	| 		|		|			|
+# sb	| srl	| sb	| ori	|		|			|
+# ori	| sb	| srl	| sb	| ori	|			|
+# ori	|		| sb	| srl	| sb	| ori		| 6
+# sb	| ori	| 		| sb	| srl	| sb		| 7
+# sb	|		| ori	|		| sb	| srl		| 8
+# srl	| sb	|		| ori	|		| sb		| 9
+# sb	| srl	| sb	|		| ori	|			|
+# lb	| sb	| srl	| sb	|		| ori		| 11
+# lb	| 		| sb	| srl	| sb	|			|
+# lbu	| lb	|		| sb	| srl	| sb		| 13
+# lbu	|		| lb	| 		| sb	| srl		| 14
+# lw	| lbu	| 		| lb	| 		| sb		| 15
+# lw	|		| lbu	|		| lb	| 			|
+# 		| lw	| 		| lbu	| 		| lb		| 17
+# 		|		| lw	|		| lbu	|			|
+#		|		|		| lw	|		| lbu		| 19
+#		|		|		|		| lw	|			|
+#		|		|		|		|		| lw		| 21

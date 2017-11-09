@@ -4,16 +4,15 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.jump4_test_const.all;
+use work.overall1_test_const.all;
 use work.global_const.all;
 use work.except_const.all;
 -- CODE BELOW IS AUTOMATICALLY GENERATED
-use work.alu_const.all;
 
-entity jump4_tb is
-end jump4_tb;
+entity overall1_tb is
+end overall1_tb;
 
-architecture bhv of jump4_tb is
+architecture bhv of overall1_tb is
     component cpu
         port (
             rst, clk: in std_logic;
@@ -68,7 +67,7 @@ architecture bhv of jump4_tb is
         );
     end component;
 
-    component jump4_fake_ram is
+    component overall1_fake_ram is
         port (
             clk, rst: in std_logic;
             enable_i, write_i: in std_logic;
@@ -101,8 +100,10 @@ architecture bhv of jump4_tb is
 
     signal int: std_logic_vector(IntWidth);
     signal timerInt: std_logic;
+
 begin
-    ram: jump4_fake_ram
+
+    ram: overall1_fake_ram
         port map (
             clk => clk,
             rst => rst,
@@ -187,8 +188,8 @@ alias user_reg is <<signal ^.cpu_inst.regfile_ist.regArray: RegArrayType>>;
         -- CODE BELOW IS AUTOMATICALLY GENERATED
 process begin
     wait for CLK_PERIOD; -- resetting
-    wait for 11 * CLK_PERIOD;
-    assert user_reg(2) = x"00000004" severity FAILURE;
+    wait for 20 * CLK_PERIOD;
+    assert user_reg(9) = 32ux"1" severity FAILURE;
     wait;
 end process;
     end block assertBlk;

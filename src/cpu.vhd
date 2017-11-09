@@ -24,6 +24,9 @@ entity cpu is
         dataAddr_o: out std_logic_vector(AddrWidth);
         dataByteSelect_o: out std_logic_vector(3 downto 0);
 
+        instExcept_i, dataExcept_i: in std_logic_vector(ExceptionCauseWidth);
+        ifToStall_i, memToStall_i: in std_logic;
+
         int_i: in std_logic_vector(intWidth);
         timerInt_o: out std_logic
     );
@@ -50,11 +53,14 @@ architecture bhv of cpu is
     component if_id
         port (
             rst, clk: in std_logic;
-            stall_i: in std_logic_vector(StallWidth);
             pc_i: in std_logic_vector(AddrWidth);
+            instEnable_i: in std_logic;
             inst_i: in std_logic_vector(InstWidth);
+            exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
             pc_o: out std_logic_vector(AddrWidth);
             inst_o: out std_logic_vector(InstWidth);
+            exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+            stall_i: in std_logic_vector(StallWidth);
             flush_i: in std_logic
         );
     end component;
@@ -236,21 +242,21 @@ architecture bhv of cpu is
             cnt_o: out std_logic_vector(CntWidth);
 
             -- for cp0 coprocessor --
-            exCP0RegData_i: in std_logic_vector(DataWidth);
-            exCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
-            exCP0RegWe_i: in std_logic;
-            memCP0RegData_o: out std_logic_vector(DataWidth);
-            memCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
-            memCP0RegWe_o: out std_logic;
+            cp0RegData_i: in std_logic_vector(DataWidth);
+            cp0RegWriteAddr_i: in std_logic_vector(cp0RegAddrWidth);
+            cp0RegWe_i: in std_logic;
+            cp0RegData_o: out std_logic_vector(DataWidth);
+            cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
+            cp0RegWe_o: out std_logic;
 
             -- for exception --
             flush_i: in std_logic;
-            exExceptCause_i: in std_logic_vector(ExceptionCauseWidth);
-            exCurrentInstAddr_i: in std_logic_vector(AddrWidth);
-            exIsInDelaySlot_i: in std_logic;
-            memExceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-            memCurrentInstAddr_o: out std_logic_vector(AddrWidth);
-            memIsInDelaySlot_o: out std_logic
+            exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+            currentInstAddr_i: in std_logic_vector(AddrWidth);
+            isInDelaySlot_i: in std_logic;
+            exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+            currentInstAddr_o: out std_logic_vector(AddrWidth);
+            isInDelaySlot_o: out std_logic
         );
     end component;
 
@@ -345,7 +351,7 @@ architecture bhv of cpu is
     component ctrl is
         port (
             rst: in std_logic;
-            idToStall_i, exToStall_i: in std_logic;
+            ifToStall_i, idToStall_i, exToStall_i, memToStall_i: in std_logic;
             stall_o: out std_logic_vector(StallWidth);
             cp0Epc_i: in std_logic_vector(DataWidth);
             exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
@@ -401,12 +407,14 @@ architecture bhv of cpu is
     -- c: cp0
     -- x: conv_endian
 
-    -- Signals connecting pc_reg and if_id --
+    -- Signal connecting pc_reg and if_id --
     signal pc_12: std_logic_vector(AddrWidth);
+    signal instEnable_12: std_logic;
 
     -- Signals connecting if_id and id --
     signal pc_24: std_logic_vector(AddrWidth);
     signal inst_24: std_logic_vector(InstWidth);
+    signal exceptCause_24: std_logic_vector(ExceptionCauseWidth);
 
     -- Signals from conv_endian --
     signal inst_x: std_logic_vector(InstWidth);
@@ -483,12 +491,12 @@ architecture bhv of cpu is
     signal memt_78: MemType;
     signal memAddr_78: std_logic_vector(AddrWidth);
     signal memData_78: std_logic_vector(DataWidth);
-    signal memCP0RegData_78: std_logic_vector(DataWidth);
-    signal memCP0RegWriteAddr_78: std_logic_vector(CP0RegAddrWidth);
-    signal memCP0RegWe_78: std_logic;
-    signal memExceptCause_78: std_logic_vector(ExceptionCauseWidth);
-    signal memCurrentInstAddr_78: std_logic_vector(AddrWidth);
-    signal memIsInDelaySlot_78: std_logic;
+    signal cp0RegData_78: std_logic_vector(DataWidth);
+    signal cp0RegWriteAddr_78: std_logic_vector(CP0RegAddrWidth);
+    signal cp0RegWe_78: std_logic;
+    signal exceptCause_78: std_logic_vector(ExceptionCauseWidth);
+    signal currentInstAddr_78: std_logic_vector(AddrWidth);
+    signal isInDelaySlot_78: std_logic;
 
     -- Signals connecting mem and id --
     signal memToWriteReg_84: std_logic;
@@ -593,22 +601,26 @@ begin
            rst => rst, clk => clk,
            stall_i => stall,
            pc_o => pc_12,
-           pcEnable_o => instEnable_o,
+           pcEnable_o => instEnable_12,
            branchFlag_i => branchFlag_41,
            branchTargetAddress_i => branchTargetAddress_41,
            flush_i => flush_b1,
            newPC_i => newPC_b1
         );
+    instEnable_o <= instEnable_12;
 
     if_id_ist: if_id
         port map (
             rst => rst, clk => clk,
             stall_i => stall,
             pc_i => pc_12,
+            instEnable_i => instEnable_12,
             inst_i => inst_2,
+            exceptCause_i => instExcept_i,
             pc_o => pc_24,
             inst_o => inst_24,
-            flush_i => flush_b2
+            flush_i => flush_b2,
+            exceptCause_o => exceptCause_24
         );
     instAddr_o <= pc_12;
 
@@ -666,7 +678,7 @@ begin
             nextInstInDelaySlot_o => nextInstInDelaySlot_45,
             branchTargetAddress_o => branchTargetAddress_41,
             branchFlag_o => branchFlag_41,
-            exceptCause_i => NO_CAUSE,
+            exceptCause_i => exceptCause_24,
             exceptCause_o => exceptCause_45,
             currentInstAddr_o => currentInstAddr_45
         );
@@ -798,20 +810,20 @@ begin
             tempProduct_o => tempProduct_76,
             cnt_o => cnt_76,
 
-            exCP0RegData_i => cp0RegData_67,
-            exCP0RegWriteAddr_i => CP0RegWriteAddr_67,
-            exCP0RegWe_i => cp0RegWe_67,
-            memCP0RegData_o => memCP0RegData_78,
-            memCP0RegWriteAddr_o => memCP0RegWriteAddr_78,
-            memCP0RegWe_o => memCP0RegWe_78,
+            cp0RegData_i => cp0RegData_67,
+            cp0RegWriteAddr_i => cp0RegWriteAddr_67,
+            cp0RegWe_i => cp0RegWe_67,
+            cp0RegData_o => cp0RegData_78,
+            cp0RegWriteAddr_o => cp0RegWriteAddr_78,
+            cp0RegWe_o => cp0RegWe_78,
 
             flush_i => flush_b7,
-            exExceptCause_i => exceptCause_67,
-            exCurrentInstAddr_i => currentInstAddr_67,
-            exIsInDelaySlot_i => isInDelaySlot_67,
-            memExceptCause_o => memExceptCause_78,
-            memCurrentInstAddr_o => memCurrentInstAddr_78,
-            memIsInDelaySlot_o => memIsInDelaySlot_78
+            exceptCause_i => exceptCause_67,
+            currentInstAddr_i => currentInstAddr_67,
+            isInDelaySlot_i => isInDelaySlot_67,
+            exceptCause_o => exceptCause_78,
+            currentInstAddr_o => currentInstAddr_78,
+            isInDelaySlot_o => isInDelaySlot_78
         );
 
     mem_ist: mem
@@ -843,15 +855,17 @@ begin
             memAddr_o => dataAddr_o,
             dataByteSelect_o => dataByteSelect_o,
 
-            cp0RegData_i => memCP0RegData_78,
-            cp0RegWriteAddr_i => memCP0RegWriteAddr_78,
-            cp0RegWe_i => memCP0RegWe_78,
+            cp0RegData_i => cp0RegData_78,
+            cp0RegWriteAddr_i => cp0RegWriteAddr_78,
+            cp0RegWe_i => cp0RegWe_78,
             cp0RegData_o => cp0RegData_89,
             cp0RegWriteAddr_o => cp0RegWriteAddr_89,
             cp0RegWe_o => cp0RegWe_89,
-            exceptCause_i => memExceptCause_78,
-            currentInstAddr_i => memCurrentInstAddr_78,
-            isInDelaySlot_i => memIsInDelaySlot_78,
+            exceptCause_i => exceptCause_78 and dataExcept_i,
+            -- If exceptCause_78 = NO_CAUSE (0x1f), exceptCause_i = dataExcept_i
+            -- If exceptCause_78 /= NO_CAUSE, dataEnable_o = DISABLE, dataExcept_i = NO_CAUSE, so exceptCause_i = exceptCause_78
+            currentInstAddr_i => currentInstAddr_78,
+            isInDelaySlot_i => isInDelaySlot_78,
 
             cp0Status_i => status_c8,
             cp0Cause_i => cause_c8,
@@ -929,8 +943,10 @@ begin
     ctrl_ist: ctrl
         port map(
             rst => rst,
+            ifToStall_i => ifToStall_i,
             idToStall_i => idToStall_4b,
             exToStall_i => exToStall_6b,
+            memToStall_i => memToStall_i,
             stall_o => stall,
             flush_o => flush_b1,
             newPC_o => newPC_b1,
@@ -957,6 +973,7 @@ begin
             isInDelaySlot_i => isInDelaySlot_8c,
             epc_o => epc_c8,
             status_o => status_c8,
-            cause_o => cause_c8
+            cause_o => cause_c8,
+            timerInt_o => timerInt_o
         );
 end bhv;

@@ -9,11 +9,9 @@ use work.loadstore1_test_const.all;
 use work.global_const.all;
 
 entity loadstore1_fake_ram is
-    generic (
-        isInst: boolean := false -- The RAM will be initialized with instructions when true
-    );
     port (
-        enable_i, write_i, clk: in std_logic;
+        clk, rst: in std_logic;
+        enable_i, write_i: in std_logic;
         data_i: in std_logic_vector(DataWidth);
         addr_i: in std_logic_vector(AddrWidth);
         byteSelect_i: in std_logic_vector(3 downto 0);
@@ -37,24 +35,23 @@ begin
     );
 
     process (clk) begin
-        if (not isInst) then
-            if (rising_edge(clk) and (enable_i = '1') and (write_i = '1')) then
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                -- CODE BELOW IS AUTOMATICALLY GENERATED
+words(1) <= x"ff_ee_03_34"; -- RUN ori $3, $0, 0xeeff
+words(2) <= x"03_01_03_a0"; -- RUN sb  $3, 0x103($0)
+words(3) <= x"02_1a_03_00"; -- RUN srl $3, $3, 8
+words(4) <= x"02_01_03_a0"; -- RUN sb  $3, 0x102($0)
+words(5) <= x"dd_cc_03_34"; -- RUN ori $3, $0, 0xccdd
+words(6) <= x"01_01_03_a0"; -- RUN sb  $3, 0x101($0)
+words(7) <= x"02_1a_03_00"; -- RUN srl $3, $3, 8
+words(8) <= x"00_01_03_a0"; -- RUN sb  $3, 0x100($0)
+words(9) <= x"03_01_01_80"; -- RUN lb  $1, 0x103($0)
+words(10) <= x"02_01_01_90"; -- RUN lbu $1, 0x102($0)
+words(11) <= x"00_01_01_8c"; -- RUN lw  $1, 0x100($0)
+            elsif ((enable_i = '1') and (write_i = '1')) then
                 words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
             end if;
-        else
-            -- The first instruction is at 0x4
-            -- CODE BELOW IS AUTOMATICALLY GENERATED
-words(1) <= x"ff_ee_03_34"; -- RUN ori $3, $0, 0xeeff
-words(2) <= x"03_00_03_a0"; -- RUN sb  $3, 0x3($0)
-words(3) <= x"02_1a_03_00"; -- RUN srl $3, $3, 8
-words(4) <= x"02_00_03_a0"; -- RUN sb  $3, 0x2($0)
-words(5) <= x"dd_cc_03_34"; -- RUN ori $3, $0, 0xccdd
-words(6) <= x"01_00_03_a0"; -- RUN sb  $3, 0x1($0)
-words(7) <= x"02_1a_03_00"; -- RUN srl $3, $3, 8
-words(8) <= x"00_00_03_a0"; -- RUN sb  $3, 0x0($0)
-words(9) <= x"03_00_01_80"; -- RUN lb  $1, 0x3($0)
-words(10) <= x"02_00_01_90"; -- RUN lbu $1, 0x2($0)
-words(11) <= x"00_00_01_8c"; -- RUN lw  $1, 0x0($0)
         end if;
     end process;
 

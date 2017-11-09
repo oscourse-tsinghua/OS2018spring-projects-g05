@@ -9,11 +9,9 @@ use work.jump2_test_const.all;
 use work.global_const.all;
 
 entity jump2_fake_ram is
-    generic (
-        isInst: boolean := false -- The RAM will be initialized with instructions when true
-    );
     port (
-        enable_i, write_i, clk: in std_logic;
+        clk, rst: in std_logic;
+        enable_i, write_i: in std_logic;
         data_i: in std_logic_vector(DataWidth);
         addr_i: in std_logic_vector(AddrWidth);
         byteSelect_i: in std_logic_vector(3 downto 0);
@@ -37,19 +35,18 @@ begin
     );
 
     process (clk) begin
-        if (not isInst) then
-            if (rising_edge(clk) and (enable_i = '1') and (write_i = '1')) then
-                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
-            end if;
-        else
-            -- The first instruction is at 0x4
-            -- CODE BELOW IS AUTOMATICALLY GENERATED
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                -- CODE BELOW IS AUTOMATICALLY GENERATED
 words(1) <= x"04_00_42_38"; -- RUN xori $2, $2, 0x0004
 words(2) <= x"02_00_40_10"; -- RUN beq $2, $0, 0x0008
 words(3) <= x"00_00_63_34"; -- RUN ori $3, $3, 0x0000
 words(4) <= x"01_00_00_0c"; -- RUN jal 0x0004
 words(5) <= x"00_00_84_34"; -- RUN ori $4, $4, 0x0000
 words(6) <= x"09_28_e0_03"; -- RUN jalr $5, $31
+            elsif ((enable_i = '1') and (write_i = '1')) then
+                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
+            end if;
         end if;
     end process;
 

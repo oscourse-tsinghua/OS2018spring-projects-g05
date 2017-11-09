@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use work.global_const.all;
+use work.except_const.all;
 use work.integration_test_const.all;
 
 entity integration_test is
@@ -28,28 +29,59 @@ architecture bhv of integration_test is
             dataAddr_o: out std_logic_vector(AddrWidth);
             dataByteSelect_o: out std_logic_vector(3 downto 0);
 
+            instExcept_i, dataExcept_i: in std_logic_vector(ExceptionCauseWidth);
+            ifToStall_i, memToStall_i: in std_logic;
+
             int_i: in std_logic_vector(intWidth);
             timerInt_o: out std_logic
         );
     end component;
 
-    component fake_ram
+    component memctrl
         port (
-            rst: in std_logic;
-            writeEnable_i, readEnable1_i, readEnable2_i: in std_logic;
-            writeAddr_i: in std_logic_vector(AddrWidth);
-            writeData_i: in std_logic_vector(DataWidth);
-            byteSelect_i: in std_logic_vector(3 downto 0);
-            readAddr1_i: in std_logic_vector(AddrWidth);
-            readAddr2_i: in std_logic_vector(AddrWidth);
-            readData1_o: out std_logic_vector(DataWidth);
-            readData2_o: out std_logic_vector(DataWidth)
+            -- Connect to instruction interface of CPU
+            instData_o: out std_logic_vector(InstWidth);
+            instAddr_i: in std_logic_vector(AddrWidth);
+            instEnable_i: in std_logic;
+            instStall_o: out std_logic;
+            instExcept_o: out std_logic_vector(ExceptionCauseWidth);
+
+            -- Connect to data interface of CPU
+            dataEnable_i: in std_logic;
+            dataWrite_i: in std_logic;
+            dataData_o: out std_logic_vector(DataWidth);
+            dataData_i: in std_logic_vector(DataWidth);
+            dataAddr_i: in std_logic_vector(AddrWidth);
+            dataByteSelect_i: in std_logic_vector(3 downto 0);
+            dataStall_o: out std_logic;
+            dataExcept_o: out std_logic_vector(ExceptionCauseWidth);
+
+            -- Connect to external device (MMU)
+            devEnable_o: out std_logic;
+            devWrite_o: out std_logic;
+            devData_i: in std_logic_vector(DataWidth);
+            devData_o: out std_logic_vector(DataWidth);
+            devAddr_o: out std_logic_vector(AddrWidth);
+            devByteSelect_o: out std_logic_vector(3 downto 0);
+            devBusy_i: in std_logic;
+            devExcept_i: in std_logic_vector(ExceptionCauseWidth)
+        );
+    end component;
+
+    component ram
+        port (
+            clka, ena: in std_logic;
+            wea: in std_logic_vector(3 downto 0);
+            dina: in std_logic_vector(31 downto 0);
+            addra: in std_logic_vector(RamAddrWidth);
+            douta: out std_logic_vector(31 downto 0)
         );
     end component;
 
     signal rst: std_logic := '1';
     signal clk: std_logic := '0';
-    signal judge_clk: std_logic := '0';
+    signal ramClk: std_logic := '0';
+    signal judgeClk: std_logic := '0';
 
     signal instEnable: std_logic;
     signal instData: std_logic_vector(DataWidth);
@@ -62,15 +94,25 @@ architecture bhv of integration_test is
     signal dataAddr: std_logic_vector(AddrWidth);
     signal dataByteSelect: std_logic_vector(3 downto 0);
 
+    signal devEnable, devWrite: std_logic;
+    signal devDataSave, devDataLoad: std_logic_vector(DataWidth);
+    signal devAddr: std_logic_vector(AddrWidth);
+    signal devByteSelect: std_logic_vector(3 downto 0);
+
+    signal instStall, dataStall: std_logic;
+    signal instExcept, dataExcept: std_logic_vector(ExceptionCauseWidth);
     signal int: std_logic_vector(IntWidth);
     signal timerInt: std_logic;
 
     signal judgeRes: std_logic;
+
 begin
 
     process begin
-        wait for CLK_PERIOD / 2;
+        wait for CLK_PERIOD / 2 - 0.1 ns;
         clk <= not clk;
+        wait for 0.1 ns;
+        ramClk <= not ramClk;
     end process;
 
     process begin
@@ -80,25 +122,50 @@ begin
         wait;
     end process;
 
-    ram_ist: fake_ram
+    ram_ist: ram
         port map (
-            rst => rst,
-            writeEnable_i => dataWrite,
-            readEnable1_i => instEnable,
-            readEnable2_i => dataEnable,
-            writeAddr_i => dataAddr,
-            writeData_i => dataDataSave,
-            byteSelect_i => dataByteSelect,
-            readAddr1_i => instAddr,
-            readAddr2_i => dataAddr,
-            readData1_o => instData,
-            readData2_o => dataDataLoad
+            clka => ramClk,
+            ena => devEnable,
+            wea => devByteSelect and (devWrite & devWrite & devWrite & devWrite),
+            dina => devDataSave,
+            addra => devAddr(RamAddrSliceWidth),
+            douta => devDataLoad
+        );
+
+    memctrl_ist: memctrl
+        port map (
+            -- Connect to instruction interface of CPU
+            instData_o => instData,
+            instAddr_i => instAddr,
+            instEnable_i => instEnable,
+            instStall_o => instStall,
+            instExcept_o => instExcept,
+
+            -- Connect to data interface of CPU
+            dataEnable_i => dataEnable,
+            dataWrite_i => dataWrite,
+            dataData_o => dataDataLoad,
+            dataData_i => dataDataSave,
+            dataAddr_i => dataAddr,
+            dataByteSelect_i => dataByteSelect,
+            dataStall_o => dataStall,
+            dataExcept_o => dataExcept,
+
+            -- Connect to external device (MMU)
+            devEnable_o => devEnable,
+            devWrite_o => devWrite,
+            devData_i => devDataLoad,
+            devData_o => devDataSave,
+            devAddr_o => devAddr,
+            devByteSelect_o => devByteSelect,
+            devBusy_i => PIPELINE_NONSTOP,
+            devExcept_i => NO_CAUSE
         );
 
     cpu_ist: cpu
         generic map (
-            instEntranceAddr => INST_ENTRANCE_ADDR,
-            instConvEndian => false
+            instConvEndian => false,
+            instEntranceAddr => INST_ENTRANCE_ADDR
         )
         port map (
             rst => rst,
@@ -112,6 +179,10 @@ begin
             dataData_o => dataDataSave,
             dataAddr_o => dataAddr,
             dataByteSelect_o => dataByteSelect,
+            instExcept_i => instExcept,
+            dataExcept_i => dataExcept,
+            ifToStall_i => instStall,
+            memToStall_i => dataStall,
             int_i => int,
             timerInt_o => timerInt
         );
@@ -119,17 +190,17 @@ begin
     int <= (0 => timerInt, others => '0');
 
     process begin
-        wait for JUDGE_CLK_PERIOD / 2;
-        judge_clk <= not judge_clk;
+        wait for JUDGE_Clk_PERIOD / 2;
+        judgeClk <= not judgeClk;
     end process;
 
-    process(judge_clk)
+    process(judgeClk)
         variable testCnt, correctCnt: integer := 0;
         variable nowTestCnt, nowCorrectCnt: integer;
         variable nowDelta :integer := 0;
         alias reg is <<signal cpu_ist.regfile_ist.regArray: RegArrayType>>;
     begin
-        if (rising_edge(judge_clk)) then
+        if (rising_edge(judgeClk)) then
             nowTestCnt := conv_integer(reg(23));
             nowCorrectCnt := conv_integer(reg(19));
             if (nowTestCnt > testCnt) then

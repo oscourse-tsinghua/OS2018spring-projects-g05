@@ -8,11 +8,9 @@ use work.{{{TEST_NAME}}}_test_const.all;
 use work.global_const.all;
 
 entity {{{TEST_NAME}}}_fake_ram is
-    generic (
-        isInst: boolean := false -- The RAM will be initialized with instructions when true
-    );
     port (
-        enable_i, write_i, clk: in std_logic;
+        clk, rst: in std_logic;
+        enable_i, write_i: in std_logic;
         data_i: in std_logic_vector(DataWidth);
         addr_i: in std_logic_vector(AddrWidth);
         byteSelect_i: in std_logic_vector(3 downto 0);
@@ -36,13 +34,12 @@ begin
     );
 
     process (clk) begin
-        if (not isInst) then
-            if (rising_edge(clk) and (enable_i = '1') and (write_i = '1')) then
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                {{{INIT_INST_RAM}}}
+            elsif ((enable_i = '1') and (write_i = '1')) then
                 words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
             end if;
-        else
-            -- The first instruction is at 0x4
-            {{{INIT_INST_RAM}}}
         end if;
     end process;
 

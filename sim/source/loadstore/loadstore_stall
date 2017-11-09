@@ -14,11 +14,23 @@ DEFINE reg regfile_ist.regArray: RegArrayType
 # Grammar: "RUN <assembly>"
 RUN ori $2, 0x1234
 # period 6
-RUN sw $2, 0x0($0)
+RUN sw $2, 0x100($0)
 # period 7
-RUN lw $3, 0x0($0)
+RUN lw $3, 0x100($0)
 # period 8
 RUN ori $4, $3, 0x0000
 # period 9
 # stall for 1 slot here
 ASSERT 10 reg(4) x"00001234"
+
+# IF	| ID	| EX	| MEM	| WB	| assertion | period
+# ori	|		|		|		|		|			|
+# sw	| ori	|		|		|		|			|
+# lw	| sw	| ori	| 		|		|			|
+# ori	| lw	| sw	| ori	|		|			|
+# 		| ori	| lw	| sw	| ori	|			|
+#		| ori	|		| lw	| sw	| ori		| 6
+#		|		| ori	| 		| lw	| sw		| 7
+#		|		|		| ori	| 		| lw		| 8
+#		|		|		|		| ori	|			|
+#		|		|		|		|		| ori		| 10

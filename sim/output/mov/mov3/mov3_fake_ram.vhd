@@ -9,11 +9,9 @@ use work.mov3_test_const.all;
 use work.global_const.all;
 
 entity mov3_fake_ram is
-    generic (
-        isInst: boolean := false -- The RAM will be initialized with instructions when true
-    );
     port (
-        enable_i, write_i, clk: in std_logic;
+        clk, rst: in std_logic;
+        enable_i, write_i: in std_logic;
         data_i: in std_logic_vector(DataWidth);
         addr_i: in std_logic_vector(AddrWidth);
         byteSelect_i: in std_logic_vector(3 downto 0);
@@ -37,13 +35,9 @@ begin
     );
 
     process (clk) begin
-        if (not isInst) then
-            if (rising_edge(clk) and (enable_i = '1') and (write_i = '1')) then
-                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
-            end if;
-        else
-            -- The first instruction is at 0x4
-            -- CODE BELOW IS AUTOMATICALLY GENERATED
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                -- CODE BELOW IS AUTOMATICALLY GENERATED
 words(1) <= x"67_45_42_38"; -- RUN xori $2, $2, 0x4567
 words(2) <= x"10_18_00_00"; -- RUN mfhi $3
 words(3) <= x"25_10_43_00"; -- RUN or $2, $2, $3
@@ -51,6 +45,9 @@ words(4) <= x"13_00_40_00"; -- RUN mtlo $2
 words(5) <= x"11_00_40_00"; -- RUN mthi $2
 words(6) <= x"12_18_00_00"; -- RUN mflo $3
 words(7) <= x"0b_20_62_00"; -- RUN movn $4, $3, $2
+            elsif ((enable_i = '1') and (write_i = '1')) then
+                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
+            end if;
         end if;
     end process;
 

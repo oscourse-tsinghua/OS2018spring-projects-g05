@@ -1,0 +1,11 @@
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+RUN ori $3, $3, 1
+RUN ori $4, $4, 1
+RUN sw $3, 0($4)
+RUN xor $7, $3, $4
+RUN jal 0x20
+RUN nop
+RUN addi $9, $9, 1
+RUN ori $0, $0, 0
+ASSERT 20 reg(9) 32ux"0"
