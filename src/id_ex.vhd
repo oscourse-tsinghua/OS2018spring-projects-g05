@@ -16,6 +16,8 @@ entity id_ex is
         operandX_i: in std_logic_vector(DataWidth);
         toWriteReg_i: in std_logic;
         writeRegAddr_i: in std_logic_vector(RegAddrWidth);
+        branchTargetAddress_i: in std_logic_vector(AddrWidth);
+        branchFlag_i: in std_logic;
         idLinkAddress_i: in std_logic_vector(AddrWidth);
         idIsInDelaySlot_i: in std_logic;
         nextInstInDelaySlot_i: in std_logic;
@@ -30,6 +32,8 @@ entity id_ex is
         operandX_o: out std_logic_vector(DataWidth);
         toWriteReg_o: out std_logic;
         writeRegAddr_o: out std_logic_vector(RegAddrWidth);
+        branchTargetAddress_o: out std_logic_vector(AddrWidth);
+        branchFlag_o: out std_logic;
         exLinkAddress_o: out std_logic_vector(AddrWidth);
         exIsInDelaySlot_o: out std_logic;
         isInDelaySlot_o: out std_logic;
@@ -53,6 +57,8 @@ begin
                 operandX_o <= (others => '0');
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
+                branchTargetAddress_o <= (others => '0');
+                branchFlag_o <= NOT_BRANCH_FLAG;
                 exExceptCause_o <= NO_CAUSE;
                 exLinkAddress_o <= (others => '0');
                 exIsInDelaySlot_o <= NO;
@@ -66,6 +72,7 @@ begin
                 operandX_o <= (others => '0');
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
+                -- Keep `branchTargetAddress_o` and `branchFlag_o` as old values
                 exExceptCause_o <= NO_CAUSE;
                 exLinkAddress_o <= (others => '0');
                 exIsInDelaySlot_o <= NO;
@@ -78,6 +85,8 @@ begin
                 operand2_o <= operand2_i;
                 operandX_o <= operandX_i;
                 toWriteReg_o <= toWriteReg_i;
+                branchTargetAddress_o <= branchTargetAddress_i;
+                branchFlag_o <= branchFlag_i;
                 writeRegAddr_o <= writeRegAddr_i;
                 exLinkAddress_o <= idLinkAddress_i;
                 exIsInDelaySlot_o <= idIsInDelaySlot_i;

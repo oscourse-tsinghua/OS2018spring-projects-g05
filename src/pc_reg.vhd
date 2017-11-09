@@ -11,7 +11,7 @@ entity pc_reg is
     port (
         rst, clk: in std_logic;
         stall_i: in std_logic_vector(StallWidth);
-        branchTargetAddress_i: in std_logic_vector(AddrWidth);
+        branchTargetAddress_i: in std_logic_vector(AddrWidth); -- From id_ex, so there is 1 period delay
         branchFlag_i: in std_logic;
         flush_i: in std_logic;
         newPc_i: in std_logic_vector(AddrWidth);
@@ -33,7 +33,7 @@ begin
             elsif (stall_i(PC_STOP_IDX) = PIPELINE_NONSTOP) then
                 pcEnable_o <= ENABLE;
                 if (branchFlag_i = BRANCH_FLAG) then
-                    pc <= branchTargetAddress_i;
+                    pc <= branchTargetAddress_i + 4;
                 else
                     pc <= pc + 4;
                 end if;
@@ -41,5 +41,5 @@ begin
         end if;
     end process;
 
-    pc_o <= pc;
+    pc_o <= branchTargetAddress_i when branchFlag_i = BRANCH_FLAG else pc;
 end bhv;

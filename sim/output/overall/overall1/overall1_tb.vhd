@@ -100,9 +100,7 @@ architecture bhv of overall1_tb is
 
     signal int: std_logic_vector(IntWidth);
     signal timerInt: std_logic;
-
 begin
-
     ram: overall1_fake_ram
         port map (
             clk => clk,
@@ -189,7 +187,7 @@ alias user_reg is <<signal ^.cpu_inst.regfile_ist.regArray: RegArrayType>>;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 20 * CLK_PERIOD;
-    assert user_reg(9) = 32ux"1" severity FAILURE;
+    assert user_reg(9) = 32ux"0" severity FAILURE;
     wait;
 end process;
     end block assertBlk;
