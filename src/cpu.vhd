@@ -24,7 +24,13 @@ entity cpu is
         ifToStall_i, memToStall_i: in std_logic;
 
         int_i: in std_logic_vector(intWidth);
-        timerInt_o: out std_logic
+        timerInt_o: out std_logic;
+
+        -- To MMU
+        isKernalMode_o: out std_logic;
+        entryIndex_o: out std_logic_vector(TLBIndexWidth);
+        entryWrite_o: out std_logic;
+        entry_o: out TLBEntry
     );
 end cpu;
 
@@ -196,6 +202,8 @@ architecture bhv of cpu is
             cp0RegData_o: out std_logic_vector(DataWidth);
             cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
             cp0RegWe_o: out std_logic;
+            isTlbwi_o: out std_logic;
+            isTlbwr_o: out std_logic;
 
             -- for exception --
             exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
@@ -241,6 +249,10 @@ architecture bhv of cpu is
             cp0RegData_o: out std_logic_vector(DataWidth);
             cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
             cp0RegWe_o: out std_logic;
+            isTlbwi_i: in std_logic;
+            isTlbwr_i: in std_logic;
+            isTlbwi_o: out std_logic;
+            isTlbwr_o: out std_logic;
 
             -- for exception --
             flush_i: in std_logic;
@@ -285,6 +297,10 @@ architecture bhv of cpu is
             cp0RegData_o: out std_logic_vector(DataWidth);
             cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
             cp0RegWe_o: out std_logic;
+            isTlbwi_i: in std_logic;
+            isTlbwr_i: in std_logic;
+            isTlbwi_o: out std_logic;
+            isTlbwr_o: out std_logic;
 
             -- for exception --
             exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
@@ -326,6 +342,10 @@ architecture bhv of cpu is
             wbCP0RegData_o: out std_logic_vector(DataWidth);
             wbCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
             wbCP0RegWe_o: out std_logic;
+            isTlbwi_i: in std_logic;
+            isTlbwr_i: in std_logic;
+            isTlbwi_o: out std_logic;
+            isTlbwr_o: out std_logic;
 
             -- for exception --
             flush_i: in std_logic
@@ -460,6 +480,7 @@ architecture bhv of cpu is
     signal cp0RegData_67: std_logic_vector(DataWidth);
     signal cp0RegWriteAddr_67: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWe_67: std_logic;
+    signal isTlbwi_67, isTlbwr_67: std_logic;
     signal tempProduct_67, tempProduct_76: std_logic_vector(DoubleDataWidth);
     signal cnt_67, cnt_76: std_logic_vector(CntWidth);
     signal exceptCause_67: std_logic_vector(ExceptionCauseWidth);
@@ -481,6 +502,7 @@ architecture bhv of cpu is
     signal cp0RegData_78: std_logic_vector(DataWidth);
     signal cp0RegWriteAddr_78: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWe_78: std_logic;
+    signal isTlbwi_78, isTlbwr_78: std_logic;
     signal exceptCause_78: std_logic_vector(ExceptionCauseWidth);
     signal currentInstAddr_78: std_logic_vector(AddrWidth);
     signal isInDelaySlot_78: std_logic;
@@ -506,6 +528,7 @@ architecture bhv of cpu is
     signal cp0RegData_89: std_logic_vector(DataWidth);
     signal cp0RegWriteAddr_89: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWe_89: std_logic;
+    signal isTlbwi_89, isTlbwr_89: std_logic;
     signal wbCP0RegWe_98: std_logic;
     signal wbCP0RegWriteAddr_98: std_logic_vector(CP0RegAddrWidth);
     signal wbCP0RegData_98: std_logic_vector(DataWidth);
@@ -530,6 +553,7 @@ architecture bhv of cpu is
     signal wbCP0RegData_9c: std_logic_vector(DataWidth);
     signal wbCP0RegWriteAddr_9c: std_logic_vector(CP0RegAddrWidth);
     signal wbCP0RegWe_9c: std_logic;
+    signal isTlbwi_9c, isTlbwr_9c: std_logic;
 
     -- Signals connecting hi_lo and ex --
     signal hiData_a6, loData_a6: std_logic_vector(DataWidth);
@@ -748,6 +772,8 @@ begin
             cp0RegData_o => cp0RegData_67,
             cp0RegWriteAddr_o => cp0RegWriteAddr_67,
             cp0RegWe_o => cp0RegWe_67,
+            isTlbwi_o => isTlbwi_67,
+            isTlbwr_o => isTlbwr_67,
 
             exceptCause_i => exExceptCause_56,
             currentInstAddr_i => exCurrentInstAddr_56,
@@ -799,6 +825,11 @@ begin
             cp0RegWriteAddr_o => cp0RegWriteAddr_78,
             cp0RegWe_o => cp0RegWe_78,
 
+            isTlbwi_i => isTlbwi_67,
+            isTlbwr_i => isTlbwr_67,
+            isTLbwi_o => isTlbwi_78,
+            isTlbwr_o => isTlbwr_78,
+
             flush_i => flush_b7,
             exceptCause_i => exceptCause_67,
             currentInstAddr_i => currentInstAddr_67,
@@ -843,6 +874,12 @@ begin
             cp0RegData_o => cp0RegData_89,
             cp0RegWriteAddr_o => cp0RegWriteAddr_89,
             cp0RegWe_o => cp0RegWe_89,
+
+            isTlbwi_i => isTlbwi_78,
+            isTlbwr_i => isTlbwr_78,
+            isTLbwi_o => isTlbwi_89,
+            isTlbwr_o => isTlbwr_89,
+
             exceptCause_i => exceptCause_78 and dataExcept_i,
             -- If exceptCause_78 = NO_CAUSE (0x1f), exceptCause_i = dataExcept_i
             -- If exceptCause_78 /= NO_CAUSE, dataEnable_o = DISABLE, dataExcept_i = NO_CAUSE, so exceptCause_i = exceptCause_78
@@ -898,6 +935,12 @@ begin
             wbCP0RegData_o => wbCP0RegData_9c,
             wbCP0RegWriteAddr_o => wbCP0RegWriteAddr_9c,
             wbCP0RegWe_o => wbCP0RegWe_9c,
+
+            isTlbwi_i => isTlbwi_89,
+            isTlbwr_i => isTlbwr_89,
+            isTLbwi_o => isTlbwi_9c,
+            isTlbwr_o => isTlbwr_9c,
+
             flush_i => flush_b9
         );
     wbToWriteHi_96 <= toWriteHi_9a;
@@ -956,6 +999,12 @@ begin
             epc_o => epc_c8,
             status_o => status_c8,
             cause_o => cause_c8,
-            timerInt_o => timerInt_o
+            timerInt_o => timerInt_o,
+            isKernalMode_o => isKernalMode_o,
+            isTlbwi_i => isTlbwi_9c,
+            isTlbwr_i => isTlbwr_9c,
+            entryIndex_o => entryIndex_o,
+            entryWrite_o => entryWrite_o,
+            entry_o => entry_o
         );
 end bhv;

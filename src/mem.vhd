@@ -40,6 +40,10 @@ entity mem is
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_o: out std_logic;
+        isTlbwi_i: in std_logic;
+        isTlbwr_i: in std_logic;
+        isTlbwi_o: out std_logic;
+        isTlbwr_o: out std_logic;
 
         -- for exception --
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
@@ -68,6 +72,9 @@ begin
     memAddr_o <= memAddr_i(31 downto 2) & "00";
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;
+
+    isTlbwi_o <= isTlbwi_i;
+    isTlbwr_o <= isTlbwr_i;
 
     process(all)
         variable loadedByte: std_logic_vector(7 downto 0);

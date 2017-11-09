@@ -59,6 +59,8 @@ entity ex is
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_o: out std_logic;
+        isTlbwi_o: out std_logic;
+        isTlbwr_o: out std_logic;
 
         -- for exception --
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
@@ -222,6 +224,8 @@ begin
         cp0ReadValue <= (others => '0');
         cp0RegWriteAddr_o <= (others => '0');
         cp0RegData_o <= (others => '0');
+        isTlbwi_o <= NO;
+        isTlbwr_o <= NO;
 
         exceptCause_o <= exceptCause_i;
 
@@ -390,6 +394,12 @@ begin
                     cp0RegWriteAddr_o <= operand1_i(4 downto 0);
                     cp0RegWe_o <= YES;
                     cp0RegData_o <= operand2_i;
+
+                when ALU_TLBWI =>
+                    isTlbwi_o <= YES;
+
+                when ALU_TLBWR =>
+                    isTlbwr_o <= YES;
 
                 when others =>
                     toWriteReg_o <= NO;

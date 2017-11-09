@@ -34,8 +34,11 @@ entity cp0_reg is
         currentInstAddr_i: in std_logic_vector(AddrWidth);
         isIndelaySlot_i: in std_logic;
 
-        -- To MMU
         isKernalMode_o: out std_logic;
+
+        -- For MMU
+        isTlbwi_i: in std_logic;
+        isTlbwr_i: in std_logic;
         entryIndex_o: out std_logic_vector(TLBIndexWidth);
         entryWrite_o: out std_logic;
         entry_o: out TLBEntry
@@ -51,6 +54,18 @@ begin
     epc_o <= regArr(EPC_REG);
 
     data_o <= regArr(conv_integer(raddr_i));
+
+    isKernalMode_o <= regArr(STATUS_REG)(STATUS_ERL_BIT) or
+                      regArr(STATUS_REG)(STATUS_EXL_BIT) or
+                      not regArr(STATUS_REG)(STATUS_UM_BIT) = '0';
+
+    entryIndex_o <= regArr(RANDOM_REG)(TLBIndexWidth) when isTlbwr_i = '1' else regArr(INDEX_REG)(TLBIndexWidth);
+
+    entryWrite_o <= isTlbwi_i or isTlbwr_i;
+
+    entry_o.hi <= regArr(ENTRY_HI_REG);
+    entry_o.lo0 <= regArr(ENTRY_LO0_REG);
+    entry_o.lo1 <= regArr(ENTRY_LO1_REG);
 
     process(clk) begin
         if (rising_edge(clk)) then

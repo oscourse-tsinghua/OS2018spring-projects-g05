@@ -6,12 +6,10 @@ package inst_const is
     --
     -- Format of instructions, classified into R type, I type and J type
     --
-    subtype InstIdx                 is integer range 31 downto  0;
     subtype InstOpIdx               is integer range 31 downto 26;
     subtype InstRsIdx               is integer range 25 downto 21;
     subtype InstRtIdx               is integer range 20 downto 16;
     subtype InstRdIdx               is integer range 15 downto 11;
-    subtype InstOpRsIdx             is integer range 31 downto 21;
     subtype InstSaIdx               is integer range 10 downto  6;
     subtype InstFuncIdx             is integer range  5 downto  0;
     subtype InstImmIdx              is integer range 15 downto  0;
@@ -22,11 +20,9 @@ package inst_const is
     subtype InstImmAddrIdx          is integer range 25 downto  0;
     subtype InstSaFuncIdx           is integer range 10 downto  0;
 
-    subtype InstIdxWidth            is integer range 31 downto  0;
     subtype InstOpWidth             is integer range  5 downto  0;
     subtype InstRsWidth             is integer range  4 downto  0;
     subtype InstRtWidth             is integer range  4 downto  0;
-    subtype instOpRsWidth           is integer range 10 downto  0;
     subtype InstRdWidth             is integer range  4 downto  0;
     subtype InstSaWidth             is integer range  4 downto  0;
     subtype InstFuncWidth           is integer range  5 downto  0;
@@ -124,16 +120,25 @@ package inst_const is
     constant JMP_BNE: std_logic_vector(InstOpWidth) := "000101";
 
     --
-    -- Special OP groups
+    -- CP0
     --
-    constant OP_SPECIAL: std_logic_vector(InstOpWidth) := "000000";
-    constant OP_SPECIAL2: std_logic_vector(InstOpWidth) := "011100";
-    constant OP_JMPSPECIAL: std_logic_vector(InstOpWidth) := "000001";
+    constant OP_COP0: std_logic_vector(InstOpWidth) := "010000";
+    constant RS_MF: std_logic_vector(InstRsWidth) := "00000";
+    constant RS_MT: std_logic_vector(InstRsWidth) := "00100";
+    constant FUNC_TLBWI: std_logic_vector(InstFuncWidth) := "000010";
+    constant FUNC_TLBWR: std_logic_vector(InstFuncWidth) := "000110";
 
     --
     -- Exceptions
     --
     constant FUNC_SYSCALL: std_logic_vector(InstFuncWidth) := "001100";
-    constant INST_ERET: std_logic_vector(InstIdxWidth) := "01000010000000000000000000011000";
+    constant FUNC_ERET: std_logic_vector(InstFuncWidth) := "011000";
+
+    --
+    -- Special OP groups
+    --
+    constant OP_SPECIAL: std_logic_vector(InstOpWidth) := "000000";
+    constant OP_SPECIAL2: std_logic_vector(InstOpWidth) := "011100";
+    constant OP_JMPSPECIAL: std_logic_vector(InstOpWidth) := "000001";
 
 end inst_const;

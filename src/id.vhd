@@ -116,10 +116,8 @@ begin
         if (rst = RST_DISABLE) then
             isInvalid := YES;
             case (instOp) is
-                -- special --
                 when OP_SPECIAL =>
                     case (instFunc) is
-                        -- or --
                         when FUNC_OR =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -128,7 +126,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- and --
                         when FUNC_AND =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -137,7 +134,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- xor --
                         when FUNC_XOR =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -146,7 +142,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- nor --
                         when FUNC_NOR =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -155,7 +150,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- sll --
                         when FUNC_SLL =>
                             oprSrc1 := SA;
                             oprSrc2 := REG;
@@ -164,7 +158,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- sllv --
                         when FUNC_SLLV =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -173,7 +166,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- srl --
                         when FUNC_SRL =>
                             oprSrc1 := SA;
                             oprSrc2 := REG;
@@ -182,7 +174,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- srlv --
                         when FUNC_SRLV =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -191,7 +182,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- sra --
                         when FUNC_SRA =>
                             oprSrc1 := SA;
                             oprSrc2 := REG;
@@ -200,7 +190,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- srav --
                         when FUNC_SRAV =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -209,7 +198,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- movn --
                         when FUNC_MOVN =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -218,7 +206,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- movz --
                         when FUNC_MOVZ =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -227,7 +214,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- mfhi --
                         when FUNC_MFHI =>
                             oprSrc1 := INVALID;
                             oprSrc2 := INVALID;
@@ -236,7 +222,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- mflo --
                         when FUNC_MFLO =>
                             oprSrc1 := INVALID;
                             oprSrc2 := INVALID;
@@ -245,7 +230,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- mthi --
                         when FUNC_MTHI =>
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
@@ -254,7 +238,6 @@ begin
                             writeRegAddr_o <= (others => '0');
                             isInvalid := NO;
 
-                        -- mtlo --
                         when FUNC_MTLO =>
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
@@ -263,7 +246,6 @@ begin
                             writeRegAddr_o <= (others => '0');
                             isInvalid := NO;
 
-                        -- add --
                         when FUNC_ADD =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -272,7 +254,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- addu --
                         when FUNC_ADDU =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -281,7 +262,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- sub --
                         when FUNC_SUB =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -290,7 +270,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- subu --
                         when FUNC_SUBU =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -299,7 +278,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- slt --
                         when FUNC_SLT =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -308,7 +286,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- sltu --
                         when FUNC_SLTU =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -317,7 +294,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- mult --
                         when FUNC_MULT =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -326,7 +302,6 @@ begin
                             writeRegAddr_o <= (others => '0');
                             isInvalid := NO;
 
-                        -- multu --
                         when FUNC_MULTU =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -335,7 +310,6 @@ begin
                             writeRegAddr_o <= (others => '0');
                             isInvalid := NO;
 
-                        -- jr --
                         when JMP_JR =>
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
@@ -347,7 +321,6 @@ begin
                             writeRegAddr_o <= (others => '0');
                             isInvalid := NO;
 
-                        -- jalr --
                         when JMP_JALR =>
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
@@ -367,7 +340,6 @@ begin
                             exceptCause_o <= SYSCALL_CAUSE;
                             isInvalid := NO;
 
-                        -- others --
                         when others =>
                             oprSrc1 := INVALID;
                             oprSrc2 := INVALID;
@@ -376,10 +348,8 @@ begin
                             writeRegAddr_o <= (others => '0');
                     end case;
 
-                -- special2 --
                 when OP_SPECIAL2 =>
                     case (instFunc) is
-                        -- clo --
                         when FUNC_CLO =>
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
@@ -388,7 +358,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- clz --
                         when FUNC_CLZ =>
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
@@ -397,7 +366,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- mul --
                         when FUNC_MUL =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -406,7 +374,6 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        -- madd --
                         when FUNC_MADD =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -415,7 +382,6 @@ begin
                             writeRegAddr_o <= (others => '0');
                             isInvalid := NO;
 
-                        -- maddu --
                         when FUNC_MADDU =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -424,7 +390,6 @@ begin
                             writeRegAddr_o <= (others => '0');
                             isInvalid := NO;
 
-                        -- msub --
                         when FUNC_MSUB =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -433,7 +398,6 @@ begin
                             writeRegAddr_o <= (others => '0');
                             isInvalid := NO;
 
-                        -- msubu --
                         when FUNC_MSUBU =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
@@ -442,12 +406,10 @@ begin
                             writeRegAddr_o <= (others => '0');
                             isInvalid := NO;
 
-                        -- others --
                         when others =>
                             null;
                     end case;
 
-                -- ori --
                 when OP_ORI =>
                     oprSrc1 := REG;
                     oprSrc2 := IMM;
@@ -456,7 +418,6 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
-                -- andi --
                 when OP_ANDI =>
                     oprSrc1 := REG;
                     oprSrc2 := IMM;
@@ -465,7 +426,6 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
-                -- xori --
                 when OP_XORI =>
                     oprSrc1 := REG;
                     oprSrc2 := IMM;
@@ -474,7 +434,6 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
-                -- lui --
                 when OP_LUI =>
                     oprSrc1 := IMM;
                     oprSrc2 := INVALID;
@@ -483,7 +442,6 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
-                -- lb --
                 when OP_LB =>
                     oprSrc1 := REG;
                     oprSrc2 := INVALID;
@@ -494,7 +452,6 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
-                -- lbu --
                 when OP_LBU =>
                     oprSrc1 := REG;
                     oprSrc2 := INVALID;
@@ -505,7 +462,6 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
-                -- lw --
                 when OP_LW =>
                     oprSrc1 := REG;
                     oprSrc2 := INVALID;
@@ -516,7 +472,6 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
-                -- sb --
                 when OP_SB =>
                     oprSrc1 := REG;
                     oprSrc2 := REG;
@@ -525,7 +480,6 @@ begin
                     memt_o <= MEM_SB;
                     isInvalid := NO;
 
-                -- sw --
                 when OP_SW =>
                     oprSrc1 := REG;
                     oprSrc2 := REG;
@@ -534,7 +488,6 @@ begin
                     memt_o <= MEM_SW;
                     isInvalid := NO;
 
-                -- addi --
                 when OP_ADDI =>
                     oprSrc1 := REG;
                     oprSrc2 := SGN_IMM;
@@ -543,7 +496,6 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
-                -- addiu --
                 when OP_ADDIU =>
                     oprSrc1 := REG;
                     oprSrc2 := SGN_IMM;
@@ -552,7 +504,6 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
-                -- slti --
                 when OP_SLTI =>
                     oprSrc1 := REG;
                     oprSrc2 := SGN_IMM;
@@ -561,7 +512,6 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
-                -- sltiu --
                 when OP_SLTIU =>
                     oprSrc1 := REG;
                     oprSrc2 := SGN_IMM;
@@ -570,7 +520,6 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
-                -- j --
                 when JMP_J =>
                     oprSrc1 := INVALID;
                     oprSrc2 := INVALID;
@@ -582,7 +531,6 @@ begin
                     writeRegAddr_o <= (others => '0');
                     isInvalid := NO;
 
-                -- jal --
                 when JMP_JAL =>
                     oprSrc1 := INVALID;
                     oprSrc1 := INVALID;
@@ -595,7 +543,6 @@ begin
                     writeRegAddr_o <= "11111";
                     isInvalid := NO;
 
-                -- beq --
                 when JMP_BEQ =>
                     condJump := YES;
                     oprSrc1 := REG;
@@ -606,14 +553,12 @@ begin
 
                 when OP_JMPSPECIAL =>
                     case (instRt) is
-                        -- bltz --
                         when JMP_BLTZ =>
                             condJump := YES;
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
                             isInvalid := NO;
 
-                        -- bgez --
                         when JMP_BGEZ =>
                             condJump := YES;
                             oprSrc1 := REG;
@@ -624,54 +569,72 @@ begin
                             null;
                     end case;
 
-                -- bgtz --
                 when JMP_BGTZ =>
                     condJump := YES;
                     oprSrc1 := REG;
                     oprSrc2 := INVALID;
                     isInvalid := NO;
 
-                -- blez --
                 when JMP_BLEZ =>
                     condJump := YES;
                     oprSrc1 := REG;
                     oprSrc2 := INVALID;
                     isInvalid := NO;
 
-                -- bne --
                 when JMP_BNE =>
                     condJump := YES;
                     oprSrc1 := REG;
                     oprSrc2 := REG;
                     isInvalid := NO;
 
+                when OP_COP0 =>
+                    case (instRs) is
+                        when RS_MT =>
+                            if (inst_i(InstSaFuncIdx) = "00000000000") then
+                                alut_o <= ALU_MTC0;
+                                oprSrc1 := REGID;
+                                oprSrc2 := REG;
+                                toWriteReg_o <= NO;
+                                writeRegAddr_o <= (others => '0');
+                                isInvalid := NO;
+                            end if;
+
+                        when RS_MF =>
+                            if (inst_i(InstSaFuncIdx) = "00000000000") then
+                                alut_o <= ALU_MFC0;
+                                oprSrc1 := REGID;
+                                oprSrc2 := INVALID;
+                                toWriteReg_o <= YES;
+                                writeRegAddr_o <= instRt;
+                                isInvalid := NO;
+                            end if;
+
+                        when others =>
+                            null;
+                    end case;
+
+                    if (inst_i(25) = '1' and inst_i(24 downto 6) = 19"0") then -- bit 25 is CO
+                        case (instFunc) is
+                            when FUNC_ERET =>
+                                isInvalid := NO;
+                                exceptCause_o <= ERET_CAUSE;
+
+                            when FUNC_TLBWI =>
+                                isInvalid := NO;
+                                alut_o <= ALU_TLBWI;
+
+                            when FUNC_TLBWR =>
+                                isInvalid := NO;
+                                alut_o <= ALU_TLBWR;
+
+                            when others =>
+                                null;
+                        end case;
+                    end if;
+
                 when others =>
                     null;
             end case;
-
-            if ((inst_i(InstOpRsIdx) = "01000000100") and (inst_i(InstSaFuncIdx) = "00000000000")) then
-                alut_o <= ALU_MTC0;
-                oprSrc1 := REGID;
-                oprSrc2 := REG;
-                toWriteReg_o <= NO;
-                writeRegAddr_o <= (others => '0');
-                isInvalid := NO;
-            end if;
-
-            if ((inst_i(InstOpRsIdx) = "01000000000") and (inst_i(InstSaFuncIdx) = "00000000000")) then
-                alut_o <= ALU_MFC0;
-                oprSrc1 := REGID;
-                oprSrc2 := INVALID;
-                toWriteReg_o <= YES;
-                writeRegAddr_o <= instRt;
-                isInvalid := NO;
-            end if;
-
-            if (inst_i = INST_ERET) then
-                toWriteReg_o <= NO;
-                isInvalid := NO;
-                exceptCause_o <= ERET_CAUSE;
-            end if;
 
             if (isInvalid = YES) then
                 exceptCause_o <= INVALID_INST_CAUSE;

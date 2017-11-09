@@ -42,6 +42,10 @@ entity ex_mem is
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_o: out std_logic;
+        isTlbwi_i: in std_logic;
+        isTlbwr_i: in std_logic;
+        isTlbwi_o: out std_logic;
+        isTlbwr_o: out std_logic;
 
         -- for exception --
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
@@ -81,6 +85,8 @@ begin
             cp0RegWe_o <= NO;
             cp0RegData_o <= (others => '0');
             cp0RegWriteAddr_o <= (others => '0');
+            isTlbwi_o <= NO;
+            isTlbwr_o <= NO;
             if (rst /= RST_ENABLE and flush_i = NO) then
                 if (stall_i(EX_STOP_IDX) = PIPELINE_STOP and stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                     tempProduct_o <= tempProduct_i;
@@ -102,6 +108,8 @@ begin
                     cp0RegWe_o <= cp0RegWe_i;
                     cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
                     cp0RegData_o <= cp0RegData_i;
+                    isTlbwi_o <= isTlbwi_i;
+                    isTlbwr_o <= isTlbwr_i;
 
                     exceptCause_o <= exceptCause_i;
                     isInDelaySlot_o <= isInDelaySlot_i;

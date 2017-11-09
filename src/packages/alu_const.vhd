@@ -12,8 +12,8 @@ package alu_const is
         ALU_LOAD, ALU_STORE,
         ALU_ADD, ALU_ADDU, ALU_SUB, ALU_SUBU, ALU_SLT, ALU_SLTU, ALU_CLO, ALU_CLZ,
         ALU_MUL, ALU_MULT, ALU_MULTU, ALU_MADD, ALU_MADDU, ALU_MSUB, ALU_MSUBU,
-        ALU_JALR, ALU_JAL,
-        ALU_BLTZ, ALU_BNE, ALU_MFC0, ALU_MTC0
+        ALU_JALR, ALU_JAL, ALU_BLTZ, ALU_BNE,
+        ALU_MFC0, ALU_MTC0, ALU_TLBWI, ALU_TLBWR
     );
 
     -- where is the operand from --

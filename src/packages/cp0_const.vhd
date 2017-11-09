@@ -39,6 +39,8 @@ package cp0_const is
     --
     -- Bits of status register
     --
+    constant STATUS_UM_BIT: integer := 4; -- User mode flag
+    constant STATUS_ERL_BIT: integer := 2; -- Error level flag
     constant STATUS_EXL_BIT: integer := 1; -- Exception level flag
     constant STATUS_IE_BIT: integer := 0; -- Interrupt enable flag
 
