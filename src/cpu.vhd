@@ -133,8 +133,6 @@ architecture bhv of cpu is
             operandX_i: in std_logic_vector(DataWidth);
             toWriteReg_i: in std_logic;
             writeRegAddr_i: in std_logic_vector(RegAddrWidth);
-            branchTargetAddress_i: in std_logic_vector(AddrWidth);
-            branchFlag_i: in std_logic;
             idIsInDelaySlot_i: in std_logic;
             idLinkAddress_i: in std_logic_vector(AddrWidth);
             nextInstInDelaySlot_i: in std_logic;
@@ -146,8 +144,6 @@ architecture bhv of cpu is
             operandX_o: out std_logic_vector(DataWidth);
             toWriteReg_o: out std_logic;
             writeRegAddr_o: out std_logic_vector(RegAddrWidth);
-            branchTargetAddress_o: out std_logic_vector(AddrWidth);
-            branchFlag_o: out std_logic;
             exIsInDelaySlot_o: out std_logic;
             exLinkAddress_o: out std_logic_vector(AddrWidth);
             isInDelaySlot_o: out std_logic;
@@ -439,8 +435,6 @@ architecture bhv of cpu is
     signal operandX_45: std_logic_vector(DataWidth);
     signal toWriteReg_45: std_logic;
     signal writeRegAddr_45: std_logic_vector(RegAddrWidth);
-    signal branchTargetAddress_45: std_logic_vector(AddrWidth);
-    signal branchFlag_45: std_logic;
     signal isInDelaySlot_45: std_logic;
     signal linkAddr_45: std_logic_vector(AddrWidth);
     signal nextInstInDelaySlot_45: std_logic;
@@ -579,8 +573,8 @@ architecture bhv of cpu is
     signal stall: std_logic_vector(StallWidth);
 
     -- Signals connecting id_ex and pc --
-    signal branchTargetAddress_51: std_logic_vector(AddrWidth);
-    signal branchFlag_51: std_logic;
+    signal branchTargetAddress_41: std_logic_vector(AddrWidth);
+    signal branchFlag_41: std_logic;
 
     -- Signals connecting cp0 and ex --
     signal data_c6: std_logic_vector(DataWidth);
@@ -608,8 +602,8 @@ begin
            stall_i => stall,
            pc_o => pc_12,
            pcEnable_o => instEnable_12,
-           branchFlag_i => branchFlag_51,
-           branchTargetAddress_i => branchTargetAddress_51,
+           branchFlag_i => branchFlag_41,
+           branchTargetAddress_i => branchTargetAddress_41,
            flush_i => flush_b1,
            newPC_i => newPC_b1
         );
@@ -682,8 +676,8 @@ begin
             isInDelaySlot_o => isInDelaySlot_45,
             linkAddr_o => linkAddr_45,
             nextInstInDelaySlot_o => nextInstInDelaySlot_45,
-            branchTargetAddress_o => branchTargetAddress_45,
-            branchFlag_o => branchFlag_45,
+            branchTargetAddress_o => branchTargetAddress_41,
+            branchFlag_o => branchFlag_41,
             exceptCause_i => exceptCause_24,
             exceptCause_o => exceptCause_45,
             currentInstAddr_o => currentInstAddr_45
@@ -700,8 +694,6 @@ begin
             operandX_i => operandX_45,
             toWriteReg_i => toWriteReg_45,
             writeRegAddr_i => writeRegAddr_45,
-            branchTargetAddress_i => branchTargetAddress_45,
-            branchFlag_i => branchFlag_45,
             idIsInDelaySlot_i => isInDelaySlot_45,
             idLinkAddress_i => linkAddr_45,
             nextInstInDelaySlot_i => nextInstInDelaySlot_45,
@@ -715,8 +707,6 @@ begin
             operandX_o => operandX_56,
             toWriteReg_o => toWriteReg_56,
             writeRegAddr_o => writeRegAddr_56,
-            branchTargetAddress_o => branchTargetAddress_51,
-            branchFlag_o => branchFlag_51,
             isInDelaySlot_o => isInDelaySlot_54,
             exIsInDelaySlot_o => exIsInDelaySlot_56,
             exLinkAddress_o => exLinkAddress_56,

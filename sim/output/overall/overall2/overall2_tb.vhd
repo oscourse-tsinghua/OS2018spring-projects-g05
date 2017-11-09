@@ -4,15 +4,15 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.overall1_test_const.all;
+use work.overall2_test_const.all;
 use work.global_const.all;
 use work.except_const.all;
 -- CODE BELOW IS AUTOMATICALLY GENERATED
 
-entity overall1_tb is
-end overall1_tb;
+entity overall2_tb is
+end overall2_tb;
 
-architecture bhv of overall1_tb is
+architecture bhv of overall2_tb is
     component cpu
         port (
             rst, clk: in std_logic;
@@ -67,7 +67,7 @@ architecture bhv of overall1_tb is
         );
     end component;
 
-    component overall1_fake_ram is
+    component overall2_fake_ram is
         port (
             clk, rst: in std_logic;
             enable_i, write_i: in std_logic;
@@ -101,7 +101,7 @@ architecture bhv of overall1_tb is
     signal int: std_logic_vector(IntWidth);
     signal timerInt: std_logic;
 begin
-    ram: overall1_fake_ram
+    ram: overall2_fake_ram
         port map (
             clk => clk,
             rst => rst,
@@ -184,12 +184,6 @@ begin
 alias user_reg is <<signal ^.cpu_inst.regfile_ist.regArray: RegArrayType>>;
     begin
         -- CODE BELOW IS AUTOMATICALLY GENERATED
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 20 * CLK_PERIOD;
-    assert user_reg(8) = 32ux"2" severity FAILURE;
-    wait;
-end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 20 * CLK_PERIOD;
