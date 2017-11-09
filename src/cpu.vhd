@@ -40,384 +40,6 @@ entity cpu is
 end cpu;
 
 architecture bhv of cpu is
-
-    component pc_reg
-        generic (
-            instEntranceAddr: std_logic_vector(AddrWidth)
-        );
-        port (
-            rst, clk: in std_logic;
-            stall_i: in std_logic_vector(StallWidth);
-            pc_o: out std_logic_vector(AddrWidth);
-            pcEnable_o: out std_logic;
-            branchFlag_i: in std_logic;
-            branchTargetAddress_i: in std_logic_vector(AddrWidth);
-            flush_i: in std_logic;
-            newPC_i: in std_logic_vector(AddrWidth)
-        );
-    end component;
-
-    component if_id
-        port (
-            rst, clk: in std_logic;
-            pc_i: in std_logic_vector(AddrWidth);
-            instEnable_i: in std_logic;
-            inst_i: in std_logic_vector(InstWidth);
-            exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
-            pc_o: out std_logic_vector(AddrWidth);
-            inst_o: out std_logic_vector(InstWidth);
-            exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-            stall_i: in std_logic_vector(StallWidth);
-            flush_i: in std_logic
-        );
-    end component;
-
-    component regfile
-        port (
-            rst, clk: in std_logic;
-            writeEnable_i: in std_logic;
-            writeAddr_i: in std_logic_vector(RegAddrWidth);
-            writeData_i: in std_logic_vector(DataWidth);
-            readEnable1_i: in std_logic;
-            readAddr1_i: in std_logic_vector(RegAddrWidth);
-            readData1_o: out std_logic_vector(DataWidth);
-            readEnable2_i: in std_logic;
-            readAddr2_i: in std_logic_vector(RegAddrWidth);
-            readData2_o: out std_logic_vector(DataWidth)
-        );
-    end component;
-
-    component id
-        port (
-            rst: in std_logic;
-            pc_i: in std_logic_vector(AddrWidth);
-            inst_i: in std_logic_vector(InstWidth);
-            regData1_i: in std_logic_vector(DataWidth);
-            regData2_i: in std_logic_vector(DataWidth);
-
-            exToWriteReg_i: in std_logic;
-            exWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
-            exWriteRegData_i: in std_logic_vector(DataWidth);
-            memToWriteReg_i: in std_logic;
-            memWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
-            memWriteRegData_i: in std_logic_vector(DataWidth);
-            isInDelaySlot_i: in std_logic;
-
-            toStall_o: out std_logic;
-            regReadEnable1_o: out std_logic;
-            regReadEnable2_o: out std_logic;
-            regReadAddr1_o: out std_logic_vector(RegAddrWidth);
-            regReadAddr2_o: out std_logic_vector(RegAddrWidth);
-            alut_o: out AluType;
-            memt_o: out MemType;
-            lastMemt_i: in MemType;
-            operand1_o: out std_logic_vector(DataWidth);
-            operand2_o: out std_logic_vector(DataWidth);
-            operandX_o: out std_logic_vector(DataWidth);
-            toWriteReg_o: out std_logic;
-            writeRegAddr_o: out std_logic_vector(RegAddrWidth);
-
-            branchTargetAddress_o: out std_logic_vector(AddrWidth);
-            branchFlag_o: out std_logic;
-            linkAddr_o: out std_logic_vector(AddrWidth);
-            isInDelaySlot_o: out std_logic;
-            nextInstInDelaySlot_o: out std_logic;
-
-            exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
-            exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-            currentInstAddr_o: out std_logic_vector(AddrWidth)
-        );
-    end component;
-
-    component id_ex
-        port (
-            rst, clk: in std_logic;
-            stall_i: in std_logic_vector(StallWidth);
-            alut_i: in AluType;
-            memt_i: in MemType;
-            operand1_i: in std_logic_vector(DataWidth);
-            operand2_i: in std_logic_vector(DataWidth);
-            operandX_i: in std_logic_vector(DataWidth);
-            toWriteReg_i: in std_logic;
-            writeRegAddr_i: in std_logic_vector(RegAddrWidth);
-            idIsInDelaySlot_i: in std_logic;
-            idLinkAddress_i: in std_logic_vector(AddrWidth);
-            nextInstInDelaySlot_i: in std_logic;
-
-            alut_o: out AluType;
-            memt_o: out MemType;
-            operand1_o: out std_logic_vector(DataWidth);
-            operand2_o: out std_logic_vector(DataWidth);
-            operandX_o: out std_logic_vector(DataWidth);
-            toWriteReg_o: out std_logic;
-            writeRegAddr_o: out std_logic_vector(RegAddrWidth);
-            exIsInDelaySlot_o: out std_logic;
-            exLinkAddress_o: out std_logic_vector(AddrWidth);
-            isInDelaySlot_o: out std_logic;
-
-            flush_i: in std_logic;
-            idExceptCause_i: in std_logic_vector(ExceptionCauseWidth);
-            idCurrentInstAddr_i: in std_logic_vector(AddrWidth);
-            exExceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-            exCurrentInstAddr_o: out std_logic_vector(AddrWidth)
-        );
-    end component;
-
-    component ex
-        port (
-            rst: in std_logic;
-            alut_i: in AluType;
-            memt_i: in MemType;
-            operand1_i: in std_logic_vector(DataWidth);
-            operand2_i: in std_logic_vector(DataWidth);
-            operandX_i: in std_logic_vector(DataWidth);
-            toWriteReg_i: in std_logic;
-            writeRegAddr_i: in std_logic_vector(RegAddrWidth);
-            isInDelaySlot_i: in std_logic;
-            linkAddress_i: in std_logic_vector(AddrWidth);
-
-            toStall_o: out std_logic;
-            toWriteReg_o: out std_logic;
-            writeRegAddr_o: out std_logic_vector(RegAddrWidth);
-            writeRegData_o: out std_logic_vector(DataWidth);
-
-            hi_i, lo_i: in std_logic_vector(DataWidth);
-            memToWriteHi_i, memToWriteLo_i: in std_logic;
-            memWriteHiData_i, memWriteLoData_i: in std_logic_vector(DataWidth);
-            wbToWriteHi_i, wbToWriteLo_i: in std_logic;
-            wbWriteHiData_i, wbWriteLoData_i: in std_logic_vector(DataWidth);
-            toWriteHi_o, toWriteLo_o: out std_logic;
-            writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth);
-
-            memt_o: out MemType;
-            memAddr_o: out std_logic_vector(AddrWidth);
-            memData_o: out std_logic_vector(DataWidth);
-
-            tempProduct_i: in std_logic_vector(DoubleDataWidth);
-            cnt_i: in std_logic_vector(CntWidth);
-            tempProduct_o: out std_logic_vector(DoubleDataWidth);
-            cnt_o: out std_logic_vector(CntWidth);
-
-            -- for cp0 coprocessor --
-            cp0RegData_i: in std_logic_vector(DataWidth);
-            wbCP0RegData_i: in std_logic_vector(DataWidth);
-            wbCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
-            wbCP0RegWe_i: in std_logic;
-            memCP0RegData_i: in std_logic_vector(DataWidth);
-            memCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
-            memCP0RegWe_i: in std_logic;
-            cp0RegReadAddr_o: out std_logic_vector(CP0RegAddrWidth);
-            cp0RegData_o: out std_logic_vector(DataWidth);
-            cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
-            cp0RegWe_o: out std_logic;
-            isTlbwi_o: out std_logic;
-            isTlbwr_o: out std_logic;
-
-            -- for exception --
-            exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
-            currentInstAddr_i: in std_logic_vector(AddrWidth);
-            exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-            currentInstAddr_o: out std_logic_vector(AddrWidth);
-            isInDelaySlot_o: out std_logic
-        );
-    end component;
-
-    component ex_mem
-        port (
-            rst, clk: in std_logic;
-            stall_i: in std_logic_vector(StallWidth);
-            toWriteReg_i: in std_logic;
-            writeRegAddr_i: in std_logic_vector(RegAddrWidth);
-            writeRegData_i: in std_logic_vector(DataWidth);
-            toWriteReg_o: out std_logic;
-            writeRegAddr_o: out std_logic_vector(RegAddrWidth);
-            writeRegData_o: out std_logic_vector(DataWidth);
-
-            toWriteHi_i, toWriteLo_i: in std_logic;
-            writeHiData_i, writeLoData_i: in std_logic_vector(DataWidth);
-            toWriteHi_o, toWriteLo_o: out std_logic;
-            writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth);
-
-            memt_i: in MemType;
-            memAddr_i: in std_logic_vector(AddrWidth);
-            memData_i: in std_logic_vector(DataWidth);
-            memt_o: out MemType;
-            memAddr_o: out std_logic_vector(AddrWidth);
-            memData_o: out std_logic_vector(DataWidth);
-
-            tempProduct_i: in std_logic_vector(DoubleDataWidth);
-            cnt_i: in std_logic_vector(CntWidth);
-            tempProduct_o: out std_logic_vector(DoubleDataWidth);
-            cnt_o: out std_logic_vector(CntWidth);
-
-            -- for cp0 coprocessor --
-            cp0RegData_i: in std_logic_vector(DataWidth);
-            cp0RegWriteAddr_i: in std_logic_vector(cp0RegAddrWidth);
-            cp0RegWe_i: in std_logic;
-            cp0RegData_o: out std_logic_vector(DataWidth);
-            cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
-            cp0RegWe_o: out std_logic;
-            isTlbwi_i: in std_logic;
-            isTlbwr_i: in std_logic;
-            isTlbwi_o: out std_logic;
-            isTlbwr_o: out std_logic;
-
-            -- for exception --
-            flush_i: in std_logic;
-            exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
-            currentInstAddr_i: in std_logic_vector(AddrWidth);
-            isInDelaySlot_i: in std_logic;
-            exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-            currentInstAddr_o: out std_logic_vector(AddrWidth);
-            isInDelaySlot_o: out std_logic
-        );
-    end component;
-
-    component mem
-        port (
-            rst: in std_logic;
-            toWriteReg_i: in std_logic;
-            writeRegAddr_i: in std_logic_vector(RegAddrWidth);
-            writeRegData_i: in std_logic_vector(DataWidth);
-            toWriteReg_o: out std_logic;
-            writeRegAddr_o: out std_logic_vector(RegAddrWidth);
-            writeRegData_o: out std_logic_vector(DataWidth);
-
-            toWriteHi_i, toWriteLo_i: in std_logic;
-            writeHiData_i, writeLoData_i: in std_logic_vector(DataWidth);
-            toWriteHi_o, toWriteLo_o: out std_logic;
-            writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth);
-
-            memt_i: in MemType;
-            memAddr_i: in std_logic_vector(AddrWidth);
-            memData_i: in std_logic_vector(DataWidth); -- Data to store
-            loadedData_i: in std_logic_vector(DataWidth); -- Data loaded from RAM
-            savingData_o: out std_logic_vector(DataWidth);
-            memAddr_o: out std_logic_vector(AddrWidth);
-            dataEnable_o: out std_logic;
-            dataWrite_o: out std_logic;
-            dataByteSelect_o: out std_logic_vector(3 downto 0);
-
-            -- for cp0 coprocessor --
-            cp0RegData_i: in std_logic_vector(DataWidth);
-            cp0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
-            cp0RegWe_i: in std_logic;
-            cp0RegData_o: out std_logic_vector(DataWidth);
-            cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
-            cp0RegWe_o: out std_logic;
-            isTlbwi_i: in std_logic;
-            isTlbwr_i: in std_logic;
-            isTlbwi_o: out std_logic;
-            isTlbwr_o: out std_logic;
-
-            -- for exception --
-            exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
-            currentInstAddr_i: in std_logic_vector(AddrWidth);
-            isInDelaySlot_i: in std_logic;
-            cp0Status_i: in std_logic_vector(DataWidth);
-            cp0Cause_i: in std_logic_vector(DataWidth);
-            cp0Epc_i: in std_logic_vector(DataWidth);
-            wbCP0RegWe_i: in std_logic;
-            wbCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
-            wbCP0RegData_i: in std_logic_vector(DataWidth);
-            cp0EPC_o: out std_logic_vector(DataWidth);
-            exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-            currentInstAddr_o: out std_logic_vector(AddrWidth);
-            isInDelaySlot_o: out std_logic
-        );
-    end component;
-
-    component mem_wb
-        port (
-            rst, clk: in std_logic;
-            stall_i: in std_logic_vector(StallWidth);
-            toWriteReg_i: in std_logic;
-            writeRegAddr_i: in std_logic_vector(RegAddrWidth);
-            writeRegData_i: in std_logic_vector(DataWidth);
-            toWriteReg_o: out std_logic;
-            writeRegAddr_o: out std_logic_vector(RegAddrWidth);
-            writeRegData_o: out std_logic_vector(DataWidth);
-
-            toWriteHi_i, toWriteLo_i: in std_logic;
-            writeHiData_i, writeLoData_i: in std_logic_vector(DataWidth);
-            toWriteHi_o, toWriteLo_o: out std_logic;
-            writeHiData_o, writeLoData_o: out std_logic_vector(DataWidth);
-
-            -- for cp0 coprocessor --
-            memCP0RegData_i: in std_logic_vector(DataWidth);
-            memCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
-            memCP0RegWe_i: in std_logic;
-            wbCP0RegData_o: out std_logic_vector(DataWidth);
-            wbCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
-            wbCP0RegWe_o: out std_logic;
-            isTlbwi_i: in std_logic;
-            isTlbwr_i: in std_logic;
-            isTlbwi_o: out std_logic;
-            isTlbwr_o: out std_logic;
-
-            -- for exception --
-            flush_i: in std_logic
-        );
-    end component;
-
-    component hi_lo
-        port (
-            rst, clk: in std_logic;
-            writeHiEnable_i, writeLoEnable_i: in std_logic;
-            writeHiData_i, writeLoData_i: in std_logic_vector(DataWidth);
-            readHiData_o, readLoData_o: out std_logic_vector(DataWidth)
-        );
-    end component;
-
-    component ctrl is
-        port (
-            rst: in std_logic;
-            ifToStall_i, idToStall_i, exToStall_i, memToStall_i: in std_logic;
-            stall_o: out std_logic_vector(StallWidth);
-            cp0Epc_i: in std_logic_vector(DataWidth);
-            exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
-            newPC_o: out std_logic_vector(AddrWidth);
-            flush_o: out std_logic
-        );
-    end component;
-
-    component cp0_reg
-        port (
-            clk, rst: in std_logic;
-            raddr_i: in std_logic_vector(CP0RegAddrWidth);
-            data_i: in std_logic_vector(DataWidth);
-            waddr_i: in std_logic_vector(CP0RegAddrWidth);
-            we_i: in std_logic;
-            int_i: in std_logic_vector(intWidth);
-
-            data_o: out std_logic_vector(DataWidth);
-            timerInt_o: out std_logic;
-
-            status_o: out std_logic_vector(DataWidth);
-            cause_o: out std_logic_vector(DataWidth);
-            epc_o: out std_logic_vector(DataWidth);
-
-            exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
-            currentInstAddr_i: in std_logic_vector(AddrWidth);
-            isInDelaySlot_i: in std_logic;
-
-            isKernelMode_o: out std_logic;
-
-            isTlbwi_i: in std_logic;
-            isTlbwr_i: in std_logic;
-            entryIndex_o: out std_logic_vector(TLBIndexWidth);
-            entryWrite_o: out std_logic;
-            entry_o: out TLBEntry
-        );
-    end component;
-
-    component conv_endian
-        port (
-            input: in std_logic_vector(31 downto 0);
-            output: out std_logic_vector(31 downto 0)
-        );
-    end component;
-
     -- Labels of components for convenience (especially in quantity naming)
     -- 1: pc_reg
     -- 2: if_id
@@ -623,7 +245,7 @@ architecture bhv of cpu is
 
 begin
 
-    pc_reg_ist: pc_reg
+    pc_reg_ist: entity work.pc_reg
         generic map (
             instEntranceAddr => instEntranceAddr
         )
@@ -639,7 +261,7 @@ begin
         );
     instEnable_o <= instEnable_12;
 
-    if_id_ist: if_id
+    if_id_ist: entity work.if_id
         port map (
             rst => rst, clk => clk,
             stall_i => stall,
@@ -654,7 +276,7 @@ begin
         );
     instAddr_o <= pc_12;
 
-    conv_endian_ist: conv_endian
+    conv_endian_ist: entity work.conv_endian
         port map (
             input => instData_i,
             output => inst_x
@@ -662,7 +284,7 @@ begin
 
     inst_2 <= inst_x when instConvEndian else instData_i;
 
-    regfile_ist: regfile
+    regfile_ist: entity work.regfile
         port map (
             rst => rst, clk => clk,
             writeEnable_i => toWriteReg_93,
@@ -676,7 +298,7 @@ begin
             readData2_o => regData2_34
         );
 
-    id_ist: id
+    id_ist: entity work.id
         port map (
             rst => rst,
             pc_i => pc_24,
@@ -713,7 +335,7 @@ begin
             currentInstAddr_o => currentInstAddr_45
         );
 
-    id_ex_ist: id_ex
+    id_ex_ist: entity work.id_ex
         port map (
             rst => rst, clk => clk,
             stall_i => stall,
@@ -744,7 +366,7 @@ begin
             exCurrentInstAddr_o => exCurrentInstAddr_56
         );
 
-    ex_ist: ex
+    ex_ist: entity work.ex
         port map (
             rst => rst,
             alut_i => alut_56,
@@ -810,7 +432,7 @@ begin
     exWriteRegData_64 <= writeRegData_67;
     lastMemt_64 <= memt_67;
 
-    ex_mem_ist: ex_mem
+    ex_mem_ist: entity work.ex_mem
         port map (
             rst => rst, clk => clk,
             stall_i => stall,
@@ -863,7 +485,7 @@ begin
             isInDelaySlot_o => isInDelaySlot_78
         );
 
-    mem_ist: mem
+    mem_ist: entity work.mem
         port map (
             rst => rst,
             toWriteReg_i => toWriteReg_78,
@@ -933,7 +555,7 @@ begin
     cp0RegWe_86 <= cp0RegWe_89;
     exceptCause_8b <= exceptCause_8c;
 
-    mem_wb_ist: mem_wb
+    mem_wb_ist: entity work.mem_wb
         port map (
             rst => rst, clk => clk,
             stall_i => stall,
@@ -978,7 +600,7 @@ begin
     wbCP0RegWriteAddr_98 <= wbCP0RegWriteAddr_96;
     wbCP0RegWe_98 <= wbCP0RegWe_96;
 
-    hi_lo_ist: hi_lo
+    hi_lo_ist: entity work.hi_lo
         port map(
             rst => rst, clk => clk,
             writeHiEnable_i => toWriteHi_9a,
@@ -989,7 +611,7 @@ begin
             readLoData_o => loData_a6
         );
 
-    ctrl_ist: ctrl
+    ctrl_ist: entity work.ctrl
         port map(
             rst => rst,
             ifToStall_i => ifToStall_i,
@@ -1007,7 +629,7 @@ begin
     flush_b7 <= flush_b1;
     flush_b9 <= flush_b1;
 
-    cp0_reg_ist: cp0_reg
+    cp0_reg_ist: entity work.cp0_reg
         port map(
             rst => rst,
             clk => clk,
