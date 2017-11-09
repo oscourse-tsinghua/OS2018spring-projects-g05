@@ -4,6 +4,7 @@ use work.global_const.all;
 use work.alu_const.all;
 use work.mem_const.all;
 use work.cp0_const.all;
+use work.mmu_const.all;
 use work.except_const.all;
 
 entity cpu is
@@ -27,7 +28,7 @@ entity cpu is
         timerInt_o: out std_logic;
 
         -- To MMU
-        isKernalMode_o: out std_logic;
+        isKernelMode_o: out std_logic;
         entryIndex_o: out std_logic_vector(TLBIndexWidth);
         entryWrite_o: out std_logic;
         entry_o: out TLBEntry
@@ -391,7 +392,15 @@ architecture bhv of cpu is
 
             exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
             currentInstAddr_i: in std_logic_vector(AddrWidth);
-            isInDelaySlot_i: in std_logic
+            isInDelaySlot_i: in std_logic;
+
+            isKernelMode_o: out std_logic;
+
+            isTlbwi_i: in std_logic;
+            isTlbwr_i: in std_logic;
+            entryIndex_o: out std_logic_vector(TLBIndexWidth);
+            entryWrite_o: out std_logic;
+            entry_o: out TLBEntry
         );
     end component;
 
@@ -1000,7 +1009,7 @@ begin
             status_o => status_c8,
             cause_o => cause_c8,
             timerInt_o => timerInt_o,
-            isKernalMode_o => isKernalMode_o,
+            isKernelMode_o => isKernelMode_o,
             isTlbwi_i => isTlbwi_9c,
             isTlbwr_i => isTlbwr_9c,
             entryIndex_o => entryIndex_o,

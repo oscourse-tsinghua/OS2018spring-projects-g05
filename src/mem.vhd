@@ -166,32 +166,17 @@ begin
         end if;
     end process;
 
-    process(all) begin
-        if (rst = RST_ENABLE) then
-            cp0Status <= (others => '0');
-        elsif ((wbCP0RegWe_i = YES) and (wbCP0RegWriteAddr_i = STATUS_PROCESSOR)) then
-            cp0Status <= wbCP0RegData_i;
-        else
-            cp0Status <= cp0Status_i;
-        end if;
-    end process;
+    cp0Status <= wbCP0RegData_i when
+                 wbCP0RegWe_i = YES and to_integer(unsigned(wbCP0RegWriteAddr_i)) = STATUS_REG else
+                 cp0Status_i;
 
-    process(all) begin
-        if (rst = RST_ENABLE) then
-            cp0EPC <= (others => '0');
-        elsif ((wbCP0RegWe_i = YES) and (wbCP0RegWriteAddr_i = EPC_PROCESSOR)) then
-            cp0EPC <= wbCP0RegData_i;
-        else
-            cp0EPC <= cp0Epc_i;
-        end if;
-    end process;
-
+    cp0EPC <= wbCP0RegData_i when
+              wbCP0RegWe_i = YES and to_integer(unsigned(wbCP0RegWriteAddr_i)) = EPC_REG else
+              cp0Epc_i;
     cp0Epc_o <= cp0Epc;
 
     process(all) begin
-        if (rst = RST_ENABLE) then
-            cp0Cause <= (others => '0');
-        elsif ((wbCP0RegWe_i = YES) and (wbCP0RegWriteAddr_i = CAUSE_PROCESSOR)) then
+        if ((wbCP0RegWe_i = YES) and (to_integer(unsigned(wbCP0RegWriteAddr_i)) = CAUSE_REG)) then
             cp0Cause(CauseIpSoftBits) <= wbCP0RegData_i(CauseIpSoftBits);
             cp0Cause(CAUSE_IV_BIT) <= wbCP0RegData_i(CAUSE_IV_BIT);
             cp0Cause(CAUSE_WP_BIT) <= wbCP0RegData_i(CAUSE_WP_BIT);

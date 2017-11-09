@@ -613,7 +613,7 @@ begin
                             null;
                     end case;
 
-                    if (inst_i(25) = '1' and inst_i(24 downto 6) = 19"0") then -- bit 25 is CO
+                    if (inst_i(25) = '1' and inst_i(24 downto 6) = 19ub"0") then -- bit 25 is CO
                         case (instFunc) is
                             when FUNC_ERET =>
                                 isInvalid := NO;

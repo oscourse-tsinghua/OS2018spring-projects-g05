@@ -10,7 +10,7 @@ use work.mmu_const.all;
 entity mmu is
     port (
         -- Translate the address
-        isKernalMode_i: in std_logic;
+        isKernelMode_i: in std_logic;
         isLoad_i: in std_logic; -- This address is used for loading rather than storing
         addr_i: in std_logic_vector(AddrWidth);
         addr_o: out std_logic_vector(AddrWidth);
@@ -35,7 +35,7 @@ begin
     begin
         addrExcept := false;
         tlbExcept := true;
-        if (isKernalMode_i = YES and addr_i(31 downto 28) >= 4x"8") then
+        if (isKernelMode_i = YES and addr_i(31 downto 28) >= 4x"8") then
             -- kseg0, kseg1, kseg2
             addrExcept := true;
         end if;

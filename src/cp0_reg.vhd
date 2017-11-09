@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 -- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_unsigned
@@ -34,7 +35,7 @@ entity cp0_reg is
         currentInstAddr_i: in std_logic_vector(AddrWidth);
         isIndelaySlot_i: in std_logic;
 
-        isKernalMode_o: out std_logic;
+        isKernelMode_o: out std_logic;
 
         -- For MMU
         isTlbwi_i: in std_logic;
@@ -46,8 +47,8 @@ entity cp0_reg is
 end cp0_reg;
 
 architecture bhv of cp0_reg is
-    type RegArr is array (0 to CP0_MAX_ID) of std_logic_vector(DataWidth);
-    signal regArr: RegArr;
+    type RegArray is array (0 to CP0_MAX_ID) of std_logic_vector(DataWidth);
+    signal regArr: RegArray;
 begin
     status_o <= regArr(STATUS_REG);
     cause_o <= regArr(CAUSE_REG);
@@ -55,9 +56,9 @@ begin
 
     data_o <= regArr(conv_integer(raddr_i));
 
-    isKernalMode_o <= regArr(STATUS_REG)(STATUS_ERL_BIT) or
+    isKernelMode_o <= regArr(STATUS_REG)(STATUS_ERL_BIT) or
                       regArr(STATUS_REG)(STATUS_EXL_BIT) or
-                      not regArr(STATUS_REG)(STATUS_UM_BIT) = '0';
+                      not regArr(STATUS_REG)(STATUS_UM_BIT);
 
     entryIndex_o <= regArr(RANDOM_REG)(TLBIndexWidth) when isTlbwr_i = '1' else regArr(INDEX_REG)(TLBIndexWidth);
 
@@ -73,29 +74,39 @@ begin
                 -- Please refer to MIPS Vol3 for reset value
                 -- Undefined reset value are reset to 0 here for robustness
                 regArr(INDEX_REG) <= (others => '0');
-                regArr(RANDOM_REG) <= conv_std_logic_vector(TLB_ENTRY_NUM - 1);
+                regArr(RANDOM_REG) <= conv_std_logic_vector(TLB_ENTRY_NUM - 1, 32);
+                regArr(ENTRY_LO0_REG) <= (others => '0');
                 regArr(ENTRY_LO1_REG) <= (others => '0');
-                regArr(ENTRY_LO2_REG) <= (others => '0');
+                regArr(WIRED_REG) <= (others => '0');
                 regArr(BAD_V_ADDR_REG) <= (others => '0');
                 regArr(COUNT_REG) <= (others => '0');
                 regArr(ENTRY_HI_REG) <= (others => '0');
                 regArr(COMPARE_REG) <= (others => '0');
-                regArr(STATUS_REG) <= (28 => '1', others => '0'); -- We don't use BEV bit. TODO: ERL bit?
+                regArr(STATUS_REG) <= (STATUS_CP0_BIT => '1', STATUS_ERL_BIT => '1', others => '0'); -- We don't use BEV bit
                 regArr(CAUSE_REG) <= (others => '0');
                 regArr(EPC_REG) <= (others => '0');
-                regArr(PRID_REG) <= (22 => '1', 19 => '1', 18 => '1', 8 => '1', 1 => '1', others => '0');
-                regArr(CONFIG_REG) <= (15 => '1', others => '0');
+                regArr(PRID_REG) <= (others => '0');
+                regArr(CONFIG_REG) <= (others => '0');
 
                 timerInt_o <= INTERRUPT_NOT_ASSERT;
             else
-                regArr(COUNT_REG) <= regArr(COUNT_REG) + 1;
                 regArr(CAUSE_REG)(CauseIpHardBits) <= int_i;
-                if ((regArr(COMPARE_REG) /= 32ux"0") and (regArr(COUNT_REG) = regArr(COMPARE_REG))) then
+
+                if (regArr(COUNT_REG) + 1 = regArr(COMPARE_REG)) then
+                    -- We use `regArr(COUNT_REG) + 1`, so no need to determine if `regArr(COMPARE_REG)` is zero (invalid)
                     timerInt_o <= INTERRUPT_ASSERT;
+                else
+                    regArr(COUNT_REG) <= regArr(COUNT_REG) + 1;
+                end if;
+
+                if (regArr(RANDOM_REG) = regArr(WIRED_REG)) then
+                    regArr(RANDOM_REG) <= conv_std_logic_vector(TLB_ENTRY_NUM - 1, 32);
+                else
+                    regArr(RANDOM_REG) <= regArr(RANDOM_REG) - 1;
                 end if;
 
                 if (we_i = ENABLE) then
-                    case (waddr_i) is
+                    case (conv_integer(waddr_i)) is
                         when COMPARE_REG =>
                             regArr(COMPARE_REG) <= data_i;
                             timerInt_o <= INTERRUPT_NOT_ASSERT;

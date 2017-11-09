@@ -6,19 +6,20 @@ package cp0_const is
     --
     -- ids of special usage registers.
     --
-    constant INDEX_REG: std_logic_vector(CP0RegAddrWidth) := 5ud"0";
-    constant RANDOM_REG: std_logic_vector(CP0RegAddrWidth) := 5ud"1";
-    constant ENTRY_LO0_REG: std_logic_vector(CP0RegAddrWidth) := 5ud"2";
-    constant ENTRY_LO1_REG: std_logic_vector(CP0RegAddrWidth) := 5ud"3";
-    constant BAD_V_ADDR_REG: std_logic_vector(CP0RegAddrWidth) := 5ud"8";
-    constant COUNT_REG: std_logic_vector(CP0RegAddrWidth) := 5ud"9";
-    constant ENTRY_HI: std_logic_vector(CP0RegAddrWidth) := 5ud"10";
-    constant COMPARE_REG: std_logic_vector(CP0RegAddrWidth) := 5ud"11";
-    constant STATUS_REG: std_logic_vector(CP0RegAddrWidth) := 5ud"12";
-    constant CAUSE_REG: std_logic_vector(CP0RegAddrWidth) := 5ud"13";
-    constant EPC_REG: std_logic_vector(CP0RegAddrWidth) := 5ud"14";
-    constant PRID_REG: std_logic_vector(CP0RegAddrWidth) := 5ud"15";
-    constant CONFIG_REG: std_logic_vector(CP0RegAddrWidth) := 5ud"16";
+    constant INDEX_REG:         integer := 0;
+    constant RANDOM_REG:        integer := 1;
+    constant ENTRY_LO0_REG:     integer := 2;
+    constant ENTRY_LO1_REG:     integer := 3;
+    constant WIRED_REG:         integer := 6;
+    constant BAD_V_ADDR_REG:    integer := 8;
+    constant COUNT_REG:         integer := 9;
+    constant ENTRY_HI_REG:          integer := 10;
+    constant COMPARE_REG:       integer := 11;
+    constant STATUS_REG:        integer := 12;
+    constant CAUSE_REG:         integer := 13;
+    constant EPC_REG:           integer := 14;
+    constant PRID_REG:          integer := 15;
+    constant CONFIG_REG:        integer := 16;
     -- Max implemented ID of CP0 registers
     constant CP0_MAX_ID: integer := 16;
 
@@ -39,6 +40,7 @@ package cp0_const is
     --
     -- Bits of status register
     --
+    constant STATUS_CP0_BIT: integer := 28; -- CP0 available flag
     constant STATUS_UM_BIT: integer := 4; -- User mode flag
     constant STATUS_ERL_BIT: integer := 2; -- Error level flag
     constant STATUS_EXL_BIT: integer := 1; -- Exception level flag
