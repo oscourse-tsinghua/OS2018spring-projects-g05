@@ -1,0 +1,38 @@
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+# 0x04
+RUN ori $3, $3, 1
+
+# 0x08
+RUN ori $4, $4, 1
+
+# 0x0c
+RUN sw $3, 0($4)
+
+# 0x10
+RUN xor $7, $3, $4
+
+# 0x14
+RUN jal 0x20
+
+# 0x18
+RUN ori $8, $8, 2
+
+# 0x1c
+RUN addi $9, $9, 1
+
+# 0x20
+RUN ori $0, $0, 0
+
+ASSERT 20 reg(8) 32ux"2"
+ASSERT 20 reg(9) 32ux"0"
+
+# IF	| ID	| EX	| MEM	| WB	| assertion | period
+# ori	|		|		|		|		|			|
+# ori	| ori	|		|		|		|			|
+# sw	| ori	| ori	|		|		|			|
+# xor	| sw	| ori	| ori	|		|			|
+# jal	| xor	| sw	| ori	| ori	|			|
+# ori	| jal	| xor	| sw	| ori	| ori		| 6
+# ori	|		| jal	| xor	| sw	| ori		| 7
+# ori	| ori	|		| jal	| xor	| sw		| 8

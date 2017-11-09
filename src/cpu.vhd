@@ -8,6 +8,10 @@ use work.mmu_const.all;
 use work.except_const.all;
 
 entity cpu is
+    generic (
+        instEntranceAddr: std_logic_vector(AddrWidth) := 32ux"4";
+        instConvEndian: boolean := true
+    );
     port (
         rst, clk: in std_logic;
         instData_i: in std_logic_vector(InstWidth);
@@ -38,6 +42,9 @@ end cpu;
 architecture bhv of cpu is
 
     component pc_reg
+        generic (
+            instEntranceAddr: std_logic_vector(AddrWidth)
+        );
         port (
             rst, clk: in std_logic;
             stall_i: in std_logic_vector(StallWidth);
@@ -435,8 +442,11 @@ architecture bhv of cpu is
     signal inst_24: std_logic_vector(InstWidth);
     signal exceptCause_24: std_logic_vector(ExceptionCauseWidth);
 
-    -- Signals connecting conv_endian and if_id --
-    signal inst_x2: std_logic_vector(InstWidth);
+    -- Signals from conv_endian --
+    signal inst_x: std_logic_vector(InstWidth);
+
+    -- Signals into if_id --
+    signal inst_2: std_logic_vector(InstWidth);
 
     -- Signals connecting regfile and id --
     signal regReadEnable1_43, regReadEnable2_43: std_logic;
@@ -592,7 +602,7 @@ architecture bhv of cpu is
     -- Signals connecting ctrl and others --
     signal stall: std_logic_vector(StallWidth);
 
-    -- Signals connecting id and pc --
+    -- Signals connecting id_ex and pc --
     signal branchTargetAddress_41: std_logic_vector(AddrWidth);
     signal branchFlag_41: std_logic;
 
@@ -614,6 +624,9 @@ architecture bhv of cpu is
 begin
 
     pc_reg_ist: pc_reg
+        generic map (
+            instEntranceAddr => instEntranceAddr
+        )
         port map (
            rst => rst, clk => clk,
            stall_i => stall,
@@ -632,7 +645,7 @@ begin
             stall_i => stall,
             pc_i => pc_12,
             instEnable_i => instEnable_12,
-            inst_i => inst_x2,
+            inst_i => inst_2,
             exceptCause_i => instExcept_i,
             pc_o => pc_24,
             inst_o => inst_24,
@@ -644,8 +657,10 @@ begin
     conv_endian_ist: conv_endian
         port map (
             input => instData_i,
-            output => inst_x2
+            output => inst_x
         );
+
+    inst_2 <= inst_x when instConvEndian else instData_i;
 
     regfile_ist: regfile
         port map (
