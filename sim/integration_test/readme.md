@@ -1,7 +1,7 @@
 ## 功能测试说明文件
 ### 步骤
-1. 依赖：mipsel-linux-gnu工具链；jinja2，通过`pip install jinja2`安装（若默认使用python3，则用`pip3 install jinja2`安装）。
-2. 执行`cp testlist_example testlist`，在testlist内增删测例，一行一个测例，后面带“*”表示该测例是一条与测试延迟槽或会触发异常的测例。
+1. 依赖：mipsel-linux-gnu工具链；jinja2，通过`pip install jinja2`安装（若你的python命令实际指向python3，则用`pip3 install jinja2`安装）。
+2. 执行`cp testlist_example testlist`，在testlist内增删测例，一行一个测例，后面带“*”表示该测例是一条测试延迟槽或会触发异常的测例。
 3. 执行`make ver=sim`生成仿真前需要写入ram中的数据文件。若需要，之后可通过`make clean ver=sim`清除。
 4. 导入IP核文件。文件为ram/ram.xci，作为设计文件导入工程。打开IP核设置对话框（在Sources面板的IP Sources标签页中双击ram），在Other Options标签页选择初始化文件。在这里我们需要将步骤2生成的ram\_init\_data.coe载入。点击OK重新定制IP核。
 5. 导入integration\_test.vhd、integration\_test\_const.vhd、fake\_ram.vhd作为仿真文件，将文件属性设置为VHDL 2008。
