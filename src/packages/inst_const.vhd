@@ -40,39 +40,40 @@ package inst_const is
     subtype InstSaFuncWidth         is integer range 10 downto  0;
 
     --
-    -- Logic Opcodes
+    -- Logic OP/FUNC codes
     --
-    constant OP_AND: std_logic_vector(InstFuncWidth) := "100100";
-    constant OP_OR: std_logic_vector(InstFuncWidth) := "100101";
-    constant OP_XOR: std_logic_vector(InstFuncWidth) := "100110";
-    constant OP_NOR: std_logic_vector(InstFuncWidth) := "100111";
+    constant FUNC_AND: std_logic_vector(InstFuncWidth) := "100100";
+    constant FUNC_OR: std_logic_vector(InstFuncWidth) := "100101";
+    constant FUNC_XOR: std_logic_vector(InstFuncWidth) := "100110";
+    constant FUNC_NOR: std_logic_vector(InstFuncWidth) := "100111";
+
     constant OP_ANDI: std_logic_vector(InstOpWidth) := "001100";
     constant OP_ORI: std_logic_vector(InstOpWidth) := "001101";
     constant OP_XORI: std_logic_vector(InstOpWidth) := "001110";
     constant OP_LUI: std_logic_vector(InstOpWidth) := "001111";
 
     --
-    -- Algebraic Opcodes
+    -- Algebraic FUNC codes
     --
-    constant OP_SLL: std_logic_vector(InstFuncWidth) := "000000";
-    constant OP_SLLV: std_logic_vector(InstFuncWidth) := "000100";
-    constant OP_SRL: std_logic_vector(InstFuncWidth) := "000010";
-    constant OP_SRLV: std_logic_vector(InstFuncWidth) := "000110";
-    constant OP_SRA: std_logic_vector(InstFuncWidth) := "000011";
-    constant OP_SRAV: std_logic_vector(InstFuncWidth) := "000111";
+    constant FUNC_SLL: std_logic_vector(InstFuncWidth) := "000000";
+    constant FUNC_SLLV: std_logic_vector(InstFuncWidth) := "000100";
+    constant FUNC_SRL: std_logic_vector(InstFuncWidth) := "000010";
+    constant FUNC_SRLV: std_logic_vector(InstFuncWidth) := "000110";
+    constant FUNC_SRA: std_logic_vector(InstFuncWidth) := "000011";
+    constant FUNC_SRAV: std_logic_vector(InstFuncWidth) := "000111";
 
     --
-    -- Move Opcodes
+    -- Move FUNC codes
     --
-    constant OP_MOVN: std_logic_vector(InstFuncWidth) := "001011";
-    constant OP_MOVZ: std_logic_vector(InstFuncWidth) := "001010";
-    constant OP_MFHI: std_logic_vector(InstFuncWidth) := "010000";
-    constant OP_MFLO: std_logic_vector(InstFuncWidth) := "010010";
-    constant OP_MTHI: std_logic_vector(InstFuncWidth) := "010001";
-    constant OP_MTLO: std_logic_vector(InstFuncWidth) := "010011";
+    constant FUNC_MOVN: std_logic_vector(InstFuncWidth) := "001011";
+    constant FUNC_MOVZ: std_logic_vector(InstFuncWidth) := "001010";
+    constant FUNC_MFHI: std_logic_vector(InstFuncWidth) := "010000";
+    constant FUNC_MFLO: std_logic_vector(InstFuncWidth) := "010010";
+    constant FUNC_MTHI: std_logic_vector(InstFuncWidth) := "010001";
+    constant FUNC_MTLO: std_logic_vector(InstFuncWidth) := "010011";
 
     --
-    -- Memory Opcodes
+    -- Memory OP codes
     --
     constant OP_LB: std_logic_vector(InstOpWidth) := "100000";
     constant OP_LBU: std_logic_vector(InstOpWidth) := "100100";
@@ -81,30 +82,30 @@ package inst_const is
     constant OP_SW: std_logic_vector(InstOpWidth) := "101011";
 
     --
-    -- Arith Opcodes
+    -- Arith OP/FUNC codes
     --
-    constant OP_ADD: std_logic_vector(InstFuncWidth) := "100000";
-    constant OP_ADDU: std_logic_vector(InstFuncWidth) := "100001";
-    constant OP_SUB: std_logic_vector(InstFuncWidth) := "100010";
-    constant OP_SUBU: std_logic_vector(InstFuncWidth) := "100011";
-    constant OP_SLT: std_logic_vector(InstFuncWidth) := "101010";
-    constant OP_SLTU: std_logic_vector(InstFuncWidth) := "101011";
-    constant OP_MULT: std_logic_vector(InstFuncWidth) := "011000";
-    constant OP_MULTU: std_logic_vector(InstFuncWidth) := "011001";
+    constant FUNC_ADD: std_logic_vector(InstFuncWidth) := "100000";
+    constant FUNC_ADDU: std_logic_vector(InstFuncWidth) := "100001";
+    constant FUNC_SUB: std_logic_vector(InstFuncWidth) := "100010";
+    constant FUNC_SUBU: std_logic_vector(InstFuncWidth) := "100011";
+    constant FUNC_SLT: std_logic_vector(InstFuncWidth) := "101010";
+    constant FUNC_SLTU: std_logic_vector(InstFuncWidth) := "101011";
+    constant FUNC_MULT: std_logic_vector(InstFuncWidth) := "011000";
+    constant FUNC_MULTU: std_logic_vector(InstFuncWidth) := "011001";
 
     constant OP_ADDI: std_logic_vector(InstOpWidth) := "001000";
     constant OP_ADDIU: std_logic_vector(InstOpWidth) := "001001";
     constant OP_SLTI: std_logic_vector(InstOpWidth) := "001010";
     constant OP_SLTIU: std_logic_vector(InstOpWidth) := "001011";
 
-    constant OP_CLO: std_logic_vector(InstFuncWidth) := "100001";
-    constant OP_CLZ: std_logic_vector(InstFuncWidth) := "100000";
-    constant OP_MUL: std_logic_vector(InstFuncWidth) := "000010";
+    constant FUNC_CLO: std_logic_vector(InstFuncWidth) := "100001";
+    constant FUNC_CLZ: std_logic_vector(InstFuncWidth) := "100000";
+    constant FUNC_MUL: std_logic_vector(InstFuncWidth) := "000010";
 
-    constant OP_MADD: std_logic_vector(InstFuncWidth) := "000000";
-    constant OP_MADDU: std_logic_vector(InstFuncWidth) := "000001";
-    constant OP_MSUB: std_logic_vector(InstFuncWidth) := "000100";
-    constant OP_MSUBU: std_logic_vector(InstFuncWidth) := "000101";
+    constant FUNC_MADD: std_logic_vector(InstFuncWidth) := "000000";
+    constant FUNC_MADDU: std_logic_vector(InstFuncWidth) := "000001";
+    constant FUNC_MSUB: std_logic_vector(InstFuncWidth) := "000100";
+    constant FUNC_MSUBU: std_logic_vector(InstFuncWidth) := "000101";
 
     --
     -- Jump Opcodes
@@ -123,7 +124,7 @@ package inst_const is
     constant JMP_BNE: std_logic_vector(InstOpWidth) := "000101";
 
     --
-    -- Special cases(logics 31-25 in this case)
+    -- Special OP groups
     --
     constant OP_SPECIAL: std_logic_vector(InstOpWidth) := "000000";
     constant OP_SPECIAL2: std_logic_vector(InstOpWidth) := "011100";
@@ -132,7 +133,7 @@ package inst_const is
     --
     -- Exceptions
     --
-    constant OP_SYSCALL: std_logic_vector(InstOpWidth) := "001100";
+    constant FUNC_SYSCALL: std_logic_vector(InstFuncWidth) := "001100";
     constant INST_ERET: std_logic_vector(InstIdxWidth) := "01000010000000000000000000011000";
 
 end inst_const;

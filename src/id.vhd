@@ -120,7 +120,7 @@ begin
                 when OP_SPECIAL =>
                     case (instFunc) is
                         -- or --
-                        when OP_OR =>
+                        when FUNC_OR =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_OR;
@@ -129,7 +129,7 @@ begin
                             isInvalid := NO;
 
                         -- and --
-                        when OP_AND =>
+                        when FUNC_AND =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_AND;
@@ -138,7 +138,7 @@ begin
                             isInvalid := NO;
 
                         -- xor --
-                        when OP_XOR =>
+                        when FUNC_XOR =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_XOR;
@@ -147,7 +147,7 @@ begin
                             isInvalid := NO;
 
                         -- nor --
-                        when OP_NOR =>
+                        when FUNC_NOR =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_NOR;
@@ -156,7 +156,7 @@ begin
                             isInvalid := NO;
 
                         -- sll --
-                        when OP_SLL =>
+                        when FUNC_SLL =>
                             oprSrc1 := SA;
                             oprSrc2 := REG;
                             alut_o <= ALU_SLL;
@@ -165,7 +165,7 @@ begin
                             isInvalid := NO;
 
                         -- sllv --
-                        when OP_SLLV =>
+                        when FUNC_SLLV =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_SLL;
@@ -174,7 +174,7 @@ begin
                             isInvalid := NO;
 
                         -- srl --
-                        when OP_SRL =>
+                        when FUNC_SRL =>
                             oprSrc1 := SA;
                             oprSrc2 := REG;
                             alut_o <= ALU_SRL;
@@ -183,7 +183,7 @@ begin
                             isInvalid := NO;
 
                         -- srlv --
-                        when OP_SRLV =>
+                        when FUNC_SRLV =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_SRL;
@@ -192,7 +192,7 @@ begin
                             isInvalid := NO;
 
                         -- sra --
-                        when OP_SRA =>
+                        when FUNC_SRA =>
                             oprSrc1 := SA;
                             oprSrc2 := REG;
                             alut_o <= ALU_SRA;
@@ -201,7 +201,7 @@ begin
                             isInvalid := NO;
 
                         -- srav --
-                        when OP_SRAV =>
+                        when FUNC_SRAV =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_SRA;
@@ -210,7 +210,7 @@ begin
                             isInvalid := NO;
 
                         -- movn --
-                        when OP_MOVN =>
+                        when FUNC_MOVN =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_MOVN;
@@ -219,7 +219,7 @@ begin
                             isInvalid := NO;
 
                         -- movz --
-                        when OP_MOVZ =>
+                        when FUNC_MOVZ =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_MOVZ;
@@ -228,7 +228,7 @@ begin
                             isInvalid := NO;
 
                         -- mfhi --
-                        when OP_MFHI =>
+                        when FUNC_MFHI =>
                             oprSrc1 := INVALID;
                             oprSrc2 := INVALID;
                             alut_o <= ALU_MFHI;
@@ -237,7 +237,7 @@ begin
                             isInvalid := NO;
 
                         -- mflo --
-                        when OP_MFLO =>
+                        when FUNC_MFLO =>
                             oprSrc1 := INVALID;
                             oprSrc2 := INVALID;
                             alut_o <= ALU_MFLO;
@@ -246,7 +246,7 @@ begin
                             isInvalid := NO;
 
                         -- mthi --
-                        when OP_MTHI =>
+                        when FUNC_MTHI =>
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
                             alut_o <= ALU_MTHI;
@@ -255,7 +255,7 @@ begin
                             isInvalid := NO;
 
                         -- mtlo --
-                        when OP_MTLO =>
+                        when FUNC_MTLO =>
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
                             alut_o <= ALU_MTLO;
@@ -264,7 +264,7 @@ begin
                             isInvalid := NO;
 
                         -- add --
-                        when OP_ADD =>
+                        when FUNC_ADD =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_ADD;
@@ -273,7 +273,7 @@ begin
                             isInvalid := NO;
 
                         -- addu --
-                        when OP_ADDU =>
+                        when FUNC_ADDU =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_ADDU;
@@ -282,7 +282,7 @@ begin
                             isInvalid := NO;
 
                         -- sub --
-                        when OP_SUB =>
+                        when FUNC_SUB =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_SUB;
@@ -291,7 +291,7 @@ begin
                             isInvalid := NO;
 
                         -- subu --
-                        when OP_SUBU =>
+                        when FUNC_SUBU =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_SUBU;
@@ -300,7 +300,7 @@ begin
                             isInvalid := NO;
 
                         -- slt --
-                        when OP_SLT =>
+                        when FUNC_SLT =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_SLT;
@@ -309,7 +309,7 @@ begin
                             isInvalid := NO;
 
                         -- sltu --
-                        when OP_SLTU =>
+                        when FUNC_SLTU =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_SLTU;
@@ -318,7 +318,7 @@ begin
                             isInvalid := NO;
 
                         -- mult --
-                        when OP_MULT =>
+                        when FUNC_MULT =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_MULT;
@@ -327,7 +327,7 @@ begin
                             isInvalid := NO;
 
                         -- multu --
-                        when OP_MULTU =>
+                        when FUNC_MULTU =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_MULTU;
@@ -360,7 +360,7 @@ begin
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
 
-                        when OP_SYSCALL =>
+                        when FUNC_SYSCALL =>
                             oprSrc1 := INVALID;
                             oprSrc2 := INVALID;
                             toWriteReg_o <= NO;
@@ -380,7 +380,7 @@ begin
                 when OP_SPECIAL2 =>
                     case (instFunc) is
                         -- clo --
-                        when OP_CLO =>
+                        when FUNC_CLO =>
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
                             alut_o <= ALU_CLO;
@@ -389,7 +389,7 @@ begin
                             isInvalid := NO;
 
                         -- clz --
-                        when OP_CLZ =>
+                        when FUNC_CLZ =>
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
                             alut_o <= ALU_CLZ;
@@ -398,7 +398,7 @@ begin
                             isInvalid := NO;
 
                         -- mul --
-                        when OP_MUL =>
+                        when FUNC_MUL =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_MUL;
@@ -407,7 +407,7 @@ begin
                             isInvalid := NO;
 
                         -- madd --
-                        when OP_MADD =>
+                        when FUNC_MADD =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_MADD;
@@ -416,7 +416,7 @@ begin
                             isInvalid := NO;
 
                         -- maddu --
-                        when OP_MADDU =>
+                        when FUNC_MADDU =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_MADDU;
@@ -425,7 +425,7 @@ begin
                             isInvalid := NO;
 
                         -- msub --
-                        when OP_MSUB =>
+                        when FUNC_MSUB =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_MSUB;
@@ -434,7 +434,7 @@ begin
                             isInvalid := NO;
 
                         -- msubu --
-                        when OP_MSUBU =>
+                        when FUNC_MSUBU =>
                             oprSrc1 := REG;
                             oprSrc2 := REG;
                             alut_o <= ALU_MSUBU;
