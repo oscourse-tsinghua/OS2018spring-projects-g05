@@ -196,14 +196,15 @@ begin
 
     process(judgeClk)
         variable testCnt, correctCnt: integer := 0;
-        variable nowTestCnt, nowCorrectCnt: integer;
+        variable tmpTestCnt, nowTestCnt, nowCorrectCnt: integer;
         variable nowDelta :integer := 0;
         alias reg is <<signal cpu_ist.regfile_ist.regArray: RegArrayType>>;
     begin
         if (rising_edge(judgeClk)) then
-            nowTestCnt := conv_integer(reg(23));
-            nowCorrectCnt := conv_integer(reg(19));
-            if (nowTestCnt > testCnt) then
+            tmpTestCnt := conv_integer(reg(23));
+            if (tmpTestCnt > testCnt) then
+                nowTestCnt := tmpTestCnt;
+                nowCorrectCnt := conv_integer(reg(19));
                 if (nowTestCnt - nowCorrectCnt > nowDelta) then
                     judgeRes <= '0';
                     report "test " & integer'image(nowTestCnt) & " failed";
