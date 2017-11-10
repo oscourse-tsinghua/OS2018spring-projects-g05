@@ -29,59 +29,66 @@ void binary_out(FILE* out,unsigned char* mem)
 
 int main(void)
 {
-	FILE *in1;
-    FILE *in2;
+	FILE *in;
 	FILE *out;
 
 	int i,j,k;
 	unsigned char mem[32];
 
-    in1 = fopen("main.text", "rb");
-    in2 = fopen("main.data", "rb");
+    in = fopen("main.bin", "rb");
     out = fopen("ram_init_data.coe","w");
 
 	fprintf(out, "memory_initialization_radix = 16;\n");
 	fprintf(out, "memory_initialization_vector =\n");
-	while(!feof(in1)) {
-	    if(fread(mem,1,4,in1)!=4) {
+	while(!feof(in)) {
+	    if(fread(mem,1,4,in)!=4) {
 	        fprintf(out, "%02x%02x%02x%02x\n", mem[3], mem[2],	mem[1], mem[0]);
-		    break;
-	    }
+		break;
+	     }
 	    fprintf(out, "%02x%02x%02x%02x\n", mem[3], mem[2], mem[1],mem[0]);
-    }
-    fprintf(out, "00000000\n");
-    while(!feof(in2)) {
-        if(fread(mem,1,4,in2)!=4) {
-            fprintf(out, "%02x%02x%02x%02x\n", mem[3], mem[2],  mem[1], mem[0]);
-            break;
         }
-        fprintf(out, "%02x%02x%02x%02x\n", mem[3], mem[2], mem[1],mem[0]);
-    }
-	fclose(in1);
-    fclose(in2);
+	fclose(in);
 	fclose(out);
 
-    in1 = fopen("main.text", "rb");
-    in2 = fopen("main.data", "rb");
+    in = fopen("main.data", "rb");
+    out = fopen("data_ram.coe","w");
+
+	fprintf(out, "memory_initialization_radix = 16;\n");
+	fprintf(out, "memory_initialization_vector =\n");
+	while(!feof(in)) {
+	    if(fread(mem,1,4,in)!=4) {
+	        fprintf(out, "%02x%02x%02x%02x\n", mem[3], mem[2],	mem[1], mem[0]);
+		break;
+	     }
+	    fprintf(out, "%02x%02x%02x%02x\n", mem[3], mem[2], mem[1],mem[0]);
+        }
+	fclose(in);
+	fclose(out);
+
+    in = fopen("main.data", "rb");
+    out = fopen("data_ram.mif","w");
+
+	while(!feof(in)) {
+	    if(fread(mem,1,4,in)!=4) {
+            binary_out(out,mem);
+		break;
+	     }
+            binary_out(out,mem);
+        }
+	fclose(in);
+	fclose(out);
+
+    in = fopen("main.bin", "rb");
     out = fopen("ram_init_data.mif","w");
 
-	while(!feof(in1)) {
-	    if(fread(mem,1,4,in1)!=4) {
+	while(!feof(in)) {
+	    if(fread(mem,1,4,in)!=4) {
             binary_out(out,mem);
-		    break;
-	    }
-        binary_out(out,mem);
-    }
-    fprintf(out, "00000000000000000000000000000000\n");
-    while(!feof(in2)) {
-        if(fread(mem,1,4,in2)!=4) {
+		break;
+	     }
             binary_out(out,mem);
-            break;
         }
-        binary_out(out,mem);
-    }
-	fclose(in1);
-    fclose(in2);
+	fclose(in);
 	fclose(out);
 
     return 0;
