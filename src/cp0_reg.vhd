@@ -82,7 +82,7 @@ begin
                 regArr(COUNT_REG) <= (others => '0');
                 regArr(ENTRY_HI_REG) <= (others => '0');
                 regArr(COMPARE_REG) <= (others => '0');
-                regArr(STATUS_REG) <= (STATUS_CP0_BIT => '1', STATUS_ERL_BIT => '1', others => '0'); -- We don't use BEV bit
+                regArr(STATUS_REG) <= (STATUS_CP0_BIT => '1', STATUS_BEV_BIT => '1', STATUS_ERL_BIT => '1', others => '0');
                 regArr(CAUSE_REG) <= (others => '0');
                 regArr(EPC_REG) <= (others => '0');
                 regArr(PRID_REG) <= (others => '0');

@@ -6,9 +6,12 @@ use ieee.std_logic_unsigned.all;
 use work.global_const.all;
 use work.except_const.all;
 use work.mmu_const.all;
+use work.cp0_const.all;
 
 entity mmu is
     port (
+        rst, clk: in std_logic;
+
         -- Translate the address
         isKernelMode_i: in std_logic;
         isLoad_i: in std_logic; -- This address is used for loading rather than storing
@@ -19,7 +22,7 @@ entity mmu is
         -- Update TLB entry
         index_i: in std_logic_vector(TLBIndexWidth);
         entryWrite_i: in std_logic;
-        entry_i: in TLBEntry;
+        entry_i: in TLBEntry
     );
 end mmu;
 
@@ -33,9 +36,10 @@ begin
         variable targetLo: std_logic_vector(DataWidth);
         variable addrExcept, tlbExcept: boolean;
     begin
+        exceptCause_o <= NO_CAUSE;
         addrExcept := false;
         tlbExcept := true;
-        if (isKernelMode_i = YES and addr_i(31 downto 28) >= 4x"8") then
+        if (isKernelMode_i = NO and addr_i(31 downto 28) >= 4x"8") then
             -- kseg0, kseg1, kseg2
             addrExcept := true;
         end if;
@@ -60,9 +64,9 @@ begin
                         end if;
                         if (targetLo(ENTRY_LO_V_BIT) = '1') then
                             -- Valid
-                            if (targetLo(ENTRY_LO_D_BIT) = '1' or isLoad_i = '1')
+                            if (targetLo(ENTRY_LO_D_BIT) = '1' or isLoad_i = '1') then
                                 -- Dirty or being read (Dirty page cannot be written)
-                                addr_o <= targetLo(ENTRY_LO_FPN_BITS) & addr_i(11 downto 0);
+                                addr_o <= targetLo(EntryLoPFNBits) & addr_i(11 downto 0);
                                 tlbExcept := false;
                             end if;
                         end if;
@@ -83,15 +87,23 @@ begin
             if (isLoad_i = YES) then
                 exceptCause_o <= TLB_LOAD_CAUSE;
             else
-                exceptCause_o <= TLB_SAVE_CAUSE;
+                exceptCause_o <= TLB_STORE_CAUSE;
             end if;
         end if;
     end process;
 
     -- Store entry
     process (clk) begin
-        if (rising_edge(clk) and entryWrite_i = YES) then
-            entries(conv_integer(index_i)) <= entry_i;
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                for i in 0 to TLB_ENTRY_NUM - 1 loop
+                    entries(i).hi <= (others => '0');
+                    entries(i).lo0 <= (others => '0');
+                    entries(i).lo1 <= (others => '0');
+                end loop;
+            elsif (entryWrite_i = YES) then
+                entries(conv_integer(index_i)) <= entry_i;
+            end if;
         end if;
     end process;
 end bhv;

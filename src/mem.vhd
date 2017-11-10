@@ -49,15 +49,13 @@ entity mem is
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         isInDelaySlot_i: in std_logic;
         currentInstAddr_i: in std_logic_vector(AddrWidth);
-        cp0Status_i: in std_logic_vector(DataWidth);
-        cp0Cause_i: in std_logic_vector(AddrWidth);
-        cp0Epc_i: in std_logic_vector(DataWidth);
+        cp0Status_i, cp0Cause_i, cp0Epc_i: in std_logic_vector(DataWidth);
         wbCP0RegWe_i: in std_logic;
         wbCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
         wbCP0RegData_i: in std_logic_vector(DataWidth);
 
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-        cp0Epc_o: out std_logic_vector(DataWidth);
+        cp0Status_o, cp0Cause_o, cp0Epc_o: out std_logic_vector(DataWidth);
         isInDelaySlot_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth)
     );
@@ -169,6 +167,7 @@ begin
     cp0Status <= wbCP0RegData_i when
                  wbCP0RegWe_i = YES and to_integer(unsigned(wbCP0RegWriteAddr_i)) = STATUS_REG else
                  cp0Status_i;
+    cp0Status_o <= cp0Status;
 
     cp0EPC <= wbCP0RegData_i when
               wbCP0RegWe_i = YES and to_integer(unsigned(wbCP0RegWriteAddr_i)) = EPC_REG else
@@ -184,6 +183,7 @@ begin
             cp0Cause <= cp0Cause_i;
         end if;
     end process;
+    cp0Cause_o <= cp0Cause;
 
     process (all)
         variable exceptCause: std_logic_vector(ExceptionCauseWidth);

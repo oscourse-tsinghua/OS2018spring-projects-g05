@@ -25,12 +25,4 @@ package except_const is
     constant OVERFLOW_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"12";
     constant ERET_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"14";
     -- Cause of eret is not in standard. We do this because 14~22 is reserved
-
-    --
-    -- Branch Target Address when Exception happens, needs future implementation here.
-    --
-    constant EXTERNAL_INTERRUPT_BRANCH_ADDR: std_logic_vector(AddrWidth) := 32ux"20";
-    constant SYSCALL_EXCEPTION_BRANCH_ADDR: std_logic_vector(AddrWidth) := 32ux"40";
-    constant INVALID_INST_EXCEPTION_BRANCH_ADDR: std_logic_vector(AddrWidth) := 32ux"40";
-    constant OVERFLOW_EXCEPTION_BRANCH_ADDR: std_logic_vector(AddrWidth) := 32ux"40";
 end except_const;

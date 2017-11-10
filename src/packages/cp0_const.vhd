@@ -41,6 +41,7 @@ package cp0_const is
     -- Bits of status register
     --
     constant STATUS_CP0_BIT: integer := 28; -- CP0 available flag
+    constant STATUS_BEV_BIT: integer := 22; -- Bootstrap flag
     constant STATUS_UM_BIT: integer := 4; -- User mode flag
     constant STATUS_ERL_BIT: integer := 2; -- Error level flag
     constant STATUS_EXL_BIT: integer := 1; -- Exception level flag

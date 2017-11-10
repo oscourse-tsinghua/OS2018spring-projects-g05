@@ -9,8 +9,13 @@ use work.except_const.all;
 
 entity cpu is
     generic (
-        instEntranceAddr: std_logic_vector(AddrWidth) := 32ux"4";
-        instConvEndian: boolean := true
+        instEntranceAddr:       std_logic_vector(AddrWidth) := 32ux"bfc0_0000";
+        exceptNormalBaseAddr:   std_logic_vector(AddrWidth) := 32ux"8000_0000";
+        exceptBootBaseAddr:     std_logic_vector(AddrWidth) := 32ux"bfc0_0200";
+        tlbRefillExl0Offset:    std_logic_vector(AddrWidth) := 32ux"000";
+        generalExceptOffset:    std_logic_vector(AddrWidth) := 32ux"180";
+        interruptIv1Offset:     std_logic_vector(AddrWidth) := 32ux"200";
+        instConvEndian:         boolean := true
     );
     port (
         rst, clk: in std_logic;
@@ -239,7 +244,9 @@ architecture bhv of cpu is
     signal currentInstAddr_8c: std_logic_vector(AddrWidth);
     signal isInDelaySlot_8c: std_logic;
 
-    -- Signals connecting cp0 and ctrl --
+    -- Signals connecting mem and ctrl --
+    signal cp0Status_8b: std_logic_vector(DataWidth);
+    signal cp0Cause_8b: std_logic_vector(DataWidth);
     signal cp0Epc_8b: std_logic_vector(DataWidth);
     signal exceptCause_8b: std_logic_vector(ExceptionCauseWidth);
 
@@ -538,7 +545,9 @@ begin
             wbCP0RegWe_i => wbCP0RegWe_98,
             wbCP0RegWriteAddr_i => wbCP0RegWriteAddr_98,
             wbCP0RegData_i => wbCP0RegData_98,
-            cp0EPC_o => cp0EPC_8b,
+            cp0Status_o => cp0Status_8b,
+            cp0Cause_o => cp0Cause_8b,
+            cp0Epc_o => cp0Epc_8b,
             exceptCause_o => exceptCause_8c,
             currentInstAddr_o => currentInstAddr_8c,
             isInDelaySlot_o => isInDelaySlot_8c
@@ -612,6 +621,13 @@ begin
         );
 
     ctrl_ist: entity work.ctrl
+        generic map (
+            exceptNormalBaseAddr => exceptNormalBaseAddr,
+            exceptBootBaseAddr => exceptBootBaseAddr,
+            tlbRefillExl0Offset => tlbRefillExl0Offset,
+            generalExceptOffset => generalExceptOffset,
+            interruptIv1Offset => interruptIv1Offset
+        )
         port map(
             rst => rst,
             ifToStall_i => ifToStall_i,
@@ -622,7 +638,9 @@ begin
             flush_o => flush_b1,
             newPC_o => newPC_b1,
             exceptCause_i => exceptCause_8b,
-            cp0Epc_i => cp0EPC_8b
+            cp0Status_i => cp0Status_8b,
+            cp0Cause_i => cp0Cause_8b,
+            cp0Epc_i => cp0Epc_8b
         );
     flush_b2 <= flush_b1;
     flush_b5 <= flush_b1;
