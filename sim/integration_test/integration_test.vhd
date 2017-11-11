@@ -3,85 +3,16 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use work.global_const.all;
 use work.except_const.all;
+use work.mmu_const.all;
 use work.integration_test_const.all;
 
 entity integration_test is
 end integration_test;
 
 architecture bhv of integration_test is
-
-    component cpu
-        generic (
-            instEntranceAddr: std_logic_vector(AddrWidth);
-            instConvEndian: boolean
-        );
-        port (
-            rst, clk: in std_logic;
-
-            instEnable_o: out std_logic;
-            instData_i: in std_logic_vector(DataWidth);
-            instAddr_o: out std_logic_vector(AddrWidth);
-
-            dataEnable_o: out std_logic;
-            dataWrite_o: out std_logic;
-            dataData_i: in std_logic_vector(DataWidth);
-            dataData_o: out std_logic_vector(DataWidth);
-            dataAddr_o: out std_logic_vector(AddrWidth);
-            dataByteSelect_o: out std_logic_vector(3 downto 0);
-
-            instExcept_i, dataExcept_i: in std_logic_vector(ExceptionCauseWidth);
-            ifToStall_i, memToStall_i: in std_logic;
-
-            int_i: in std_logic_vector(intWidth);
-            timerInt_o: out std_logic
-        );
-    end component;
-
-    component memctrl
-        port (
-            -- Connect to instruction interface of CPU
-            instData_o: out std_logic_vector(InstWidth);
-            instAddr_i: in std_logic_vector(AddrWidth);
-            instEnable_i: in std_logic;
-            instStall_o: out std_logic;
-            instExcept_o: out std_logic_vector(ExceptionCauseWidth);
-
-            -- Connect to data interface of CPU
-            dataEnable_i: in std_logic;
-            dataWrite_i: in std_logic;
-            dataData_o: out std_logic_vector(DataWidth);
-            dataData_i: in std_logic_vector(DataWidth);
-            dataAddr_i: in std_logic_vector(AddrWidth);
-            dataByteSelect_i: in std_logic_vector(3 downto 0);
-            dataStall_o: out std_logic;
-            dataExcept_o: out std_logic_vector(ExceptionCauseWidth);
-
-            -- Connect to external device (MMU)
-            devEnable_o: out std_logic;
-            devWrite_o: out std_logic;
-            devData_i: in std_logic_vector(DataWidth);
-            devData_o: out std_logic_vector(DataWidth);
-            devAddr_o: out std_logic_vector(AddrWidth);
-            devByteSelect_o: out std_logic_vector(3 downto 0);
-            devBusy_i: in std_logic;
-            devExcept_i: in std_logic_vector(ExceptionCauseWidth)
-        );
-    end component;
-
-    component ram
-        port (
-            clka, ena: in std_logic;
-            wea: in std_logic_vector(3 downto 0);
-            dina: in std_logic_vector(31 downto 0);
-            addra: in std_logic_vector(RamAddrWidth);
-            douta: out std_logic_vector(31 downto 0)
-        );
-    end component;
-
     signal rst: std_logic := '1';
     signal clk: std_logic := '0';
-    signal ramClk: std_logic := '0';
-    signal judgeClk: std_logic := '0';
+    signal ramClk: std_logic;
 
     signal instEnable: std_logic;
     signal instData: std_logic_vector(DataWidth);
@@ -96,11 +27,17 @@ architecture bhv of integration_test is
 
     signal devEnable, devWrite: std_logic;
     signal devDataSave, devDataLoad: std_logic_vector(DataWidth);
-    signal devAddr: std_logic_vector(AddrWidth);
+    signal devVirtualAddr, devPhysicalAddr: std_logic_vector(AddrWidth);
     signal devByteSelect: std_logic_vector(3 downto 0);
 
     signal instStall, dataStall: std_logic;
-    signal instExcept, dataExcept: std_logic_vector(ExceptionCauseWidth);
+    signal instExcept, dataExcept, devExcept: std_logic_vector(ExceptionCauseWidth);
+
+    signal isKernelMode: std_logic;
+    signal entryIndex: std_logic_vector(TLBIndexWidth);
+    signal entryWrite: std_logic;
+    signal entry: TLBEntry;
+
     signal int: std_logic_vector(IntWidth);
     signal timerInt: std_logic;
 
@@ -109,10 +46,8 @@ architecture bhv of integration_test is
 begin
 
     process begin
-        wait for CLK_PERIOD / 2 - 0.1 ns;
+        wait for CLK_PERIOD / 2;
         clk <= not clk;
-        wait for 0.1 ns;
-        ramClk <= not ramClk;
     end process;
 
     process begin
@@ -122,17 +57,34 @@ begin
         wait;
     end process;
 
-    ram_ist: ram
+    ramClk <= clk after 0.1 ns;
+    ram_ist: entity work.ram
         port map (
             clka => ramClk,
             ena => devEnable,
             wea => devByteSelect and (devWrite & devWrite & devWrite & devWrite),
             dina => devDataSave,
-            addra => devAddr(RamAddrSliceWidth),
+            addra => devPhysicalAddr(RamAddrSliceWidth),
             douta => devDataLoad
         );
 
-    memctrl_ist: memctrl
+    mmu_ist: entity work.mmu
+        port map (
+            clk => clk,
+            rst => rst,
+
+            isKernelMode_i => isKernelMode,
+            isLoad_i => not devWrite,
+            addr_i => devVirtualAddr,
+            addr_o => devPhysicalAddr,
+            exceptCause_o => devExcept,
+
+            index_i => entryIndex,
+            entryWrite_i => entryWrite,
+            entry_i => entry
+        );
+
+    memctrl_ist: entity work.memctrl
         port map (
             -- Connect to instruction interface of CPU
             instData_o => instData,
@@ -156,16 +108,21 @@ begin
             devWrite_o => devWrite,
             devData_i => devDataLoad,
             devData_o => devDataSave,
-            devAddr_o => devAddr,
+            devAddr_o => devVirtualAddr,
             devByteSelect_o => devByteSelect,
             devBusy_i => PIPELINE_NONSTOP,
-            devExcept_i => NO_CAUSE
+            devExcept_i => devExcept
         );
 
-    cpu_ist: cpu
+    cpu_ist: entity work.cpu
         generic map (
-            instConvEndian => false,
-            instEntranceAddr => INST_ENTRANCE_ADDR
+            instEntranceAddr        => 32ux"8000_0000",
+            exceptNormalBaseAddr    => 32ux"8000_0000",
+            exceptBootBaseAddr      => 32ux"8000_0000",
+            tlbRefillExl0Offset     => 32ux"180",
+            generalExceptOffset     => 32ux"180",
+            interruptIv1Offset      => 32ux"200",
+            instConvEndian          => false
         )
         port map (
             rst => rst,
@@ -184,23 +141,22 @@ begin
             ifToStall_i => instStall,
             memToStall_i => dataStall,
             int_i => int,
-            timerInt_o => timerInt
+            timerInt_o => timerInt,
+            isKernelMode_o => isKernelMode,
+            entryIndex_o => entryIndex,
+            entryWrite_o => entryWrite,
+            entry_o => entry
         );
 
     int <= (0 => timerInt, others => '0');
 
-    process begin
-        wait for JUDGE_Clk_PERIOD / 2;
-        judgeClk <= not judgeClk;
-    end process;
-
-    process(judgeClk)
+    process(clk)
         variable testCnt, correctCnt: integer := 0;
         variable tmpTestCnt, nowTestCnt, nowCorrectCnt: integer;
-        variable nowDelta :integer := 0;
+        variable nowDelta: integer := 0;
         alias reg is <<signal cpu_ist.regfile_ist.regArray: RegArrayType>>;
     begin
-        if (rising_edge(judgeClk)) then
+        if (falling_edge(clk)) then
             tmpTestCnt := conv_integer(reg(23));
             if (tmpTestCnt > testCnt) then
                 nowTestCnt := tmpTestCnt;

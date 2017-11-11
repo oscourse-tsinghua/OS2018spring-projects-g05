@@ -56,7 +56,9 @@ begin
                 else
                     newPC := exceptBootBaseAddr;
                 end if;
-                if (
+                if (exceptCause_i = ERET_CAUSE) then
+                    newPC := cp0Epc_i;
+                elsif (
                     (exceptCause_i = TLB_LOAD_CAUSE or exceptCause_i = TLB_STORE_CAUSE) and
                     cp0Status_i(STATUS_EXL_BIT) = '0'
                 ) then
