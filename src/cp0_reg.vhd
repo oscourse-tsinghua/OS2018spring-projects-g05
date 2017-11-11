@@ -48,25 +48,48 @@ end cp0_reg;
 
 architecture bhv of cp0_reg is
     type RegArray is array (0 to CP0_MAX_ID) of std_logic_vector(DataWidth);
-    signal regArr: RegArray;
+    signal regArr, curArr: RegArray;
+    -- curArr including the data that will be written to regArr in the next period
 begin
-    status_o <= regArr(STATUS_REG);
-    cause_o <= regArr(CAUSE_REG);
-    epc_o <= regArr(EPC_REG);
+    status_o <= curArr(STATUS_REG);
+    cause_o <= curArr(CAUSE_REG);
+    epc_o <= curArr(EPC_REG);
 
-    data_o <= regArr(conv_integer(raddr_i));
+    data_o <= curArr(conv_integer(raddr_i));
 
-    isKernelMode_o <= regArr(STATUS_REG)(STATUS_ERL_BIT) or
-                      regArr(STATUS_REG)(STATUS_EXL_BIT) or
-                      not regArr(STATUS_REG)(STATUS_UM_BIT);
+    timerInt_o <= INTERRUPT_ASSERT when
+                  curArr(COMPARE_REG) /= 32ux"0" and curArr(COMPARE_REG) = curArr(COUNT_REG) else
+                  INTERRUPT_NOT_ASSERT;
 
-    entryIndex_o <= regArr(RANDOM_REG)(TLBIndexWidth) when isTlbwr_i = '1' else regArr(INDEX_REG)(TLBIndexWidth);
+    isKernelMode_o <= curArr(STATUS_REG)(STATUS_ERL_BIT) or
+                      curArr(STATUS_REG)(STATUS_EXL_BIT) or
+                      not curArr(STATUS_REG)(STATUS_UM_BIT);
+
+    entryIndex_o <= curArr(RANDOM_REG)(TLBIndexWidth) when isTlbwr_i = '1' else curArr(INDEX_REG)(TLBIndexWidth);
 
     entryWrite_o <= isTlbwi_i or isTlbwr_i;
 
-    entry_o.hi <= regArr(ENTRY_HI_REG);
-    entry_o.lo0 <= regArr(ENTRY_LO0_REG);
-    entry_o.lo1 <= regArr(ENTRY_LO1_REG);
+    entry_o.hi <= curArr(ENTRY_HI_REG);
+    entry_o.lo0 <= curArr(ENTRY_LO0_REG);
+    entry_o.lo1 <= curArr(ENTRY_LO1_REG);
+
+    process (all) begin
+        for i in 0 to CP0_MAX_ID loop
+            curArr(i) <= regArr(i);
+        end loop;
+        if (rst = RST_DISABLE and we_i = ENABLE) then
+            case (conv_integer(waddr_i)) is
+                when COMPARE_REG =>
+                    curArr(COMPARE_REG) <= data_i;
+                when CAUSE_REG =>
+                    curArr(CAUSE_REG)(CauseIpSoftBits) <= data_i(CauseIpSoftBits);
+                    curArr(CAUSE_REG)(CAUSE_IV_BIT) <= data_i(CAUSE_IV_BIT);
+                    curArr(CAUSE_REG)(CAUSE_WP_BIT) <= data_i(CAUSE_WP_BIT);
+                when others =>
+                    curArr(conv_integer(waddr_i)) <= data_i;
+            end case;
+        end if;
+    end process;
 
     process(clk) begin
         if (rising_edge(clk)) then
@@ -87,17 +110,11 @@ begin
                 regArr(EPC_REG) <= (others => '0');
                 regArr(PRID_REG) <= (others => '0');
                 regArr(CONFIG_REG) <= (others => '0');
-
-                timerInt_o <= INTERRUPT_NOT_ASSERT;
             else
                 regArr(CAUSE_REG)(CauseIpHardBits) <= int_i;
 
-                if (regArr(COUNT_REG) + 1 = regArr(COMPARE_REG)) then
-                    -- We use `regArr(COUNT_REG) + 1`, so no need to determine if `regArr(COMPARE_REG)` is zero (invalid)
-                    timerInt_o <= INTERRUPT_ASSERT;
-                else
-                    regArr(COUNT_REG) <= regArr(COUNT_REG) + 1;
-                end if;
+                regArr(COUNT_REG) <= regArr(COUNT_REG) + 1;
+                -- The exception handler will reset COUNT register
 
                 if (regArr(RANDOM_REG) = regArr(WIRED_REG)) then
                     regArr(RANDOM_REG) <= conv_std_logic_vector(TLB_ENTRY_NUM - 1, 32);
@@ -106,17 +123,8 @@ begin
                 end if;
 
                 if (we_i = ENABLE) then
-                    case (conv_integer(waddr_i)) is
-                        when COMPARE_REG =>
-                            regArr(COMPARE_REG) <= data_i;
-                            timerInt_o <= INTERRUPT_NOT_ASSERT;
-                        when CAUSE_REG =>
-                            regArr(CAUSE_REG)(CauseIpSoftBits) <= data_i(CauseIpSoftBits);
-                            regArr(CAUSE_REG)(CAUSE_IV_BIT) <= data_i(CAUSE_IV_BIT);
-                            regArr(CAUSE_REG)(CAUSE_WP_BIT) <= data_i(CAUSE_WP_BIT);
-                        when others =>
-                            regArr(conv_integer(waddr_i)) <= data_i;
-                    end case;
+                    regArr(conv_integer(waddr_i)) <= curArr(conv_integer(waddr_i));
+                    -- We only assign the `waddr_i`-th register, in order not to interfere the counters above
                 end if;
 
                 if ((exceptCause_i /= NO_CAUSE) and (exceptCause_i /= ERET_CAUSE)) then

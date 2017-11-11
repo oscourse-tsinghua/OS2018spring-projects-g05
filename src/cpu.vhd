@@ -175,9 +175,6 @@ architecture bhv of cpu is
     signal cp0RegWriteAddr_89: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWe_89: std_logic;
     signal isTlbwi_89, isTlbwr_89: std_logic;
-    signal wbCP0RegWe_98: std_logic;
-    signal wbCP0RegWriteAddr_98: std_logic_vector(CP0RegAddrWidth);
-    signal wbCP0RegData_98: std_logic_vector(DataWidth);
 
     -- Signals connecting mem_wb and regfile --
     signal toWriteReg_93: std_logic;
@@ -191,9 +188,6 @@ architecture bhv of cpu is
     -- Signals connecting mem_wb and ex --
     signal wbToWriteHi_96, wbToWriteLo_96: std_logic;
     signal wbWriteHiData_96, wbWriteLoData_96: std_logic_vector(DataWidth);
-    signal wbCP0RegData_96: std_logic_vector(DataWidth);
-    signal wbCP0RegWriteAddr_96: std_logic_vector(CP0RegAddrWidth);
-    signal wbCP0RegWe_96: std_logic;
 
     -- Signals connecting mem_wb and cp0 --
     signal wbCP0RegData_9c: std_logic_vector(DataWidth);
@@ -415,9 +409,6 @@ begin
             cnt_o => cnt_67,
 
             cp0RegData_i => data_c6,
-            wbCP0RegData_i => wbCP0RegData_96,
-            wbCP0RegWriteAddr_i => wbCP0RegWriteAddr_96,
-            wbCP0RegWe_i => wbCP0RegWe_96,
             memCP0RegData_i => cp0RegData_86,
             memCP0RegWriteAddr_i => cp0RegWriteAddr_86,
             memCP0RegWe_i => cp0RegWe_86,
@@ -542,9 +533,6 @@ begin
             cp0Status_i => status_c8,
             cp0Cause_i => cause_c8,
             cp0Epc_i => epc_c8,
-            wbCP0RegWe_i => wbCP0RegWe_98,
-            wbCP0RegWriteAddr_i => wbCP0RegWriteAddr_98,
-            wbCP0RegData_i => wbCP0RegData_98,
             cp0Status_o => cp0Status_8b,
             cp0Cause_o => cp0Cause_8b,
             cp0Epc_o => cp0Epc_8b,
@@ -602,12 +590,6 @@ begin
     wbToWriteLo_96 <= toWriteLo_9a;
     wbWriteHiData_96 <= writeHiData_9a;
     wbWriteLoData_96 <= writeLoData_9a;
-    wbCP0RegData_96 <= wbCP0RegData_9c;
-    wbCP0RegWriteAddr_96 <= wbCP0RegWriteAddr_9c;
-    wbCP0RegWe_96 <= wbCP0RegWe_9c;
-    wbCP0RegData_98 <= wbCP0RegData_96;
-    wbCP0RegWriteAddr_98 <= wbCP0RegWriteAddr_96;
-    wbCP0RegWe_98 <= wbCP0RegWe_96;
 
     hi_lo_ist: entity work.hi_lo
         port map(
