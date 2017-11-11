@@ -42,7 +42,7 @@ architecture bhv of arith2_tb is
     signal int: std_logic_vector(IntWidth);
     signal timerInt: std_logic;
 begin
-    ram_inst: entity work.arith2_fake_ram
+    ram_ist: entity work.arith2_fake_ram
         port map (
             clk => clk,
             rst => rst,
@@ -54,7 +54,7 @@ begin
             data_o => devDataLoad
         );
 
-    mmu_inst: entity work.mmu
+    mmu_ist: entity work.mmu
         port map (
             clk => clk,
             rst => rst,
@@ -70,7 +70,7 @@ begin
             entry_i => entry
         );
 
-    memctrl_inst: entity work.memctrl
+    memctrl_ist: entity work.memctrl
         port map (
             -- Connect to instruction interface of CPU
             instData_o => instData,
@@ -100,7 +100,7 @@ begin
             devExcept_i => devExcept
         );
 
-    cpu_inst: entity work.cpu
+    cpu_ist: entity work.cpu
         generic map (
             instEntranceAddr        => 32ux"8000_0004",
             exceptNormalBaseAddr    => 32ux"8000_0000",
@@ -151,7 +151,7 @@ begin
     assertBlk: block
         -- NOTE: `assertBlk` is also a layer in the herarchical reference
         -- CODE BELOW IS AUTOMATICALLY GENERATED
-alias user_reg is <<signal ^.cpu_inst.regfile_ist.regArray: RegArrayType>>;
+alias user_reg is <<signal ^.cpu_ist.regfile_ist.regArray: RegArrayType>>;
     begin
         -- CODE BELOW IS AUTOMATICALLY GENERATED
 process begin

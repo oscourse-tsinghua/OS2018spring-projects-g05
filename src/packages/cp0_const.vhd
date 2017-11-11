@@ -13,7 +13,7 @@ package cp0_const is
     constant WIRED_REG:         integer := 6;
     constant BAD_V_ADDR_REG:    integer := 8;
     constant COUNT_REG:         integer := 9;
-    constant ENTRY_HI_REG:          integer := 10;
+    constant ENTRY_HI_REG:      integer := 10;
     constant COMPARE_REG:       integer := 11;
     constant STATUS_REG:        integer := 12;
     constant CAUSE_REG:         integer := 13;

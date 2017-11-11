@@ -59,7 +59,7 @@ def genAssertions(assertCmd):
 def genAliases(defineCmd):
     stmts = ['-- CODE BELOW IS AUTOMATICALLY GENERATED']
     for alias, hierarchy in defineCmd:
-        stmts.append('alias user_%s is <<signal ^.cpu_inst.%s>>;'%(alias, hierarchy))
+        stmts.append('alias user_%s is <<signal ^.cpu_ist.%s>>;'%(alias, hierarchy))
     return '\n'.join(stmts)
 
 def genImports(importCmd):

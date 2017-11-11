@@ -4,17 +4,16 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.ori1_test_const.all;
+use work.tlb1_test_const.all;
 use work.global_const.all;
 use work.except_const.all;
 use work.mmu_const.all;
 -- CODE BELOW IS AUTOMATICALLY GENERATED
-use work.global_const.all;
 
-entity ori1_tb is
-end ori1_tb;
+entity tlb1_tb is
+end tlb1_tb;
 
-architecture bhv of ori1_tb is
+architecture bhv of tlb1_tb is
     signal rst: std_logic := '1';
     signal clk: std_logic := '0';
 
@@ -43,7 +42,7 @@ architecture bhv of ori1_tb is
     signal int: std_logic_vector(IntWidth);
     signal timerInt: std_logic;
 begin
-    ram_ist: entity work.ori1_fake_ram
+    ram_ist: entity work.tlb1_fake_ram
         port map (
             clk => clk,
             rst => rst,
@@ -157,20 +156,20 @@ alias user_reg is <<signal ^.cpu_ist.regfile_ist.regArray: RegArrayType>>;
         -- CODE BELOW IS AUTOMATICALLY GENERATED
 process begin
     wait for CLK_PERIOD; -- resetting
-    wait for 6 * CLK_PERIOD;
-    assert user_reg(2) = 32ux"0020" severity FAILURE;
+    wait for 23 * CLK_PERIOD;
+    assert user_reg(4) = 32ux"1234" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
-    wait for 7 * CLK_PERIOD;
-    assert user_reg(0) = 32ux"0000" severity FAILURE;
+    wait for 12 * CLK_PERIOD;
+    assert user_reg(4) = 32ux"7100" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
-    wait for 8 * CLK_PERIOD;
-    assert user_reg(3) = 32ux"1234" severity FAILURE;
+    wait for 13 * CLK_PERIOD;
+    assert user_reg(4) = 32ux"6000" severity FAILURE;
     wait;
 end process;
     end block assertBlk;
