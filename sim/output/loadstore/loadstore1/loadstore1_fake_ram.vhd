@@ -38,17 +38,18 @@ begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then
                 -- CODE BELOW IS AUTOMATICALLY GENERATED
-words(1) <= x"ff_ee_03_34"; -- RUN ori $3, $0, 0xeeff
-words(2) <= x"03_01_03_a0"; -- RUN sb  $3, 0x103($0)
-words(3) <= x"02_1a_03_00"; -- RUN srl $3, $3, 8
-words(4) <= x"02_01_03_a0"; -- RUN sb  $3, 0x102($0)
-words(5) <= x"dd_cc_03_34"; -- RUN ori $3, $0, 0xccdd
-words(6) <= x"01_01_03_a0"; -- RUN sb  $3, 0x101($0)
-words(7) <= x"02_1a_03_00"; -- RUN srl $3, $3, 8
-words(8) <= x"00_01_03_a0"; -- RUN sb  $3, 0x100($0)
-words(9) <= x"03_01_01_80"; -- RUN lb  $1, 0x103($0)
-words(10) <= x"02_01_01_90"; -- RUN lbu $1, 0x102($0)
-words(11) <= x"00_01_01_8c"; -- RUN lw  $1, 0x100($0)
+words(1) <= x"00_80_0a_3c"; -- RUN lui $10, 0x8000
+words(2) <= x"ff_ee_03_34"; -- RUN ori $3, $0, 0xeeff
+words(3) <= x"03_01_43_a1"; -- RUN sb  $3, 0x103($10)
+words(4) <= x"02_1a_03_00"; -- RUN srl $3, $3, 8
+words(5) <= x"02_01_43_a1"; -- RUN sb  $3, 0x102($10)
+words(6) <= x"dd_cc_03_34"; -- RUN ori $3, $0, 0xccdd
+words(7) <= x"01_01_43_a1"; -- RUN sb  $3, 0x101($10)
+words(8) <= x"02_1a_03_00"; -- RUN srl $3, $3, 8
+words(9) <= x"00_01_43_a1"; -- RUN sb  $3, 0x100($10)
+words(10) <= x"03_01_41_81"; -- RUN lb  $1, 0x103($10)
+words(11) <= x"02_01_41_91"; -- RUN lbu $1, 0x102($10)
+words(12) <= x"00_01_41_8d"; -- RUN lw  $1, 0x100($10)
             elsif ((enable_i = '1') and (write_i = '1')) then
                 words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
             end if;

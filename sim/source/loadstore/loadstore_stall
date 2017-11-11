@@ -12,25 +12,23 @@ DEFINE reg regfile_ist.regArray: RegArrayType
 
 # Execute an assembly instruction
 # Grammar: "RUN <assembly>"
+RUN lui $10, 0x8000
 RUN ori $2, 0x1234
-# period 6
-RUN sw $2, 0x100($0)
-# period 7
-RUN lw $3, 0x100($0)
-# period 8
+RUN sw $2, 0x100($10)
+RUN lw $3, 0x100($10)
 RUN ori $4, $3, 0x0000
-# period 9
 # stall for 1 slot here
-ASSERT 10 reg(4) x"00001234"
+ASSERT 11 reg(4) x"00001234"
 
 # IF	| ID	| EX	| MEM	| WB	| assertion | period
-# ori	|		|		|		|		|			|
-# sw	| ori	|		|		|		|			|
-# lw	| sw	| ori	| 		|		|			|
-# ori	| lw	| sw	| ori	|		|			|
-# 		| ori	| lw	| sw	| ori	|			|
-#		| ori	|		| lw	| sw	| ori		| 6
-#		|		| ori	| 		| lw	| sw		| 7
-#		|		|		| ori	| 		| lw		| 8
+# lui	|		|		|		|		|			|
+# ori	| lui	|		|		|		|			|
+# sw	| ori	| lui	|		|		|			|
+# lw	| sw	| ori	| lui	|		|			|
+# ori	| lw	| sw	| ori	| lui	|			|
+# 		| ori	| lw	| sw	| ori	| lui		| 6
+#		| ori	|		| lw	| sw	| ori		| 7
+#		|		| ori	| 		| lw	| sw		| 8
+#		|		|		| ori	| 		| lw		| 9
 #		|		|		|		| ori	|			|
-#		|		|		|		|		| ori		| 10
+#		|		|		|		|		| ori		| 11

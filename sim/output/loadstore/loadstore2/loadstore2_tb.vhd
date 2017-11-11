@@ -157,7 +157,7 @@ alias user_reg is <<signal ^.cpu_inst.regfile_ist.regArray: RegArrayType>>;
         -- CODE BELOW IS AUTOMATICALLY GENERATED
 process begin
     wait for CLK_PERIOD; -- resetting
-    wait for 11 * CLK_PERIOD;
+    wait for 12 * CLK_PERIOD;
     assert user_reg(1) = x"44556677" severity FAILURE;
     wait;
 end process;
