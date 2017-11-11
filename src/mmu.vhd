@@ -13,10 +13,12 @@ entity mmu is
         rst, clk: in std_logic;
 
         -- Translate the address
+        enable_i: in std_logic;
         isKernelMode_i: in std_logic;
         isLoad_i: in std_logic; -- This address is used for loading rather than storing
         addr_i: in std_logic_vector(AddrWidth);
         addr_o: out std_logic_vector(AddrWidth);
+        enable_o: out std_logic;
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
 
         -- Update TLB entry
@@ -37,6 +39,7 @@ begin
         variable addrExcept, tlbExcept: boolean;
     begin
         exceptCause_o <= NO_CAUSE;
+        enable_o <= enable_i;
         addrExcept := false;
         tlbExcept := true;
         if (isKernelMode_i = NO and addr_i(31 downto 28) >= 4x"8") then
@@ -65,7 +68,7 @@ begin
                         if (targetLo(ENTRY_LO_V_BIT) = '1') then
                             -- Valid
                             if (targetLo(ENTRY_LO_D_BIT) = '1' or isLoad_i = '1') then
-                                -- Dirty or being read (Dirty page cannot be written)
+                                -- Dirty or being read (Only dirty page can be written)
                                 addr_o <= targetLo(EntryLoPFNBits) & addr_i(11 downto 0);
                                 tlbExcept := false;
                             end if;
@@ -76,6 +79,7 @@ begin
         end if;
 
         if (addrExcept) then
+            enable_o <= DISABLE;
             if (isLoad_i = YES) then -- Conditional assignment in sequential code has not been supported in Vivado yet
                 exceptCause_o <= ADDR_ERR_LOAD_CAUSE;
             else
@@ -84,6 +88,7 @@ begin
         end if;
 
         if (tlbExcept) then
+            enable_o <= DISABLE;
             if (isLoad_i = YES) then
                 exceptCause_o <= TLB_LOAD_CAUSE;
             else

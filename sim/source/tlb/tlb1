@@ -23,7 +23,7 @@ RUN sw  $3, 0x7100($0)
 
 # 0x10
 RUN lw  $4, 0x0100($10)
-ASSERT 23 reg(4) 32ux"1234"
+ASSERT 24 reg(4) 32ux"1234"
 
 # 0x14
 RUN nop
@@ -53,7 +53,7 @@ RUN nop
 RUN nop
 
 # 0x38
-RUN nop
+RUN j 0x100
 
 # 0x3c
 RUN nop
@@ -68,13 +68,13 @@ ASSERT 13 reg(4) 32ux"6000"
 
 # 0x48 Move Physical address 0x1000 to ENTRY_LO1 with (D,V,G)=(1,1,1)
 # We move the higher address to the lower register because out fake_ram only support 1024 words
-RUN ori $6, 0x03
+RUN ori $6, 0x07
 
 # 0x4c
 RUN mtc0 $6, $3
 
 # 0x50 Move Physical address 0x0000 to ENTRY_LO0 with (D,V,G)=(1,1,1)
-RUN ori $6, 0x43
+RUN ori $6, 0x47
 
 # 0x54
 RUN mtc0 $6, $2
@@ -107,6 +107,6 @@ RUN eret
 # lw	| sw	|		|		|		|			|
 # nop	| lw	| sw	|		|		|			|
 # nop	| nop	| lw	| sw	|		|			|
-# nop	| nop	| nop	| lw	| sw	|			|
-# nop	| nop	| nop	| nop	| lw	| sw		| 23
-# nop	| nop	| nop	| nop	| nop	| lw		| 24
+# nop	| 		| nop	| lw	| sw	|			|
+# nop	| 		| 		| nop	| lw	| sw		|
+# nop	| nop	| 		| 		| nop	| lw		| 24

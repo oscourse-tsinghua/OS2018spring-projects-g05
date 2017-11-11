@@ -507,6 +507,7 @@ begin
             memt_i => memt_78,
             memAddr_i => memAddr_78,
             memData_i => memData_78,
+            memExcept_i => dataExcept_i,
             dataEnable_o => dataEnable_o,
             dataWrite_o => dataWrite_o,
             loadedData_i => dataData_i,
@@ -526,9 +527,7 @@ begin
             isTLbwi_o => isTlbwi_89,
             isTlbwr_o => isTlbwr_89,
 
-            exceptCause_i => exceptCause_78 and dataExcept_i,
-            -- If exceptCause_78 = NO_CAUSE (0x1f), exceptCause_i = dataExcept_i
-            -- If exceptCause_78 /= NO_CAUSE, dataEnable_o = DISABLE, dataExcept_i = NO_CAUSE, so exceptCause_i = exceptCause_78
+            exceptCause_i => exceptCause_78,
             currentInstAddr_i => currentInstAddr_78,
             isInDelaySlot_i => isInDelaySlot_78,
 

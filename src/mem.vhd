@@ -26,6 +26,7 @@ entity mem is
         memt_i: in MemType;
         memAddr_i: in std_logic_vector(AddrWidth);
         memData_i: in std_logic_vector(DataWidth); -- Data to store
+        memExcept_i: in std_logic_vector(ExceptionCauseWidth);
         loadedData_i: in std_logic_vector(DataWidth); -- Data loaded from RAM
         savingData_o: out std_logic_vector(DataWidth);
         memAddr_o: out std_logic_vector(AddrWidth);
@@ -59,6 +60,7 @@ end mem;
 
 architecture bhv of mem is
     signal dataWrite: std_logic;
+    signal interrupt: std_logic_vector(ExceptionCauseWidth);
 begin
     memAddr_o <= memAddr_i(31 downto 2) & "00";
     isInDelaySlot_o <= isInDelaySlot_i;
@@ -157,19 +159,17 @@ begin
         end if;
     end process;
 
-    process (all)
-        variable exceptCause: std_logic_vector(ExceptionCauseWidth);
-    begin
-        if ((cp0Cause_i(CauseIpBits) /= 8ux"0") and (cp0Status_i(STATUS_EXL_BIT) = NO) and (cp0Status_i(STATUS_IE_BIT) = YES)) then
-            exceptCause := EXTERNAL_CAUSE;
-        else
-            exceptCause := exceptCause_i;
-        end if;
-        exceptCause_o <= exceptCause;
-        if (exceptCause = NO_CAUSE) then
-            dataWrite_o <= dataWrite;
-        else
-            dataWrite_o <= NO;
-        end if;
-    end process;
+    interrupt <= EXTERNAL_CAUSE when
+                 cp0Cause_i(CauseIpBits) /= 8ux"0" and cp0Status_i(STATUS_EXL_BIT) = NO and cp0Status_i(STATUS_IE_BIT) = YES else
+                 NO_CAUSE;
+
+    dataWrite_o <= dataWrite when
+                   (exceptCause_i and interrupt) = NO_CAUSE else
+                   NO;
+    -- NOTE: dataWrite_o should not depend on memExcept_i, or there might be an oscillation
+
+    exceptCause_o <= interrupt when
+                     interrupt /= NO_CAUSE else
+                     exceptCause_i and memExcept_i;
+    -- If exceptCause_i /= NO_CAUSE, there won't be any memory access, so memExcept_i should be NO_CAUSE
 end bhv;

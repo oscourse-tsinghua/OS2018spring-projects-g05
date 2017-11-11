@@ -25,7 +25,7 @@ architecture bhv of {{{TEST_NAME}}}_tb is
     signal dataAddr: std_logic_vector(AddrWidth);
     signal dataByteSelect: std_logic_vector(3 downto 0);
 
-    signal devEnable, devWrite: std_logic;
+    signal devEnable, devWrite, mmuEnable: std_logic;
     signal devDataSave, devDataLoad: std_logic_vector(DataWidth);
     signal devVirtualAddr, devPhysicalAddr: std_logic_vector(AddrWidth);
     signal devByteSelect: std_logic_vector(3 downto 0);
@@ -58,10 +58,12 @@ begin
             clk => clk,
             rst => rst,
 
+            enable_i => mmuEnable,
             isKernelMode_i => isKernelMode,
             isLoad_i => not devWrite,
             addr_i => devVirtualAddr,
             addr_o => devPhysicalAddr,
+            enable_o => devEnable,
             exceptCause_o => devExcept,
 
             index_i => entryIndex,
@@ -89,7 +91,7 @@ begin
             dataExcept_o => dataExcept,
 
             -- Connect to external device (MMU)
-            devEnable_o => devEnable,
+            devEnable_o => mmuEnable,
             devWrite_o => devWrite,
             devData_i => devDataLoad,
             devData_o => devDataSave,

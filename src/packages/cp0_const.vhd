@@ -33,7 +33,7 @@ package cp0_const is
     -- Bits of EntryLo0~1 registers
     --
     subtype EntryLoPFNBits is integer range 25 downto 6; -- Page Frame Number (We only use its lower 20 bits)
-    constant ENTRY_LO_D_BIT: integer := 2; -- Dirty flag (0 for dirty)
+    constant ENTRY_LO_D_BIT: integer := 2; -- Dirty flag
     constant ENTRY_LO_V_BIT: integer := 1; -- Valid flag
     constant ENTRY_LO_G_BIT: integer := 0; -- Global flag
 
