@@ -1,33 +1,37 @@
 DEFINE reg regfile_ist.regArray: RegArrayType
 
 # 0x04
-RUN ori $3, $3, 1
+RUN lui $10, 0x8000
 
 # 0x08
-RUN ori $4, $4, 1
+RUN ori $3, $3, 1
 
 # 0x0c
-RUN sw $3, 0($4)
+RUN ori $4, $10, 1
 
 # 0x10
-RUN jal 0x1c
+RUN sw $3, 0($4)
 
 # 0x14
-RUN nop
+RUN jal 0x20
 
 # 0x18
-RUN addi $9, $9, 1
+RUN nop
 
 # 0x1c
+RUN addi $9, $9, 1
+
+# 0x20
 RUN ori $0, $0, 0
 ASSERT 20 reg(9) 32ux"0"
 
 # IF	| ID	| EX	| MEM	| WB	| assertion | period
-# ori	|		|		|		|		|			|
-# ori	| ori	|		|		|		|			|
-# sw	| ori	| ori	|		|		|			|
-# jal	| sw	| ori	| ori	|		|			|
-# nop	| jal	| sw	| ori	| ori	|			|
-# ori	| nop	| jal	| sw	| ori	| ori		| 6
-# ori	|		| nop	| jal	| sw	| ori		| 7
-# 		| ori 	|		| nop	| jal	| sw		| 8
+# lui	|		|		|		|		|			|
+# ori	| lui	|		|		|		|			|
+# ori	| ori	| lui	|		|		|			|
+# sw	| ori	| ori	| lui	|		|			|
+# jal	| sw	| ori	| ori	| lui	|			|
+# nop	| jal	| sw	| ori	| ori	| lui		| 6
+# ori	| nop	| jal	| sw	| ori	| ori		| 7
+# ori	|		| nop	| jal	| sw	| ori		| 8
+# 		| ori 	|		| nop	| jal	| sw		| 9

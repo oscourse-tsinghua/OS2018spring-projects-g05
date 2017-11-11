@@ -176,13 +176,13 @@ end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 16 * CLK_PERIOD;
-    assert user_reg(31) = x"00000018" severity FAILURE;
+    assert user_reg(31) = x"80000018" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 17 * CLK_PERIOD;
-    assert user_reg(5) = x"00000020" severity FAILURE;
+    assert user_reg(5) = x"80000020" severity FAILURE;
     wait;
 end process;
     end block assertBlk;
