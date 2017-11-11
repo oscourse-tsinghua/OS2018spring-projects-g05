@@ -235,13 +235,15 @@ architecture bhv of cpu is
     signal cause_c8: std_logic_vector(DataWidth);
     signal epc_c8: std_logic_vector(AddrWidth);
     signal exceptCause_8c: std_logic_vector(ExceptionCauseWidth);
-    signal currentInstAddr_8c: std_logic_vector(AddrWidth);
+    signal currentInstAddr_8c, currentAccessAddr_8c: std_logic_vector(AddrWidth);
     signal isInDelaySlot_8c: std_logic;
 
+    -- Signals connecting cp0 and ctrl --
+    signal cp0Status_cb: std_logic_vector(DataWidth);
+    signal cp0Cause_cb: std_logic_vector(DataWidth);
+    signal cp0Epc_cb: std_logic_vector(DataWidth);
+
     -- Signals connecting mem and ctrl --
-    signal cp0Status_8b: std_logic_vector(DataWidth);
-    signal cp0Cause_8b: std_logic_vector(DataWidth);
-    signal cp0Epc_8b: std_logic_vector(DataWidth);
     signal exceptCause_8b: std_logic_vector(ExceptionCauseWidth);
 
 begin
@@ -509,7 +511,7 @@ begin
             dataWrite_o => dataWrite_o,
             loadedData_i => dataData_i,
             savingData_o => dataData_o,
-            memAddr_o => dataAddr_o,
+            memAddr_o => currentAccessAddr_8c,
             dataByteSelect_o => dataByteSelect_o,
 
             cp0RegData_i => cp0RegData_78,
@@ -532,14 +534,11 @@ begin
 
             cp0Status_i => status_c8,
             cp0Cause_i => cause_c8,
-            cp0Epc_i => epc_c8,
-            cp0Status_o => cp0Status_8b,
-            cp0Cause_o => cp0Cause_8b,
-            cp0Epc_o => cp0Epc_8b,
             exceptCause_o => exceptCause_8c,
             currentInstAddr_o => currentInstAddr_8c,
             isInDelaySlot_o => isInDelaySlot_8c
         );
+    dataAddr_o <= currentAccessAddr_8c;
     memToWriteReg_84 <= toWriteReg_89;
     memWriteRegAddr_84 <= writeRegAddr_89;
     memWriteRegData_84 <= writeRegData_89;
@@ -620,9 +619,9 @@ begin
             flush_o => flush_b1,
             newPC_o => newPC_b1,
             exceptCause_i => exceptCause_8b,
-            cp0Status_i => cp0Status_8b,
-            cp0Cause_i => cp0Cause_8b,
-            cp0Epc_i => cp0Epc_8b
+            cp0Status_i => cp0Status_cb,
+            cp0Cause_i => cp0Cause_cb,
+            cp0Epc_i => cp0Epc_cb
         );
     flush_b2 <= flush_b1;
     flush_b5 <= flush_b1;
@@ -641,6 +640,7 @@ begin
             data_o => data_c6,
             exceptCause_i => exceptCause_8c,
             currentInstAddr_i => currentInstAddr_8c,
+            currentAccessAddr_i => currentAccessAddr_8c,
             isInDelaySlot_i => isInDelaySlot_8c,
             epc_o => epc_c8,
             status_o => status_c8,
@@ -653,4 +653,7 @@ begin
             entryWrite_o => entryWrite_o,
             entry_o => entry_o
         );
+    cp0Status_cb <= status_c8;
+    cp0Cause_cb <= cause_c8;
+    cp0Epc_cb <= epc_c8;
 end bhv;

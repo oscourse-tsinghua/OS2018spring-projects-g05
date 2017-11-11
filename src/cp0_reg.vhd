@@ -32,7 +32,7 @@ entity cp0_reg is
 
         -- for exception --
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
-        currentInstAddr_i: in std_logic_vector(AddrWidth);
+        currentInstAddr_i, currentAccessAddr_i: in std_logic_vector(AddrWidth);
         isIndelaySlot_i: in std_logic;
 
         isKernelMode_o: out std_logic;
@@ -138,9 +138,15 @@ begin
                     end if;
                     regArr(CAUSE_REG)(CauseExcCodeBits) <= exceptCause_i;
                 end if;
-                if (exceptCause_i = ERET_CAUSE) then
-                    regArr(STATUS_REG)(STATUS_EXL_BIT) <= '0';
-                end if;
+                case (exceptCause_i) is
+                    when ERET_CAUSE =>
+                        regArr(STATUS_REG)(STATUS_EXL_BIT) <= '0';
+                    when TLB_LOAD_CAUSE|TLB_STORE_CAUSE|ADDR_ERR_LOAD_CAUSE|ADDR_ERR_STORE_CAUSE =>
+                        regArr(BAD_V_ADDR_REG) <= currentAccessAddr_i;
+                        regArr(ENTRY_HI_REG)(EntryHiVPN2Bits) <= currentAccessAddr_i(EntryHiVPN2Bits);
+                    when others =>
+                        null;
+                end case;
             end if;
         end if;
     end process;
