@@ -29,67 +29,67 @@ void binary_out(FILE* out,unsigned char* mem)
 
 int main(void)
 {
-	FILE *in;
-	FILE *out;
+    FILE *in;
+    FILE *out;
 
-	int i,j,k;
-	unsigned char mem[32];
+    int i,j,k;
+    unsigned char mem[32];
 
     in = fopen("main.bin", "rb");
     out = fopen("ram_init_data.coe","w");
 
-	fprintf(out, "memory_initialization_radix = 16;\n");
-	fprintf(out, "memory_initialization_vector =\n");
-	while(!feof(in)) {
-	    if(fread(mem,1,4,in)!=4) {
-	        fprintf(out, "%02x%02x%02x%02x\n", mem[3], mem[2],	mem[1], mem[0]);
-		break;
-	     }
-	    fprintf(out, "%02x%02x%02x%02x\n", mem[3], mem[2], mem[1],mem[0]);
+    fprintf(out, "memory_initialization_radix = 16;\n");
+    fprintf(out, "memory_initialization_vector =\n");
+    while(!feof(in)) {
+        if(fread(mem,1,4,in)!=4) {
+            fprintf(out, "%02x%02x%02x%02x\n", mem[3], mem[2],  mem[1], mem[0]);
+        break;
+         }
+        fprintf(out, "%02x%02x%02x%02x\n", mem[3], mem[2], mem[1],mem[0]);
         }
-	fclose(in);
-	fclose(out);
+    fclose(in);
+    fclose(out);
 
     in = fopen("main.data", "rb");
     out = fopen("data_ram.coe","w");
 
-	fprintf(out, "memory_initialization_radix = 16;\n");
-	fprintf(out, "memory_initialization_vector =\n");
-	while(!feof(in)) {
-	    if(fread(mem,1,4,in)!=4) {
-	        fprintf(out, "%02x%02x%02x%02x\n", mem[3], mem[2],	mem[1], mem[0]);
-		break;
-	     }
-	    fprintf(out, "%02x%02x%02x%02x\n", mem[3], mem[2], mem[1],mem[0]);
+    fprintf(out, "memory_initialization_radix = 16;\n");
+    fprintf(out, "memory_initialization_vector =\n");
+    while(!feof(in)) {
+        if(fread(mem,1,4,in)!=4) {
+            fprintf(out, "%02x%02x%02x%02x\n", mem[3], mem[2],  mem[1], mem[0]);
+        break;
+         }
+        fprintf(out, "%02x%02x%02x%02x\n", mem[3], mem[2], mem[1],mem[0]);
         }
-	fclose(in);
-	fclose(out);
+    fclose(in);
+    fclose(out);
 
     in = fopen("main.data", "rb");
     out = fopen("data_ram.mif","w");
 
-	while(!feof(in)) {
-	    if(fread(mem,1,4,in)!=4) {
+    while(!feof(in)) {
+        if(fread(mem,1,4,in)!=4) {
             binary_out(out,mem);
-		break;
-	     }
+        break;
+         }
             binary_out(out,mem);
         }
-	fclose(in);
-	fclose(out);
+    fclose(in);
+    fclose(out);
 
     in = fopen("main.bin", "rb");
     out = fopen("ram_init_data.mif","w");
 
-	while(!feof(in)) {
-	    if(fread(mem,1,4,in)!=4) {
+    while(!feof(in)) {
+        if(fread(mem,1,4,in)!=4) {
             binary_out(out,mem);
-		break;
-	     }
+        break;
+         }
             binary_out(out,mem);
         }
-	fclose(in);
-	fclose(out);
+    fclose(in);
+    fclose(out);
 
     return 0;
 }
