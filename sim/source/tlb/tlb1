@@ -1,0 +1,112 @@
+# Line starting with '#' is comment
+# The comment should be in seperated lines
+
+# Import a package
+# Grammar: "IMPORT <packageName>"
+# "IMPORT" should be in UPPER CASE, same below
+
+# Define a signal to be checked
+# Grammar: "DEFINE <signalName> <sub_instace_name.sub_sub_instance_name.(...).signal_name>: <type>"
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+# Execute an assembly instruction
+# Grammar: "RUN <assembly>"
+
+# 0x04
+RUN lui $10, 0x8000
+
+# 0x08
+RUN ori $3, 0x1234
+
+# 0x0c
+RUN sw  $3, 0x7100($0)
+
+# 0x10
+RUN lw  $4, 0x0100($10)
+ASSERT 24 reg(4) 32ux"1234"
+
+# 0x14
+RUN nop
+
+# 0x18
+RUN nop
+
+# 0x1c
+RUN nop
+
+# 0x20
+RUN nop
+
+# 0x24
+RUN nop
+
+# 0x28
+RUN nop
+
+# 0x2c
+RUN nop
+
+# 0x30
+RUN nop
+
+# 0x34
+RUN nop
+
+# 0x38
+RUN j 0x100
+
+# 0x3c
+RUN nop
+
+# 0x40 BAD_V_ADDR
+RUN mfc0 $4, $8
+ASSERT 12 reg(4) 32ux"7100"
+
+# 0x44 ENTRY_HI
+RUN mfc0 $4, $10
+ASSERT 13 reg(4) 32ux"6000"
+
+# 0x48 Move Physical address 0x1000 to ENTRY_LO1 with (D,V,G)=(1,1,1)
+# We move the higher address to the lower register because out fake_ram only support 1024 words
+RUN ori $6, 0x07
+
+# 0x4c
+RUN mtc0 $6, $3
+
+# 0x50 Move Physical address 0x0000 to ENTRY_LO0 with (D,V,G)=(1,1,1)
+RUN ori $6, 0x47
+
+# 0x54
+RUN mtc0 $6, $2
+
+# 0x58
+RUN tlbwr
+
+# 0x5c
+RUN eret
+
+# IF	| ID	| EX	| MEM	| WB	| assertion | period
+# lui	|		|		|		|		|			|
+# ori	| lui	|		|		|		|			|
+# sw	| ori	| lui	|		|		|			|
+# lw	| sw	| ori	| lui	|		|			|
+# nop	| lw	| sw	| ori	| lui	|			|
+# nop	| nop	| lw	| sw	| ori	| lui		| 6
+# mfc0	|		|		|		|		|			|
+# mfc0	| mfc0	|		|		|		|			|
+# ori	| mfc0	| mfc0	| 		|		|			|
+# mtc0	| ori	| mfc0	| mfc0	| 		|			|
+# ori	| mtc0	| ori	| mfc0	| mfc0	| 			|
+# mtc0	| ori	| mtc0	| ori	| mfc0	| mfc0		| 12
+# tlbwr	| mtc0	| ori	| mtc0	| ori	| mfc0		| 13
+# eret	| tlbwr	| mtc0	| ori	| mtc0	| ori		|
+#		| eret	| tlbwr | mtc0	| ori	| mtc0		|
+#		|		| eret	| tlbwr | mtc0	| ori		|
+#		|		|		| eret  | tlbwr | mtc0		|
+# sw	|		|		|		|		|			|
+# lw	| sw	|		|		|		|			|
+# nop	| lw	| sw	|		|		|			|
+# nop	| nop	| lw	| sw	|		|			|
+# nop	| 		| nop	| lw	| sw	|			|
+# nop	| 		| 		| nop	| lw	| sw		|
+# nop	| nop	| 		| 		| nop	| lw		| 24

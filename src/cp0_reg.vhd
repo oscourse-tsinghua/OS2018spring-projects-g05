@@ -1,12 +1,14 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 -- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_unsigned
 --       Use numeric_std if signed number is needed (different API)
-use work.cp0_const.all;
 use work.global_const.all;
 use work.except_const.all;
+use work.cp0_const.all;
+use work.mmu_const.all;
 
 entity cp0_reg is
     port(
@@ -19,118 +21,134 @@ entity cp0_reg is
         data_i: in std_logic_vector(DataWidth);
         int_i: in std_logic_vector(IntWidth);
 
+        data_o: out std_logic_vector(DataWidth);
+        timerInt_o: out std_logic;
+
         -- output signals for CP0 processor
         -- refers to page 295 in that book still
-        -- NOTE: These are REGISTERS
-        data_o: out std_logic_vector(DataWidth);
-        count_o: out std_logic_vector(DataWidth);
-        compare_o: out std_logic_vector(DataWidth);
         status_o: out std_logic_vector(DataWidth);
         cause_o: out std_logic_vector(DataWidth);
         epc_o: out std_logic_vector(DataWidth);
-        config_o: out std_logic_vector(DataWidth);
-        prid_o: out std_logic_vector(DataWidth);
-        timerInt_o: out std_logic;
 
         -- for exception --
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
-        currentInstAddr_i: in std_logic_vector(AddrWidth);
-        isIndelaySlot_i: in std_logic
+        currentInstAddr_i, currentAccessAddr_i: in std_logic_vector(AddrWidth);
+        isIndelaySlot_i: in std_logic;
+
+        isKernelMode_o: out std_logic;
+
+        -- For MMU
+        isTlbwi_i: in std_logic;
+        isTlbwr_i: in std_logic;
+        entryIndex_o: out std_logic_vector(TLBIndexWidth);
+        entryWrite_o: out std_logic;
+        entry_o: out TLBEntry
     );
 end cp0_reg;
 
 architecture bhv of cp0_reg is
+    type RegArray is array (0 to CP0_MAX_ID) of std_logic_vector(DataWidth);
+    signal regArr, curArr: RegArray;
+    -- curArr including the data that will be written to regArr in the next period
 begin
-    process(clk) begin
-        if (rising_edge(clk)) then
-            if (rst = RST_ENABLE) then
-                count_o <= (others => '0');
-                compare_o <= (others => '0');
-                status_o <= (28 => '1', others => '0');
-                cause_o <= (others => '0');
-                epc_o <= (others => '0');
-                config_o <= (15 => '1', others => '0');
-                prid_o <= (22 => '1', 19 => '1', 18 => '1', 8 => '1', 1 => '1', others => '0');
-                timerInt_o <= INTERRUPT_NOT_ASSERT;
-            else
-                count_o <= count_o + 1;
-                cause_o(CauseIpHardBits) <= int_i;
-                if ((compare_o /= 32ux"0") and (count_o = compare_o)) then
-                    timerInt_o <= INTERRUPT_ASSERT;
-                end if;
-                if (we_i = ENABLE) then
-                    case (waddr_i) is
-                        when COUNT_PROCESSOR =>
-                            count_o <= data_i;
+    status_o <= curArr(STATUS_REG);
+    cause_o <= curArr(CAUSE_REG);
+    epc_o <= curArr(EPC_REG);
 
-                        when COMPARE_PROCESSOR =>
-                            compare_o <= data_i;
-                            timerInt_o <= INTERRUPT_NOT_ASSERT;
+    data_o <= curArr(conv_integer(raddr_i));
 
-                        when STATUS_PROCESSOR =>
-                            status_o <= data_i;
+    timerInt_o <= INTERRUPT_ASSERT when
+                  curArr(COMPARE_REG) /= 32ux"0" and curArr(COMPARE_REG) = curArr(COUNT_REG) else
+                  INTERRUPT_NOT_ASSERT;
 
-                        when EPC_PROCESSOR =>
-                            epc_o <= data_i;
+    isKernelMode_o <= curArr(STATUS_REG)(STATUS_ERL_BIT) or
+                      curArr(STATUS_REG)(STATUS_EXL_BIT) or
+                      not curArr(STATUS_REG)(STATUS_UM_BIT);
 
-                        when CAUSE_PROCESSOR =>
-                            cause_o(CauseIpSoftBits) <= data_i(CauseIpSoftBits);
-                            cause_o(CAUSE_IV_BIT) <= data_i(CAUSE_IV_BIT);
-                            cause_o(CAUSE_WP_BIT) <= data_i(CAUSE_WP_BIT);
+    entryIndex_o <= curArr(RANDOM_REG)(TLBIndexWidth) when isTlbwr_i = '1' else curArr(INDEX_REG)(TLBIndexWidth);
 
-                        when others =>
-                            null;
-                    end case;
-                end if;
+    entryWrite_o <= isTlbwi_i or isTlbwr_i;
 
-                if ((exceptCause_i /= NO_CAUSE) and (exceptCause_i /= ERET_CAUSE)) then
-                    status_o(STATUS_EXL_BIT) <= '1';
-                    if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
-                        epc_o <= currentInstAddr_i - 4;
-                        cause_o(CAUSE_BD_BIT) <= '1';
-                    else
-                        epc_o <= currentInstAddr_i;
-                        cause_o(CAUSE_BD_BIT) <= '0';
-                    end if;
-                    cause_o(CauseExcCodeBits) <= exceptCause_i;
-                end if;
-                if (exceptCause_i = ERET_CAUSE) then
-                    status_o(STATUS_EXL_BIT) <= '0';
-                end if;
-            end if;
-        end if;
-    end process;
+    entry_o.hi <= curArr(ENTRY_HI_REG);
+    entry_o.lo0 <= curArr(ENTRY_LO0_REG);
+    entry_o.lo1 <= curArr(ENTRY_LO1_REG);
 
-    process (all)
-    begin
-        if (rst = RST_ENABLE) then
-            data_o <= (others => '0');
-        else
-            case (raddr_i) is
-                when COUNT_PROCESSOR =>
-                    data_o <= count_o;
-
-                when COMPARE_PROCESSOR =>
-                    data_o <= compare_o;
-
-                when STATUS_PROCESSOR =>
-                    data_o <= status_o;
-
-                when CAUSE_PROCESSOR =>
-                    data_o <= cause_o;
-
-                when EPC_PROCESSOR =>
-                    data_o <= epc_o;
-
-                when PRID_PROCESSOR =>
-                    data_o <= prid_o;
-
-                when CONFIG_PROCESSOR =>
-                    data_o <= config_o;
-
+    process (all) begin
+        for i in 0 to CP0_MAX_ID loop
+            curArr(i) <= regArr(i);
+        end loop;
+        if (rst = RST_DISABLE and we_i = ENABLE) then
+            case (conv_integer(waddr_i)) is
+                when COMPARE_REG =>
+                    curArr(COMPARE_REG) <= data_i;
+                when CAUSE_REG =>
+                    curArr(CAUSE_REG)(CauseIpSoftBits) <= data_i(CauseIpSoftBits);
+                    curArr(CAUSE_REG)(CAUSE_IV_BIT) <= data_i(CAUSE_IV_BIT);
+                    curArr(CAUSE_REG)(CAUSE_WP_BIT) <= data_i(CAUSE_WP_BIT);
                 when others =>
-                    null;
+                    curArr(conv_integer(waddr_i)) <= data_i;
             end case;
         end if;
     end process;
+
+    process(clk) begin
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                -- Please refer to MIPS Vol3 for reset value
+                -- Undefined reset value are reset to 0 here for robustness
+                regArr(INDEX_REG) <= (others => '0');
+                regArr(RANDOM_REG) <= conv_std_logic_vector(TLB_ENTRY_NUM - 1, 32);
+                regArr(ENTRY_LO0_REG) <= (others => '0');
+                regArr(ENTRY_LO1_REG) <= (others => '0');
+                regArr(WIRED_REG) <= (others => '0');
+                regArr(BAD_V_ADDR_REG) <= (others => '0');
+                regArr(COUNT_REG) <= (others => '0');
+                regArr(ENTRY_HI_REG) <= (others => '0');
+                regArr(COMPARE_REG) <= (others => '0');
+                regArr(STATUS_REG) <= (STATUS_CP0_BIT => '1', STATUS_BEV_BIT => '1', STATUS_ERL_BIT => '1', others => '0');
+                regArr(CAUSE_REG) <= (others => '0');
+                regArr(EPC_REG) <= (others => '0');
+                regArr(PRID_REG) <= (others => '0');
+                regArr(CONFIG_REG) <= (others => '0');
+            else
+                regArr(CAUSE_REG)(CauseIpHardBits) <= int_i;
+
+                regArr(COUNT_REG) <= regArr(COUNT_REG) + 1;
+                -- The exception handler will reset COUNT register
+
+                if (regArr(RANDOM_REG) = regArr(WIRED_REG)) then
+                    regArr(RANDOM_REG) <= conv_std_logic_vector(TLB_ENTRY_NUM - 1, 32);
+                else
+                    regArr(RANDOM_REG) <= regArr(RANDOM_REG) - 1;
+                end if;
+
+                if (we_i = ENABLE) then
+                    regArr(conv_integer(waddr_i)) <= curArr(conv_integer(waddr_i));
+                    -- We only assign the `waddr_i`-th register, in order not to interfere the counters above
+                end if;
+
+                if ((exceptCause_i /= NO_CAUSE) and (exceptCause_i /= ERET_CAUSE)) then
+                    regArr(STATUS_REG)(STATUS_EXL_BIT) <= '1';
+                    if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
+                        regArr(EPC_REG) <= currentInstAddr_i - 4;
+                        regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '1';
+                    else
+                        regArr(EPC_REG) <= currentInstAddr_i;
+                        regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '0';
+                    end if;
+                    regArr(CAUSE_REG)(CauseExcCodeBits) <= exceptCause_i;
+                end if;
+                case (exceptCause_i) is
+                    when ERET_CAUSE =>
+                        regArr(STATUS_REG)(STATUS_EXL_BIT) <= '0';
+                    when TLB_LOAD_CAUSE|TLB_STORE_CAUSE|ADDR_ERR_LOAD_CAUSE|ADDR_ERR_STORE_CAUSE =>
+                        regArr(BAD_V_ADDR_REG) <= currentAccessAddr_i;
+                        regArr(ENTRY_HI_REG)(EntryHiVPN2Bits) <= currentAccessAddr_i(EntryHiVPN2Bits);
+                    when others =>
+                        null;
+                end case;
+            end if;
+        end if;
+    end process;
 end bhv;
+

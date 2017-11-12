@@ -12,15 +12,17 @@ DEFINE reg regfile_ist.regArray: RegArrayType
 
 # Execute an assembly instruction
 # Grammar: "RUN <assembly>"
-RUN lui $3, 0x4455
+RUN lui $10, 0x8000
 # period 6
-RUN ori $3, $3, 0x6677
+RUN lui $3, 0x4455
 # period 7
-RUN ori $4, $0, 0x0004
+RUN ori $3, $3, 0x6677
 # period 8
-RUN ori $5, $0, 0x0005
+RUN ori $4, $10, 0x0004
 # period 9
-RUN sw  $3, 0x104($4)
+RUN ori $5, $10, 0x0005
 # period 10
+RUN sw  $3, 0x104($4)
+# period 11
 RUN lw  $1, 0x103($5)
-ASSERT 11 reg(1) x"44556677"
+ASSERT 12 reg(1) x"44556677"

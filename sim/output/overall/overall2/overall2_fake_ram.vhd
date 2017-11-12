@@ -38,13 +38,14 @@ begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then
                 -- CODE BELOW IS AUTOMATICALLY GENERATED
-words(1) <= x"01_00_63_34"; -- RUN ori $3, $3, 1
-words(2) <= x"01_00_84_34"; -- RUN ori $4, $4, 1
-words(3) <= x"00_00_83_ac"; -- RUN sw $3, 0($4)
-words(4) <= x"07_00_00_0c"; -- RUN jal 0x1c
-words(5) <= x"00_00_00_00"; -- RUN nop
-words(6) <= x"01_00_29_21"; -- RUN addi $9, $9, 1
-words(7) <= x"00_00_00_34"; -- RUN ori $0, $0, 0
+words(1) <= x"00_80_0a_3c"; -- RUN lui $10, 0x8000
+words(2) <= x"01_00_63_34"; -- RUN ori $3, $3, 1
+words(3) <= x"01_00_44_35"; -- RUN ori $4, $10, 1
+words(4) <= x"00_00_83_ac"; -- RUN sw $3, 0($4)
+words(5) <= x"08_00_00_0c"; -- RUN jal 0x20
+words(6) <= x"00_00_00_00"; -- RUN nop
+words(7) <= x"01_00_29_21"; -- RUN addi $9, $9, 1
+words(8) <= x"00_00_00_34"; -- RUN ori $0, $0, 0
             elsif ((enable_i = '1') and (write_i = '1')) then
                 words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
             end if;

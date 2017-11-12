@@ -26,6 +26,10 @@ entity mem_wb is
         wbCP0RegData_o: out std_logic_vector(DataWidth);
         wbCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         wbCP0RegWe_o: out std_logic;
+        isTlbwi_i: in std_logic;
+        isTlbwr_i: in std_logic;
+        isTlbwi_o: out std_logic;
+        isTlbwr_o: out std_logic;
 
         -- for exception --
         flush_i: in std_logic
@@ -53,6 +57,9 @@ begin
                 wbCP0RegWe_o <= NO;
                 wbCP0RegData_o <= (others => '0');
                 wbCP0RegWriteAddr_o <= (others => '0');
+
+                isTlbwi_o <= NO;
+                isTlbwr_o <= NO;
             elsif (stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                 toWriteReg_o <= toWriteReg_i;
                 writeRegAddr_o <= writeRegAddr_i;
@@ -66,6 +73,9 @@ begin
                 wbCP0RegWe_o <= memCP0RegWe_i;
                 wbCP0RegWriteAddr_o <= memCP0RegWriteAddr_i;
                 wbCP0RegData_o <= memCP0RegData_i;
+
+                isTlbwi_o <= isTlbwi_i;
+                isTlbwr_o <= isTlbwr_i;
             end if;
         end if;
     end process;

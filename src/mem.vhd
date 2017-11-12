@@ -26,6 +26,7 @@ entity mem is
         memt_i: in MemType;
         memAddr_i: in std_logic_vector(AddrWidth);
         memData_i: in std_logic_vector(DataWidth); -- Data to store
+        memExcept_i: in std_logic_vector(ExceptionCauseWidth);
         loadedData_i: in std_logic_vector(DataWidth); -- Data loaded from RAM
         savingData_o: out std_logic_vector(DataWidth);
         memAddr_o: out std_logic_vector(AddrWidth);
@@ -40,20 +41,18 @@ entity mem is
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_o: out std_logic;
+        isTlbwi_i: in std_logic;
+        isTlbwr_i: in std_logic;
+        isTlbwi_o: out std_logic;
+        isTlbwr_o: out std_logic;
 
         -- for exception --
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         isInDelaySlot_i: in std_logic;
         currentInstAddr_i: in std_logic_vector(AddrWidth);
-        cp0Status_i: in std_logic_vector(DataWidth);
-        cp0Cause_i: in std_logic_vector(AddrWidth);
-        cp0Epc_i: in std_logic_vector(DataWidth);
-        wbCP0RegWe_i: in std_logic;
-        wbCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
-        wbCP0RegData_i: in std_logic_vector(DataWidth);
+        cp0Status_i, cp0Cause_i: in std_logic_vector(DataWidth);
 
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-        cp0Epc_o: out std_logic_vector(DataWidth);
         isInDelaySlot_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth)
     );
@@ -61,13 +60,14 @@ end mem;
 
 architecture bhv of mem is
     signal dataWrite: std_logic;
-    signal cp0Status: std_logic_vector(DataWidth);
-    signal cp0Cause: std_logic_vector(AddrWidth);
-    signal cp0EPC: std_logic_vector(DataWidth);
+    signal interrupt: std_logic_vector(ExceptionCauseWidth);
 begin
     memAddr_o <= memAddr_i(31 downto 2) & "00";
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;
+
+    isTlbwi_o <= isTlbwi_i;
+    isTlbwr_o <= isTlbwr_i;
 
     process(all)
         variable loadedByte: std_logic_vector(7 downto 0);
@@ -159,53 +159,17 @@ begin
         end if;
     end process;
 
-    process(all) begin
-        if (rst = RST_ENABLE) then
-            cp0Status <= (others => '0');
-        elsif ((wbCP0RegWe_i = YES) and (wbCP0RegWriteAddr_i = STATUS_PROCESSOR)) then
-            cp0Status <= wbCP0RegData_i;
-        else
-            cp0Status <= cp0Status_i;
-        end if;
-    end process;
+    interrupt <= EXTERNAL_CAUSE when
+                 cp0Cause_i(CauseIpBits) /= 8ux"0" and cp0Status_i(STATUS_EXL_BIT) = NO and cp0Status_i(STATUS_IE_BIT) = YES else
+                 NO_CAUSE;
 
-    process(all) begin
-        if (rst = RST_ENABLE) then
-            cp0EPC <= (others => '0');
-        elsif ((wbCP0RegWe_i = YES) and (wbCP0RegWriteAddr_i = EPC_PROCESSOR)) then
-            cp0EPC <= wbCP0RegData_i;
-        else
-            cp0EPC <= cp0Epc_i;
-        end if;
-    end process;
+    dataWrite_o <= dataWrite when
+                   (exceptCause_i and interrupt) = NO_CAUSE else
+                   NO;
+    -- NOTE: dataWrite_o should not depend on memExcept_i, or there might be an oscillation
 
-    cp0Epc_o <= cp0Epc;
-
-    process(all) begin
-        if (rst = RST_ENABLE) then
-            cp0Cause <= (others => '0');
-        elsif ((wbCP0RegWe_i = YES) and (wbCP0RegWriteAddr_i = CAUSE_PROCESSOR)) then
-            cp0Cause(CauseIpSoftBits) <= wbCP0RegData_i(CauseIpSoftBits);
-            cp0Cause(CAUSE_IV_BIT) <= wbCP0RegData_i(CAUSE_IV_BIT);
-            cp0Cause(CAUSE_WP_BIT) <= wbCP0RegData_i(CAUSE_WP_BIT);
-        else
-            cp0Cause <= cp0Cause_i;
-        end if;
-    end process;
-
-    process (all)
-        variable exceptCause: std_logic_vector(ExceptionCauseWidth);
-    begin
-        if ((cp0Cause(CauseIpBits) /= 8ux"0") and (cp0Status(STATUS_EXL_BIT) = NO) and (cp0Status(STATUS_IE_BIT) = YES)) then
-            exceptCause := EXTERNAL_CAUSE;
-        else
-            exceptCause := exceptCause_i;
-        end if;
-        exceptCause_o <= exceptCause;
-        if (exceptCause = NO_CAUSE) then
-            dataWrite_o <= dataWrite;
-        else
-            dataWrite_o <= NO;
-        end if;
-    end process;
+    exceptCause_o <= interrupt when
+                     interrupt /= NO_CAUSE else
+                     exceptCause_i and memExcept_i;
+    -- If exceptCause_i /= NO_CAUSE, there won't be any memory access, so memExcept_i should be NO_CAUSE
 end bhv;

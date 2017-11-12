@@ -49,9 +49,6 @@ entity ex is
 
         -- interact with CP0 --
         cp0RegData_i: in std_logic_vector(DataWidth);
-        wbCP0RegData_i: in std_logic_vector(DataWidth);
-        wbCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
-        wbCP0RegWe_i: in std_logic;
         memCP0RegData_i: in std_logic_vector(DataWidth);
         memCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
         memCP0RegWe_i: in std_logic;
@@ -59,6 +56,8 @@ entity ex is
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_o: out std_logic;
+        isTlbwi_o: out std_logic;
+        isTlbwr_o: out std_logic;
 
         -- for exception --
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
@@ -95,7 +94,6 @@ architecture bhv of ex is
     signal multip1, multip2: std_logic_vector(DataWidth);
     signal calcMult: std_logic := '0';
     signal product: std_logic_vector(DoubleDataWidth);
-    signal cp0ReadValue: std_logic_vector(DataWidth);
     signal trapAssert: std_logic;
     signal reg2IMux: std_logic_vector(DataWidth);
     signal resultSum: std_logic_vector(DataWidth);
@@ -219,9 +217,10 @@ begin
         tempProduct_o <= (others => '0');
         cnt_o <= (others => '0');
         cp0RegWe_o <= NO;
-        cp0ReadValue <= (others => '0');
         cp0RegWriteAddr_o <= (others => '0');
         cp0RegData_o <= (others => '0');
+        isTlbwi_o <= NO;
+        isTlbwr_o <= NO;
 
         exceptCause_o <= exceptCause_i;
 
@@ -375,21 +374,23 @@ begin
 
                 when ALU_MFC0 =>
                     cp0RegReadAddr_o <= operand1_i(4 downto 0);
-                    cp0ReadValue <= cp0RegData_i;
+                    writeRegData_o <= cp0RegData_i;
 
                     -- Push forward for cp0 --
                     if (memCP0RegWe_i = YES and memCP0RegWriteAddr_i = operand1_i(4 downto 0)) then
-                        cp0ReadValue <= memCP0RegData_i;
-                    elsif (wbCP0RegWe_i = YES and wbCP0RegWriteAddr_i = operand1_i(4 downto 0)) then
-                        cp0ReadValue <= wbCP0RegData_i;
+                        writeRegData_o <= memCP0RegData_i;
                     end if;
-
-                    writeRegData_o <= cp0ReadValue;
 
                 when ALU_MTC0 =>
                     cp0RegWriteAddr_o <= operand1_i(4 downto 0);
                     cp0RegWe_o <= YES;
                     cp0RegData_o <= operand2_i;
+
+                when ALU_TLBWI =>
+                    isTlbwi_o <= YES;
+
+                when ALU_TLBWR =>
+                    isTlbwr_o <= YES;
 
                 when others =>
                     toWriteReg_o <= NO;
