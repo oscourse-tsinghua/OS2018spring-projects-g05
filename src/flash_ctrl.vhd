@@ -8,9 +8,6 @@ entity flash_ctrl is
         clk, rst: in std_logic;
         cyc_i, stb_i: in std_logic;
         addr_i: in std_logic_vector(FlashCtrlAddrWidth);
-        writeEnable_i: in std_logic;
-        writeData_i: in std_logic_vector(DataWidth);
-        byteSelect_i: in std_logic_vector(3 downto 0);
         readEnable_i: in std_logic;
         readData_o: out std_logic_vector(DataWidth);
         ack_o: out std_logic;
@@ -24,7 +21,7 @@ end flash_ctrl;
 
 architecture bhv of flash_ctrl is
     signal devEnable: std_logic;
-    signal data: std_logic_vector(DataWidth);
+    signal tmpData: std_logic_vector(FlashDataHiWidth);
 begin
 
     devEnable <= cyc_i and stb_i;
@@ -33,14 +30,14 @@ begin
     flOE_o <= not (devEnable and readEnable_i);
     flWE_o <= '1';
     flByte_o <= '1';
-    flVpen_o <= '0';
+    flVpen_o <= '1';
 
     process(clk)
         variable state: integer := 0;
     begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE or devEnable = DISABLE) then
-                data <= (others => '0');
+                tmpData <= (others => '0');
                 ack_o <= '0';
                 readData_o <= (others => '0');
                 state := 0;
@@ -49,11 +46,10 @@ begin
                     when 0 =>
                         flAddr_o <= addr_i & "00";
                     when CLKS_TO_GET_DATA =>
-                        data(FlashDataHiWidth) <= flData_i;
+                        tmpData <= flData_i;
                         flAddr_o <= addr_i & "10";
                     when CLKS_TO_GET_DATA * 2 =>
-                        data(FlashDataLoWidth) <= flData_i;
-                        readData_o <= data;
+                        readData_o <= tmpData & flData_i;
                         ack_o <= '1';
                     when others =>
                 end case;
