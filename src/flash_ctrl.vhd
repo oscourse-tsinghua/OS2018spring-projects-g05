@@ -17,7 +17,8 @@ entity flash_ctrl is
 
         flRst_o, flOE_o, flCE_o, flWE_o: out std_logic;
         flAddr_o: out std_logic_vector(FlashAddrWidth);
-        flData_i: in std_logic_vector(FlashDataWidth)
+        flData_i: in std_logic_vector(FlashDataWidth);
+        flByte_o, flVpen_o: out std_logic
     );
 end flash_ctrl;
 
@@ -31,12 +32,14 @@ begin
     flCE_o <= not devEnable;
     flOE_o <= not (devEnable and readEnable_i);
     flWE_o <= '1';
+    flByte_o <= '1';
+    flVpen_o <= '0';
 
     process(clk)
         variable state: integer := 0;
     begin
         if (rising_edge(clk)) then
-            if (rst = RST_ENABLE or not devEnable) then
+            if (rst = RST_ENABLE or devEnable = DISABLE) then
                 data <= (others => '0');
                 ack_o <= '0';
                 readData_o <= (others => '0');
@@ -44,15 +47,15 @@ begin
             else
                 case (state) is
                     when 0 =>
-                        flAddr_o <= addr_i & '0';
+                        flAddr_o <= addr_i & "00";
                     when CLKS_TO_GET_DATA =>
                         data(FlashDataHiWidth) <= flData_i;
-                        flAddr_o <= addr_i & '1';
+                        flAddr_o <= addr_i & "10";
                     when CLKS_TO_GET_DATA * 2 =>
                         data(FlashDataLoWidth) <= flData_i;
                         readData_o <= data;
                         ack_o <= '1';
-                    when others =>;
+                    when others =>
                 end case;
                 if (state = CLKS_TO_GET_DATA * 2) then
                     state := 0;

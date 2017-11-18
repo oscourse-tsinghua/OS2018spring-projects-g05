@@ -25,11 +25,6 @@ package global_const is
     constant MEM_STOP_IDX: integer := 4;
     constant  WB_STOP_IDX: integer := 5;
 
-    subtype FlashAddrWidth is integer range 15 downto 0;
-    subtype FlashDataWidth is integer range 15 downto 0;
-    subtype FlashHiDataWidth is integer range 31 downto 16;
-    subtype FlashLoDataWidth is integer range 15 downto 0;
-
     constant ENABLE: std_logic := '1';
     constant DISABLE: std_logic := '0';
 
