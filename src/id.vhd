@@ -100,12 +100,9 @@ architecture bhv of id is
                     when others =>
                 end case;
 
-            when JMP_BEQ =>
-                rsShouleBeZero := true;
-                rtShouleBeZero := true;
             when OP_LUI =>
                 rsShouleBeZero := true;
-            when JMP_BGEZ | JMP_BLEZ =>
+            when JMP_BGTZ | JMP_BLEZ =>
                 rtShouleBeZero := true;
 
             when others =>
@@ -711,7 +708,7 @@ begin
                     null;
             end case;
 
-            if (isInvalid = YES) then
+            if (isInvalid = YES or not zeroJudge(instOp, instRs, instRt, instRd, instSa, instFunc)) then
                 exceptCause_o <= INVALID_INST_CAUSE;
             end if;
 
