@@ -54,6 +54,81 @@ entity id is
 end id;
 
 architecture bhv of id is
+    
+    function zeroJudge(instOp: std_logic_vector(InstOpWidth);
+                       instRs: std_logic_vector(InstRsWidth);
+                       instRt: std_logic_vector(InstRtWidth);
+                       instRd: std_logic_vector(InstRdWidth);
+                       instSa: std_logic_vector(InstSaWidth);
+                       instFunc: std_logic_vector(InstFuncWidth)) return boolean is
+        variable opShouleBeZero: boolean;
+        variable rsShouleBeZero: boolean;
+        variable rtShouleBeZero: boolean;
+        variable rdShouleBeZero: boolean;
+        variable saShouleBeZero: boolean;
+        variable funcShouleBeZero: boolean;
+    begin
+        rsShouleBeZero := false;
+        rtShouleBeZero := false;
+        rdShouleBeZero := false;
+        saShouleBeZero := false;
+
+        case (instOp) is
+            when OP_SPECIAL =>
+                if (instFunc /= FUNC_SLL and instFunc /= FUNC_SRL and instFunc /= FUNC_SRA) then
+                    saShouleBeZero := true;
+                end if;
+                case (instFunc) is
+                    when FUNC_MFHI | FUNC_MFLO =>
+                        rsShouleBeZero := true;
+                        rtShouleBeZero := true;
+                    when FUNC_MTHI | FUNC_MTLO | JMP_JR =>
+                        rtShouleBeZero := true;
+                        rdShouleBeZero := true;
+                    when JMP_JALR =>
+                        rtShouleBeZero := true;
+                    when FUNC_MULT | FUNC_MULTU=>
+                        rdShouleBeZero := true;
+                    when others =>
+                end case;
+
+            when OP_SPECIAL2 =>
+                saShouleBeZero := true;
+                case (instFunc) is
+                    when FUNC_MADD | FUNC_MADDU | FUNC_MSUB | FUNC_MSUBU =>
+                        rdShouleBeZero := true;
+                    when others =>
+                end case;
+
+            when JMP_BEQ =>
+                rsShouleBeZero := true;
+                rtShouleBeZero := true;
+            when OP_LUI =>
+                rsShouleBeZero := true;
+            when JMP_BGEZ | JMP_BLEZ =>
+                rtShouleBeZero := true;
+
+            when others =>
+        end case;
+
+        if (opShouleBeZero and instOp /= "000000") then
+            return false;
+        end if;
+        if (rsShouleBeZero and instRs /= "00000") then
+            return false;
+        end if;
+        if (rtShouleBeZero and instRt /= "00000") then
+            return false;
+        end if;
+        if (rdShouleBeZero and instRd /= "00000") then
+            return false;
+        end if;
+        if (saShouleBeZero and instSa /= "00000") then
+            return false;
+        end if;
+        return true;
+    end zeroJudge;
+
     signal instOp:   std_logic_vector(InstOpWidth);
     signal instRs:   std_logic_vector(InstRsWidth);
     signal instRt:   std_logic_vector(InstRtWidth);
