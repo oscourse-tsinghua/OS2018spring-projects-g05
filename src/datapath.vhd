@@ -7,7 +7,7 @@ use work.cp0_const.all;
 use work.mmu_const.all;
 use work.except_const.all;
 
-entity cpu is
+entity datapath is
     generic (
         instEntranceAddr:       std_logic_vector(AddrWidth) := 32ux"bfc0_0000";
         exceptNormalBaseAddr:   std_logic_vector(AddrWidth) := 32ux"8000_0000";
@@ -42,9 +42,9 @@ entity cpu is
         entryWrite_o: out std_logic;
         entry_o: out TLBEntry
     );
-end cpu;
+end datapath;
 
-architecture bhv of cpu is
+architecture bhv of datapath is
     -- Labels of components for convenience (especially in quantity naming)
     -- 1: pc_reg
     -- 2: if_id

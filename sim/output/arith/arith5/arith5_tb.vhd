@@ -102,7 +102,7 @@ begin
             devExcept_i => devExcept
         );
 
-    cpu_ist: entity work.cpu
+    datapath_ist: entity work.datapath
         generic map (
             instEntranceAddr        => 32ux"8000_0004",
             exceptNormalBaseAddr    => 32ux"8000_0000",
@@ -153,9 +153,9 @@ begin
     assertBlk: block
         -- NOTE: `assertBlk` is also a layer in the herarchical reference
         -- CODE BELOW IS AUTOMATICALLY GENERATED
-alias user_reg is <<signal ^.cpu_ist.regfile_ist.regArray: RegArrayType>>;
-alias user_hi is <<signal ^.cpu_ist.hi_lo_ist.hiData: std_logic_vector(DataWidth)>>;
-alias user_lo is <<signal ^.cpu_ist.hi_lo_ist.loData: std_logic_vector(DataWidth)>>;
+alias user_reg is <<signal ^.datapath_ist.regfile_ist.regArray: RegArrayType>>;
+alias user_hi is <<signal ^.datapath_ist.hi_lo_ist.hiData: std_logic_vector(DataWidth)>>;
+alias user_lo is <<signal ^.datapath_ist.hi_lo_ist.loData: std_logic_vector(DataWidth)>>;
     begin
         -- CODE BELOW IS AUTOMATICALLY GENERATED
 process begin

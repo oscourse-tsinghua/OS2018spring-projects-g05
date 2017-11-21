@@ -101,7 +101,7 @@ begin
             devExcept_i => devExcept
         );
 
-    cpu_ist: entity work.cpu
+    datapath_ist: entity work.datapath
         generic map (
             instEntranceAddr        => 32ux"8000_0004",
             exceptNormalBaseAddr    => 32ux"8000_0000",

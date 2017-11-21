@@ -116,7 +116,7 @@ begin
             devExcept_i => devExcept
         );
 
-    cpu_ist: entity work.cpu
+    datapath_ist: entity work.datapath
         generic map (
             instEntranceAddr        => 32ux"8000_0000",
             exceptNormalBaseAddr    => 32ux"8000_0000",
@@ -156,7 +156,7 @@ begin
         variable testCnt, correctCnt: integer := 0;
         variable tmpTestCnt, nowTestCnt, nowCorrectCnt: integer;
         variable nowDelta: integer := 0;
-        alias reg is <<signal cpu_ist.regfile_ist.regArray: RegArrayType>>;
+        alias reg is <<signal datapath_ist.regfile_ist.regArray: RegArrayType>>;
     begin
         if (falling_edge(clk)) then
             tmpTestCnt := conv_integer(reg(23));
