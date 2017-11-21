@@ -9,13 +9,13 @@ use work.except_const.all;
 
 entity datapath is
     generic (
-        instEntranceAddr:       std_logic_vector(AddrWidth) := 32ux"bfc0_0000";
-        exceptNormalBaseAddr:   std_logic_vector(AddrWidth) := 32ux"8000_0000";
-        exceptBootBaseAddr:     std_logic_vector(AddrWidth) := 32ux"bfc0_0200";
-        tlbRefillExl0Offset:    std_logic_vector(AddrWidth) := 32ux"000";
-        generalExceptOffset:    std_logic_vector(AddrWidth) := 32ux"180";
-        interruptIv1Offset:     std_logic_vector(AddrWidth) := 32ux"200";
-        instConvEndian:         boolean := true
+        instEntranceAddr:       std_logic_vector(AddrWidth);
+        exceptNormalBaseAddr:   std_logic_vector(AddrWidth);
+        exceptBootBaseAddr:     std_logic_vector(AddrWidth);
+        tlbRefillExl0Offset:    std_logic_vector(AddrWidth);
+        generalExceptOffset:    std_logic_vector(AddrWidth);
+        interruptIv1Offset:     std_logic_vector(AddrWidth);
+        instConvEndian:         boolean
     );
     port (
         rst, clk: in std_logic;
