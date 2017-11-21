@@ -18,6 +18,7 @@ entity cpu is
         clk, rst: in std_logic;
 
         devEnable_o, devWrite_o: out std_logic;
+        devBusy_i: in std_logic;
         devDataSave_o: out std_logic_vector(DataWidth);
         devDataLoad_i: in std_logic_vector(DataWidth);
         devPhysicalAddr_o: out std_logic_vector(AddrWidth);
@@ -101,7 +102,7 @@ begin
             devData_o => devDataSave_o,
             devAddr_o => devVirtualAddr,
             devByteSelect_o => devByteSelect_o,
-            devBusy_i => PIPELINE_NONSTOP,
+            devBusy_i => devBusy_i,
             devExcept_i => devExcept
         );
 

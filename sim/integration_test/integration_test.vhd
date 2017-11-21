@@ -63,6 +63,7 @@ begin
         port map (
             rst => rst, clk => clk,
             devEnable_o => devEnable,
+            devBusy_i => PIPELINE_NONSTOP,
             devWrite_o => devWrite,
             devDataSave_o => devDataSave,
             devDataLoad_i => devDataLoad,
