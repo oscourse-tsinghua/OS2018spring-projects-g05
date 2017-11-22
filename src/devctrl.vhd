@@ -16,7 +16,7 @@ entity devctrl is
         devByteSelect_i: in std_logic_vector(3 downto 0);
 
         int_o: out std_logic_vector(IntWidth);
-        timerInt_i: in std_logic
+        timerInt_i: in std_logic;
 
         -- Signals connecting to devices --
         addr_o: out std_logic_vector(AddrWidth);
