@@ -138,20 +138,65 @@ wire rst;
 assign rst = touch_btn[5];
 
 wire clk25; // 25MHz clock
-clk_ctrl clk_ctrl_ist(.reset(rst), .clk_in1(clk_in), .clk_out1(clk25));
+clk_ctrl clk_ctrl_ist(
+    .reset(rst),
+    .clk_in1(clk_in),
+    .clk_out1(clk25)
+);
 
-wire[31:0] addr;
+wire devEnable, devWrite, devBusy;
+wire[31:0] dataSave, dataLoad, addr;
+wire[3:0] byteSelect;
+wire[5:0] int;
+wire timerInt;
+assign int = {5'h0, timerInt};
+cpu cpu_ist(
+    .clk(clk25),
+    .rst(rst),
+    .devEnable_o(devEnable),
+    .devWrite_o(devWrite),
+    .devBusy_i(devBusy),
+    .devDataSave_o(dataSave),
+    .devDataLoad_i(dataLoad),
+    .devPhysicalAddr_o(addr),
+    .devByteSelect_o(byteSelect),
+    .int_i(int),
+    .timerInt_o(timerInt)
+);
 
 wire ramEnable, ramReadEnable, ramWriteBusy;
 wire[31:0] ramDataSave, ramDataLoad;
-wire[3:0] ramByteSelect;
+
+wire flashEnable, flashReadEnable, flashBusy;
+wire[31:0] flashDataLoad;
+
+devctrl devctrl_ist(
+    .devEnable_i(devEnable),
+    .devWrite_i(devWrite),
+    .devBusy_o(devBusy),
+    .devDataSave_i(dataSave),
+    .devDataLoad_o(dataLoad),
+    .devPhysicalAddr_i(addr),
+
+    .ramEnable_o(ramEnable),
+    .ramReadEnable_o(ramReadEnable),
+    .ramDataSave_o(ramDataSave),
+    .ramDataLoad_i(ramDataLoad),
+    .ramWriteBusy_i(ramWriteBusy),
+
+    .flashEnable_o(flashEnable),
+    .flashReadEnable_o(flashReadEnable),
+    .flashDataLoad_i(flashDataLoad),
+    .flashBusy_i(flashBusy)
+);
+
 sram_ctrl base_sram_ctrl(
     .clk(clk25),
     .rst(rst),
     .enable_i(ramEnable),
     .readEnable_i(ramReadEnable),
     .addr_i(addr),
-    .byteSelect_i(ramByteSelect),
+    .byteSelect_i(byteSelect),
     .dataSave_i(ramDataSave),
     .dataLoad_o(ramDataLoad),
     .busy_o(ramWriteBusy),
@@ -163,19 +208,37 @@ sram_ctrl base_sram_ctrl(
     .we_n_o(base_ram_we_n)
 );
 
+flash_ctrl flash_ctrl_ist(
+    .clk(clk25),
+    .rst(rst),
+    .devEnable_i(flashEnable),
+    .addr_i(addr),
+    .readEnable_i(flashReadEnable),
+    .readData_o(flashDataLoad),
+    .busy_o(flashBusy),
+    .flRst_o(flash_rp_n),
+    .flOE_o(flash_oe_n),
+    .flCE_o(flash_ce_n),
+    .flWE_o(flash_we_n),
+    .flAddr_o(flash_a),
+    .flData_i(flash_data),
+    .flByte_o(flash_byte_n),
+    .flVpen_o(flash_vpen)
+);
+
 /* sram_ctrl Test 1: Alternatively write and read
  * 1. Press and release rst
  * 2. LED should show 0xAAAA pattern
  */
 /*
-reg[15:0] count, correct, dataSave;
+reg[15:0] count, correct, testDataSave;
 reg reading;
 assign addr = count;
 assign ramEnable = 1;
 assign ramReadEnable = reading;
-assign ramByteSelect = 4'hf;
+assign byteSelect = 4'hf;
 assign leds[15:0] = correct;
-assign ramDataSave = {16'h0, dataSave};
+assign ramDataSave = {16'h0, testDataSave};
 always@(posedge clk25) begin
     if (rst) begin
         count <= 0;
@@ -184,7 +247,7 @@ always@(posedge clk25) begin
     end else begin
         if (count < 16'haaaa || reading == 0) begin
             if (reading == 0) begin
-                dataSave <= count;
+                testDataSave <= count;
             end else begin
                 if (ramDataLoad[15:0] == count)
                     correct <= correct + 1;
@@ -204,7 +267,7 @@ end
 /*
 assign ramEnable = 1;
 assign ramReadEnable = 1;
-assign ramByteSelect = 4'hf;
+assign byteSelect = 4'hf;
 assign addr = dip_sw;
 assign leds[15:0] = ramDataLoad[15:0];
 */

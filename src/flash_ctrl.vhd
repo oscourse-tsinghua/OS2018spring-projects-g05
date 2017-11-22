@@ -43,7 +43,7 @@ begin
                         flAddr_o <= addr_i(FlashAddrSliceWidth) & '0';
                         busy_o <= '1';
                     when CLKS_TO_GET_DATA =>
-                        readData_o <= ZEROS16 & flData_i;
+                        readData_o <= 16ux"0" & flData_i;
                         busy_o <= '0';
                     when others =>
                 end case;
