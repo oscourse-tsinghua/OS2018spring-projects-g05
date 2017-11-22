@@ -28,6 +28,7 @@ entity devctrl is
         ramReadEnable_o: out std_logic;
         ramDataSave_o: out std_logic_vector(DataWidth);
         ramDataLoad_i: in std_logic_vector(DataWidth);
+        ramByteSelect_o: out std_logic(3 downto 0);
         ramWriteBusy_i: in std_logic;
 
         -- Signals connecting to flash_ctrl --
