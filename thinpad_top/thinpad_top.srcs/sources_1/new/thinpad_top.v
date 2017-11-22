@@ -75,7 +75,7 @@ output wire[3:0] base_ram_be_n;
 output wire base_ram_ce_n;
 output wire base_ram_oe_n;
 output wire base_ram_we_n;
-assign base_ram_be_n=4'b0; // keep ByteEnable zero if you don't know what it is
+//assign base_ram_be_n=4'b0; // keep ByteEnable zero if you don't know what it is
 
 //Extension memory signals
 inout wire[31:0] ext_ram_data;
@@ -84,7 +84,7 @@ output wire[3:0] ext_ram_be_n;
 output wire ext_ram_ce_n;
 output wire ext_ram_oe_n;
 output wire ext_ram_we_n;
-assign ext_ram_be_n=4'b0; // keep ByteEnable zero if you don't know what it is
+//assign ext_ram_be_n=4'b0; // keep ByteEnable zero if you don't know what it is
 
 //Ext serial port signals
 output wire txd;
@@ -132,53 +132,81 @@ output wire video_vsync;
 output wire video_clk;
 output wire video_de;
 
-/* =========== Demo code begin =========== */
+/* =========== END OF PORT DECLARATION ============= */
 
-// 7-Segment display decoder
-reg[7:0] number;
-SEG7_LUT segL(.oSEG1({leds[23:22],leds[19:17],leds[20],leds[21],leds[16]}), .iDIG(number[3:0]));
-SEG7_LUT segH(.oSEG1({leds[31:30],leds[27:25],leds[28],leds[29],leds[24]}), .iDIG(number[7:4]));
+wire rst;
+assign rst = touch_btn[5];
 
-//LED & DIP switches test
-reg[23:0] counter;
-reg[15:0] led_bits;
-always@(posedge clk_in) begin
-    if(touch_btn[5])begin //reset
-        counter<=0;
-        led_bits[15:0] <= dip_sw[15:0]^dip_sw[31:16];
-        number <= 0;
-    end
-    else begin
-        counter<= counter+1;
-        if(&counter)begin
-            led_bits[15:0] <= {led_bits[14:0],led_bits[15]};
-            number <= number + 1;
+wire clk25; // 25MHz clock
+clk_ctrl clk_ctrl_ist(.reset(rst), .clk_in1(clk_in), .clk_out1(clk25));
+
+wire[31:0] addr;
+
+wire ramEnable, ramReadEnable, ramWriteBusy;
+wire[31:0] ramDataSave, ramDataLoad;
+wire[3:0] ramByteSelect;
+sram_ctrl base_sram_ctrl(
+    .clk(clk25),
+    .rst(rst),
+    .enable_i(ramEnable),
+    .readEnable_i(ramReadEnable),
+    .addr_i(addr),
+    .byteSelect_i(ramByteSelect),
+    .dataSave_i(ramDataSave),
+    .dataLoad_o(ramDataLoad),
+    .busy_o(ramWriteBusy),
+    .data_io(base_ram_data),
+    .addr_o(base_ram_addr),
+    .be_n_o(base_ram_be_n),
+    .ce_n_o(base_ram_ce_n),
+    .oe_n_o(base_ram_oe_n),
+    .we_n_o(base_ram_we_n)
+);
+
+/* sram_ctrl Test 1: Alternatively write and read
+ * 1. Press and release rst
+ * 2. LED should show 0xAAAA pattern
+ */
+/*
+reg[15:0] count, correct, dataSave;
+reg reading;
+assign addr = count;
+assign ramEnable = 1;
+assign ramReadEnable = reading;
+assign ramByteSelect = 4'hf;
+assign leds[15:0] = correct;
+assign ramDataSave = {16'h0, dataSave};
+always@(posedge clk25) begin
+    if (rst) begin
+        count <= 0;
+        correct <= 0;
+        reading <= 0;
+    end else begin
+        if (count < 16'haaaa || reading == 0) begin
+            if (reading == 0) begin
+                dataSave <= count;
+            end else begin
+                if (ramDataLoad[15:0] == count)
+                    correct <= correct + 1;
+                count <= count + 1;
+            end
+            reading <= ~reading;
         end
     end
 end
-assign leds[15:0] = led_bits;
+*/
 
-//Ext serial port receive and transmit, 115200 baudrate, no parity
-wire [7:0] RxD_data;
-wire RxD_data_ready;
-async_receiver #(.ClkFrequency(11059200),.Baud(115200)) 
-    uart_r(.clk(clk_uart_in),.RxD(rxd),.RxD_data_ready(RxD_data_ready),.RxD_data(RxD_data));
-async_transmitter #(.ClkFrequency(11059200),.Baud(115200)) 
-    uart_t(.clk(clk_uart_in),.TxD(txd),.TxD_start(RxD_data_ready),.TxD_data(RxD_data)); //transmit data back
-
-//VGA display pattern generation
-wire [2:0] red,green;
-wire [1:0] blue;
-assign video_pixel = {red,green,blue};
-assign video_clk = clk_in;
-vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
-    .clk(clk_in), 
-    .hdata(red),
-    .vdata({blue,green}),
-    .hsync(video_hsync),
-    .vsync(video_vsync),
-    .data_enable(video_de)
-);
-/* =========== Demo code end =========== */
+/* sram_ctrl Test 2: Load arbitary data
+ * 1. Upload RAM initializing file
+ * 2. Press and release reset
+ * 3. Set the switches and watch the LEDs
+ */
+/*
+assign ramEnable = 1;
+assign ramReadEnable = 1;
+assign ramByteSelect = 4'hf;
+assign addr = dip_sw;
+assign leds[15:0] = ramDataLoad[15:0];
+*/
 
 endmodule
