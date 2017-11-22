@@ -4,3 +4,4 @@
 /thinpad_top.runs
 *.cache
 .Xil
+*.backup.*
