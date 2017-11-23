@@ -58,6 +58,8 @@ module thinpad_top(/*autoport*/
          dip_sw,
          touch_btn);
 
+parameter bootFromFlash = 1;
+
 input wire clk_in; //50MHz main clock input
 input wire clk_uart_in; //11.0592MHz clock for UART
 
@@ -139,7 +141,6 @@ assign rst = touch_btn[5];
 
 wire clk25; // 25MHz clock
 clk_ctrl clk_ctrl_ist(
-    .reset(rst),
     .clk_in1(clk_in),
     .clk_out1(clk25)
 );
@@ -159,7 +160,8 @@ wire[3:0] byteSelect;
 wire[5:0] int;
 wire timerInt, comInt;
 assign int = {4'h0, comInt, timerInt};
-cpu cpu_ist(
+cpu #(.instEntranceAddr(bootFromFlash == 1 ? 32'hbfc00000 : 32'h80000000))
+    cpu_ist(
     .clk(clk25),
     .rst(rst),
     .devEnable_o(devEnable),
