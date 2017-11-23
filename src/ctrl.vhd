@@ -24,7 +24,7 @@ entity ctrl is
         interruptIv1Offset:     std_logic_vector(AddrWidth)
     );
     port (
-        rst: in std_logic;
+        rst, clk: in std_logic;
 
         -- Stall
         ifToStall_i, idToStall_i, exToStall_i, memToStall_i: in std_logic;
@@ -34,11 +34,15 @@ entity ctrl is
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         cp0Status_i, cp0Cause_i, cp0Epc_i: in std_logic_vector(DataWidth);
         newPC_o: out std_logic_vector(AddrWidth);
-        flush_o: out std_logic
+        flush_o: out std_logic;
+        toWriteBadVAddr_o: out std_logic;
+        badVAddr_o: out std_logic_vector(AddrWidth)
     );
 end ctrl;
 
 architecture bhv of ctrl is
+    signal toWriteBadVAddr: std_logic;
+    signal badVAddr: std_logic_vector(AddrWidth);
 begin
     process(all)
         variable newPC: std_logic_vector(AddrWidth);
@@ -47,7 +51,11 @@ begin
             stall_o <= (others => '0');
             flush_o <= '0';
             newPC_o <= (others => '0');
+            badVAddr <= (others => '0');
+            toWriteBadVAddr <= NO;
         else
+            toWriteBadVAddr <= NO;
+            badVAddr <= (others => '0');
             if (exceptCause_i /= NO_CAUSE) then
                 flush_o <= '1';
                 stall_o <= (others => '0');
@@ -57,7 +65,13 @@ begin
                     newPC := exceptBootBaseAddr;
                 end if;
                 if (exceptCause_i = ERET_CAUSE) then
-                    newPC := cp0Epc_i;
+                    if (cp0Epc_i(1 downto 0) = "00") then
+                        newPC := cp0Epc_i;
+                    else
+                        toWriteBadVAddr <= YES;
+                        badVAddr <= cp0Epc_i;
+                        newPC := newPC + generalExceptOffset;
+                    end if;
                 elsif (
                     (exceptCause_i = TLB_LOAD_CAUSE or exceptCause_i = TLB_STORE_CAUSE) and
                     cp0Status_i(STATUS_EXL_BIT) = '0'
@@ -83,6 +97,13 @@ begin
                     stall_o <= "000000";
                 end if;
             end if;
+        end if;
+    end process;
+
+    process(clk) begin
+        if (rising_edge(clk)) then
+            badVAddr_o <= badVAddr;
+            toWriteBadVAddr_o <= toWriteBadVAddr;
         end if;
     end process;
 end bhv;
