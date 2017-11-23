@@ -25,7 +25,7 @@ architecture bhv of sram_ctrl is
     signal stat: State;
 begin
     data_io <= dataSave_i when stat = WRITE else (others => 'Z');
-    addr_o <= addr_i(19 downto 0);
+    addr_o <= addr_i(21 downto 2);
     be_n_o <= not byteSelect_i;
     ce_n_o <= not enable_i;
     oe_n_o <= '0'; -- WE will disable OE
