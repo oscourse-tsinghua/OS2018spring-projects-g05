@@ -144,12 +144,21 @@ clk_ctrl clk_ctrl_ist(
     .clk_out1(clk25)
 );
 
+wire rxdReady, txdBusy, txdStart;
+wire[7:0] rxdData, txdData;
+async_receiver
+    #(.ClkFrequency(25000000), .Baud(9600))
+    uart_r(.clk(clk25), .RxD(rxd), .RxD_data_ready(rxdReady), .RxD_data(rxdData));
+async_transmitter
+    #(.ClkFrequency(25000000),.Baud(9600))
+    uart_t(.clk(clk25), .TxD(txd), .TxD_busy(txdBusy), .TxD_start(txdStart), .TxD_data(txdData));
+
 wire devEnable, devWrite, devBusy;
 wire[31:0] dataSave, dataLoad, addr;
 wire[3:0] byteSelect;
 wire[5:0] int;
-wire timerInt;
-assign int = {5'h0, timerInt};
+wire timerInt, comInt;
+assign int = {4'h0, comInt, timerInt};
 cpu cpu_ist(
     .clk(clk25),
     .rst(rst),
@@ -170,6 +179,9 @@ wire[31:0] ramDataSave, ramDataLoad;
 wire flashEnable, flashReadEnable, flashBusy;
 wire[31:0] flashDataLoad;
 
+wire comEnable, comReadEnable;
+wire[31:0] comDataSave, comDataLoad;
+
 devctrl devctrl_ist(
     .devEnable_i(devEnable),
     .devWrite_i(devWrite),
@@ -187,7 +199,12 @@ devctrl devctrl_ist(
     .flashEnable_o(flashEnable),
     .flashReadEnable_o(flashReadEnable),
     .flashDataLoad_i(flashDataLoad),
-    .flashBusy_i(flashBusy)
+    .flashBusy_i(flashBusy),
+
+    .comEnable_o(comEnable),
+    .comReadEnable_o(comReadEnable),
+    .comDataSave_o(comDataSave),
+    .comDataLoad_i(comDataLoad)
 );
 
 sram_ctrl base_sram_ctrl(
@@ -224,6 +241,22 @@ flash_ctrl flash_ctrl_ist(
     .flData_i(flash_data),
     .flByte_o(flash_byte_n),
     .flVpen_o(flash_vpen)
+);
+
+serial_ctrl serial_ctrl_ist(
+    .clk(clk25),
+    .rst(rst),
+    .enable_i(comEnable),
+    .readEnable_i(comReadEnable),
+    .mode_i(addr[2]),
+    .dataSave_i(comDataSave),
+    .dataLoad_o(comDataLoad),
+    .int_o(comInt),
+    .rxdReady_i(rxdReady),
+    .rxdData_i(rxdData),
+    .txdBusy_i(txdBusy),
+    .txdStart_o(txdStart),
+    .txdData_o(txdData)
 );
 
 /* sram_ctrl Test 1: Alternatively write and read

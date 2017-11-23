@@ -23,7 +23,13 @@ entity devctrl is
         flashEnable_o: out std_logic;
         flashReadEnable_o: out std_logic;
         flashDataLoad_i: in std_logic_vector(DataWidth);
-        flashBusy_i: in std_logic
+        flashBusy_i: in std_logic;
+
+        -- Signals connecting to serial_ctrl --
+        comEnable_o: out std_logic;
+        comReadEnable_o: out std_logic;
+        comDataSave_o: out std_logic_vector(DataWidth);
+        comDataLoad_i: in std_logic_vector(DataWidth)
     );
 end devctrl;
 
@@ -58,6 +64,10 @@ begin
                 -- ROM --
             elsif (devPhysicalAddr_i >= 32ux"1fd003f8" and devPhysicalAddr_i <= 32ux"1fd003fc") then
                 -- COM --
+                comEnable_o <= ENABLE;
+                comReadEnable_o <= not devWrite_i;
+                comDataSave_o <= devDataSave_i;
+                devDataLoad_o <= comDataLoad_i;
             end if;
         end if;
     end process;
