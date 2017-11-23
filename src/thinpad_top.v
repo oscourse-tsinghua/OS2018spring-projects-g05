@@ -145,6 +145,16 @@ clk_ctrl clk_ctrl_ist(
     .clk_out1(clk25)
 );
 
+// 7-Segment display decoder
+reg[7:0] numberHold;
+SEG7_LUT segL(.oSEG1({leds[23:22],leds[19:17],leds[20],leds[21],leds[16]}), .iDIG(numberHold[3:0]));
+SEG7_LUT segH(.oSEG1({leds[31:30],leds[27:25],leds[28],leds[29],leds[24]}), .iDIG(numberHold[7:4]));
+
+// LED
+reg[15:0] ledHold;
+assign leds[15:0] = ledHold;
+
+// Serial COM
 wire rxdReady, txdBusy, txdStart;
 wire[7:0] rxdData, txdData;
 async_receiver
@@ -184,6 +194,10 @@ wire[31:0] flashDataLoad;
 wire comEnable, comReadEnable;
 wire[31:0] comDataSave, comDataLoad;
 
+wire ledEnable, numEnable;
+wire[15:0] ledData;
+wire[7:0] numData;
+
 devctrl devctrl_ist(
     .devEnable_i(devEnable),
     .devWrite_i(devWrite),
@@ -206,7 +220,12 @@ devctrl devctrl_ist(
     .comEnable_o(comEnable),
     .comReadEnable_o(comReadEnable),
     .comDataSave_o(comDataSave),
-    .comDataLoad_i(comDataLoad)
+    .comDataLoad_i(comDataLoad),
+
+    .ledEnable_o(ledEnable),
+    .ledData_o(ledData),
+    .numEnable_o(numEnable),
+    .numData_o(numData)
 );
 
 sram_ctrl base_sram_ctrl(
@@ -260,6 +279,18 @@ serial_ctrl serial_ctrl_ist(
     .txdStart_o(txdStart),
     .txdData_o(txdData)
 );
+
+always@(posedge clk25) begin
+    if (rst == 1) begin
+        ledHold <= 0;
+        numberHold <= 0;
+    end else begin
+        if (ledEnable)
+            ledHold <= ledData;
+        if (numEnable)
+            numberHold <= numData;
+    end
+end
 
 /* sram_ctrl Test 1: Alternatively write and read
  * 1. Press and release rst
