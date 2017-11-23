@@ -17,14 +17,10 @@ n80_beq_ex_ds_test:
     TEST_BEQ_EX_DS_EX_ADDI
     TEST_BEQ_EX_DS_EX_ADD
     TEST_BEQ_EX_DS_EX_SUB
-    TEST_BEQ_EX_DS_EX_LH
-    TEST_BEQ_EX_DS_EX_LHU
     TEST_BEQ_EX_DS_EX_LW
-    TEST_BEQ_EX_DS_EX_SH
     TEST_BEQ_EX_DS_EX_SW
     TEST_BEQ_EX_DS_EX_RI
     TEST_BEQ_EX_DS_EX_SYSCALL
-    TEST_BEQ_EX_DS_EX_BREAK
 ###detect exception
 #   lui s0, 0x4444
 #   bne v0, s0, inst_error
