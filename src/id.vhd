@@ -54,7 +54,7 @@ entity id is
 end id;
 
 architecture bhv of id is
-    
+
     function zeroJudge(instOp: std_logic_vector(InstOpWidth);
                        instRs: std_logic_vector(InstRsWidth);
                        instRt: std_logic_vector(InstRtWidth);
@@ -166,8 +166,10 @@ begin
         -- indicates where the operand is from --
         variable oprSrc1, oprSrc2: OprSrcType;
         variable oprSrcX: XOprSrcType;
-        variable operand1, operand2, operandX, branchTargetAddress: std_logic_vector(DataWidth);
+        variable operand1, operand2, operandX: std_logic_vector(DataWidth);
         variable isInvalid, jumpToRs, condJump: std_logic;
+        variable branchFlag: std_logic;
+        variable branchTargetAddress: std_logic_vector(AddrWidth);
     begin
         oprSrc1 := INVALID;
         oprSrc2 := INVALID;
@@ -179,7 +181,7 @@ begin
         toStall_o <= PIPELINE_NONSTOP;
         linkAddr_o <= (others => '0');
         branchTargetAddress := (others => '0');
-        branchFlag_o <= NOT_BRANCH_FLAG;
+        branchFlag := NOT_BRANCH_FLAG;
         nextInstInDelaySlot_o <= NOT_IN_DELAY_SLOT_FLAG;
         jumpToRs := NO;
         condJump := NO;
@@ -386,7 +388,7 @@ begin
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
                             jumpToRs := YES;
-                            branchFlag_o <= BRANCH_FLAG;
+                            branchFlag := BRANCH_FLAG;
                             nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                             linkAddr_o <= (others => '0');
                             toWriteReg_o <= NO;
@@ -397,7 +399,7 @@ begin
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
                             jumpToRs := YES;
-                            branchFlag_o <= BRANCH_FLAG;
+                            branchFlag := BRANCH_FLAG;
                             alut_o <= ALU_JALR;
                             nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                             linkAddr_o <= pcPlus8;
@@ -595,7 +597,7 @@ begin
                 when JMP_J =>
                     oprSrc1 := INVALID;
                     oprSrc2 := INVALID;
-                    branchFlag_o <= BRANCH_FLAG;
+                    branchFlag := BRANCH_FLAG;
                     nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                     linkAddr_o <= (others => '0');
                     branchTargetAddress := immInstrAddr;
@@ -606,7 +608,7 @@ begin
                 when JMP_JAL =>
                     oprSrc1 := INVALID;
                     oprSrc1 := INVALID;
-                    branchFlag_o <= BRANCH_FLAG;
+                    branchFlag := BRANCH_FLAG;
                     alut_o <= ALU_JAL;
                     nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                     linkAddr_o <= pcPlus8;
@@ -825,12 +827,12 @@ begin
                         when JMP_BGEZ =>
                             if (operand1(31) = '0') then
                                 branchTargetAddress := pcPlus4 + instOffsetImm - instImmSign;
-                                branchFlag_o <= BRANCH_FLAG;
+                                branchFlag := BRANCH_FLAG;
                             end if;
                         when JMP_BLTZ =>
                             if (operand1(31) = '1') then
                                 branchTargetAddress := pcPlus4 + instOffsetImm - instImmSign;
-                                branchFlag_o <= BRANCH_FLAG;
+                                branchFlag := BRANCH_FLAG;
                             end if;
                         when others =>
                             null;
@@ -838,30 +840,30 @@ begin
                 when JMP_BEQ =>
                     if (operand1 = operand2) then
                         branchTargetAddress := pcPlus4 + instOffsetImm - instImmSign;
-                        branchFlag_o <= BRANCH_FLAG;
+                        branchFlag := BRANCH_FLAG;
                     end if;
                 when JMP_BGTZ =>
                     if (operand1(31) = '0' and operand1 /= "00000000000000000000000000000000") then
                         branchTargetAddress := pcPlus4 + instOffsetImm - instImmSign;
-                        branchFlag_o <= BRANCH_FLAG;
+                        branchFlag := BRANCH_FLAG;
                     end if;
                 when JMP_BLEZ =>
                     if (operand1(31) = '1' or operand1 = "00000000000000000000000000000000") then
                         branchTargetAddress := pcPlus4 + instOffsetImm - instImmSign;
-                        branchFlag_o <= BRANCH_FLAG;
+                        branchFlag := BRANCH_FLAG;
                     end if;
                 when JMP_BNE =>
                     if (operand1 /= operand2) then
                         branchTargetAddress := pcPlus4 + instOffsetImm - instImmSign;
-                        branchFlag_o <= BRANCH_FLAG;
+                        branchFlag := BRANCH_FLAG;
                     end if;
                 when others =>
                     null;
             end case;
         end if;
-        
-        if ((branchFlag_o = BRANCH_FLAG) and (branchTargetAddress(1 downto 0) /= "00")) then
-            branchFlag_o <= NOT_BRANCH_FLAG;
+
+        if ((branchFlag = BRANCH_FLAG) and (branchTargetAddress(1 downto 0) /= "00")) then
+            branchFlag := NOT_BRANCH_FLAG;
             branchTargetAddress := (others => '0');
             exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
         end if;
@@ -869,6 +871,7 @@ begin
         operand1_o <= operand1;
         operand2_o <= operand2;
         operandX_o <= operandX;
+        branchFlag_o <= branchFlag;
         branchTargetAddress_o <= branchTargetAddress;
     end process;
 end bhv;
