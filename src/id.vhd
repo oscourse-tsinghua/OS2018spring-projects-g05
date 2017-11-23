@@ -839,30 +839,35 @@ begin
                 when JMP_BEQ =>
                     if (operand1 = operand2) then
                         branchTargetAddress_o <= pcPlus4 + instOffsetImm - instImmSign;
-                        branchFlag_o <= BRANCH_FLAG;
                         nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
+                        branchFlag_o <= BRANCH_FLAG;
                     end if;
                 when JMP_BGTZ =>
                     if (operand1(31) = '0' and operand1 /= "00000000000000000000000000000000") then
                         branchTargetAddress_o <= pcPlus4 + instOffsetImm - instImmSign;
-                        branchFlag_o <= BRANCH_FLAG;
                         nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
+                        branchFlag_o <= BRANCH_FLAG;
                     end if;
                 when JMP_BLEZ =>
                     if (operand1(31) = '1' or operand1 = "00000000000000000000000000000000") then
                         branchTargetAddress_o <= pcPlus4 + instOffsetImm - instImmSign;
-                        branchFlag_o <= BRANCH_FLAG;
                         nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
+                        branchFlag_o <= BRANCH_FLAG;
                     end if;
                 when JMP_BNE =>
                     if (operand1 /= operand2) then
                         branchTargetAddress_o <= pcPlus4 + instOffsetImm - instImmSign;
-                        branchFlag_o <= BRANCH_FLAG;
                         nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
+                        branchFlag_o <= BRANCH_FLAG;
                     end if;
                 when others =>
                     null;
             end case;
+        end if;
+        if ((branchFlag_o = BRANCH_FLAG) and (branchTargetAddress_o(1 downto 0) /= "00")) then
+            branchFlag_o <= NOT_BRANCH_FLAG;
+            branchTargetAddress_o <= (others => '0');
+            exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
         end if;
 
         operand1_o <= operand1;

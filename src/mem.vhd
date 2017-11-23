@@ -62,7 +62,9 @@ architecture bhv of mem is
     signal dataWrite: std_logic;
     signal interrupt: std_logic_vector(ExceptionCauseWidth);
 begin
-    memAddr_o <= memAddr_i(31 downto 2) & "00";
+    memAddr_o <= memAddr_i when
+        (memt_i = MEM_LW or memt_i = MEM_SW) else memAddr_i(31 downto 2) & "00";
+    -- We preserve the low 2 bits for `lw` and `sw` as required by BadVAddr register
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;
 
@@ -105,57 +107,59 @@ begin
             cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
             cp0RegData_o <= cp0RegData_i;
 
-            -- Byte selection --
-            case memt_i is
-                when MEM_LW|MEM_SW =>
-                    savingData_o <= memData_i;
-                    dataByteSelect_o <= "1111";
-                when MEM_LB|MEM_LBU|MEM_SB =>
-                    case memAddr_i(1 downto 0) is
-                        when "00" =>
-                            savingData_o <= 24b"0" & memData_i(7 downto 0);
-                            loadedByte := loadedData_i(7 downto 0);
-                            dataByteSelect_o <= "0001";
-                        when "01" =>
-                            savingData_o <= 16b"0" & memData_i(7 downto 0) & 8b"0";
-                            loadedByte := loadedData_i(15 downto 8);
-                            dataByteSelect_o <= "0010";
-                        when "10" =>
-                            savingData_o <= 8b"0" & memData_i(7 downto 0) & 16b"0";
-                            loadedByte := loadedData_i(23 downto 16);
-                            dataByteSelect_o <= "0100";
-                        when "11" =>
-                            savingData_o <= memData_i(7 downto 0) & 24b"0";
-                            loadedByte := loadedData_i(31 downto 24);
-                            dataByteSelect_o <= "1000";
-                        when others =>
-                            -- Although there is actually no other cases
-                            -- But the simulator thinks someting like 'Z' should be considered
-                            null;
-                    end case;
-                when others =>
-                    null;
-            end case;
+            if (exceptCause_i = NO_CAUSE) then
+                -- Byte selection --
+                case memt_i is
+                    when MEM_LW|MEM_SW =>
+                        savingData_o <= memData_i;
+                        dataByteSelect_o <= "1111";
+                    when MEM_LB|MEM_LBU|MEM_SB =>
+                        case memAddr_i(1 downto 0) is
+                            when "00" =>
+                                savingData_o <= 24b"0" & memData_i(7 downto 0);
+                                loadedByte := loadedData_i(7 downto 0);
+                                dataByteSelect_o <= "0001";
+                            when "01" =>
+                                savingData_o <= 16b"0" & memData_i(7 downto 0) & 8b"0";
+                                loadedByte := loadedData_i(15 downto 8);
+                                dataByteSelect_o <= "0010";
+                            when "10" =>
+                                savingData_o <= 8b"0" & memData_i(7 downto 0) & 16b"0";
+                                loadedByte := loadedData_i(23 downto 16);
+                                dataByteSelect_o <= "0100";
+                            when "11" =>
+                                savingData_o <= memData_i(7 downto 0) & 24b"0";
+                                loadedByte := loadedData_i(31 downto 24);
+                                dataByteSelect_o <= "1000";
+                            when others =>
+                                -- Although there is actually no other cases
+                                -- But the simulator thinks something like 'Z' should be considered
+                                null;
+                        end case;
+                    when others =>
+                        null;
+                end case;
 
-            case memt_i is
-                when MEM_LB => -- toWriteReg_o is already YES
-                    writeRegData_o <= std_logic_vector(resize(signed(loadedByte), 32));
-                    dataEnable_o <= ENABLE;
-                when MEM_LBU =>
-                    writeRegData_o <= std_logic_vector(resize(unsigned(loadedByte), 32));
-                    dataEnable_o <= ENABLE;
-                when MEM_LW =>
-                    writeRegData_o <= loadedData_i;
-                    dataEnable_o <= ENABLE;
-                when MEM_SB =>
-                    dataWrite <= YES;
-                    dataEnable_o <= ENABLE;
-                when MEM_SW =>
-                    dataWrite <= YES;
-                    dataEnable_o <= ENABLE;
-                when others =>
-                    null;
-            end case;
+                case memt_i is
+                    when MEM_LB => -- toWriteReg_o is already YES
+                        writeRegData_o <= std_logic_vector(resize(signed(loadedByte), 32));
+                        dataEnable_o <= ENABLE;
+                    when MEM_LBU =>
+                        writeRegData_o <= std_logic_vector(resize(unsigned(loadedByte), 32));
+                        dataEnable_o <= ENABLE;
+                    when MEM_LW =>
+                        writeRegData_o <= loadedData_i;
+                        dataEnable_o <= ENABLE;
+                    when MEM_SB =>
+                        dataWrite <= YES;
+                        dataEnable_o <= ENABLE;
+                    when MEM_SW =>
+                        dataWrite <= YES;
+                        dataEnable_o <= ENABLE;
+                    when others =>
+                        null;
+                end case;
+            end if;
         end if;
     end process;
 

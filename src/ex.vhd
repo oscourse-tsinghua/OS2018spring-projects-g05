@@ -100,7 +100,6 @@ architecture bhv of ex is
     signal ovSum: std_logic;
     signal reg1Ltreg2: std_logic;
 begin
-
     memt_o <= memt_i;
 
     clo <= 32ux"00" when operand1_i(31) = '0' else 32ux"01" when operand1_i(30) = '0' else
@@ -277,10 +276,10 @@ begin
                     writeLoData_o <= operand1_i;
 
                 when ALU_LOAD =>
-                    memAddr_o <= operand1_i + operandX_i;
+                    memAddr_o <= to_stdlogicvector(operand1_i + to_integer(signed(operandX_i(15 downto 0))));
 
                 when ALU_STORE =>
-                    memAddr_o <= operand1_i + operandX_i;
+                    memAddr_o <= to_stdlogicvector(operand1_i + to_integer(signed(operandX_i(15 downto 0))));
                     memData_o <= operand2_i;
 
                 when ALU_ADD =>
@@ -395,12 +394,24 @@ begin
                 when others =>
                     toWriteReg_o <= NO;
             end case;
-            if (((alut_i = ALU_ADD) or (alut_i = ALU_SUB)) and (ovSum = YES)) then
-                toWriteReg_o <= NO;
-                -- No need to care about priority. If there is already an exception, we will not be here
-                exceptCause_o <= OVERFLOW_CAUSE;
-            else
-                toWriteReg_o <= YES;
+            if ((alut_i = ALU_ADD) or (alut_i = ALU_SUB)) then
+                if (ovSum = YES) then
+                    toWriteReg_o <= NO;
+                    -- No need to care about priority. If there is already an exception, we will not be here
+                    exceptCause_o <= OVERFLOW_CAUSE;
+                else
+                    toWriteReg_o <= YES;
+                end if;
+            end if;
+            
+            if (memt_i = MEM_LW or memt_i = MEM_SW) then
+                if (memAddr_o(1 downto 0) /= "00") then
+                    if (alut_i = ALU_LOAD) then
+                        exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
+                    else
+                        exceptCause_o <= ADDR_ERR_STORE_CAUSE;
+                    end if;
+                end if;
             end if;
         end if;
     end process;
