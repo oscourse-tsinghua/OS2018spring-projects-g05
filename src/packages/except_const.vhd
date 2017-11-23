@@ -18,7 +18,7 @@ package except_const is
     constant EXTERNAL_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"0";
     constant TLB_LOAD_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"2";
     constant TLB_STORE_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"3";
-    constant ADDR_ERR_LOAD_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"4";
+    constant ADDR_ERR_LOAD_OR_IF_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"4";
     constant ADDR_ERR_STORE_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"5";
     constant SYSCALL_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"8";
     constant INVALID_INST_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"10";

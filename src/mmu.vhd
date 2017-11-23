@@ -81,7 +81,7 @@ begin
         if (addrExcept) then
             enable_o <= DISABLE;
             if (isLoad_i = YES) then -- Conditional assignment in sequential code has not been supported in Vivado yet
-                exceptCause_o <= ADDR_ERR_LOAD_CAUSE;
+                exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
             else
                 exceptCause_o <= ADDR_ERR_STORE_CAUSE;
             end if;
