@@ -17,14 +17,10 @@ n84_blez_ex_ds_test:
     TEST_BLEZ_EX_DS_EX_ADDI
     TEST_BLEZ_EX_DS_EX_ADD
     TEST_BLEZ_EX_DS_EX_SUB
-    TEST_BLEZ_EX_DS_EX_LH
-    TEST_BLEZ_EX_DS_EX_LHU
     TEST_BLEZ_EX_DS_EX_LW
-    TEST_BLEZ_EX_DS_EX_SH
     TEST_BLEZ_EX_DS_EX_SW
     TEST_BLEZ_EX_DS_EX_RI
     TEST_BLEZ_EX_DS_EX_SYSCALL
-    TEST_BLEZ_EX_DS_EX_BREAK
 ###detect exception
 #   lui s0, 0x4444
 #   bne v0, s0, inst_error
