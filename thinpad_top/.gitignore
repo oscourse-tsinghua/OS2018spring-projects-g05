@@ -1,0 +1,8 @@
+/vivado.jou
+/vivado.log
+/vivado_pid*.str
+/thinpad_top.runs
+/thinpad_top.ip_user_files
+*.cache
+.Xil
+*.backup.*
