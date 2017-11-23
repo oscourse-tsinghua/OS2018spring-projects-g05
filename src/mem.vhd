@@ -64,6 +64,7 @@ architecture bhv of mem is
 begin
     memAddr_o <= memAddr_i when
         (memt_i = MEM_LW or memt_i = MEM_SW) else memAddr_i(31 downto 2) & "00";
+    -- We preserve the low 2 bits for `lw` and `sw` as required by BadVAddr register
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;
 
@@ -105,7 +106,7 @@ begin
             cp0RegWe_o <= cp0RegWe_i;
             cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
             cp0RegData_o <= cp0RegData_i;
-            
+
             if (exceptCause_i = NO_CAUSE) then
                 -- Byte selection --
                 case memt_i is
