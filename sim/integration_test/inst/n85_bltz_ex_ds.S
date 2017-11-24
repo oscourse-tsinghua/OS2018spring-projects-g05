@@ -17,14 +17,10 @@ n85_bltz_ex_ds_test:
     TEST_BLTZ_EX_DS_EX_ADDI
     TEST_BLTZ_EX_DS_EX_ADD
     TEST_BLTZ_EX_DS_EX_SUB
-    TEST_BLTZ_EX_DS_EX_LH
-    TEST_BLTZ_EX_DS_EX_LHU
     TEST_BLTZ_EX_DS_EX_LW
-    TEST_BLTZ_EX_DS_EX_SH
     TEST_BLTZ_EX_DS_EX_SW
     TEST_BLTZ_EX_DS_EX_RI
     TEST_BLTZ_EX_DS_EX_SYSCALL
-    TEST_BLTZ_EX_DS_EX_BREAK
 ###detect exception
 #   lui s0, 0x4444
 #   bne v0, s0, inst_error

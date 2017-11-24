@@ -234,6 +234,8 @@ architecture bhv of datapath is
     signal cp0Status_cb: std_logic_vector(DataWidth);
     signal cp0Cause_cb: std_logic_vector(DataWidth);
     signal cp0Epc_cb: std_logic_vector(DataWidth);
+    signal ctrlToWriteBadVAddr_cb: std_logic;
+    signal ctrlBadVAddr_cb: std_logic_vector(AddrWidth);
 
     -- Signals connecting mem and ctrl --
     signal exceptCause_8b: std_logic_vector(ExceptionCauseWidth);
@@ -594,6 +596,7 @@ begin
         )
         port map(
             rst => rst,
+            clk => clk,
             ifToStall_i => ifToStall_i,
             idToStall_i => idToStall_4b,
             exToStall_i => exToStall_6b,
@@ -604,7 +607,9 @@ begin
             exceptCause_i => exceptCause_8b,
             cp0Status_i => cp0Status_cb,
             cp0Cause_i => cp0Cause_cb,
-            cp0Epc_i => cp0Epc_cb
+            cp0Epc_i => cp0Epc_cb,
+            toWriteBadVAddr_o => ctrlToWriteBadVAddr_cb,
+            badVAddr_o => ctrlBadVAddr_cb
         );
     flush_b2 <= flush_b1;
     flush_b5 <= flush_b1;
@@ -625,6 +630,8 @@ begin
             currentInstAddr_i => currentInstAddr_8c,
             currentAccessAddr_i => currentAccessAddr_8c,
             isInDelaySlot_i => isInDelaySlot_8c,
+            ctrlToWriteBadVAddr_i => ctrlToWriteBadVAddr_cb,
+            ctrlBadVAddr_i => ctrlBadVAddr_cb,
             epc_o => epc_c8,
             status_o => status_c8,
             cause_o => cause_c8,

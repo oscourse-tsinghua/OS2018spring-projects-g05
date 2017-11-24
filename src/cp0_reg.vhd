@@ -42,7 +42,11 @@ entity cp0_reg is
         isTlbwr_i: in std_logic;
         entryIndex_o: out std_logic_vector(TLBIndexWidth);
         entryWrite_o: out std_logic;
-        entry_o: out TLBEntry
+        entry_o: out TLBEntry;
+
+        -- Connect ctrl, for address error after eret instruction
+        ctrlBadVAddr_i: in std_logic_vector(AddrWidth);
+        ctrlToWriteBadVAddr_i: in std_logic
     );
 end cp0_reg;
 
@@ -147,6 +151,18 @@ begin
                     when others =>
                         null;
                 end case;
+                if (ctrlToWriteBadVAddr_i = YES) then
+                    regArr(BAD_V_ADDR_REG) <= ctrlBadVAddr_i;
+                    regArr(STATUS_REG)(STATUS_EXL_BIT) <= '1';
+                    if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
+                        regArr(EPC_REG) <= currentInstAddr_i - 4;
+                        regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '1';
+                    else
+                        regArr(EPC_REG) <= currentInstAddr_i;
+                        regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '0';
+                    end if;
+                    regArr(CAUSE_REG)(CauseExcCodeBits) <= ADDR_ERR_LOAD_OR_IF_CAUSE;                    
+                end if;
             end if;
         end if;
     end process;
