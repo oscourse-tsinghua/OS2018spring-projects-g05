@@ -12,7 +12,7 @@ entity devctrl is
         devDataLoad_o: out std_logic_vector(DataWidth);
         devPhysicalAddr_i: in std_logic_vector(AddrWidth);
 
-        -- Signals connecting to ram_ctrl --
+        -- Signals connecting to sram_ctrl --
         ramEnable_o: out std_logic;
         ramReadEnable_o: out std_logic;
         ramDataSave_o: out std_logic_vector(DataWidth);

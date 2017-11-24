@@ -1,10 +1,10 @@
 -- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2017.2 (win64) Build 1909853 Thu Jun 15 18:39:09 MDT 2017
--- Date        : Wed Nov 22 18:32:45 2017
--- Host        : LAPTOP-FKIVSI39 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode synth_stub -rename_top clk_ctrl -prefix
---               clk_ctrl_ clk_ctrl_stub.vhdl
+-- Date        : Sat Nov 25 01:57:59 2017
+-- Host        : DESKTOP-JPEQ6FJ running 64-bit major release  (build 9200)
+-- Command     : write_vhdl -force -mode synth_stub
+--               E:/Development/nCore/nCore/thinpad_top/thinpad_top.srcs/sources_1/ip/clk_ctrl/clk_ctrl_stub.vhdl
 -- Design      : clk_ctrl
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7a100tfgg676-2L

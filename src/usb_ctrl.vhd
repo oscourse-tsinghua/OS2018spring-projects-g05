@@ -1,10 +1,10 @@
 library ieee;
 use ieee.std_logic_1164.all;
-use work.global.all;
+use work.global_const.all;
 
 entity usb_ctrl is
     port (
-        clk, rst: std_logic;
+        clk, rst: in std_logic;
 
         devEnable_i: in std_logic;
         addr_i: in std_logic_vector(AddrWidth);

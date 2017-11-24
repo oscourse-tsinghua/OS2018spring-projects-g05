@@ -43,7 +43,7 @@ begin
     end process;
 
     vga_ram_ist: entity work.vga_ram
-        port map(
+        port map (
             clka => clk,
             ena => devEnable_i and writeEnable_i,
             wea(0) => writeEnable_i,

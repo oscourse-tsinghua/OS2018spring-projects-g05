@@ -157,7 +157,7 @@ wire devEnable, devWrite, devBusy;
 wire[31:0] dataSave, dataLoad, addr;
 wire[3:0] byteSelect;
 wire[5:0] int;
-wire timerInt, comInt;
+wire timerInt, comInt, usbInt;
 assign int = {4'h0, comInt, timerInt};
 cpu cpu_ist(
     .clk(clk25),
@@ -179,8 +179,15 @@ wire[31:0] ramDataSave, ramDataLoad;
 wire flashEnable, flashReadEnable, flashBusy;
 wire[31:0] flashDataLoad;
 
+wire vgaEnable, vgaWriteEnable;
+wire[31:0] vgaWriteData;
+wire[3:0] vgaWriteByteSelect;
+
 wire comEnable, comReadEnable;
 wire[31:0] comDataSave, comDataLoad;
+
+wire usbEnable, usbReadEnable, usbWriteEnable, usbBusy;
+wire[31:0] usbReadData, usbWriteData;
 
 devctrl devctrl_ist(
     .devEnable_i(devEnable),
@@ -243,6 +250,20 @@ flash_ctrl flash_ctrl_ist(
     .flVpen_o(flash_vpen)
 );
 
+vga_ctrl vga_ctrl_ist(
+    .clk(clk25),
+    .rst(rst),
+    .devEnable_i(vgaEnable),
+    .addr_i(addr),
+    .writeEnable_i(vgaWriteEnable),
+    .writeData_i(vgaWriteData),
+    .writeByteSelect_i(vgaWriteByteSelect),
+    .de_o(video_de),
+    .rgb_o(video_pixel),
+    .hs_o(video_hsync),
+    .vs_o(video_vsync)
+);
+
 serial_ctrl serial_ctrl_ist(
     .clk(clk25),
     .rst(rst),
@@ -257,6 +278,27 @@ serial_ctrl serial_ctrl_ist(
     .txdBusy_i(txdBusy),
     .txdStart_o(txdStart),
     .txdData_o(txdData)
+);
+
+usb_ctrl usb_ctrl_ist(
+    .clk(clk25),
+    .rst(rst),
+    .devEnable_i(usbEnable),
+    .addr_i(addr),
+    .readEnable_i(usbReadEnable),
+    .readData_i(usbReadData),
+    .writeEnable_i(usbWriteEnable),
+    .writeData_i(usbWriteData),
+    .busy_o(usbBusy),
+    .int_o(usbInt),
+    .usbA0_o(sl811_a0),
+    .usbWE_o(sl811_we_n),
+    .usbRD_o(sl811_rd_n),
+    .usbCS_o(sl811_cs_n),
+    .usbRst_o(sl811_rst_n),
+    .usbDACK_o(sl811_dack),
+    .usbInt_i(sl811_int),
+    .usbData_io(sl811_data)
 );
 
 /* sram_ctrl Test 1: Alternatively write and read
