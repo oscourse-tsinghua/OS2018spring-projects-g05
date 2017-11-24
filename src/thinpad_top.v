@@ -228,6 +228,8 @@ devctrl devctrl_ist(
     .numData_o(numData)
 );
 
+// Please don't pass inout port into a sub-module
+wire ramTriStateWrite;
 sram_ctrl base_sram_ctrl(
     .clk(clk25),
     .rst(rst),
@@ -235,16 +237,16 @@ sram_ctrl base_sram_ctrl(
     .readEnable_i(ramReadEnable),
     .addr_i(addr),
     .byteSelect_i(byteSelect),
-    .dataSave_i(ramDataSave),
-    .dataLoad_o(ramDataLoad),
     .busy_o(ramWriteBusy),
-    .data_io(base_ram_data),
+    .triStateWrite_o(ramTriStateWrite),
     .addr_o(base_ram_addr),
     .be_n_o(base_ram_be_n),
     .ce_n_o(base_ram_ce_n),
     .oe_n_o(base_ram_oe_n),
     .we_n_o(base_ram_we_n)
 );
+assign base_ram_data = ramTriStateWrite ? ramDataSave : 32'hzzzzzzzz;
+assign ramDataLoad = base_ram_data;
 
 flash_ctrl flash_ctrl_ist(
     .clk(clk25),
