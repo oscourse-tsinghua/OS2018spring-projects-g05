@@ -21,34 +21,51 @@ entity vga_ctrl is
 end vga_ctrl;
 
 architecture bhv of vga_ctrl is
+
+    component vga_ram
+        port (
+            clka, ena, clkb, enb: in std_logic;
+            wea: in std_logic_vector(0 downto 0);
+            addra, addrb: in std_logic_vector(18 downto 0);
+            dina: in std_logic_vector(7 downto 0);
+            doutb: out std_logic_vector(7 downto 0)
+        );
+    end component;
+
     signal dout: std_logic_vector(7 downto 0);
     signal writeByte: std_logic_vector(7 downto 0);
     signal pixelAddr, nextPixelAddr: std_logic_vector(18 downto 0);
+    signal writeAddr: std_logic_vector(AddrWidth);
     signal x, nx: std_logic_vector(9 downto 0);
     signal y, ny: std_logic_vector(8 downto 0);
 begin
 
-    process (writeData_i, writeByteSelect_i) begin
+    process (writeData_i, writeByteSelect_i, addr_i) begin
         if (writeByteSelect_i(3) = '1') then
             writeByte <= writeData_i(31 downto 24);
+            writeAddr <= addr_i + 3;
         elsif (writeByteSelect_i(2) = '1') then
             writeByte <= writeData_i(23 downto 16);
+            writeAddr <= addr_i + 2;
         elsif (writeByteSelect_i(1) = '1') then
             writeByte <= writeData_i(15 downto 8);
+            writeAddr <= addr_i + 1;
         elsif (writeByteSelect_i(0) = '1') then
             writeByte <= writeData_i(7 downto 0);
+            writeAddr <= addr_i;
         else
             writeByte <= (others => '0');
+            writeAddr <= (others => '0');
         end if;
     end process;
 
-    vga_ram_ist: entity work.vga_ram
-        port map(
+    vga_ram_ist: vga_ram
+        port map (
             clka => clk,
             ena => devEnable_i and writeEnable_i,
             wea(0) => writeEnable_i,
             dina => writeByte,
-            addra => addr_i(18 downto 0),
+            addra => writeAddr(18 downto 0),
             clkb => clk,
             enb => devEnable_i,
             doutb => dout,

@@ -168,8 +168,9 @@ wire devEnable, devWrite, devBusy;
 wire[31:0] dataSave, dataLoad, addr;
 wire[3:0] byteSelect;
 wire[5:0] int;
-wire timerInt, comInt;
-assign int = {4'h0, comInt, timerInt};
+wire timerInt, comInt, usbInt;
+assign int = {4'h0, comInt, usbInt, timerInt};
+
 cpu #(
     .instEntranceAddr(functionalTest == 1 ? 32'h80000000 : 32'hbfc00000),
     .exceptBootBaseAddr(functionalTest == 1 ? 32'h80000000 : 32'hbfc00000),
@@ -194,9 +195,14 @@ wire[31:0] ramDataSave, ramDataLoad;
 wire flashEnable, flashReadEnable, flashBusy;
 wire[31:0] flashDataLoad;
 
+wire vgaEnable, vgaWriteEnable;
+wire[31:0] vgaWriteData;
+
 wire comEnable, comReadEnable;
 wire[31:0] comDataSave, comDataLoad;
 
+wire usbEnable, usbReadEnable, usbWriteEnable, usbBusy;
+wire[31:0] usbReadData, usbWriteData;
 wire ledEnable, numEnable;
 wire[15:0] ledData;
 wire[7:0] numData;
@@ -220,10 +226,21 @@ devctrl devctrl_ist(
     .flashDataLoad_i(flashDataLoad),
     .flashBusy_i(flashBusy),
 
+    .vgaEnable_o(vgaEnable),
+    .vgaWriteEnable_o(vgaWriteEnable),
+    .vgaWriteData_o(vgaWriteData),
+
     .comEnable_o(comEnable),
     .comReadEnable_o(comReadEnable),
     .comDataSave_o(comDataSave),
     .comDataLoad_i(comDataLoad),
+
+    .usbEnable_o(usbEnable),
+    .usbReadEnable_o(usbReadEnable),
+    .usbReadData_i(usbReadData),
+    .usbWriteEnable_o(usbWriteEnable),
+    .usbWriteData_o(usbWriteData),
+    .usbBusy_i(usbBusy),
 
     .ledEnable_o(ledEnable),
     .ledData_o(ledData),
@@ -269,6 +286,20 @@ flash_ctrl flash_ctrl_ist(
     .flVpen_o(flash_vpen)
 );
 
+vga_ctrl vga_ctrl_ist(
+    .clk(clk25),
+    .rst(rst),
+    .devEnable_i(vgaEnable),
+    .addr_i(addr),
+    .writeEnable_i(vgaWriteEnable),
+    .writeData_i(vgaWriteData),
+    .writeByteSelect_i(byteSelect),
+    .de_o(video_de),
+    .rgb_o(video_pixel),
+    .hs_o(video_hsync),
+    .vs_o(video_vsync)
+);
+
 serial_ctrl serial_ctrl_ist(
     .clk(clk25),
     .rst(rst),
@@ -279,10 +310,30 @@ serial_ctrl serial_ctrl_ist(
     .dataLoad_o(comDataLoad),
     .int_o(comInt),
     .rxdReady_i(rxdReady),
-    .rxdData_i(rxdData),
     .txdBusy_i(txdBusy),
     .txdStart_o(txdStart),
     .txdData_o(txdData)
+);
+
+usb_ctrl usb_ctrl_ist(
+    .clk(clk25),
+    .rst(rst),
+    .devEnable_i(usbEnable),
+    .addr_i(addr),
+    .readEnable_i(usbReadEnable),
+    .readData_o(usbReadData),
+    .writeEnable_i(usbWriteEnable),
+    .writeData_i(usbWriteData),
+    .busy_o(usbBusy),
+    .int_o(usbInt),
+    .usbA0_o(sl811_a0),
+    .usbWE_o(sl811_we_n),
+    .usbRD_o(sl811_rd_n),
+    .usbCS_o(sl811_cs_n),
+    .usbRst_o(sl811_rst_n),
+    .usbDACK_o(sl811_dack),
+    .usbInt_i(sl811_int),
+    .usbData_io(sl811_data)
 );
 
 always@(posedge clk25) begin

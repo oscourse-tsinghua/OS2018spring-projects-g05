@@ -12,7 +12,7 @@ entity devctrl is
         devDataLoad_o: out std_logic_vector(DataWidth);
         devPhysicalAddr_i: in std_logic_vector(AddrWidth);
 
-        -- Signals connecting to ram_ctrl --
+        -- Signals connecting to sram_ctrl --
         ramEnable_o: out std_logic;
         ramReadEnable_o: out std_logic;
         ramDataSave_o: out std_logic_vector(DataWidth);
@@ -25,11 +25,24 @@ entity devctrl is
         flashDataLoad_i: in std_logic_vector(DataWidth);
         flashBusy_i: in std_logic;
 
+        -- Signals connecting to vga_ctrl --
+        vgaEnable_o: out std_logic;
+        vgaWriteEnable_o: out std_logic;
+        vgaWriteData_o: out std_logic_vector(DataWidth);
+
         -- Signals connecting to serial_ctrl --
         comEnable_o: out std_logic;
         comReadEnable_o: out std_logic;
         comDataSave_o: out std_logic_vector(DataWidth);
         comDataLoad_i: in std_logic_vector(DataWidth);
+
+        -- Signals connecting to usb_ctrl --
+        usbEnable_o: out std_logic;
+        usbReadEnable_o: out std_logic;
+        usbReadData_i: in std_logic_vector(DataWidth);
+        usbWriteEnable_o: out std_logic;
+        usbWriteData_o: out std_logic_vector(DataWidth);
+        usbBusy_i: in std_logic;
 
         ledEnable_o: out std_logic;
         ledData_o: out std_logic_vector(15 downto 0);
@@ -48,6 +61,10 @@ begin
         ramDataSave_o <= (others => '0');
         flashEnable_o <= DISABLE;
         flashReadEnable_o <= ENABLE;
+
+        vgaEnable_o <= ENABLE;
+        vgaWriteEnable_o <= DISABLE;
+        vgaWriteData_o <= (others => '0');
         ledEnable_o <= DISABLE;
         ledData_o <= (others => '0');
         numEnable_o <= DISABLE;
@@ -77,6 +94,11 @@ begin
                 comReadEnable_o <= not devWrite_i;
                 comDataSave_o <= devDataSave_i;
                 devDataLoad_o <= comDataLoad_i;
+            elsif (devPhysicalAddr_i >= 32ux"1fe00000" and devPhysicalAddr_i <= 32ux"1fe4afff") then
+                -- VGA --
+                -- designated by myself, software needed to support --
+                vgaWriteEnable_o <= ENABLE;
+                vgaWriteData_o <= devDataSave_i;
             elsif (devPhysicalAddr_i = 32ux"3fd0f000") then
                 -- LED. Required by functional test --
                 ledEnable_o <= ENABLE;
