@@ -63,58 +63,63 @@ architecture bhv of ex_mem is
 begin
     process(clk) begin
         if (rising_edge(clk)) then
-            toWriteReg_o <= NO;
-            writeRegAddr_o <= (others => '0');
-            writeRegData_o <= (others => '0');
+            if (
+                rst = RST_ENABLE or
+                flush_i = YES or
+                (stall_i(EX_STOP_IDX) = PIPELINE_STOP and stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP)
+            ) then
+                toWriteReg_o <= NO;
+                writeRegAddr_o <= (others => '0');
+                writeRegData_o <= (others => '0');
 
-            toWriteHi_o <= NO;
-            toWriteLo_o <= NO;
-            writeHiData_o <= (others => '0');
-            writeLoData_o <= (others => '0');
+                toWriteHi_o <= NO;
+                toWriteLo_o <= NO;
+                writeHiData_o <= (others => '0');
+                writeLoData_o <= (others => '0');
 
-            memt_o <= INVALID;
-            memAddr_o <= (others => '0');
-            memData_o <= (others => '0');
+                memt_o <= INVALID;
+                memAddr_o <= (others => '0');
+                memData_o <= (others => '0');
 
-            tempProduct_o <= (others => '0');
-            cnt_o <= (others => '0');
-            exceptCause_o <= NO_CAUSE;
-            isInDelaySlot_o <= NO;
-            currentInstAddr_o <= (others => '0');
+                tempProduct_o <= (others => '0');
+                cnt_o <= (others => '0');
+                exceptCause_o <= NO_CAUSE;
+                isInDelaySlot_o <= NO;
+                currentInstAddr_o <= (others => '0');
 
-            cp0RegWe_o <= NO;
-            cp0RegData_o <= (others => '0');
-            cp0RegWriteAddr_o <= (others => '0');
-            isTlbwi_o <= NO;
-            isTlbwr_o <= NO;
-            if (rst /= RST_ENABLE and flush_i = NO) then
+                cp0RegWe_o <= NO;
+                cp0RegData_o <= (others => '0');
+                cp0RegWriteAddr_o <= (others => '0');
+                isTlbwi_o <= NO;
+                isTlbwr_o <= NO;
+
                 if (stall_i(EX_STOP_IDX) = PIPELINE_STOP and stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                     tempProduct_o <= tempProduct_i;
                     cnt_o <= cnt_i;
-                elsif (stall_i(EX_STOP_IDX) = PIPELINE_NONSTOP) then
-                    toWriteReg_o <= toWriteReg_i;
-                    writeRegAddr_o <= writeRegAddr_i;
-                    writeRegData_o <= writeRegData_i;
-
-                    toWriteHi_o <= toWriteHi_i;
-                    toWriteLo_o <= toWriteLo_i;
-                    writeHiData_o <= writeHiData_i;
-                    writeLoData_o <= writeLoData_i;
-
-                    memt_o <= memt_i;
-                    memAddr_o <= memAddr_i;
-                    memData_o <= memData_i;
-
-                    cp0RegWe_o <= cp0RegWe_i;
-                    cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
-                    cp0RegData_o <= cp0RegData_i;
-                    isTlbwi_o <= isTlbwi_i;
-                    isTlbwr_o <= isTlbwr_i;
-
-                    exceptCause_o <= exceptCause_i;
-                    isInDelaySlot_o <= isInDelaySlot_i;
-                    currentInstAddr_o <= currentInstAddr_i;
                 end if;
+            elsif (stall_i(EX_STOP_IDX) = PIPELINE_NONSTOP) then
+                toWriteReg_o <= toWriteReg_i;
+                writeRegAddr_o <= writeRegAddr_i;
+                writeRegData_o <= writeRegData_i;
+
+                toWriteHi_o <= toWriteHi_i;
+                toWriteLo_o <= toWriteLo_i;
+                writeHiData_o <= writeHiData_i;
+                writeLoData_o <= writeLoData_i;
+
+                memt_o <= memt_i;
+                memAddr_o <= memAddr_i;
+                memData_o <= memData_i;
+
+                cp0RegWe_o <= cp0RegWe_i;
+                cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
+                cp0RegData_o <= cp0RegData_i;
+                isTlbwi_o <= isTlbwi_i;
+                isTlbwr_o <= isTlbwr_i;
+
+                exceptCause_o <= exceptCause_i;
+                isInDelaySlot_o <= isInDelaySlot_i;
+                currentInstAddr_o <= currentInstAddr_i;
             end if;
         end if;
     end process;
