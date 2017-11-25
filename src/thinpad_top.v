@@ -286,7 +286,7 @@ usb_ctrl usb_ctrl_ist(
     .devEnable_i(usbEnable),
     .addr_i(addr),
     .readEnable_i(usbReadEnable),
-    .readData_i(usbReadData),
+    .readData_o(usbReadData),
     .writeEnable_i(usbWriteEnable),
     .writeData_i(usbWriteData),
     .busy_o(usbBusy),

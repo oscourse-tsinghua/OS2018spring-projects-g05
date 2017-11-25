@@ -21,6 +21,17 @@ entity vga_ctrl is
 end vga_ctrl;
 
 architecture bhv of vga_ctrl is
+
+    component vga_ram
+        port (
+            clka, ena, clkb, enb: in std_logic;
+            wea: in std_logic_vector(0 downto 0);
+            addra, addrb: in std_logic_vector(18 downto 0);
+            dina: in std_logic_vector(7 downto 0);
+            doutb: out std_logic_vector(7 downto 0)
+        );
+    end component;
+
     signal dout: std_logic_vector(7 downto 0);
     signal writeByte: std_logic_vector(7 downto 0);
     signal pixelAddr, nextPixelAddr: std_logic_vector(18 downto 0);
@@ -42,7 +53,7 @@ begin
         end if;
     end process;
 
-    vga_ram_ist: entity work.vga_ram
+    vga_ram_ist: vga_ram
         port map (
             clka => clk,
             ena => devEnable_i and writeEnable_i,
