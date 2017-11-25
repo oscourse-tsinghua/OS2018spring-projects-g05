@@ -12,7 +12,7 @@ entity cpu is
         tlbRefillExl0Offset: std_logic_vector(AddrWidth) := 32ux"000";
         generalExceptOffset: std_logic_vector(AddrWidth) := 32ux"180";
         interruptIv1Offset: std_logic_vector(AddrWidth) := 32ux"200";
-        instConvEndian: boolean := true
+        convEndianEnable: boolean := false
     );
     port (
         clk, rst: in std_logic;
@@ -54,7 +54,25 @@ architecture bhv of cpu is
     signal entryWrite: std_logic;
     signal entry: TLBEntry;
 
+    signal dataLoadConv, dataSaveConv: std_logic_vector(DataWidth);
+
 begin
+    conv_endian_load: entity work.conv_endian
+        generic map (
+            enable => convEndianEnable
+        )
+        port map (
+            input => devDataLoad_i,
+            output => dataLoadConv
+        );
+    conv_endian_save: entity work.conv_endian
+        generic map (
+            enable => convEndianEnable
+        )
+        port map (
+            input => dataSaveConv,
+            output => devDataSave_o
+        );
 
     devWrite_o <= devWrite;
 
@@ -98,8 +116,8 @@ begin
             -- Connect to external device (MMU)
             devEnable_o => mmuEnable,
             devWrite_o => devWrite,
-            devData_i => devDataLoad_i,
-            devData_o => devDataSave_o,
+            devData_i => dataLoadConv,
+            devData_o => dataSaveConv,
             devAddr_o => devVirtualAddr,
             devByteSelect_o => devByteSelect_o,
             devBusy_i => devBusy_i,
@@ -113,8 +131,7 @@ begin
             exceptBootBaseAddr      => exceptBootBaseAddr,
             tlbRefillExl0Offset     => tlbRefillExl0Offset,
             generalExceptOffset     => generalExceptOffset,
-            interruptIv1Offset      => interruptIv1Offset,
-            instConvEndian          => instConvEndian
+            interruptIv1Offset      => interruptIv1Offset
         )
         port map (
             rst => rst,

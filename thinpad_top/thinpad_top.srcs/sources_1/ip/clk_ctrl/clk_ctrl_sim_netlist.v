@@ -1,10 +1,10 @@
 // Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2017.2 (win64) Build 1909853 Thu Jun 15 18:39:09 MDT 2017
-// Date        : Wed Nov 22 18:32:45 2017
+// Date        : Thu Nov 23 18:23:34 2017
 // Host        : LAPTOP-FKIVSI39 running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode funcsim -rename_top clk_ctrl -prefix
-//               clk_ctrl_ clk_ctrl_sim_netlist.v
+// Command     : write_verilog -force -mode funcsim
+//               D:/docs/projects/nCore/thinpad_top/thinpad_top.srcs/sources_1/ip/clk_ctrl/clk_ctrl_sim_netlist.v
 // Design      : clk_ctrl
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -15,28 +15,23 @@
 (* NotValidForBitStream *)
 module clk_ctrl
    (clk_out1,
-    reset,
     clk_in1);
   output clk_out1;
-  input reset;
   input clk_in1;
 
   (* IBUF_LOW_PWR *) wire clk_in1;
   wire clk_out1;
-  wire reset;
 
   clk_ctrl_clk_ctrl_clk_wiz inst
        (.clk_in1(clk_in1),
-        .clk_out1(clk_out1),
-        .reset(reset));
+        .clk_out1(clk_out1));
 endmodule
 
+(* ORIG_REF_NAME = "clk_ctrl_clk_wiz" *) 
 module clk_ctrl_clk_ctrl_clk_wiz
    (clk_out1,
-    reset,
     clk_in1);
   output clk_out1;
-  input reset;
   input clk_in1;
 
   wire clk_in1;
@@ -45,7 +40,6 @@ module clk_ctrl_clk_ctrl_clk_wiz
   wire clk_out1_clk_ctrl;
   wire clkfbout_buf_clk_ctrl;
   wire clkfbout_clk_ctrl;
-  wire reset;
   wire NLW_mmcm_adv_inst_CLKFBOUTB_UNCONNECTED;
   wire NLW_mmcm_adv_inst_CLKFBSTOPPED_UNCONNECTED;
   wire NLW_mmcm_adv_inst_CLKINSTOPPED_UNCONNECTED;
@@ -164,7 +158,7 @@ module clk_ctrl_clk_ctrl_clk_wiz
         .PSEN(1'b0),
         .PSINCDEC(1'b0),
         .PWRDWN(1'b0),
-        .RST(reset));
+        .RST(1'b0));
 endmodule
 `ifndef GLBL
 `define GLBL

@@ -3,8 +3,16 @@ set_property -dict {PACKAGE_PIN D18 IOSTANDARD LVCMOS33} [get_ports clk_in] ;#50
 set_property -dict {PACKAGE_PIN C18 IOSTANDARD LVCMOS33} [get_ports clk_uart_in] ;#11.0592MHz clock for UART
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets clk_uart_in_IBUF]
 
+# 50MHz main clock in
 create_clock -period 20.000 -name clk_in -waveform {0.000 10.000} [get_ports clk_in]
+# 11.0592MHz clock for UART
 create_clock -period 90.422 -name clk_uart_in -waveform {0.000 45.211} [get_ports clk_uart_in]
+# 25MHz derived clock
+# Code below may bring warnings in synthesis stage and it doesn't matter
+# It's only needed in implementation stage
+create_generated_clock -name clk25 [get_pins -hierarchical *mmcm_adv_inst/CLKOUT0]\
+    -source [get_pins -hierarchical *mmcm_adv_inst/CLKIN1]\
+    -master_clock clk_in
 
 #Touch Button
 set_property IOSTANDARD LVCMOS33 [get_ports touch_btn[*]]
@@ -217,6 +225,11 @@ set_property PACKAGE_PIN B22 [get_ports flash_vpen]
 set_property IOSTANDARD LVCMOS33 [get_ports flash_we_n]
 set_property PACKAGE_PIN C1 [get_ports flash_we_n]
 
+# If we want to use constraint to implement the holding time for writing,
+# we can set `addr` and `data` to hold for 11ns (-min -11), and set `we` to
+# setup within 10ns (-max 30, i.e. (clk25 period) 40ns - 10ns = 30ns)
+# However, this method is too time-consuming in the implementation stage,
+# so we are still using `and clk` method in `sram_ctrl`
 set_property IOSTANDARD LVCMOS33 [get_ports {base_ram_addr[*]}]
 set_property PACKAGE_PIN F24 [get_ports {base_ram_addr[0]}]
 set_property PACKAGE_PIN G24 [get_ports {base_ram_addr[1]}]

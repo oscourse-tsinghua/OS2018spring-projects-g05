@@ -58,6 +58,8 @@ module thinpad_top(/*autoport*/
          dip_sw,
          touch_btn);
 
+parameter functionalTest = 0;
+
 input wire clk_in; //50MHz main clock input
 input wire clk_uart_in; //11.0592MHz clock for UART
 
@@ -139,11 +141,20 @@ assign rst = touch_btn[5];
 
 wire clk25; // 25MHz clock
 clk_ctrl clk_ctrl_ist(
-    .reset(rst),
     .clk_in1(clk_in),
     .clk_out1(clk25)
 );
 
+// 7-Segment display decoder
+reg[7:0] numberHold;
+SEG7_LUT segL(.oSEG1({leds[23:22],leds[19:17],leds[20],leds[21],leds[16]}), .iDIG(numberHold[3:0]));
+SEG7_LUT segH(.oSEG1({leds[31:30],leds[27:25],leds[28],leds[29],leds[24]}), .iDIG(numberHold[7:4]));
+
+// LED
+reg[15:0] ledHold;
+assign leds[15:0] = ledHold;
+
+// Serial COM
 wire rxdReady, txdBusy, txdStart;
 wire[7:0] rxdData, txdData;
 async_receiver
@@ -159,7 +170,11 @@ wire[3:0] byteSelect;
 wire[5:0] int;
 wire timerInt, comInt;
 assign int = {4'h0, comInt, timerInt};
-cpu cpu_ist(
+cpu #(
+    .instEntranceAddr(functionalTest == 1 ? 32'h80000000 : 32'hbfc00000),
+    .exceptBootBaseAddr(functionalTest == 1 ? 32'h80000000 : 32'hbfc00000),
+    .tlbRefillExl0Offset(functionalTest == 1 ? 32'h180 : 32'h000)
+) cpu_ist (
     .clk(clk25),
     .rst(rst),
     .devEnable_o(devEnable),
@@ -181,6 +196,10 @@ wire[31:0] flashDataLoad;
 
 wire comEnable, comReadEnable;
 wire[31:0] comDataSave, comDataLoad;
+
+wire ledEnable, numEnable;
+wire[15:0] ledData;
+wire[7:0] numData;
 
 devctrl devctrl_ist(
     .devEnable_i(devEnable),
@@ -204,9 +223,16 @@ devctrl devctrl_ist(
     .comEnable_o(comEnable),
     .comReadEnable_o(comReadEnable),
     .comDataSave_o(comDataSave),
-    .comDataLoad_i(comDataLoad)
+    .comDataLoad_i(comDataLoad),
+
+    .ledEnable_o(ledEnable),
+    .ledData_o(ledData),
+    .numEnable_o(numEnable),
+    .numData_o(numData)
 );
 
+// Please don't pass inout port into a sub-module
+wire ramTriStateWrite;
 sram_ctrl base_sram_ctrl(
     .clk(clk25),
     .rst(rst),
@@ -214,16 +240,16 @@ sram_ctrl base_sram_ctrl(
     .readEnable_i(ramReadEnable),
     .addr_i(addr),
     .byteSelect_i(byteSelect),
-    .dataSave_i(ramDataSave),
-    .dataLoad_o(ramDataLoad),
     .busy_o(ramWriteBusy),
-    .data_io(base_ram_data),
+    .triStateWrite_o(ramTriStateWrite),
     .addr_o(base_ram_addr),
     .be_n_o(base_ram_be_n),
     .ce_n_o(base_ram_ce_n),
     .oe_n_o(base_ram_oe_n),
     .we_n_o(base_ram_we_n)
 );
+assign base_ram_data = ramTriStateWrite ? ramDataSave : 32'hzzzzzzzz;
+assign ramDataLoad = base_ram_data;
 
 flash_ctrl flash_ctrl_ist(
     .clk(clk25),
@@ -258,6 +284,18 @@ serial_ctrl serial_ctrl_ist(
     .txdStart_o(txdStart),
     .txdData_o(txdData)
 );
+
+always@(posedge clk25) begin
+    if (rst == 1) begin
+        ledHold <= 0;
+        numberHold <= 0;
+    end else begin
+        if (ledEnable)
+            ledHold <= ledData;
+        if (numEnable)
+            numberHold <= numData;
+    end
+end
 
 /* sram_ctrl Test 1: Alternatively write and read
  * 1. Press and release rst

@@ -14,8 +14,7 @@ entity datapath is
         exceptBootBaseAddr:     std_logic_vector(AddrWidth);
         tlbRefillExl0Offset:    std_logic_vector(AddrWidth);
         generalExceptOffset:    std_logic_vector(AddrWidth);
-        interruptIv1Offset:     std_logic_vector(AddrWidth);
-        instConvEndian:         boolean
+        interruptIv1Offset:     std_logic_vector(AddrWidth)
     );
     port (
         rst, clk: in std_logic;
@@ -58,7 +57,6 @@ architecture bhv of datapath is
     -- a: hi_lo
     -- b: ctrl
     -- c: cp0
-    -- x: conv_endian
 
     -- Signal connecting pc_reg and if_id --
     signal pc_12: std_logic_vector(AddrWidth);
@@ -68,12 +66,6 @@ architecture bhv of datapath is
     signal pc_24: std_logic_vector(AddrWidth);
     signal inst_24: std_logic_vector(InstWidth);
     signal exceptCause_24: std_logic_vector(ExceptionCauseWidth);
-
-    -- Signals from conv_endian --
-    signal inst_x: std_logic_vector(InstWidth);
-
-    -- Signals into if_id --
-    signal inst_2: std_logic_vector(InstWidth);
 
     -- Signals connecting regfile and id --
     signal regReadEnable1_43, regReadEnable2_43: std_logic;
@@ -272,7 +264,7 @@ begin
             stall_i => stall,
             pc_i => pc_12,
             instEnable_i => instEnable_12,
-            inst_i => inst_2,
+            inst_i => instData_i,
             exceptCause_i => instExcept_i,
             pc_o => pc_24,
             inst_o => inst_24,
@@ -280,14 +272,6 @@ begin
             exceptCause_o => exceptCause_24
         );
     instAddr_o <= pc_12;
-
-    conv_endian_ist: entity work.conv_endian
-        port map (
-            input => instData_i,
-            output => inst_x
-        );
-
-    inst_2 <= inst_x when instConvEndian else instData_i;
 
     regfile_ist: entity work.regfile
         port map (
