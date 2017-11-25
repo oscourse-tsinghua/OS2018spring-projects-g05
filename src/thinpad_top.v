@@ -214,7 +214,14 @@ devctrl devctrl_ist(
     .comEnable_o(comEnable),
     .comReadEnable_o(comReadEnable),
     .comDataSave_o(comDataSave),
-    .comDataLoad_i(comDataLoad)
+    .comDataLoad_i(comDataLoad),
+
+    .usbEnable_o(usbEnable),
+    .usbReadEnable_o(usbReadEnable),
+    .usbReadData_i(usbReadData),
+    .usbWriteEnable_o(usbWriteEnable),
+    .usbWriteData_o(usbWriteData),
+    .usbBusy_i(usbBusy)
 );
 
 sram_ctrl base_sram_ctrl(

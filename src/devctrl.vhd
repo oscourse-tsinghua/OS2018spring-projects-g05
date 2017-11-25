@@ -34,7 +34,15 @@ entity devctrl is
         comEnable_o: out std_logic;
         comReadEnable_o: out std_logic;
         comDataSave_o: out std_logic_vector(DataWidth);
-        comDataLoad_i: in std_logic_vector(DataWidth)
+        comDataLoad_i: in std_logic_vector(DataWidth);
+
+        -- Signals connecting to usb_ctrl --
+        usbEnable_o: out std_logic;
+        usbReadEnable_o: out std_logic;
+        usbReadData_i: in std_logic_vector(DataWidth);
+        usbWriteEnable_o: out std_logic;
+        usbWriteData_o: out std_logic_vector(DataWidth);
+        usbBusy_i: in std_logic
     );
 end devctrl;
 
