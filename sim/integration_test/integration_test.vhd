@@ -57,8 +57,7 @@ begin
             exceptBootBaseAddr      => 32ux"8000_0000",
             tlbRefillExl0Offset     => 32ux"180",
             generalExceptOffset     => 32ux"180",
-            interruptIv1Offset      => 32ux"200",
-            instConvEndian          => false
+            interruptIv1Offset      => 32ux"200"
         )
         port map (
             rst => rst, clk => clk,

@@ -37,6 +37,10 @@ end memctrl;
 architecture bhv of memctrl is begin
     process (all) begin
         devEnable_o <= DISABLE;
+        devWrite_o <= NO;
+        devData_o <= (others => '0');
+        devAddr_o <= (others => '0');
+        devByteSelect_o <= "0000";
         instData_o <= (others => '0');
         dataData_o <= (others => '0');
         instStall_o <= PIPELINE_NONSTOP;

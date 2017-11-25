@@ -42,7 +42,12 @@ entity devctrl is
         usbReadData_i: in std_logic_vector(DataWidth);
         usbWriteEnable_o: out std_logic;
         usbWriteData_o: out std_logic_vector(DataWidth);
-        usbBusy_i: in std_logic
+        usbBusy_i: in std_logic;
+
+        ledEnable_o: out std_logic;
+        ledData_o: out std_logic_vector(15 downto 0);
+        numEnable_o: out std_logic;
+        numData_o: out std_logic_vector(7 downto 0)
     );
 end devctrl;
 
@@ -56,9 +61,14 @@ begin
         ramDataSave_o <= (others => '0');
         flashEnable_o <= DISABLE;
         flashReadEnable_o <= ENABLE;
+
         vgaEnable_o <= ENABLE;
         vgaWriteEnable_o <= DISABLE;
         vgaWriteData_o <= (others => '0');
+        ledEnable_o <= DISABLE;
+        ledData_o <= (others => '0');
+        numEnable_o <= DISABLE;
+        numData_o <= (others => '0');
 
         if (devEnable_i = ENABLE) then
             if (devPhysicalAddr_i <= 32ux"fffff") then
@@ -89,6 +99,14 @@ begin
                 -- designated by myself, software needed to support --
                 vgaWriteEnable_o <= ENABLE;
                 vgaWriteData_o <= devDataSave_i;
+            elsif (devPhysicalAddr_i = 32ux"3fd0f000") then
+                -- LED. Required by functional test --
+                ledEnable_o <= ENABLE;
+                ledData_o <= devDataSave_i(15 downto 0);
+            elsif (devPhysicalAddr_i = 32ux"3fd0f010") then
+                -- 7-seg display. Required by functional test --
+                numEnable_o <= ENABLE;
+                numData_o <= devDataSave_i(7 downto 0);
             end if;
         end if;
     end process;
