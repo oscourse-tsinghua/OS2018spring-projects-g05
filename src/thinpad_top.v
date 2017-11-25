@@ -158,7 +158,7 @@ wire[31:0] dataSave, dataLoad, addr;
 wire[3:0] byteSelect;
 wire[5:0] int;
 wire timerInt, comInt, usbInt;
-assign int = {4'h0, comInt, timerInt};
+assign int = {4'h0, comInt, usbInt, timerInt};
 cpu cpu_ist(
     .clk(clk25),
     .rst(rst),
@@ -181,7 +181,6 @@ wire[31:0] flashDataLoad;
 
 wire vgaEnable, vgaWriteEnable;
 wire[31:0] vgaWriteData;
-wire[3:0] vgaWriteByteSelect;
 
 wire comEnable, comReadEnable;
 wire[31:0] comDataSave, comDataLoad;
@@ -207,6 +206,10 @@ devctrl devctrl_ist(
     .flashReadEnable_o(flashReadEnable),
     .flashDataLoad_i(flashDataLoad),
     .flashBusy_i(flashBusy),
+
+    .vgaEnable_o(vgaEnable),
+    .vgaWriteEnable_o(vgaWriteEnable),
+    .vgaWriteData_o(vgaWriteData),
 
     .comEnable_o(comEnable),
     .comReadEnable_o(comReadEnable),
@@ -257,7 +260,7 @@ vga_ctrl vga_ctrl_ist(
     .addr_i(addr),
     .writeEnable_i(vgaWriteEnable),
     .writeData_i(vgaWriteData),
-    .writeByteSelect_i(vgaWriteByteSelect),
+    .writeByteSelect_i(byteSelect),
     .de_o(video_de),
     .rgb_o(video_pixel),
     .hs_o(video_hsync),
@@ -274,7 +277,6 @@ serial_ctrl serial_ctrl_ist(
     .dataLoad_o(comDataLoad),
     .int_o(comInt),
     .rxdReady_i(rxdReady),
-    .rxdData_i(rxdData),
     .txdBusy_i(txdBusy),
     .txdStart_o(txdStart),
     .txdData_o(txdData)

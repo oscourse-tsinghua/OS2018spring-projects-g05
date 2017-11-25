@@ -25,6 +25,11 @@ entity devctrl is
         flashDataLoad_i: in std_logic_vector(DataWidth);
         flashBusy_i: in std_logic;
 
+        -- Signals connecting to vga_ctrl --
+        vgaEnable_o: out std_logic;
+        vgaWriteEnable_o: out std_logic;
+        vgaWriteData_o: out std_logic_vector(DataWidth);
+
         -- Signals connecting to serial_ctrl --
         comEnable_o: out std_logic;
         comReadEnable_o: out std_logic;
@@ -43,6 +48,9 @@ begin
         ramDataSave_o <= (others => '0');
         flashEnable_o <= DISABLE;
         flashReadEnable_o <= ENABLE;
+        vgaEnable_o <= ENABLE;
+        vgaWriteEnable_o <= DISABLE;
+        vgaWriteData_o <= (others => '0');
 
         if (devEnable_i = ENABLE) then
             if (devPhysicalAddr_i <= 32ux"fffff") then
@@ -68,6 +76,11 @@ begin
                 comReadEnable_o <= not devWrite_i;
                 comDataSave_o <= devDataSave_i;
                 devDataLoad_o <= comDataLoad_i;
+            elsif (devPhysicalAddr_i >= 32ux"1fe00000" and devPhysicalAddr_i <= 32ux"1fe4afff") then
+                -- VGA --
+                -- designated by myself, software needed to support --
+                vgaWriteEnable_o <= ENABLE;
+                vgaWriteData_o <= devDataSave_i;
             end if;
         end if;
     end process;
