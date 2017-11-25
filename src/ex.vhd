@@ -95,9 +95,6 @@ architecture bhv of ex is
     signal calcMult: std_logic := '0';
     signal product: std_logic_vector(DoubleDataWidth);
     signal trapAssert: std_logic;
-    signal reg2IMux: std_logic_vector(DataWidth);
-    signal resultSum: std_logic_vector(DataWidth);
-    signal ovSum: std_logic;
     signal reg1Ltreg2: std_logic;
 begin
     memt_o <= memt_i;
@@ -203,6 +200,9 @@ begin
     process(all)
         variable res: std_logic_vector(DataWidth);
         variable res64: std_logic_vector(DoubleDataWidth);
+        variable ovSum: std_logic;
+        variable resultSum: std_logic_vector(DataWidth);
+        variable reg2IMux: std_logic_vector(DataWidth);
     begin
         toWriteHi_o <= NO;
         toWriteLo_o <= NO;
@@ -223,14 +223,18 @@ begin
 
         exceptCause_o <= exceptCause_i;
 
+        resultSum := (others => 'X');
+        reg2IMux := (others => 'X');
+        ovSum := 'X'; -- Otherwise it will introduce a level latch to keep the prior value
+
         if (rst = RST_DISABLE) then
             if (alut_i = ALU_SUB or alut_i = ALU_SUBU or alut_i = ALU_SLT) then
-                reg2IMux <= not(operand2_i) + 1;
+                reg2IMux := not(operand2_i) + 1;
             else
-                reg2IMux <= operand2_i;
+                reg2IMux := operand2_i;
             end if;
-            resultSum <= operand1_i + reg2IMux;
-            ovSum <= (((not operand1_i(31)) and (not reg2IMux(31))) and resultSum(31))
+            resultSum := operand1_i + reg2IMux;
+            ovSum := (((not operand1_i(31)) and (not reg2IMux(31))) and resultSum(31))
                         or ((operand1_i(31) and reg2IMux(31)) and (not resultSum(31)));
             writeRegAddr_o <= writeRegAddr_i;
             case alut_i is
@@ -403,7 +407,7 @@ begin
                     toWriteReg_o <= YES;
                 end if;
             end if;
-            
+
             if (memt_i = MEM_LW or memt_i = MEM_SW) then
                 if (memAddr_o(1 downto 0) /= "00") then
                     if (alut_i = ALU_LOAD) then

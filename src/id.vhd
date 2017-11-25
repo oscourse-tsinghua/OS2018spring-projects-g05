@@ -186,6 +186,15 @@ begin
         jumpToRs := NO;
         condJump := NO;
         exceptCause_o <= exceptCause_i;
+        regReadEnable1_o <= DISABLE;
+        regReadAddr1_o <= (others => '0');
+        regReadEnable2_o <= DISABLE;
+        regReadAddr2_o <= (others => '0');
+
+        -- Assign 'X' to them, otherwise it will introduce a level latch to keep prior values
+        operand1 := (others => 'X');
+        operand2 := (others => 'X');
+        operandX := (others => 'X');
 
         if (rst = RST_DISABLE) then
             isInvalid := YES;
@@ -737,18 +746,12 @@ begin
                     end if;
 
                 when SA =>
-                    regReadEnable1_o <= DISABLE;
-                    regReadAddr1_o <= (others => '0');
                     operand1 := "000000000000000000000000000" & instSa;
 
                 when IMM =>
-                    regReadEnable1_o <= DISABLE;
-                    regReadAddr1_o <= (others => '0');
                     operand1 := "0000000000000000" & instImm;
 
                 when SGN_IMM =>
-                    regReadEnable1_o <= DISABLE;
-                    regReadAddr1_o <= (others => '0');
                     if (instImm(15) = '0') then
                         operand1 := "0000000000000000" & instImm;
                     else
@@ -759,8 +762,6 @@ begin
                     operand1 := "000000000000000000000000000" & instRd;
 
                 when others =>
-                    regReadEnable1_o <= DISABLE;
-                    regReadAddr1_o <= (others => '0');
                     operand1 := (others => '0');
             end case;
 
@@ -787,13 +788,9 @@ begin
                     end if;
 
                 when IMM =>
-                    regReadEnable2_o <= DISABLE;
-                    regReadAddr2_o <= (others => '0');
                     operand2 := "0000000000000000" & instImm;
 
                 when SGN_IMM =>
-                    regReadEnable2_o <= DISABLE;
-                    regReadAddr2_o <= (others => '0');
                     if (instImm(15) = '0') then
                         operand2 := "0000000000000000" & instImm;
                     else
@@ -801,8 +798,6 @@ begin
                     end if;
 
                 when others =>
-                    regReadEnable2_o <= DISABLE;
-                    regReadAddr2_o <= (others => '0');
                     operand2 := (others => '0');
             end case;
 
