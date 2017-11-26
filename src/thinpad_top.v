@@ -171,19 +171,20 @@ wire timerInt, comInt, usbInt;
 assign int = {4'h0, comInt, usbInt, timerInt};
 
 cpu #(
-`ifdef FUNC_TEST
+`ifdef USE_BOOTLOADER
+    .instEntranceAddr(32'hbfc00000),
+`else
     .instEntranceAddr(32'h80000000),
+`endif
+`ifdef FUNC_TEST
     .exceptBootBaseAddr(32'h80000000),
     .tlbRefillExl0Offset(32'h180)
 `elsif MONITOR
-    .instEntranceAddr(32'hbfc00000),
     .exceptNormalBaseAddr(32'h80000000),
     .exceptBootBaseAddr(32'h80000000),
     .tlbRefillExl0Offset(32'h1000),
-    .generalExceptOffset(32'h1180),
-    .interruptIv1Offset(32'h1180)
+    .generalExceptOffset(32'h1180)
 `else
-    .instEntranceAddr(32'hbfc00000),
     .exceptBootBaseAddr(32'hbfc00000),
     .tlbRefillExl0Offset(32'h000)
 `endif
@@ -201,8 +202,10 @@ cpu #(
     .timerInt_o(timerInt)
 );
 
-wire ramEnable, ramReadEnable, ramWriteBusy;
-wire[31:0] ramDataSave, ramDataLoad;
+wire ram0Enable, ram0ReadEnable, ram0WriteBusy;
+wire[31:0] ram0DataSave, ram0DataLoad;
+wire ram1Enable, ram1ReadEnable, ram1WriteBusy;
+wire[31:0] ram1DataSave, ram1DataLoad;
 
 wire flashEnable, flashReadEnable, flashBusy;
 wire[31:0] flashDataLoad;
@@ -227,11 +230,16 @@ devctrl devctrl_ist(
     .devDataLoad_o(dataLoad),
     .devPhysicalAddr_i(addr),
 
-    .ramEnable_o(ramEnable),
-    .ramReadEnable_o(ramReadEnable),
-    .ramDataSave_o(ramDataSave),
-    .ramDataLoad_i(ramDataLoad),
-    .ramWriteBusy_i(ramWriteBusy),
+    .ram0Enable_o(ram0Enable),
+    .ram0ReadEnable_o(ram0ReadEnable),
+    .ram0DataSave_o(ram0DataSave),
+    .ram0DataLoad_i(ram0DataLoad),
+    .ram0WriteBusy_i(ram0WriteBusy),
+    .ram1Enable_o(ram1Enable),
+    .ram1ReadEnable_o(ram1ReadEnable),
+    .ram1DataSave_o(ram1DataSave),
+    .ram1DataLoad_i(ram1DataLoad),
+    .ram1WriteBusy_i(ram1WriteBusy),
 
     .flashEnable_o(flashEnable),
     .flashReadEnable_o(flashReadEnable),
@@ -261,24 +269,43 @@ devctrl devctrl_ist(
 );
 
 // Please don't pass inout port into a sub-module
-wire ramTriStateWrite;
+wire ram0TriStateWrite;
 sram_ctrl base_sram_ctrl(
     .clk(clk25),
     .rst(rst),
-    .enable_i(ramEnable),
-    .readEnable_i(ramReadEnable),
+    .enable_i(ram0Enable),
+    .readEnable_i(ram0ReadEnable),
     .addr_i(addr),
     .byteSelect_i(byteSelect),
-    .busy_o(ramWriteBusy),
-    .triStateWrite_o(ramTriStateWrite),
+    .busy_o(ram0WriteBusy),
+    .triStateWrite_o(ram0TriStateWrite),
     .addr_o(base_ram_addr),
     .be_n_o(base_ram_be_n),
     .ce_n_o(base_ram_ce_n),
     .oe_n_o(base_ram_oe_n),
     .we_n_o(base_ram_we_n)
 );
-assign base_ram_data = ramTriStateWrite ? ramDataSave : 32'hzzzzzzzz;
-assign ramDataLoad = base_ram_data;
+assign base_ram_data = ram0TriStateWrite ? ram0DataSave : 32'hzzzzzzzz;
+assign ram0DataLoad = base_ram_data;
+
+wire ram1TriStateWrite;
+sram_ctrl ext_sram_ctrl(
+    .clk(clk25),
+    .rst(rst),
+    .enable_i(ram1Enable),
+    .readEnable_i(ram1ReadEnable),
+    .addr_i(addr),
+    .byteSelect_i(byteSelect),
+    .busy_o(ram1WriteBusy),
+    .triStateWrite_o(ram1TriStateWrite),
+    .addr_o(ext_ram_addr),
+    .be_n_o(ext_ram_be_n),
+    .ce_n_o(ext_ram_ce_n),
+    .oe_n_o(ext_ram_oe_n),
+    .we_n_o(ext_ram_we_n)
+);
+assign ext_ram_data = ram1TriStateWrite ? ram1DataSave : 32'hzzzzzzzz;
+assign ram1DataLoad = ext_ram_data;
 
 flash_ctrl flash_ctrl_ist(
     .clk(clk25),

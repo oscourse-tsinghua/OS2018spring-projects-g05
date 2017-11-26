@@ -12,12 +12,19 @@ entity devctrl is
         devDataLoad_o: out std_logic_vector(DataWidth);
         devPhysicalAddr_i: in std_logic_vector(AddrWidth);
 
-        -- Signals connecting to sram_ctrl --
-        ramEnable_o: out std_logic;
-        ramReadEnable_o: out std_logic;
-        ramDataSave_o: out std_logic_vector(DataWidth);
-        ramDataLoad_i: in std_logic_vector(DataWidth);
-        ramWriteBusy_i: in std_logic;
+        -- Signals connecting to sram_ctrl (base) --
+        ram0Enable_o: out std_logic;
+        ram0ReadEnable_o: out std_logic;
+        ram0DataSave_o: out std_logic_vector(DataWidth);
+        ram0DataLoad_i: in std_logic_vector(DataWidth);
+        ram0WriteBusy_i: in std_logic;
+
+        -- Signals connecting to sram_ctrl (ext) --
+        ram1Enable_o: out std_logic;
+        ram1ReadEnable_o: out std_logic;
+        ram1DataSave_o: out std_logic_vector(DataWidth);
+        ram1DataLoad_i: in std_logic_vector(DataWidth);
+        ram1WriteBusy_i: in std_logic;
 
         -- Signals connecting to flash_ctrl --
         flashEnable_o: out std_logic;
@@ -56,9 +63,12 @@ begin
     process (all) begin
         devBusy_o <= PIPELINE_NONSTOP;
         devDataLoad_o <= (others => '0');
-        ramEnable_o <= DISABLE;
-        ramReadEnable_o <= ENABLE;
-        ramDataSave_o <= (others => '0');
+        ram0Enable_o <= DISABLE;
+        ram0ReadEnable_o <= ENABLE;
+        ram0DataSave_o <= (others => '0');
+        ram1Enable_o <= DISABLE;
+        ram1ReadEnable_o <= ENABLE;
+        ram1DataSave_o <= (others => '0');
         flashEnable_o <= DISABLE;
         flashReadEnable_o <= ENABLE;
 
@@ -71,13 +81,20 @@ begin
         numData_o <= (others => '0');
 
         if (devEnable_i = ENABLE) then
-            if (devPhysicalAddr_i <= 32ux"fffff") then
-                -- RAM --
-                ramEnable_o <= ENABLE;
-                ramReadEnable_o <= not devWrite_i;
-                ramDataSave_o <= devDataSave_i;
-                devDataLoad_o <= ramDataLoad_i;
-                devBusy_o <= ramWriteBusy_i;
+            if (devPhysicalAddr_i <= 32ux"3fffff") then
+                -- RAM0 --
+                ram0Enable_o <= ENABLE;
+                ram0ReadEnable_o <= not devWrite_i;
+                ram0DataSave_o <= devDataSave_i;
+                devDataLoad_o <= ram0DataLoad_i;
+                devBusy_o <= ram0WriteBusy_i;
+            elsif (devPhysicalAddr_i >= 32ux"400000" and devPhysicalAddr_i <= 32ux"7fffff") then
+                -- RAM1 --
+                ram1Enable_o <= ENABLE;
+                ram1ReadEnable_o <= not devWrite_i;
+                ram1DataSave_o <= devDataSave_i;
+                devDataLoad_o <= ram1DataLoad_i;
+                devBusy_o <= ram1WriteBusy_i;
             elsif (devPhysicalAddr_i = 32ux"f000000") then
                 -- keyboard --
             elsif (devPhysicalAddr_i >= 32ux"1e000000" and devPhysicalAddr_i <= 32ux"1effffff") then
