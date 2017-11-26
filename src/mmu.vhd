@@ -47,9 +47,13 @@ begin
             addrExcept := true;
         end if;
 
-        if (addr_i(31 downto 28) >= 4x"8" and addr_i(31 downto 28) < 4x"c") then
-            -- kseg0, kseg1 (unmapped)
+        if (addr_i(31 downto 28) >= 4x"8" and addr_i(31 downto 28) < 4x"a") then
+            -- kseg0 (unmapped)
             addr_o <= addr_i - 32x"80000000";
+            tlbExcept := false;
+        elsif (addr_i(31 downto 28) >= 4x"a" and addr_i(31 downto 28) < 4x"c") then
+            -- kseg1 (unmapped)
+            addr_o <= addr_i - 32x"a0000000";
             tlbExcept := false;
         else
             -- kuseg, kseg2 (mapped)
