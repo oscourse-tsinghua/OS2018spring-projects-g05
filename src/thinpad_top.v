@@ -58,7 +58,15 @@ module thinpad_top(/*autoport*/
          dip_sw,
          touch_btn);
 
-parameter functionalTest = 0;
+`ifdef FUNC_TEST
+    parameter instEntranceAddr = 32'h80000000;
+    parameter exceptBootBaseAddr = 32'h80000000;
+    parameter tlbRefillExl0Offset = 32'h180;
+`else
+    parameter instEntranceAddr = 32'hbfc00000;
+    parameter exceptBootBaseAddr = 32'hbfc00000;
+    parameter tlbRefillExl0Offset = 32'h000;
+`endif
 
 input wire clk_in; //50MHz main clock input
 input wire clk_uart_in; //11.0592MHz clock for UART
@@ -172,9 +180,9 @@ wire timerInt, comInt, usbInt;
 assign int = {4'h0, comInt, usbInt, timerInt};
 
 cpu #(
-    .instEntranceAddr(functionalTest == 1 ? 32'h80000000 : 32'hbfc00000),
-    .exceptBootBaseAddr(functionalTest == 1 ? 32'h80000000 : 32'hbfc00000),
-    .tlbRefillExl0Offset(functionalTest == 1 ? 32'h180 : 32'h000)
+    .instEntranceAddr(instEntranceAddr),
+    .exceptBootBaseAddr(exceptBootBaseAddr),
+    .tlbRefillExl0Offset(tlbRefillExl0Offset)
 ) cpu_ist (
     .clk(clk25),
     .rst(rst),
