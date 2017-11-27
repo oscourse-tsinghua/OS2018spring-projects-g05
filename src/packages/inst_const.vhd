@@ -18,7 +18,7 @@ package inst_const is
     subtype InstAddrIdx             is integer range 25 downto  0;
     subtype InstJmpUnchangeIdx      is integer range 31 downto 28;
     subtype InstImmAddrIdx          is integer range 25 downto  0;
-    subtype InstSaFuncIdx           is integer range 10 downto  0;
+    subtype InstSaFuncIdx           is integer range 10 downto  3;
 
     subtype InstOpWidth             is integer range  5 downto  0;
     subtype InstRsWidth             is integer range  4 downto  0;
