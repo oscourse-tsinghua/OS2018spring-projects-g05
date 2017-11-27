@@ -1,6 +1,6 @@
 #Clock
-set_property -dict {PACKAGE_PIN D18 IOSTANDARD LVCMOS33} [get_ports clk_in] ;#50MHz main clock in
-set_property -dict {PACKAGE_PIN C18 IOSTANDARD LVCMOS33} [get_ports clk_uart_in] ;#11.0592MHz clock for UART
+set_property -dict {PACKAGE_PIN D18 IOSTANDARD LVCMOS33} [get_ports clk_in]
+set_property -dict {PACKAGE_PIN C18 IOSTANDARD LVCMOS33} [get_ports clk_uart_in]
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets clk_uart_in_IBUF]
 
 # 50MHz main clock in
@@ -10,34 +10,32 @@ create_clock -period 90.422 -name clk_uart_in -waveform {0.000 45.211} [get_port
 # 25MHz derived clock
 # Code below may bring warnings in synthesis stage and it doesn't matter
 # It's only needed in implementation stage
-create_generated_clock -name clk25 [get_pins -hierarchical *mmcm_adv_inst/CLKOUT0]\
-    -source [get_pins -hierarchical *mmcm_adv_inst/CLKIN1]\
-    -master_clock clk_in
+create_generated_clock -name clk25 -source [get_pins -hierarchical *mmcm_adv_inst/CLKIN1] -master_clock clk_in [get_pins -hierarchical *mmcm_adv_inst/CLKOUT0]
 
 #Touch Button
-set_property IOSTANDARD LVCMOS33 [get_ports touch_btn[*]]
-set_property PACKAGE_PIN J19 [get_ports touch_btn[0]] ;#BTN1
-set_property PACKAGE_PIN E25 [get_ports touch_btn[1]] ;#BTN2
-set_property PACKAGE_PIN F23 [get_ports touch_btn[2]] ;#BTN3
-set_property PACKAGE_PIN E23 [get_ports touch_btn[3]] ;#BTN4
-set_property PACKAGE_PIN H19 [get_ports touch_btn[4]] ;#BTN5
-set_property PACKAGE_PIN F22 [get_ports touch_btn[5]] ;#BTN6
+set_property IOSTANDARD LVCMOS33 [get_ports {touch_btn[*]}]
+set_property PACKAGE_PIN J19 [get_ports {touch_btn[0]}]
+set_property PACKAGE_PIN E25 [get_ports {touch_btn[1]}]
+set_property PACKAGE_PIN F23 [get_ports {touch_btn[2]}]
+set_property PACKAGE_PIN E23 [get_ports {touch_btn[3]}]
+set_property PACKAGE_PIN H19 [get_ports {touch_btn[4]}]
+set_property PACKAGE_PIN F22 [get_ports {touch_btn[5]}]
 
 #required if touch_btn[4] used as manual clock source
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets touch_btn_IBUF[4]]
 
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets touch_btn_IBUF[5]]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets {touch_btn_IBUF[5]}]
 
 #CPLD
-set_property -dict {PACKAGE_PIN P20 IOSTANDARD LVCMOS33} [get_ports {uart_wrn}]
-set_property -dict {PACKAGE_PIN K22 IOSTANDARD LVCMOS33} [get_ports {uart_rdn}]
-set_property -dict {PACKAGE_PIN M20 IOSTANDARD LVCMOS33} [get_ports {uart_tbre}]
-set_property -dict {PACKAGE_PIN M16 IOSTANDARD LVCMOS33} [get_ports {uart_tsre}]
-set_property -dict {PACKAGE_PIN J24 IOSTANDARD LVCMOS33} [get_ports {uart_dataready}]
+set_property -dict {PACKAGE_PIN P20 IOSTANDARD LVCMOS33} [get_ports uart_wrn]
+set_property -dict {PACKAGE_PIN K22 IOSTANDARD LVCMOS33} [get_ports uart_rdn]
+set_property -dict {PACKAGE_PIN M20 IOSTANDARD LVCMOS33} [get_ports uart_tbre]
+set_property -dict {PACKAGE_PIN M16 IOSTANDARD LVCMOS33} [get_ports uart_tsre]
+set_property -dict {PACKAGE_PIN J24 IOSTANDARD LVCMOS33} [get_ports uart_dataready]
 
 #Ext serial
-set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN L19} [get_ports txd] ;#GPIO5
-set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN K21} [get_ports rxd] ;#GPIO6
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN L19} [get_ports txd]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN K21} [get_ports rxd]
 
 #USB
 set_property -dict {PACKAGE_PIN K3 IOSTANDARD LVCMOS33} [get_ports sl811_a0]
@@ -170,7 +168,7 @@ set_property PACKAGE_PIN M7 [get_ports {dip_sw[30]}]
 set_property PACKAGE_PIN M5 [get_ports {dip_sw[31]}]
 
 set_property IOSTANDARD LVCMOS33 [get_ports {flash_a[*]}]
-set_property PACKAGE_PIN K8  [get_ports {flash_a[0]}]
+set_property PACKAGE_PIN K8 [get_ports {flash_a[0]}]
 set_property PACKAGE_PIN C26 [get_ports {flash_a[1]}]
 set_property PACKAGE_PIN B26 [get_ports {flash_a[2]}]
 set_property PACKAGE_PIN B25 [get_ports {flash_a[3]}]
@@ -365,3 +363,34 @@ set_property PACKAGE_PIN U16 [get_ports ext_ram_we_n]
 set_property CFGBVS VCCO [current_design]
 set_property CONFIG_VOLTAGE 3.3 [current_design]
 
+
+create_debug_core u_ila_0 ila
+set_property ALL_PROBE_SAME_MU true [get_debug_cores u_ila_0]
+set_property ALL_PROBE_SAME_MU_CNT 4 [get_debug_cores u_ila_0]
+set_property C_ADV_TRIGGER true [get_debug_cores u_ila_0]
+set_property C_DATA_DEPTH 1024 [get_debug_cores u_ila_0]
+set_property C_EN_STRG_QUAL true [get_debug_cores u_ila_0]
+set_property C_INPUT_PIPE_STAGES 0 [get_debug_cores u_ila_0]
+set_property C_TRIGIN_EN false [get_debug_cores u_ila_0]
+set_property C_TRIGOUT_EN false [get_debug_cores u_ila_0]
+set_property port_width 1 [get_debug_ports u_ila_0/clk]
+connect_debug_port u_ila_0/clk [get_nets [list clk_ctrl_ist/inst/clk_out1]]
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe0]
+set_property port_width 32 [get_debug_ports u_ila_0/probe0]
+connect_debug_port u_ila_0/probe0 [get_nets [list {cpu_ist/mmu_ist/addr_i[0]} {cpu_ist/mmu_ist/addr_i[1]} {cpu_ist/mmu_ist/addr_i[2]} {cpu_ist/mmu_ist/addr_i[3]} {cpu_ist/mmu_ist/addr_i[4]} {cpu_ist/mmu_ist/addr_i[5]} {cpu_ist/mmu_ist/addr_i[6]} {cpu_ist/mmu_ist/addr_i[7]} {cpu_ist/mmu_ist/addr_i[8]} {cpu_ist/mmu_ist/addr_i[9]} {cpu_ist/mmu_ist/addr_i[10]} {cpu_ist/mmu_ist/addr_i[11]} {cpu_ist/mmu_ist/addr_i[12]} {cpu_ist/mmu_ist/addr_i[13]} {cpu_ist/mmu_ist/addr_i[14]} {cpu_ist/mmu_ist/addr_i[15]} {cpu_ist/mmu_ist/addr_i[16]} {cpu_ist/mmu_ist/addr_i[17]} {cpu_ist/mmu_ist/addr_i[18]} {cpu_ist/mmu_ist/addr_i[19]} {cpu_ist/mmu_ist/addr_i[20]} {cpu_ist/mmu_ist/addr_i[21]} {cpu_ist/mmu_ist/addr_i[22]} {cpu_ist/mmu_ist/addr_i[23]} {cpu_ist/mmu_ist/addr_i[24]} {cpu_ist/mmu_ist/addr_i[25]} {cpu_ist/mmu_ist/addr_i[26]} {cpu_ist/mmu_ist/addr_i[27]} {cpu_ist/mmu_ist/addr_i[28]} {cpu_ist/mmu_ist/addr_i[29]} {cpu_ist/mmu_ist/addr_i[30]} {cpu_ist/mmu_ist/addr_i[31]}]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe1]
+set_property port_width 5 [get_debug_ports u_ila_0/probe1]
+connect_debug_port u_ila_0/probe1 [get_nets [list {cpu_ist/datapath_ist/exceptCause_8c[0]} {cpu_ist/datapath_ist/exceptCause_8c[1]} {cpu_ist/datapath_ist/exceptCause_8c[2]} {cpu_ist/datapath_ist/exceptCause_8c[3]} {cpu_ist/datapath_ist/exceptCause_8c[4]}]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe2]
+set_property port_width 32 [get_debug_ports u_ila_0/probe2]
+connect_debug_port u_ila_0/probe2 [get_nets [list {cpu_ist/datapath_ist/instAddr_o[0]} {cpu_ist/datapath_ist/instAddr_o[1]} {cpu_ist/datapath_ist/instAddr_o[2]} {cpu_ist/datapath_ist/instAddr_o[3]} {cpu_ist/datapath_ist/instAddr_o[4]} {cpu_ist/datapath_ist/instAddr_o[5]} {cpu_ist/datapath_ist/instAddr_o[6]} {cpu_ist/datapath_ist/instAddr_o[7]} {cpu_ist/datapath_ist/instAddr_o[8]} {cpu_ist/datapath_ist/instAddr_o[9]} {cpu_ist/datapath_ist/instAddr_o[10]} {cpu_ist/datapath_ist/instAddr_o[11]} {cpu_ist/datapath_ist/instAddr_o[12]} {cpu_ist/datapath_ist/instAddr_o[13]} {cpu_ist/datapath_ist/instAddr_o[14]} {cpu_ist/datapath_ist/instAddr_o[15]} {cpu_ist/datapath_ist/instAddr_o[16]} {cpu_ist/datapath_ist/instAddr_o[17]} {cpu_ist/datapath_ist/instAddr_o[18]} {cpu_ist/datapath_ist/instAddr_o[19]} {cpu_ist/datapath_ist/instAddr_o[20]} {cpu_ist/datapath_ist/instAddr_o[21]} {cpu_ist/datapath_ist/instAddr_o[22]} {cpu_ist/datapath_ist/instAddr_o[23]} {cpu_ist/datapath_ist/instAddr_o[24]} {cpu_ist/datapath_ist/instAddr_o[25]} {cpu_ist/datapath_ist/instAddr_o[26]} {cpu_ist/datapath_ist/instAddr_o[27]} {cpu_ist/datapath_ist/instAddr_o[28]} {cpu_ist/datapath_ist/instAddr_o[29]} {cpu_ist/datapath_ist/instAddr_o[30]} {cpu_ist/datapath_ist/instAddr_o[31]}]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe3]
+set_property port_width 32 [get_debug_ports u_ila_0/probe3]
+connect_debug_port u_ila_0/probe3 [get_nets [list {cpu_ist/datapath_ist/instData_i[0]} {cpu_ist/datapath_ist/instData_i[1]} {cpu_ist/datapath_ist/instData_i[2]} {cpu_ist/datapath_ist/instData_i[3]} {cpu_ist/datapath_ist/instData_i[4]} {cpu_ist/datapath_ist/instData_i[5]} {cpu_ist/datapath_ist/instData_i[6]} {cpu_ist/datapath_ist/instData_i[7]} {cpu_ist/datapath_ist/instData_i[8]} {cpu_ist/datapath_ist/instData_i[9]} {cpu_ist/datapath_ist/instData_i[10]} {cpu_ist/datapath_ist/instData_i[11]} {cpu_ist/datapath_ist/instData_i[12]} {cpu_ist/datapath_ist/instData_i[13]} {cpu_ist/datapath_ist/instData_i[14]} {cpu_ist/datapath_ist/instData_i[15]} {cpu_ist/datapath_ist/instData_i[16]} {cpu_ist/datapath_ist/instData_i[17]} {cpu_ist/datapath_ist/instData_i[18]} {cpu_ist/datapath_ist/instData_i[19]} {cpu_ist/datapath_ist/instData_i[20]} {cpu_ist/datapath_ist/instData_i[21]} {cpu_ist/datapath_ist/instData_i[22]} {cpu_ist/datapath_ist/instData_i[23]} {cpu_ist/datapath_ist/instData_i[24]} {cpu_ist/datapath_ist/instData_i[25]} {cpu_ist/datapath_ist/instData_i[26]} {cpu_ist/datapath_ist/instData_i[27]} {cpu_ist/datapath_ist/instData_i[28]} {cpu_ist/datapath_ist/instData_i[29]} {cpu_ist/datapath_ist/instData_i[30]} {cpu_ist/datapath_ist/instData_i[31]}]]
+set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
+set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
+set_property C_USER_SCAN_CHAIN 1 [get_debug_cores dbg_hub]
+connect_debug_port dbg_hub/clk [get_nets clk25]

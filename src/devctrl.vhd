@@ -51,6 +51,11 @@ entity devctrl is
         usbWriteData_o: out std_logic_vector(DataWidth);
         usbBusy_i: in std_logic;
 
+        -- Signals connecting to boot_ctrl --
+        bootEnable_o, bootReadEnable_o: out std_logic;
+        bootDataLoad_i: in std_logic_vector(DataWidth);
+        bootBusy_i: in std_logic;
+
         ledEnable_o: out std_logic;
         ledData_o: out std_logic_vector(15 downto 0);
         numEnable_o: out std_logic;
@@ -75,6 +80,8 @@ begin
         vgaEnable_o <= ENABLE;
         vgaWriteEnable_o <= DISABLE;
         vgaWriteData_o <= (others => '0');
+        bootEnable_o <= DISABLE;
+        bootReadEnable_o <= ENABLE;
         ledEnable_o <= DISABLE;
         ledData_o <= (others => '0');
         numEnable_o <= DISABLE;
@@ -104,7 +111,10 @@ begin
                 devDataLoad_o <= flashDataLoad_i;
                 devBusy_o <= flashBusy_i;
             elsif (devPhysicalAddr_i >= 32ux"1fc00000" and devPhysicalAddr_i <= 32ux"1fc00fff") then
-                -- ROM --
+                -- BOOT --
+                bootEnable_o <= ENABLE;
+                devDataLoad_o <= bootDataLoad_i;
+                devBusy_o <= bootBusy_i;
             elsif (devPhysicalAddr_i >= 32ux"1fd003f8" and devPhysicalAddr_i <= 32ux"1fd003fc") then
                 -- COM --
                 comEnable_o <= ENABLE;

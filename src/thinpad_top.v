@@ -218,6 +218,10 @@ wire[31:0] comDataSave, comDataLoad;
 
 wire usbEnable, usbReadEnable, usbWriteEnable, usbBusy;
 wire[31:0] usbReadData, usbWriteData;
+
+wire bootEnable, bootReadEnable, bootBusy;
+wire[31:0] bootDataLoad;
+
 wire ledEnable, numEnable;
 wire[15:0] ledData;
 wire[7:0] numData;
@@ -261,6 +265,10 @@ devctrl devctrl_ist(
     .usbWriteEnable_o(usbWriteEnable),
     .usbWriteData_o(usbWriteData),
     .usbBusy_i(usbBusy),
+
+    .bootEnable_o(bootEnable),
+    .bootReadEnable_o(bootReadEnable),
+    .bootBusy_i(bootBusy),
 
     .ledEnable_o(ledEnable),
     .ledData_o(ledData),
@@ -373,6 +381,16 @@ usb_ctrl usb_ctrl_ist(
     .usbDACK_o(sl811_dack),
     .usbInt_i(sl811_int),
     .usbData_io(sl811_data)
+);
+
+boot_ctrl boot_ctrl_ist(
+    .clk(clk25),
+    .rst(rst),
+    .devEnable_i(bootEnable),
+    .addr_i(addr),
+    .readEnable_i(bootReadEnable),
+    .readData_o(bootDataLoad),
+    .busy_o(bootBusy)
 );
 
 always@(posedge clk25) begin
