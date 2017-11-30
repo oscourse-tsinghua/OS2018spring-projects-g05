@@ -25,8 +25,9 @@ architecture bhv of boot_ctrl is
         );
     end component;
 
-    type StateType is (READY, GET);
+    type StateType is (INIT, READY, GET);
     signal state: StateType;
+
 begin
 
     boot_ram_ist: boot_ram
@@ -39,19 +40,22 @@ begin
             addra => addr_i(11 downto 2)
         );
 
+    busy_o <= PIPELINE_NONSTOP when state = GET else PIPELINE_STOP;
+
     process (clk) begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE or devEnable_i = DISABLE or readEnable_i = DISABLE) then
-                state <= READY;
-                busy_o <= PIPELINE_NONSTOP;
+                state <= INIT;
             else
-                if (state = READY) then
-                    state <= GET;
-                    busy_o <= PIPELINE_STOP;
-                elsif (state = GET) then
-                    state <= READY;
-                    busy_o <= PIPELINE_NONSTOP;
-                end if;
+                case (state) is
+                    when INIT =>
+                        state <= READY;
+                    when READY =>
+                        state <= GET;
+                    when GET =>
+                        state <= INIT;
+                    when others =>
+                end case;
             end if;
         end if;
     end process;

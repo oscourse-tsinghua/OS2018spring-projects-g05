@@ -364,33 +364,4 @@ set_property CFGBVS VCCO [current_design]
 set_property CONFIG_VOLTAGE 3.3 [current_design]
 
 
-create_debug_core u_ila_0 ila
-set_property ALL_PROBE_SAME_MU true [get_debug_cores u_ila_0]
-set_property ALL_PROBE_SAME_MU_CNT 4 [get_debug_cores u_ila_0]
-set_property C_ADV_TRIGGER true [get_debug_cores u_ila_0]
-set_property C_DATA_DEPTH 1024 [get_debug_cores u_ila_0]
-set_property C_EN_STRG_QUAL true [get_debug_cores u_ila_0]
-set_property C_INPUT_PIPE_STAGES 0 [get_debug_cores u_ila_0]
-set_property C_TRIGIN_EN false [get_debug_cores u_ila_0]
-set_property C_TRIGOUT_EN false [get_debug_cores u_ila_0]
-set_property port_width 1 [get_debug_ports u_ila_0/clk]
-connect_debug_port u_ila_0/clk [get_nets [list clk_ctrl_ist/inst/clk_out1]]
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe0]
-set_property port_width 32 [get_debug_ports u_ila_0/probe0]
-connect_debug_port u_ila_0/probe0 [get_nets [list {cpu_ist/mmu_ist/addr_i[0]} {cpu_ist/mmu_ist/addr_i[1]} {cpu_ist/mmu_ist/addr_i[2]} {cpu_ist/mmu_ist/addr_i[3]} {cpu_ist/mmu_ist/addr_i[4]} {cpu_ist/mmu_ist/addr_i[5]} {cpu_ist/mmu_ist/addr_i[6]} {cpu_ist/mmu_ist/addr_i[7]} {cpu_ist/mmu_ist/addr_i[8]} {cpu_ist/mmu_ist/addr_i[9]} {cpu_ist/mmu_ist/addr_i[10]} {cpu_ist/mmu_ist/addr_i[11]} {cpu_ist/mmu_ist/addr_i[12]} {cpu_ist/mmu_ist/addr_i[13]} {cpu_ist/mmu_ist/addr_i[14]} {cpu_ist/mmu_ist/addr_i[15]} {cpu_ist/mmu_ist/addr_i[16]} {cpu_ist/mmu_ist/addr_i[17]} {cpu_ist/mmu_ist/addr_i[18]} {cpu_ist/mmu_ist/addr_i[19]} {cpu_ist/mmu_ist/addr_i[20]} {cpu_ist/mmu_ist/addr_i[21]} {cpu_ist/mmu_ist/addr_i[22]} {cpu_ist/mmu_ist/addr_i[23]} {cpu_ist/mmu_ist/addr_i[24]} {cpu_ist/mmu_ist/addr_i[25]} {cpu_ist/mmu_ist/addr_i[26]} {cpu_ist/mmu_ist/addr_i[27]} {cpu_ist/mmu_ist/addr_i[28]} {cpu_ist/mmu_ist/addr_i[29]} {cpu_ist/mmu_ist/addr_i[30]} {cpu_ist/mmu_ist/addr_i[31]}]]
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe1]
-set_property port_width 5 [get_debug_ports u_ila_0/probe1]
-connect_debug_port u_ila_0/probe1 [get_nets [list {cpu_ist/datapath_ist/exceptCause_8c[0]} {cpu_ist/datapath_ist/exceptCause_8c[1]} {cpu_ist/datapath_ist/exceptCause_8c[2]} {cpu_ist/datapath_ist/exceptCause_8c[3]} {cpu_ist/datapath_ist/exceptCause_8c[4]}]]
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe2]
-set_property port_width 32 [get_debug_ports u_ila_0/probe2]
-connect_debug_port u_ila_0/probe2 [get_nets [list {cpu_ist/datapath_ist/instAddr_o[0]} {cpu_ist/datapath_ist/instAddr_o[1]} {cpu_ist/datapath_ist/instAddr_o[2]} {cpu_ist/datapath_ist/instAddr_o[3]} {cpu_ist/datapath_ist/instAddr_o[4]} {cpu_ist/datapath_ist/instAddr_o[5]} {cpu_ist/datapath_ist/instAddr_o[6]} {cpu_ist/datapath_ist/instAddr_o[7]} {cpu_ist/datapath_ist/instAddr_o[8]} {cpu_ist/datapath_ist/instAddr_o[9]} {cpu_ist/datapath_ist/instAddr_o[10]} {cpu_ist/datapath_ist/instAddr_o[11]} {cpu_ist/datapath_ist/instAddr_o[12]} {cpu_ist/datapath_ist/instAddr_o[13]} {cpu_ist/datapath_ist/instAddr_o[14]} {cpu_ist/datapath_ist/instAddr_o[15]} {cpu_ist/datapath_ist/instAddr_o[16]} {cpu_ist/datapath_ist/instAddr_o[17]} {cpu_ist/datapath_ist/instAddr_o[18]} {cpu_ist/datapath_ist/instAddr_o[19]} {cpu_ist/datapath_ist/instAddr_o[20]} {cpu_ist/datapath_ist/instAddr_o[21]} {cpu_ist/datapath_ist/instAddr_o[22]} {cpu_ist/datapath_ist/instAddr_o[23]} {cpu_ist/datapath_ist/instAddr_o[24]} {cpu_ist/datapath_ist/instAddr_o[25]} {cpu_ist/datapath_ist/instAddr_o[26]} {cpu_ist/datapath_ist/instAddr_o[27]} {cpu_ist/datapath_ist/instAddr_o[28]} {cpu_ist/datapath_ist/instAddr_o[29]} {cpu_ist/datapath_ist/instAddr_o[30]} {cpu_ist/datapath_ist/instAddr_o[31]}]]
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe3]
-set_property port_width 32 [get_debug_ports u_ila_0/probe3]
-connect_debug_port u_ila_0/probe3 [get_nets [list {cpu_ist/datapath_ist/instData_i[0]} {cpu_ist/datapath_ist/instData_i[1]} {cpu_ist/datapath_ist/instData_i[2]} {cpu_ist/datapath_ist/instData_i[3]} {cpu_ist/datapath_ist/instData_i[4]} {cpu_ist/datapath_ist/instData_i[5]} {cpu_ist/datapath_ist/instData_i[6]} {cpu_ist/datapath_ist/instData_i[7]} {cpu_ist/datapath_ist/instData_i[8]} {cpu_ist/datapath_ist/instData_i[9]} {cpu_ist/datapath_ist/instData_i[10]} {cpu_ist/datapath_ist/instData_i[11]} {cpu_ist/datapath_ist/instData_i[12]} {cpu_ist/datapath_ist/instData_i[13]} {cpu_ist/datapath_ist/instData_i[14]} {cpu_ist/datapath_ist/instData_i[15]} {cpu_ist/datapath_ist/instData_i[16]} {cpu_ist/datapath_ist/instData_i[17]} {cpu_ist/datapath_ist/instData_i[18]} {cpu_ist/datapath_ist/instData_i[19]} {cpu_ist/datapath_ist/instData_i[20]} {cpu_ist/datapath_ist/instData_i[21]} {cpu_ist/datapath_ist/instData_i[22]} {cpu_ist/datapath_ist/instData_i[23]} {cpu_ist/datapath_ist/instData_i[24]} {cpu_ist/datapath_ist/instData_i[25]} {cpu_ist/datapath_ist/instData_i[26]} {cpu_ist/datapath_ist/instData_i[27]} {cpu_ist/datapath_ist/instData_i[28]} {cpu_ist/datapath_ist/instData_i[29]} {cpu_ist/datapath_ist/instData_i[30]} {cpu_ist/datapath_ist/instData_i[31]}]]
-set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
-set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
-set_property C_USER_SCAN_CHAIN 1 [get_debug_cores dbg_hub]
-connect_debug_port dbg_hub/clk [get_nets clk25]
+

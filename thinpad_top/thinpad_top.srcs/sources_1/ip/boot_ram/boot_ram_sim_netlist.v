@@ -1,18 +1,18 @@
 // Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2017.2 (win64) Build 1909853 Thu Jun 15 18:39:09 MDT 2017
-// Date        : Mon Nov 27 08:26:47 2017
+// Date        : Wed Nov 29 21:05:35 2017
 // Host        : DESKTOP-JPEQ6FJ running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode funcsim -rename_top boot_ram -prefix
-//               boot_ram_ blk_mem_gen_0_sim_netlist.v
-// Design      : blk_mem_gen_0
+// Command     : write_verilog -force -mode funcsim
+//               E:/Development/nCore/nCore/thinpad_top/thinpad_top.srcs/sources_1/ip/boot_ram/boot_ram_sim_netlist.v
+// Design      : boot_ram
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
 // Device      : xc7a100tfgg676-2L
 // --------------------------------------------------------------------------------
 `timescale 1 ps / 1 ps
 
-(* CHECK_LICENSE_TYPE = "blk_mem_gen_0,blk_mem_gen_v8_3_6,{}" *) (* downgradeipidentifiedwarnings = "yes" *) (* x_core_info = "blk_mem_gen_v8_3_6,Vivado 2017.2" *) 
+(* CHECK_LICENSE_TYPE = "boot_ram,blk_mem_gen_v8_3_6,{}" *) (* downgradeipidentifiedwarnings = "yes" *) (* x_core_info = "blk_mem_gen_v8_3_6,Vivado 2017.2" *) 
 (* NotValidForBitStream *)
 module boot_ram
    (clka,
@@ -96,10 +96,10 @@ module boot_ram
   (* C_HAS_SOFTECC_OUTPUT_REGS_B = "0" *) 
   (* C_INITA_VAL = "0" *) 
   (* C_INITB_VAL = "0" *) 
-  (* C_INIT_FILE = "blk_mem_gen_0.mem" *) 
-  (* C_INIT_FILE_NAME = "no_coe_file_loaded" *) 
+  (* C_INIT_FILE = "boot_ram.mem" *) 
+  (* C_INIT_FILE_NAME = "boot_ram.mif" *) 
   (* C_INTERFACE_TYPE = "0" *) 
-  (* C_LOAD_INIT_FILE = "0" *) 
+  (* C_LOAD_INIT_FILE = "1" *) 
   (* C_MEM_TYPE = "0" *) 
   (* C_MUX_PIPELINE_STAGES = "0" *) 
   (* C_PRIM_TYPE = "1" *) 
@@ -195,6 +195,7 @@ module boot_ram
         .web(1'b0));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_generic_cstr" *) 
 module boot_ram_blk_mem_gen_generic_cstr
    (douta,
     clka,
@@ -225,6 +226,7 @@ module boot_ram_blk_mem_gen_generic_cstr
         .wea(wea));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module boot_ram_blk_mem_gen_prim_width
    (douta,
     clka,
@@ -246,7 +248,7 @@ module boot_ram_blk_mem_gen_prim_width
   wire ena;
   wire [0:0]wea;
 
-  boot_ram_blk_mem_gen_prim_wrapper \prim_noinit.ram 
+  boot_ram_blk_mem_gen_prim_wrapper_init \prim_init.ram 
        (.addra(addra),
         .clka(clka),
         .dina(dina),
@@ -255,7 +257,8 @@ module boot_ram_blk_mem_gen_prim_width
         .wea(wea));
 endmodule
 
-module boot_ram_blk_mem_gen_prim_wrapper
+(* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
+module boot_ram_blk_mem_gen_prim_wrapper_init
    (douta,
     clka,
     ena,
@@ -310,17 +313,17 @@ module boot_ram_blk_mem_gen_prim_wrapper
     .INITP_0D(256'h0000000000000000000000000000000000000000000000000000000000000000),
     .INITP_0E(256'h0000000000000000000000000000000000000000000000000000000000000000),
     .INITP_0F(256'h0000000000000000000000000000000000000000000000000000000000000000),
-    .INIT_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
-    .INIT_01(256'h0000000000000000000000000000000000000000000000000000000000000000),
-    .INIT_02(256'h0000000000000000000000000000000000000000000000000000000000000000),
-    .INIT_03(256'h0000000000000000000000000000000000000000000000000000000000000000),
-    .INIT_04(256'h0000000000000000000000000000000000000000000000000000000000000000),
-    .INIT_05(256'h0000000000000000000000000000000000000000000000000000000000000000),
-    .INIT_06(256'h0000000000000000000000000000000000000000000000000000000000000000),
-    .INIT_07(256'h0000000000000000000000000000000000000000000000000000000000000000),
-    .INIT_08(256'h0000000000000000000000000000000000000000000000000000000000000000),
-    .INIT_09(256'h0000000000000000000000000000000000000000000000000000000000000000),
-    .INIT_0A(256'h0000000000000000000000000000000000000000000000000000000000000000),
+    .INIT_00(256'h3C10BE00AD090000240900FF3508FFF83C08BEFF000000001000000100000000),
+    .INIT_01(256'h3508457F3C08464C012F4825000F7C008DEF00048DE90000020F7821240F0000),
+    .INIT_02(256'h8DEF00048DF10000020F7821240F003800000000100000420000000011090003),
+    .INIT_03(256'h024F9025000F7C008DEF00048DF20000020F7821240F0058022F8825000F7C00),
+    .INIT_04(256'h262F0008026F9825000F7C008DEF00048DF30000020F7821240F00303252FFFF),
+    .INIT_05(256'h000F7840262F0010028FA025000F7C008DEF00048DF40000020F7821000F7840),
+    .INIT_06(256'h020F7821000F7840262F000402AFA825000F7C008DEF00048DF50000020F7821),
+    .INIT_07(256'h0000000012A0000E000000001280001002CFB025000F7C008DEF00048DF60000),
+    .INIT_08(256'hAE880000010F4025000F7C008DEF00048DE80000020F7821000F784026CF0000),
+    .INIT_09(256'h1E40FFD72652FFFF26310020000000001EA0FFF426B5FFFC2694000426D60004),
+    .INIT_0A(256'h00000000000000001000FFFF000000001000FFFF000000000260000800000000),
     .INIT_0B(256'h0000000000000000000000000000000000000000000000000000000000000000),
     .INIT_0C(256'h0000000000000000000000000000000000000000000000000000000000000000),
     .INIT_0D(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -500,6 +503,7 @@ module boot_ram_blk_mem_gen_prim_wrapper
         .WEBWE({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_top" *) 
 module boot_ram_blk_mem_gen_top
    (douta,
     clka,
@@ -543,8 +547,8 @@ endmodule
 (* C_HAS_MEM_OUTPUT_REGS_B = "0" *) (* C_HAS_MUX_OUTPUT_REGS_A = "0" *) (* C_HAS_MUX_OUTPUT_REGS_B = "0" *) 
 (* C_HAS_REGCEA = "0" *) (* C_HAS_REGCEB = "0" *) (* C_HAS_RSTA = "0" *) 
 (* C_HAS_RSTB = "0" *) (* C_HAS_SOFTECC_INPUT_REGS_A = "0" *) (* C_HAS_SOFTECC_OUTPUT_REGS_B = "0" *) 
-(* C_INITA_VAL = "0" *) (* C_INITB_VAL = "0" *) (* C_INIT_FILE = "blk_mem_gen_0.mem" *) 
-(* C_INIT_FILE_NAME = "no_coe_file_loaded" *) (* C_INTERFACE_TYPE = "0" *) (* C_LOAD_INIT_FILE = "0" *) 
+(* C_INITA_VAL = "0" *) (* C_INITB_VAL = "0" *) (* C_INIT_FILE = "boot_ram.mem" *) 
+(* C_INIT_FILE_NAME = "boot_ram.mif" *) (* C_INTERFACE_TYPE = "0" *) (* C_LOAD_INIT_FILE = "1" *) 
 (* C_MEM_TYPE = "0" *) (* C_MUX_PIPELINE_STAGES = "0" *) (* C_PRIM_TYPE = "1" *) 
 (* C_READ_DEPTH_A = "1024" *) (* C_READ_DEPTH_B = "1024" *) (* C_READ_WIDTH_A = "32" *) 
 (* C_READ_WIDTH_B = "32" *) (* C_RSTRAM_A = "0" *) (* C_RSTRAM_B = "0" *) 
@@ -554,7 +558,7 @@ endmodule
 (* C_USE_URAM = "0" *) (* C_WEA_WIDTH = "1" *) (* C_WEB_WIDTH = "1" *) 
 (* C_WRITE_DEPTH_A = "1024" *) (* C_WRITE_DEPTH_B = "1024" *) (* C_WRITE_MODE_A = "WRITE_FIRST" *) 
 (* C_WRITE_MODE_B = "WRITE_FIRST" *) (* C_WRITE_WIDTH_A = "32" *) (* C_WRITE_WIDTH_B = "32" *) 
-(* C_XDEVICEFAMILY = "artix7" *) (* downgradeipidentifiedwarnings = "yes" *) 
+(* C_XDEVICEFAMILY = "artix7" *) (* ORIG_REF_NAME = "blk_mem_gen_v8_3_6" *) (* downgradeipidentifiedwarnings = "yes" *) 
 module boot_ram_blk_mem_gen_v8_3_6
    (clka,
     rsta,
@@ -810,6 +814,7 @@ module boot_ram_blk_mem_gen_v8_3_6
         .wea(wea));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_v8_3_6_synth" *) 
 module boot_ram_blk_mem_gen_v8_3_6_synth
    (douta,
     clka,

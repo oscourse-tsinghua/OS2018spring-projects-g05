@@ -268,6 +268,7 @@ devctrl devctrl_ist(
 
     .bootEnable_o(bootEnable),
     .bootReadEnable_o(bootReadEnable),
+    .bootDataLoad_i(bootDataLoad),
     .bootBusy_i(bootBusy),
 
     .ledEnable_o(ledEnable),
