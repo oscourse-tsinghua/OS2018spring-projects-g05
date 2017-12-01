@@ -219,7 +219,6 @@ wire[31:0] comDataSave, comDataLoad;
 wire usbEnable, usbReadEnable, usbWriteEnable, usbBusy;
 wire[31:0] usbReadData, usbWriteData;
 
-wire bootEnable, bootReadEnable, bootBusy;
 wire[31:0] bootDataLoad;
 
 wire ledEnable, numEnable;
@@ -266,10 +265,7 @@ devctrl devctrl_ist(
     .usbWriteData_o(usbWriteData),
     .usbBusy_i(usbBusy),
 
-    .bootEnable_o(bootEnable),
-    .bootReadEnable_o(bootReadEnable),
     .bootDataLoad_i(bootDataLoad),
-    .bootBusy_i(bootBusy),
 
     .ledEnable_o(ledEnable),
     .ledData_o(ledData),
@@ -385,13 +381,8 @@ usb_ctrl usb_ctrl_ist(
 );
 
 boot_ctrl boot_ctrl_ist(
-    .clk(clk25),
-    .rst(rst),
-    .devEnable_i(bootEnable),
     .addr_i(addr),
-    .readEnable_i(bootReadEnable),
-    .readData_o(bootDataLoad),
-    .busy_o(bootBusy)
+    .readData_o(bootDataLoad)
 );
 
 always@(posedge clk25) begin
