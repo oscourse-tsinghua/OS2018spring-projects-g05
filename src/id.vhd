@@ -673,7 +673,7 @@ begin
                 when OP_COP0 =>
                     case (instRs) is
                         when RS_MT =>
-                            if (inst_i(InstSaFuncIdx) = "00000000000") then
+                            if (inst_i(InstSaFuncIdx) = "00000000") then
                                 alut_o <= ALU_MTC0;
                                 oprSrc1 := REGID;
                                 oprSrc2 := REG;
@@ -683,7 +683,7 @@ begin
                             end if;
 
                         when RS_MF =>
-                            if (inst_i(InstSaFuncIdx) = "00000000000") then
+                            if (inst_i(InstSaFuncIdx) = "00000000") then
                                 alut_o <= ALU_MFC0;
                                 oprSrc1 := REGID;
                                 oprSrc2 := INVALID;
