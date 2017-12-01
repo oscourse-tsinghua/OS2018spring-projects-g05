@@ -1,6 +1,6 @@
 #Clock
-set_property -dict {PACKAGE_PIN D18 IOSTANDARD LVCMOS33} [get_ports clk_in]
-set_property -dict {PACKAGE_PIN C18 IOSTANDARD LVCMOS33} [get_ports clk_uart_in]
+set_property -dict {PACKAGE_PIN D18 IOSTANDARD LVCMOS33} [get_ports clk_in] ;#50MHz main clock in
+set_property -dict {PACKAGE_PIN C18 IOSTANDARD LVCMOS33} [get_ports clk_uart_in] ;#11.0592MHz clock for UART
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets clk_uart_in_IBUF]
 
 # 50MHz main clock in
@@ -10,32 +10,34 @@ create_clock -period 90.422 -name clk_uart_in -waveform {0.000 45.211} [get_port
 # 25MHz derived clock
 # Code below may bring warnings in synthesis stage and it doesn't matter
 # It's only needed in implementation stage
-create_generated_clock -name clk25 -source [get_pins -hierarchical *mmcm_adv_inst/CLKIN1] -master_clock clk_in [get_pins -hierarchical *mmcm_adv_inst/CLKOUT0]
+create_generated_clock -name clk25 [get_pins -hierarchical *mmcm_adv_inst/CLKOUT0]\
+    -source [get_pins -hierarchical *mmcm_adv_inst/CLKIN1]\
+    -master_clock clk_in
 
 #Touch Button
-set_property IOSTANDARD LVCMOS33 [get_ports {touch_btn[*]}]
-set_property PACKAGE_PIN J19 [get_ports {touch_btn[0]}]
-set_property PACKAGE_PIN E25 [get_ports {touch_btn[1]}]
-set_property PACKAGE_PIN F23 [get_ports {touch_btn[2]}]
-set_property PACKAGE_PIN E23 [get_ports {touch_btn[3]}]
-set_property PACKAGE_PIN H19 [get_ports {touch_btn[4]}]
-set_property PACKAGE_PIN F22 [get_ports {touch_btn[5]}]
+set_property IOSTANDARD LVCMOS33 [get_ports touch_btn[*]]
+set_property PACKAGE_PIN J19 [get_ports touch_btn[0]] ;#BTN1
+set_property PACKAGE_PIN E25 [get_ports touch_btn[1]] ;#BTN2
+set_property PACKAGE_PIN F23 [get_ports touch_btn[2]] ;#BTN3
+set_property PACKAGE_PIN E23 [get_ports touch_btn[3]] ;#BTN4
+set_property PACKAGE_PIN H19 [get_ports touch_btn[4]] ;#BTN5
+set_property PACKAGE_PIN F22 [get_ports touch_btn[5]] ;#BTN6
 
 #required if touch_btn[4] used as manual clock source
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets touch_btn_IBUF[4]]
 
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets {touch_btn_IBUF[5]}]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets touch_btn_IBUF[5]]
 
 #CPLD
-set_property -dict {PACKAGE_PIN P20 IOSTANDARD LVCMOS33} [get_ports uart_wrn]
-set_property -dict {PACKAGE_PIN K22 IOSTANDARD LVCMOS33} [get_ports uart_rdn]
-set_property -dict {PACKAGE_PIN M20 IOSTANDARD LVCMOS33} [get_ports uart_tbre]
-set_property -dict {PACKAGE_PIN M16 IOSTANDARD LVCMOS33} [get_ports uart_tsre]
-set_property -dict {PACKAGE_PIN J24 IOSTANDARD LVCMOS33} [get_ports uart_dataready]
+set_property -dict {PACKAGE_PIN P20 IOSTANDARD LVCMOS33} [get_ports {uart_wrn}]
+set_property -dict {PACKAGE_PIN K22 IOSTANDARD LVCMOS33} [get_ports {uart_rdn}]
+set_property -dict {PACKAGE_PIN M20 IOSTANDARD LVCMOS33} [get_ports {uart_tbre}]
+set_property -dict {PACKAGE_PIN M16 IOSTANDARD LVCMOS33} [get_ports {uart_tsre}]
+set_property -dict {PACKAGE_PIN J24 IOSTANDARD LVCMOS33} [get_ports {uart_dataready}]
 
 #Ext serial
-set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN L19} [get_ports txd]
-set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN K21} [get_ports rxd]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN L19} [get_ports txd] ;#GPIO5
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN K21} [get_ports rxd] ;#GPIO6
 
 #USB
 set_property -dict {PACKAGE_PIN K3 IOSTANDARD LVCMOS33} [get_ports sl811_a0]
@@ -168,7 +170,7 @@ set_property PACKAGE_PIN M7 [get_ports {dip_sw[30]}]
 set_property PACKAGE_PIN M5 [get_ports {dip_sw[31]}]
 
 set_property IOSTANDARD LVCMOS33 [get_ports {flash_a[*]}]
-set_property PACKAGE_PIN K8 [get_ports {flash_a[0]}]
+set_property PACKAGE_PIN K8  [get_ports {flash_a[0]}]
 set_property PACKAGE_PIN C26 [get_ports {flash_a[1]}]
 set_property PACKAGE_PIN B26 [get_ports {flash_a[2]}]
 set_property PACKAGE_PIN B25 [get_ports {flash_a[3]}]
@@ -362,6 +364,4 @@ set_property PACKAGE_PIN U16 [get_ports ext_ram_we_n]
 
 set_property CFGBVS VCCO [current_design]
 set_property CONFIG_VOLTAGE 3.3 [current_design]
-
-
 
