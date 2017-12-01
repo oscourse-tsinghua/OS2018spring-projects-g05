@@ -220,9 +220,13 @@ begin
         cp0RegData_o <= (others => '0');
         isTlbwi_o <= NO;
         isTlbwr_o <= NO;
+        writeHiData_o <= (others => '0');
+        writeLoData_o <= (others => '0');
+        cp0RegReadAddr_o <= (others => '0');
 
         exceptCause_o <= exceptCause_i;
 
+        res64 := (others => 'X');
         resultSum := (others => 'X');
         reg2IMux := (others => 'X');
         ovSum := 'X'; -- Otherwise it will introduce a level latch to keep the prior value

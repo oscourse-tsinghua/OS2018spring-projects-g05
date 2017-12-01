@@ -164,8 +164,12 @@ begin
     end process;
 
     interrupt <= EXTERNAL_CAUSE when
-                 cp0Cause_i(CauseIpBits) /= 8ux"0" and cp0Status_i(STATUS_EXL_BIT) = NO and cp0Status_i(STATUS_IE_BIT) = YES else
-                 NO_CAUSE;
+                    (cp0Cause_i(CauseIpBits) and cp0Status_i(StatusImBits)) /= 8ux"0" and
+                    cp0Status_i(STATUS_EXL_BIT) = NO and
+                    cp0Status_i(STATUS_ERL_BIT) = NO and
+                    cp0Status_i(STATUS_IE_BIT) = YES
+                 else
+                    NO_CAUSE;
 
     dataWrite_o <= dataWrite when
                    (exceptCause_i and interrupt) = NO_CAUSE else

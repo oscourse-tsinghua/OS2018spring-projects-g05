@@ -47,6 +47,7 @@ begin
     process(all)
         variable newPC: std_logic_vector(AddrWidth);
     begin
+        newPC := (others => 'X');
         if (rst = RST_ENABLE) then
             stall_o <= (others => '0');
             flush_o <= '0';

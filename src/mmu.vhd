@@ -42,6 +42,7 @@ begin
         enable_o <= enable_i;
         addrExcept := false;
         tlbExcept := true;
+        addr_o <= (others => '0');
         if (isKernelMode_i = NO and addr_i(31 downto 28) >= 4x"8") then
             -- kseg0, kseg1, kseg2
             addrExcept := true;

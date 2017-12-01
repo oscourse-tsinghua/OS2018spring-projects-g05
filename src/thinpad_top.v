@@ -168,7 +168,10 @@ wire[31:0] dataSave, dataLoad, addr;
 wire[3:0] byteSelect;
 wire[5:0] int;
 wire timerInt, comInt, usbInt;
-assign int = {4'h0, comInt, usbInt, timerInt};
+assign int = {timerInt, 1'b0, 1'b0, comInt, 1'b0, usbInt};
+// NOTE: 1'b0 cannot be written as 0
+// MIPS standard requires int[5] = timer
+// Monitor requires int[2] = COM
 
 cpu #(
 `ifdef USE_BOOTLOADER
@@ -184,9 +187,6 @@ cpu #(
     .exceptBootBaseAddr(32'h80000000),
     .tlbRefillExl0Offset(32'h1000),
     .generalExceptOffset(32'h1180)
-`else
-    .exceptBootBaseAddr(32'hbfc00000),
-    .tlbRefillExl0Offset(32'h000)
 `endif
 ) cpu_ist (
     .clk(clk25),
@@ -354,6 +354,7 @@ serial_ctrl serial_ctrl_ist(
     .dataLoad_o(comDataLoad),
     .int_o(comInt),
     .rxdReady_i(rxdReady),
+    .rxdData_i(rxdData),
     .txdBusy_i(txdBusy),
     .txdStart_o(txdStart),
     .txdData_o(txdData)

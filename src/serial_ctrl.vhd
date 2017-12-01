@@ -26,7 +26,7 @@ architecture bhv of serial_ctrl is
     signal recvData: std_logic_vector(7 downto 0);
 begin
     dataLoad_o <=
-            (1 => rxdReady_i or recvAvail, 0 => txdBusy_i, others => '0')
+            (1 => rxdReady_i or recvAvail, 0 => not txdBusy_i, others => '0')
         when mode_i = '1' else
             24ux"0" & rxdData_i when rxdReady_i = '1' else 24ux"0" & recvData;
     -- When recvAvail = NO or chip disabled, outputting whatever is OK
@@ -37,6 +37,8 @@ begin
 
     process (clk) begin
         if (rising_edge(clk)) then
+            txdStart_o <= '0';
+            txdData_o <= (others => '0');
             if (rst = RST_ENABLE) then
                 recvAvail <= NO;
                 recvData <= (others => '0');
@@ -44,7 +46,7 @@ begin
                 if (rxdReady_i = '1') then
                     recvAvail <= YES;
                     recvData <= rxdData_i;
-                elsif (enable_i = ENABLE and readEnable_i = ENABLE) then
+                elsif (enable_i = ENABLE and readEnable_i = ENABLE and mode_i = '0') then
                     recvAvail <= NO;
                     recvData <= (others => '0');
                 end if;
