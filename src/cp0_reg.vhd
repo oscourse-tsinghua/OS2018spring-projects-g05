@@ -109,7 +109,9 @@ begin
                 regArr(COUNT_REG) <= (others => '0');
                 regArr(ENTRY_HI_REG) <= (others => '0');
                 regArr(COMPARE_REG) <= (others => '0');
-                regArr(STATUS_REG) <= (STATUS_CP0_BIT => '1', STATUS_BEV_BIT => '1', STATUS_ERL_BIT => '1', others => '0');
+                regArr(STATUS_REG) <= (
+                    STATUS_CP0_BIT => '1', STATUS_BEV_BIT => '1', STATUS_ERL_BIT => '1', StatusImBits => '1', others => '0'
+                );
                 regArr(CAUSE_REG) <= (others => '0');
                 regArr(EPC_REG) <= (others => '0');
                 regArr(PRID_REG) <= (others => '0');
@@ -161,7 +163,7 @@ begin
                         regArr(EPC_REG) <= currentInstAddr_i;
                         regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '0';
                     end if;
-                    regArr(CAUSE_REG)(CauseExcCodeBits) <= ADDR_ERR_LOAD_OR_IF_CAUSE;                    
+                    regArr(CAUSE_REG)(CauseExcCodeBits) <= ADDR_ERR_LOAD_OR_IF_CAUSE;
                 end if;
             end if;
         end if;

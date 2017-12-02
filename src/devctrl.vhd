@@ -74,7 +74,9 @@ begin
         ram1DataSave_o <= (others => '0');
         flashEnable_o <= DISABLE;
         flashReadEnable_o <= ENABLE;
-
+        comEnable_o <= DISABLE;
+        comReadEnable_o <= ENABLE;
+        comDataSave_o <= (others => '0');
         vgaEnable_o <= ENABLE;
         vgaWriteEnable_o <= DISABLE;
         vgaWriteData_o <= (others => '0');
