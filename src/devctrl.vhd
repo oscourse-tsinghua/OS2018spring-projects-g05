@@ -117,11 +117,6 @@ begin
                 comReadEnable_o <= not devWrite_i;
                 comDataSave_o <= devDataSave_i;
                 devDataLoad_o <= comDataLoad_i;
-            elsif (devPhysicalAddr_i >= 32ux"1fe00000" and devPhysicalAddr_i <= 32ux"1fe4afff") then
-                -- VGA --
-                -- designated by myself, software needed to support --
-                vgaWriteEnable_o <= ENABLE;
-                vgaWriteData_o <= devDataSave_i;
             elsif (devPhysicalAddr_i = 32ux"1fd0f000") then
                 -- LED. Required by functional test --
                 ledEnable_o <= ENABLE;
@@ -130,6 +125,13 @@ begin
                 -- 7-seg display. Required by functional test --
                 numEnable_o <= ENABLE;
                 numData_o <= devDataSave_i(7 downto 0);
+            elsif (devPhysicalAddr_i >= 32ux"1fe00000" and devPhysicalAddr_i <= 32ux"1fe4afff") then
+                -- VGA --
+                -- designated by myself, software needed to support --
+                vgaWriteEnable_o <= ENABLE;
+                vgaWriteData_o <= devDataSave_i;
+            elsif (devPhysicalAddr_i >= 32ux"1fe4b000" and devPhysicalAddr_i <= 32ux"1fe4b800") then
+                -- lattice --
             end if;
         end if;
     end process;
