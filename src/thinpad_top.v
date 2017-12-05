@@ -212,6 +212,7 @@ wire[31:0] flashDataLoad;
 
 wire vgaEnable, vgaWriteEnable;
 wire[31:0] vgaWriteData;
+assign video_clk = clk25;
 
 wire ltcEnable, ltcReadEnable, ltcBusy;
 wire[31:0] ltcDataLoad;
