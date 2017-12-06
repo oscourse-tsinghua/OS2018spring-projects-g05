@@ -31,6 +31,7 @@ entity ctrl is
         stall_o: out std_logic_vector(StallWidth);
 
         -- Exception
+        exceptionBase_i: in std_logic_vector(DataWidth);
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         cp0Status_i, cp0Cause_i, cp0Epc_i: in std_logic_vector(DataWidth);
         newPC_o: out std_logic_vector(AddrWidth);
@@ -47,6 +48,7 @@ begin
     process(all)
         variable newPC: std_logic_vector(AddrWidth);
     begin
+        newPC_o := (others => '0');
         newPC := (others => 'X');
         if (rst = RST_ENABLE) then
             stall_o <= (others => '0');
@@ -61,7 +63,7 @@ begin
                 flush_o <= '1';
                 stall_o <= (others => '0');
                 if (cp0Status_i(STATUS_BEV_BIT) = '0') then
-                    newPC := exceptNormalBaseAddr;
+                    newPC := exceptionBase_i;
                 else
                     newPC := exceptBootBaseAddr;
                 end if;

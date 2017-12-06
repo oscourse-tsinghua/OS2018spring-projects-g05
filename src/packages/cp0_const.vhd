@@ -18,7 +18,7 @@ package cp0_const is
     constant STATUS_REG:        integer := 12;
     constant CAUSE_REG:         integer := 13;
     constant EPC_REG:           integer := 14;
-    constant PRID_REG:          integer := 15;
+    constant EBASE_REG:          integer := 15;
     constant CONFIG_REG:        integer := 16;
     -- Max implemented ID of CP0 registers
     constant CP0_MAX_ID: integer := 16;
@@ -32,6 +32,7 @@ package cp0_const is
     --
     -- Bits of EntryLo0~1 registers
     --
+    subtype EntryLoRWBits is integer range 29 downto 0;
     subtype EntryLoPFNBits is integer range 25 downto 6; -- Page Frame Number (We only use its lower 20 bits)
     constant ENTRY_LO_D_BIT: integer := 2; -- Dirty flag
     constant ENTRY_LO_V_BIT: integer := 1; -- Valid flag
@@ -58,4 +59,9 @@ package cp0_const is
     subtype CauseIpHardBits is integer range 15 downto 10;
     subtype CauseIpSoftBits is integer range  9 downto  8;
     subtype CauseExcCodeBits is integer range 6 downto 2;
+
+    --
+    -- Bits of ebase register
+    --
+    subtype EbaseAddrBits is integer range 29 downto 12; -- Formal name is EbaseExceptionBaseBits
 end cp0_const;

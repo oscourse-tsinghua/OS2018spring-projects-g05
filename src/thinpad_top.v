@@ -174,19 +174,19 @@ assign int = {timerInt, 1'b0, 1'b0, comInt, 1'b0, usbInt};
 // Monitor requires int[2] = COM
 
 cpu #(
-`ifdef USE_BOOTLOADER
-    .instEntranceAddr(32'hbfc00000),
-`else
-    .instEntranceAddr(32'h80000000),
-`endif
 `ifdef FUNC_TEST
     .exceptBootBaseAddr(32'h80000000),
-    .tlbRefillExl0Offset(32'h180)
+    .tlbRefillExl0Offset(32'h180),
 `elsif MONITOR
     .exceptNormalBaseAddr(32'h80000000),
     .exceptBootBaseAddr(32'h80000000),
     .tlbRefillExl0Offset(32'h1000),
-    .generalExceptOffset(32'h1180)
+    .generalExceptOffset(32'h1180),
+`endif
+`ifdef USE_BOOTLOADER
+    .instEntranceAddr(32'hbfc00000)
+`else
+    .instEntranceAddr(32'h80000000)
 `endif
 ) cpu_ist (
     .clk(clk25),
