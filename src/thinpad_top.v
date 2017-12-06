@@ -33,7 +33,7 @@ module thinpad_top(/*autoport*/
          sl811_rd_n,
          sl811_cs_n,
          sl811_rst_n,
-         sl811_drq,
+         sl811_dack,
          dm9k_cmd,
          dm9k_we_n,
          dm9k_rd_n,
@@ -52,8 +52,8 @@ module thinpad_top(/*autoport*/
          uart_tbre,
          uart_tsre,
          rxd,
-         sl811_dack,
          sl811_int,
+         sl811_drq,
          dm9k_int,
          dip_sw,
          touch_btn);
@@ -108,9 +108,9 @@ output wire sl811_we_n;
 output wire sl811_rd_n;
 output wire sl811_cs_n;
 output wire sl811_rst_n;
-input wire sl811_dack;
+output wire sl811_dack;
 input wire sl811_int;
-output wire sl811_drq;
+input wire sl811_drq;
 
 //DM9000 Ethernet controller signals
 output wire dm9k_cmd;
