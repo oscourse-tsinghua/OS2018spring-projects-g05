@@ -1,7 +1,9 @@
 /vivado.jou
 /vivado.log
 /vivado_pid*.str
+/*pid*.log
 /thinpad_top.runs
+/thinpad_top.sim
 /thinpad_top.hw
 /thinpad_top.ip_user_files
 *.cache
