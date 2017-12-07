@@ -54,6 +54,12 @@ entity devctrl is
         -- Signals connecting to boot_ctrl --
         bootDataLoad_i: in std_logic_vector(DataWidth);
 
+        -- Signals connecting to lattice_ram_ctrl --
+        ltcEnable_o: out std_logic;
+        ltcReadEnable_o: out std_logic;
+        ltcDataLoad_i: in std_logic_vector(DataWidth);
+        ltcBusy_i: in std_logic;
+
         ledEnable_o: out std_logic;
         ledData_o: out std_logic_vector(15 downto 0);
         numEnable_o: out std_logic;
@@ -80,6 +86,8 @@ begin
         vgaEnable_o <= ENABLE;
         vgaWriteEnable_o <= DISABLE;
         vgaWriteData_o <= (others => '0');
+        ltcEnable_o <= ENABLE;
+        ltcReadEnable_o <= DISABLE;
         ledEnable_o <= DISABLE;
         ledData_o <= (others => '0');
         numEnable_o <= DISABLE;
@@ -117,11 +125,6 @@ begin
                 comReadEnable_o <= not devWrite_i;
                 comDataSave_o <= devDataSave_i;
                 devDataLoad_o <= comDataLoad_i;
-            elsif (devPhysicalAddr_i >= 32ux"1fe00000" and devPhysicalAddr_i <= 32ux"1fe4afff") then
-                -- VGA --
-                -- designated by myself, software needed to support --
-                vgaWriteEnable_o <= ENABLE;
-                vgaWriteData_o <= devDataSave_i;
             elsif (devPhysicalAddr_i = 32ux"1fd0f000") then
                 -- LED. Required by functional test --
                 ledEnable_o <= ENABLE;
@@ -130,6 +133,16 @@ begin
                 -- 7-seg display. Required by functional test --
                 numEnable_o <= ENABLE;
                 numData_o <= devDataSave_i(7 downto 0);
+            elsif (devPhysicalAddr_i >= 32ux"1fe00000" and devPhysicalAddr_i <= 32ux"1fe4afff") then
+                -- VGA --
+                -- designated by myself, software needed to support --
+                vgaWriteEnable_o <= ENABLE;
+                vgaWriteData_o <= devDataSave_i;
+            elsif (devPhysicalAddr_i >= 32ux"1fe4b000" and devPhysicalAddr_i <= 32ux"1fe4b800") then
+                -- lattice --
+                ltcReadEnable_o <= ENABLE;
+                devDataLoad_o <= ltcDataLoad_i;
+                devBusy_o <= ltcBusy_i;
             end if;
         end if;
     end process;
