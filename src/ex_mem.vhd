@@ -120,6 +120,9 @@ begin
                 exceptCause_o <= exceptCause_i;
                 isInDelaySlot_o <= isInDelaySlot_i;
                 currentInstAddr_o <= currentInstAddr_i;
+
+                tempProduct_o <= tempProduct_i;
+                cnt_o <= cnt_i;
             end if;
         end if;
     end process;
