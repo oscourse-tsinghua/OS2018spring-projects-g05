@@ -46,8 +46,8 @@ begin
             tlbRefillExl0Offset     => 32ux"40",
             generalExceptOffset     => 32ux"40",
             interruptIv1Offset      => 32ux"40",
-            instConvEndian          => true
-        ) 
+            convEndianEnable        => true
+        )
         port map (
             rst => rst, clk => clk,
             devEnable_o => devEnable,

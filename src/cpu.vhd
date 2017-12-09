@@ -55,6 +55,7 @@ architecture bhv of cpu is
     signal entry: TLBEntry;
 
     signal dataLoadConv, dataSaveConv: std_logic_vector(DataWidth);
+    signal byteSelectConv: std_logic_vector(3 downto 0);
 
 begin
     conv_endian_load: entity work.conv_endian
@@ -73,6 +74,13 @@ begin
             input => dataSaveConv,
             output => devDataSave_o
         );
+    process (all) begin
+        if (convEndianEnable) then
+            devByteSelect_o <= byteSelectConv(0) & byteSelectConv(1) & byteSelectConv(2) & byteSelectConv(3);
+        else
+            devByteSelect_o <= byteSelectConv;
+        end if;
+    end process;
 
     devWrite_o <= devWrite;
 
@@ -119,7 +127,7 @@ begin
             devData_i => dataLoadConv,
             devData_o => dataSaveConv,
             devAddr_o => devVirtualAddr,
-            devByteSelect_o => devByteSelect_o,
+            devByteSelect_o => byteSelectConv,
             devBusy_i => devBusy_i,
             devExcept_i => devExcept
         );

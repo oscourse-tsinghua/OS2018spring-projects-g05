@@ -212,6 +212,10 @@ wire[31:0] flashDataLoad;
 
 wire vgaEnable, vgaWriteEnable;
 wire[31:0] vgaWriteData;
+assign video_clk = clk25;
+
+wire ltcEnable, ltcReadEnable, ltcBusy;
+wire[31:0] ltcDataLoad;
 
 wire comEnable, comReadEnable;
 wire[31:0] comDataSave, comDataLoad;
@@ -266,6 +270,11 @@ devctrl devctrl_ist(
     .usbBusy_i(usbBusy),
 
     .bootDataLoad_i(bootDataLoad),
+
+    .ltcEnable_o(ltcEnable),
+    .ltcReadEnable_o(ltcReadEnable),
+    .ltcDataLoad_i(ltcDataLoad),
+    .ltcBusy_i(ltcBusy),
 
     .ledEnable_o(ledEnable),
     .ledData_o(ledData),
@@ -384,6 +393,16 @@ usb_ctrl usb_ctrl_ist(
 boot_ctrl boot_ctrl_ist(
     .addr_i(addr),
     .readData_o(bootDataLoad)
+);
+
+lattice_ram_ctrl lattice_ram_ctrl_ist(
+    .clk(clk25),
+    .rst(rst),
+    .devEnable_i(ltcEnable),
+    .readEnable_i(ltcReadEnable),
+    .addr_i(addr),
+    .readData_o(ltcDataLoad),
+    .busy_o(ltcBusy)
 );
 
 always@(posedge clk25) begin
