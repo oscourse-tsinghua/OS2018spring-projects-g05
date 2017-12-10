@@ -178,7 +178,6 @@ cpu #(
     .exceptBootBaseAddr(32'h80000000),
     .tlbRefillExl0Offset(32'h180),
 `elsif MONITOR
-    .exceptNormalBaseAddr(32'h80000000),
     .exceptBootBaseAddr(32'h80000000),
     .tlbRefillExl0Offset(32'h1000),
     .generalExceptOffset(32'h1180),

@@ -17,7 +17,6 @@ use work.cp0_const.all;
 
 entity ctrl is
     generic (
-        exceptNormalBaseAddr:   std_logic_vector(AddrWidth);
         exceptBootBaseAddr:     std_logic_vector(AddrWidth);
         tlbRefillExl0Offset:    std_logic_vector(AddrWidth);
         generalExceptOffset:    std_logic_vector(AddrWidth);
@@ -48,7 +47,7 @@ begin
     process(all)
         variable newPC: std_logic_vector(AddrWidth);
     begin
-        newPC_o := (others => '0');
+        newPC_o <= (others => '0');
         newPC := (others => 'X');
         if (rst = RST_ENABLE) then
             stall_o <= (others => '0');

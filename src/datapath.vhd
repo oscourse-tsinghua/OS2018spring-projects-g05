@@ -10,7 +10,6 @@ use work.except_const.all;
 entity datapath is
     generic (
         instEntranceAddr:       std_logic_vector(AddrWidth);
-        exceptNormalBaseAddr:   std_logic_vector(AddrWidth);
         exceptBootBaseAddr:     std_logic_vector(AddrWidth);
         tlbRefillExl0Offset:    std_logic_vector(AddrWidth);
         generalExceptOffset:    std_logic_vector(AddrWidth);
@@ -589,7 +588,6 @@ begin
 
     ctrl_ist: entity work.ctrl
         generic map (
-            exceptNormalBaseAddr => exceptNormalBaseAddr,
             exceptBootBaseAddr => exceptBootBaseAddr,
             tlbRefillExl0Offset => tlbRefillExl0Offset,
             generalExceptOffset => generalExceptOffset,

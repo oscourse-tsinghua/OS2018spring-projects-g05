@@ -7,7 +7,6 @@ use work.mmu_const.all;
 entity cpu is
     generic (
         instEntranceAddr: std_logic_vector(AddrWidth) := 32ux"bfc0_0000";
-        exceptNormalBaseAddr: std_logic_vector(AddrWidth) := 32ux"8000_0000";
         exceptBootBaseAddr: std_logic_vector(AddrWidth) := 32ux"bfc0_0200";
         tlbRefillExl0Offset: std_logic_vector(AddrWidth) := 32ux"000";
         generalExceptOffset: std_logic_vector(AddrWidth) := 32ux"180";
@@ -135,7 +134,6 @@ begin
     datapath_ist: entity work.datapath
         generic map (
             instEntranceAddr        => instEntranceAddr,
-            exceptNormalBaseAddr    => exceptNormalBaseAddr,
             exceptBootBaseAddr      => exceptBootBaseAddr,
             tlbRefillExl0Offset     => tlbRefillExl0Offset,
             generalExceptOffset     => generalExceptOffset,
