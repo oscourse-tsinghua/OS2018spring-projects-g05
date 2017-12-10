@@ -32,7 +32,7 @@ architecture bhv of mmu is
     type EntryArr is array (0 to TLB_ENTRY_NUM - 1) of TLBEntry;
     signal entries: EntryArr;
 begin
-    -- Traslation
+    -- Translation
     -- We can't use 'Z' inside chip, so here we are using sequential look-up
     process (all)
         variable targetLo: std_logic_vector(DataWidth);
@@ -63,7 +63,7 @@ begin
                     -- VPN match
                     if (
                         (entries(i).lo0(ENTRY_LO_G_BIT) and entries(i).lo1(ENTRY_LO_G_BIT)) = '1' or -- global
-                        entries(i).hi(EntryHiASIDBits) = addr_i(EntryHiASIDBits) -- ASID match
+                        entries(i).hi(EntryHiASIDBits) = entry_i.hi(EntryHiASIDBits) -- ASID match
                     ) then
                         if (addr_i(12) = '0') then
                             targetLo := entries(i).lo0;

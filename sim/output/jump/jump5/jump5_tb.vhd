@@ -41,7 +41,6 @@ begin
     cpu_ist: entity work.cpu
         generic map (
             instEntranceAddr        => 32ux"8000_0004",
-            exceptNormalBaseAddr    => 32ux"8000_0000",
             exceptBootBaseAddr      => 32ux"8000_0000",
             tlbRefillExl0Offset     => 32ux"40",
             generalExceptOffset     => 32ux"40",

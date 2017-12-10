@@ -45,8 +45,11 @@ entity cp0_reg is
         entry_o: out TLBEntry;
 
         -- Connect ctrl, for address error after eret instruction
-        ctrlBadVAddr_i: in std_logic_vector(AddrWidth);
-        ctrlToWriteBadVAddr_i: in std_logic
+        ctrlBadVAddr_i: in std_logic_vector(DataWidth);
+        ctrlToWriteBadVAddr_i: in std_logic;
+
+        -- Connect ctrl, for ExceptNormalBaseAddress modification
+        cp0EBaseAddr_o: out std_logic_vector(DataWidth)
     );
 end cp0_reg;
 
@@ -77,6 +80,8 @@ begin
     entry_o.lo0 <= curArr(ENTRY_LO0_REG);
     entry_o.lo1 <= curArr(ENTRY_LO1_REG);
 
+    cp0EBaseAddr_o <= curArr(EBASE_REG);
+
     process (all) begin
         for i in 0 to CP0_MAX_ID loop
             curArr(i) <= regArr(i);
@@ -89,6 +94,12 @@ begin
                     curArr(CAUSE_REG)(CauseIpSoftBits) <= data_i(CauseIpSoftBits);
                     curArr(CAUSE_REG)(CAUSE_IV_BIT) <= data_i(CAUSE_IV_BIT);
                     curArr(CAUSE_REG)(CAUSE_WP_BIT) <= data_i(CAUSE_WP_BIT);
+                when EBASE_REG =>
+                    curArr(EBASE_REG)(EbaseAddrBits) <= data_i(EbaseAddrBits);
+                when ENTRY_LO0_REG =>
+                    curArr(ENTRY_LO0_REG)(EntryLoRWBits) <= data_i(EntryLoRWBits);
+                when ENTRY_LO1_REG =>
+                    curArr(ENTRY_LO1_REG)(EntryLoRWBits) <= data_i(EntryLoRWBits);
                 when others =>
                     curArr(conv_integer(waddr_i)) <= data_i;
             end case;
@@ -114,7 +125,7 @@ begin
                 );
                 regArr(CAUSE_REG) <= (others => '0');
                 regArr(EPC_REG) <= (others => '0');
-                regArr(PRID_REG) <= (others => '0');
+                regArr(EBASE_REG) <= (31 => '1', others => '0');
                 regArr(CONFIG_REG) <= (others => '0');
             else
                 regArr(CAUSE_REG)(CauseIpHardBits) <= int_i;

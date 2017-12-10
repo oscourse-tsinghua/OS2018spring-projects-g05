@@ -10,7 +10,6 @@ use work.except_const.all;
 entity datapath is
     generic (
         instEntranceAddr:       std_logic_vector(AddrWidth);
-        exceptNormalBaseAddr:   std_logic_vector(AddrWidth);
         exceptBootBaseAddr:     std_logic_vector(AddrWidth);
         tlbRefillExl0Offset:    std_logic_vector(AddrWidth);
         generalExceptOffset:    std_logic_vector(AddrWidth);
@@ -234,8 +233,9 @@ architecture bhv of datapath is
     signal cp0Status_cb: std_logic_vector(DataWidth);
     signal cp0Cause_cb: std_logic_vector(DataWidth);
     signal cp0Epc_cb: std_logic_vector(DataWidth);
+    signal cp0EBaseAddr_cb: std_logic_vector(DataWidth);
     signal ctrlToWriteBadVAddr_cb: std_logic;
-    signal ctrlBadVAddr_cb: std_logic_vector(AddrWidth);
+    signal ctrlBadVAddr_cb: std_logic_vector(DataWidth);
 
     -- Signals connecting mem and ctrl --
     signal exceptCause_8b: std_logic_vector(ExceptionCauseWidth);
@@ -588,7 +588,6 @@ begin
 
     ctrl_ist: entity work.ctrl
         generic map (
-            exceptNormalBaseAddr => exceptNormalBaseAddr,
             exceptBootBaseAddr => exceptBootBaseAddr,
             tlbRefillExl0Offset => tlbRefillExl0Offset,
             generalExceptOffset => generalExceptOffset,
@@ -604,6 +603,7 @@ begin
             stall_o => stall,
             flush_o => flush_b1,
             newPC_o => newPC_b1,
+            exceptionBase_i => cp0EBaseAddr_cb,
             exceptCause_i => exceptCause_8b,
             cp0Status_i => cp0Status_cb,
             cp0Cause_i => cp0Cause_cb,
@@ -641,7 +641,8 @@ begin
             isTlbwr_i => isTlbwr_9c,
             entryIndex_o => entryIndex_o,
             entryWrite_o => entryWrite_o,
-            entry_o => entry_o
+            entry_o => entry_o,
+            cp0EBaseAddr_o => cp0EBaseAddr_cb
         );
     cp0Status_cb <= status_c8;
     cp0Cause_cb <= cause_c8;
