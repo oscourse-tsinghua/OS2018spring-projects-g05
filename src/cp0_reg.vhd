@@ -130,7 +130,9 @@ begin
             else
                 regArr(CAUSE_REG)(CauseIpHardBits) <= int_i;
 
-                regArr(COUNT_REG) <= regArr(COUNT_REG) + 1;
+                if (regArr(COUNT_REG) /= curArr(COMPARE_REG)) then
+                    regArr(COUNT_REG) <= regArr(COUNT_REG) + 1;
+                end if;
                 -- The exception handler will reset COUNT register
 
                 if (regArr(RANDOM_REG) = regArr(WIRED_REG)) then
