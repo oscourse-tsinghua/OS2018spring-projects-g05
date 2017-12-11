@@ -90,6 +90,7 @@ begin
             case (conv_integer(waddr_i)) is
                 when COMPARE_REG =>
                     curArr(COMPARE_REG) <= data_i;
+                    curArr(COUNT_REG) <= (others => '0'); -- Side effect
                 when CAUSE_REG =>
                     curArr(CAUSE_REG)(CauseIpSoftBits) <= data_i(CauseIpSoftBits);
                     curArr(CAUSE_REG)(CAUSE_IV_BIT) <= data_i(CAUSE_IV_BIT);
@@ -133,7 +134,7 @@ begin
                 if (regArr(COUNT_REG) /= curArr(COMPARE_REG)) then
                     regArr(COUNT_REG) <= regArr(COUNT_REG) + 1;
                 end if;
-                -- The exception handler will reset COUNT register
+                -- COUNT will be reset when COMPARE is written
 
                 if (regArr(RANDOM_REG) = regArr(WIRED_REG)) then
                     regArr(RANDOM_REG) <= conv_std_logic_vector(TLB_ENTRY_NUM - 1, 32);
