@@ -54,19 +54,24 @@ entity mem is
 
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         isInDelaySlot_o: out std_logic;
-        currentInstAddr_o: out std_logic_vector(AddrWidth)
+        currentInstAddr_o: out std_logic_vector(AddrWidth);
+        currentAccessAddr_o: out std_logic_vector(AddrWidth)
     );
 end mem;
 
 architecture bhv of mem is
+    signal memAddr: std_logic_vector(AddrWidth);
     signal dataWrite: std_logic;
     signal interrupt: std_logic_vector(ExceptionCauseWidth);
 begin
-    memAddr_o <= memAddr_i when
+    memAddr <= memAddr_i when
         (memt_i = MEM_LW or memt_i = MEM_SW) else memAddr_i(31 downto 2) & "00";
+    memAddr_o <= memAddr;
     -- We preserve the low 2 bits for `lw` and `sw` as required by BadVAddr register
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;
+    -- When IF has an exception, memt_i must be INVALID
+    currentAccessAddr_o <= currentInstAddr_i when memt_i = INVALID else memAddr;
 
     isTlbwi_o <= isTlbwi_i;
     isTlbwr_o <= isTlbwr_i;

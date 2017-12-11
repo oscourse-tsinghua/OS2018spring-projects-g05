@@ -498,7 +498,7 @@ begin
             dataWrite_o => dataWrite_o,
             loadedData_i => dataData_i,
             savingData_o => dataData_o,
-            memAddr_o => currentAccessAddr_8c,
+            memAddr_o => dataAddr_o,
             dataByteSelect_o => dataByteSelect_o,
 
             cp0RegData_i => cp0RegData_78,
@@ -521,9 +521,9 @@ begin
             cp0Cause_i => cause_c8,
             exceptCause_o => exceptCause_8c,
             currentInstAddr_o => currentInstAddr_8c,
+            currentAccessAddr_o => currentAccessAddr_8c,
             isInDelaySlot_o => isInDelaySlot_8c
         );
-    dataAddr_o <= currentAccessAddr_8c;
     memToWriteReg_84 <= toWriteReg_89;
     memWriteRegAddr_84 <= writeRegAddr_89;
     memWriteRegData_84 <= writeRegData_89;
