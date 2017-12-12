@@ -63,6 +63,7 @@ architecture bhv of datapath is
 
     -- Signals connecting if_id and id --
     signal pc_24: std_logic_vector(AddrWidth);
+    signal valid_24: std_logic;
     signal inst_24: std_logic_vector(InstWidth);
     signal exceptCause_24: std_logic_vector(ExceptionCauseWidth);
 
@@ -83,6 +84,7 @@ architecture bhv of datapath is
     signal linkAddr_45: std_logic_vector(AddrWidth);
     signal nextInstInDelaySlot_45: std_logic;
     signal isInDelaySlot_54: std_logic;
+    signal valid_45: std_logic;
     signal exceptCause_45: std_logic_vector(ExceptionCauseWidth);
     signal currentInstAddr_45: std_logic_vector(AddrWidth);
 
@@ -98,6 +100,7 @@ architecture bhv of datapath is
     signal exLinkAddress_56: std_logic_vector(AddrWidth);
     signal exExceptCause_56: std_logic_vector(ExceptionCauseWidth);
     signal exCurrentInstAddr_56: std_logic_vector(AddrWidth);
+    signal valid_56: std_logic;
 
     -- Signals connecting ex and id --
     signal exToWriteReg_64: std_logic;
@@ -123,6 +126,7 @@ architecture bhv of datapath is
     signal exceptCause_67: std_logic_vector(ExceptionCauseWidth);
     signal currentInstAddr_67: std_logic_vector(AddrWidth);
     signal isInDelaySlot_67: std_logic;
+    signal valid_67: std_logic;
 
     -- Signals connecting ex and cp0 --
     signal cp0RegReadAddr_6c: std_logic_vector(CP0RegAddrWidth);
@@ -143,6 +147,7 @@ architecture bhv of datapath is
     signal exceptCause_78: std_logic_vector(ExceptionCauseWidth);
     signal currentInstAddr_78: std_logic_vector(AddrWidth);
     signal isInDelaySlot_78: std_logic;
+    signal valid_78: std_logic;
 
     -- Signals connecting mem and id --
     signal memToWriteReg_84: std_logic;
@@ -263,6 +268,7 @@ begin
             rst => rst, clk => clk,
             stall_i => stall,
             pc_i => pc_12,
+            valid_o => valid_24,
             instEnable_i => instEnable_12,
             inst_i => instData_i,
             exceptCause_i => instExcept_i,
@@ -319,6 +325,8 @@ begin
             nextInstInDelaySlot_o => nextInstInDelaySlot_45,
             branchTargetAddress_o => branchTargetAddress_41,
             branchFlag_o => branchFlag_41,
+            valid_i => valid_24,
+            valid_o => valid_45,
             exceptCause_i => exceptCause_24,
             exceptCause_o => exceptCause_45,
             currentInstAddr_o => currentInstAddr_45
@@ -341,6 +349,7 @@ begin
             flush_i => flush_b5,
             idExceptCause_i => exceptCause_45,
             idCurrentInstAddr_i => currentInstAddr_45,
+            valid_i => valid_45,
             alut_o => alut_56,
             memt_o => memt_56,
             operand1_o => operand1_56,
@@ -352,7 +361,8 @@ begin
             exIsInDelaySlot_o => exIsInDelaySlot_56,
             exLinkAddress_o => exLinkAddress_56,
             exExceptCause_o => exExceptCause_56,
-            exCurrentInstAddr_o => exCurrentInstAddr_56
+            exCurrentInstAddr_o => exCurrentInstAddr_56,
+            valid_o => valid_56
         );
 
     ex_ist: entity work.ex
@@ -407,6 +417,8 @@ begin
             isTlbwi_o => isTlbwi_67,
             isTlbwr_o => isTlbwr_67,
 
+            valid_i => valid_56,
+            valid_o => valid_67,
             exceptCause_i => exExceptCause_56,
             currentInstAddr_i => exCurrentInstAddr_56,
             exceptCause_o => exceptCause_67,
@@ -463,9 +475,11 @@ begin
             isTlbwr_o => isTlbwr_78,
 
             flush_i => flush_b7,
+            valid_i => valid_67,
             exceptCause_i => exceptCause_67,
             currentInstAddr_i => currentInstAddr_67,
             isInDelaySlot_i => isInDelaySlot_67,
+            valid_o => valid_78,
             exceptCause_o => exceptCause_78,
             currentInstAddr_o => currentInstAddr_78,
             isInDelaySlot_o => isInDelaySlot_78
@@ -513,6 +527,7 @@ begin
             isTLbwi_o => isTlbwi_89,
             isTlbwr_o => isTlbwr_89,
 
+            valid_i => valid_78,
             exceptCause_i => exceptCause_78,
             currentInstAddr_i => currentInstAddr_78,
             isInDelaySlot_i => isInDelaySlot_78,

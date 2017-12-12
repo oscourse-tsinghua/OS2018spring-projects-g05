@@ -22,6 +22,7 @@ entity id_ex is
         flush_i: in std_logic;
         idCurrentInstAddr_i: in std_logic_vector(AddrWidth);
         idExceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        valid_i: in std_logic;
 
         alut_o: out AluType;
         memt_o: out MemType;
@@ -34,7 +35,8 @@ entity id_ex is
         exIsInDelaySlot_o: out std_logic;
         isInDelaySlot_o: out std_logic;
         exCurrentInstAddr_o: out std_logic_vector(AddrWidth);
-        exExceptCause_o: out std_logic_vector(ExceptionCauseWidth)
+        exExceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        valid_o: out std_logic
     );
 end id_ex;
 
@@ -58,6 +60,7 @@ begin
                 exIsInDelaySlot_o <= NO;
                 isInDelaySlot_o <= NO;
                 exCurrentInstAddr_o <= (others => '0');
+                valid_o <= NO;
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_STOP and stall_i(EX_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= INVALID;
                 memt_o <= INVALID;
@@ -71,6 +74,7 @@ begin
                 exIsInDelaySlot_o <= NO;
                 -- Keep `isInDelaySlot_o` as old value
                 exCurrentInstAddr_o <= (others => '0');
+                valid_o <= NO;
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= alut_i;
                 memt_o <= memt_i;
@@ -84,6 +88,7 @@ begin
                 isInDelaySlot_o <= nextInstInDelaySlot_i;
                 exExceptCause_o <= idExceptCause_i;
                 exCurrentInstAddr_o <= idCurrentInstAddr_i;
+                valid_o <= valid_i;
             end if;
         end if;
     end process;

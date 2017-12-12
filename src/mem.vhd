@@ -47,6 +47,7 @@ entity mem is
         isTlbwr_o: out std_logic;
 
         -- for exception --
+        valid_i: in std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         isInDelaySlot_i: in std_logic;
         currentInstAddr_i: in std_logic_vector(AddrWidth);
@@ -169,6 +170,7 @@ begin
     end process;
 
     interrupt <= EXTERNAL_CAUSE when
+                    valid_i = YES and
                     (cp0Cause_i(CauseIpBits) and cp0Status_i(StatusImBits)) /= 8ux"0" and
                     cp0Status_i(STATUS_EXL_BIT) = NO and
                     cp0Status_i(STATUS_ERL_BIT) = NO and
