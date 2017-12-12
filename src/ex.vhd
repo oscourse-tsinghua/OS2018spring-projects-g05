@@ -60,6 +60,8 @@ entity ex is
         isTlbwr_o: out std_logic;
 
         -- for exception --
+        valid_i: in std_logic;
+        valid_o: out std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         currentInstAddr_i: in std_logic_vector(AddrWidth);
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
@@ -136,6 +138,7 @@ begin
 
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;
+    valid_o <= valid_i;
 
     -- multiplication --
     process(multip1, multip2, alut_i, calcMult)

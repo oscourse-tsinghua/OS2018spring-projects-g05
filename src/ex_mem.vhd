@@ -48,6 +48,8 @@ entity ex_mem is
         isTlbwr_o: out std_logic;
 
         -- for exception --
+        valid_i: in std_logic;
+        valid_o: out std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         isInDelaySlot_i: in std_logic;
         currentInstAddr_i: in std_logic_vector(AddrWidth);
@@ -93,6 +95,8 @@ begin
                 isTlbwi_o <= NO;
                 isTlbwr_o <= NO;
 
+                valid_o <= NO;
+
                 if (stall_i(EX_STOP_IDX) = PIPELINE_STOP and stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                     tempProduct_o <= tempProduct_i;
                     cnt_o <= cnt_i;
@@ -120,6 +124,8 @@ begin
                 exceptCause_o <= exceptCause_i;
                 isInDelaySlot_o <= isInDelaySlot_i;
                 currentInstAddr_o <= currentInstAddr_i;
+
+                valid_o <= valid_i;
 
                 tempProduct_o <= tempProduct_i;
                 cnt_o <= cnt_i;

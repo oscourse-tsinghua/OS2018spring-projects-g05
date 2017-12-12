@@ -47,6 +47,8 @@ entity id is
         isInDelaySlot_o: out std_logic;
 
         -- For Exceptions --
+        valid_i: in std_logic;
+        valid_o: out std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         currentInstAddr_o: out std_logic_vector(AddrWidth)
@@ -161,6 +163,7 @@ begin
     currentInstAddr_o <= pc_i;
 
     isInDelaySlot_o <= isInDelaySlot_i;
+    valid_o <= valid_i;
 
     process(all)
         -- indicates where the operand is from --
