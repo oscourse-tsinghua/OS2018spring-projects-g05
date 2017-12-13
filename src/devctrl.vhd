@@ -60,6 +60,13 @@ entity devctrl is
         ltcDataLoad_i: in std_logic_vector(DataWidth);
         ltcBusy_i: in std_logic;
 
+        -- Signals connecting to eth_ctrl --
+        ethEnable_o: out std_logic;
+        ethReadEnable_o: out std_logic;
+        ethDataSave_o: out std_logic_vector(DataWidth);
+        ethDataLoad_i: in std_logic_vector(DataWidth);
+        ethWriteBusy_i: in std_logic;
+
         ledEnable_o: out std_logic;
         ledData_o: out std_logic_vector(15 downto 0);
         numEnable_o: out std_logic;
@@ -88,6 +95,9 @@ begin
         vgaWriteData_o <= (others => '0');
         ltcEnable_o <= ENABLE;
         ltcReadEnable_o <= DISABLE;
+        ethDataSave_o <= (others => '0');
+        ethEnable_o <= DISABLE;
+        ethReadEnable_o <= ENABLE;
         ledEnable_o <= DISABLE;
         ledData_o <= (others => '0');
         numEnable_o <= DISABLE;
@@ -138,11 +148,18 @@ begin
                 -- designated by myself, software needed to support --
                 vgaWriteEnable_o <= ENABLE;
                 vgaWriteData_o <= devDataSave_i;
-            elsif (devPhysicalAddr_i >= 32ux"1fe4b000" and devPhysicalAddr_i <= 32ux"1fe4b800") then
+            elsif (devPhysicalAddr_i >= 32ux"1fe4b000" and devPhysicalAddr_i <= 32ux"1fe4b7ff") then
                 -- lattice --
                 ltcReadEnable_o <= ENABLE;
                 devDataLoad_o <= ltcDataLoad_i;
                 devBusy_o <= ltcBusy_i;
+            elsif (devPhysicalAddr_i >= 32ux"1fe4b800" and devPhysicalAddr_i <= 32ux"1fe4b804") then
+                -- Ethernet --
+                ethEnable_o <= ENABLE;
+                ethReadEnable_o <= not devWrite_i;
+                ethDataSave_o <= devDataSave_i;
+                devDataLoad_o <= ethDataLoad_i;
+                devBusy_o <= ethWriteBusy_i;
             end if;
         end if;
     end process;
