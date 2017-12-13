@@ -421,7 +421,7 @@ eth_ctrl eth_ctrl_ist(
     .addr_i(addr),
     .readData_o(ethDataLoad),
     .writeData_i(ethDataSave),
-    .busy_o(ethWriteBusy),
+    .writeBusy_o(ethWriteBusy),
     .int_o(ethInt),
 
     .ethInt_i(dm9k_int),
