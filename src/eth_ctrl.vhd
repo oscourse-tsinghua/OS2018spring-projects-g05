@@ -9,7 +9,6 @@ entity eth_ctrl is
         writeData_i: in std_logic_vector(DataWidth);
         readData_o: out std_logic_vector(DataWidth);
         addr_i: in std_logic_vector(AddrWidth);
-        byteSelect_i: in std_logic_vector(3 downto 0);
         writeBusy_o: out std_logic;
         int_o: out std_logic;
 
@@ -25,15 +24,16 @@ architecture bhv of eth_ctrl is
     signal latch: std_logic;
 begin
     int_o <= ethInt_i;
+    ethCmd_o <= addr_i(2);
     ethWE_o <= not (enable_i and (not readEnable_i) and latch);
     ethRD_o <= not (enable_i and readEnable_i);
     ethCS_o <= not enable_i;
     ethRst_o <= not rst;
 
-    readData_o <= ethData_io when enable_i and readEnable_i else (others => '0');
-    ethData_io <= writeData_i;
+    readData_o <= 16ux"0" & ethData_io when enable_i and readEnable_i else (others => '0');
+    ethData_io <= writeData_i(15 downto 0);
 
-    writeBusy_o <= '0' when state = GET else '1';
+    writeBusy_o <= PIPELINE_STOP when state = INIT and readEnable_i = DISABLE else PIPELINE_NONSTOP;
 
     process (clk) begin
         if (rising_edge(clk)) then
