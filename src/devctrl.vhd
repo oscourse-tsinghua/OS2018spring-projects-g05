@@ -155,6 +155,7 @@ begin
                 devBusy_o <= ltcBusy_i;
             elsif (devPhysicalAddr_i >= 32ux"1fe4b800" and devPhysicalAddr_i <= 32ux"1fe4b804") then
                 -- Ethernet --
+                -- 1fe4b800: index port; 1fe4b804: data port --
                 ethEnable_o <= ENABLE;
                 ethReadEnable_o <= not devWrite_i;
                 ethDataSave_o <= devDataSave_i;
