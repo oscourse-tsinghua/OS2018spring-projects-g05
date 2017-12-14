@@ -76,6 +76,16 @@ start:
 /*
  *  exception handle
  */
+.org 0x180
+    lui v1, 0xffe8
+    ori v1, 0xdc03
+    beq v0, v1, tlbwr_ex
+    nop
+    lui v1, 0xefe8
+    ori v1, 0xdc03
+    beq v0, v1, tlbwi_ex
+    nop
+
 .org 0x380
     li  v1, 0x01 # syscall
     beq v0, v1, syscall_ex
@@ -255,7 +265,62 @@ ex_ret:
     nop
     nop
     nop
-
+tlbwr_ex:
+    li v1, 0x1
+    beq k0, v1, tlbwr_allbit
+    nop
+    li v1, 0x2
+    beq k0, v1, tlbwr_vdbit
+    nop
+    li v1, 0x3
+    beq k0, v1, tlbwr_asid
+    nop
+    addiu t0, 0x0001
+    addiu t1, 0x0001
+    addiu k0, 0x0001
+    j tlbwr_return
+    nop
+tlbwr_allbit:
+    ori t0, 0x7
+    ori t1, 0x7
+    j tlbwr_return
+    nop
+tlbwr_vdbit:
+    ori t0, 0x7
+    ori t1, 0x7
+    j tlbwr_return
+    nop
+tlbwr_asid:
+    j tlbwr_return
+    nop
+tlbwr_return:
+    mtc0 s0, c0_entryhi
+    mtc0 t0, c0_entrylo0
+    mtc0 t1, c0_entrylo1
+    tlbwr
+    lui v1, 0xed08
+    ori v1, 0xdc15
+    add v1, v1, k0
+    .set mips32
+    eret
+    .set mips1
+tlbwi_ex:
+    mfc0 v1, c0_badvaddr
+    lui a1, 0xffff
+    ori a1, 0xe000
+    and v1, a1, v1
+    mtc0 v1, c0_entryhi
+    li v1, 0x0007
+    mtc0 v1, c0_entrylo0
+    li v1, 0x0007
+    mtc0 v1, c0_entrylo1
+    tlbwi
+    lui v1, 0xed12
+    ori v1, 0x5678
+    .set mips32
+    eret
+    .set mips1
+    nop
 
 locate:
   .set noreorder

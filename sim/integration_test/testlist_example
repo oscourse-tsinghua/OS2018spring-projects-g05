@@ -89,3 +89,5 @@ n88_j_ex_ds *
 n89_jal_ex_ds *
 n90_jr_ex_ds *
 n91_jalr_ex_ds *
+n92_tlbwi *
+n93_tlbwr *
