@@ -167,8 +167,8 @@ wire devEnable, devWrite, devBusy;
 wire[31:0] dataSave, dataLoad, addr;
 wire[3:0] byteSelect;
 wire[5:0] int;
-wire timerInt, comInt, usbInt;
-assign int = {timerInt, 1'b0, 1'b0, comInt, 1'b0, usbInt};
+wire timerInt, comInt, usbInt, ethInt;
+assign int = {timerInt, 1'b0, 1'b0, comInt, ethInt, usbInt};
 // NOTE: 1'b0 cannot be written as 0
 // MIPS standard requires int[5] = timer
 // Monitor requires int[2] = COM
@@ -222,6 +222,9 @@ wire[31:0] comDataSave, comDataLoad;
 wire usbEnable, usbReadEnable, usbWriteEnable, usbBusy;
 wire[31:0] usbReadData, usbWriteData;
 
+wire ethEnable, ethReadEnable, ethWriteBusy;
+wire[31:0] ethDataLoad, ethDataSave;
+
 wire[31:0] bootDataLoad;
 
 wire ledEnable, numEnable;
@@ -274,6 +277,12 @@ devctrl devctrl_ist(
     .ltcReadEnable_o(ltcReadEnable),
     .ltcDataLoad_i(ltcDataLoad),
     .ltcBusy_i(ltcBusy),
+
+    .ethEnable_o(ethEnable),
+    .ethReadEnable_o(ethReadEnable),
+    .ethDataLoad_i(ethDataLoad),
+    .ethDataSave_o(ethDataSave),
+    .ethWriteBusy_i(ethWriteBusy),
 
     .ledEnable_o(ledEnable),
     .ledData_o(ledData),
@@ -402,6 +411,26 @@ lattice_ram_ctrl lattice_ram_ctrl_ist(
     .addr_i(addr),
     .readData_o(ltcDataLoad),
     .busy_o(ltcBusy)
+);
+
+eth_ctrl eth_ctrl_ist(
+    .clk(clk25),
+    .rst(rst),
+    .enable_i(ethEnable),
+    .readEnable_i(ethReadEnable),
+    .addr_i(addr),
+    .readData_o(ethDataLoad),
+    .writeData_i(ethDataSave),
+    .writeBusy_o(ethWriteBusy),
+    .int_o(ethInt),
+
+    .ethInt_i(dm9k_int),
+    .ethCmd_o(dm9k_cmd),
+    .ethWE_o(dm9k_we_n),
+    .ethRD_o(dm9k_rd_n),
+    .ethCS_o(dm9k_cs_n),
+    .ethRst_o(dm9k_rst_n),
+    .ethData_io(dm9k_data)
 );
 
 always@(posedge clk25) begin
