@@ -78,6 +78,9 @@ outw(uint32_t port, uint32_t data) {
 #define ISA_BASE        0xbfd00000
 #define COM1            (ISA_BASE+0x3F8)
 #define COM1_IRQ        4
+#define VGA_BASE        0xbfe00000
+#define VGA_TOP         0xbfe4b000
+#define LATTICE_BASE    0xbfe4b000
 
 #define TIMER0_IRQ       7
 
