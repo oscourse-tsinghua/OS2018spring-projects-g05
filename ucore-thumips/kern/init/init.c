@@ -28,6 +28,7 @@ kern_init(void) {
 
     pic_init();                 // init interrupt controller
     cons_init();                // init the console
+    vga_init();                 // init the vga
     clock_init();               // init clock interrupt
 
     check_initrd();

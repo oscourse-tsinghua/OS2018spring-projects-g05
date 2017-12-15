@@ -5,6 +5,6 @@
 #include <defs.h>
 
 void vga_init();
-void vga_putc();
+void vga_putc(uint8_t ch);
 
 #endif
