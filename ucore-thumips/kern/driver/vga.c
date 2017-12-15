@@ -40,9 +40,16 @@ void _vga_put_one_char(uint8_t ch) {
 void _vga_flush() {
   int k = 0;
   uint32_t addr;
-  for (addr = VGA_BASE; k < buflen; ++k, ++addr) {
+  for (addr = VGA_BASE; k < 64 * 24 - 24 ; ++k, ++addr) {
     _vga_put_one_char(buf[k]);
   }
+  for (k = 0; k < 64; ++k) {
+    _vga_put_one_char('\0');
+  }
+  ltr = 462;
+  ltc = 1;
+  ltrn = 23;
+  ltcn = 0;
 }
 
 void _vga_scroll() {
@@ -80,7 +87,7 @@ void vga_putc(uint8_t ch) {
   if (ch == '\n') {
     int k = 64 - buflen % 64;
     while (k--) {
-      vga_putc(' ');
+      vga_putc('\0');
     }
     return;
   }
