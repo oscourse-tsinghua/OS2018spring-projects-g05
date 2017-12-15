@@ -53,7 +53,7 @@ void _vga_scroll() {
   for (k = 0; k < 64 * 24 - 64; ++k) {
     buf[k] = buf[k + 64];
   }
-  for (k = 64; k < 64 * 24; ++k) {
+  for (k = 64 * 24 - 64; k < 64 * 24; ++k) {
     buf[k] = 0;
   }
   buflen -= 64;
