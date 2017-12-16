@@ -65,10 +65,13 @@ architecture bhv of mem is
     signal dataWrite: std_logic;
     signal interrupt: std_logic_vector(ExceptionCauseWidth);
 begin
-    memAddr <= memAddr_i when
-        (memt_i = MEM_LW or memt_i = MEM_SW) else memAddr_i(31 downto 2) & "00";
+    with memt_i select memAddr <=
+        memAddr_i(31 downto 2) & "00"               when MEM_LB|MEM_LBU|MEM_SB,
+        memAddr_i(31 downto 2) & "0" & memAddr_i(0) when MEM_LH|MEM_LHU|MEM_SH,
+        memAddr_i                                   when others;
     memAddr_o <= memAddr;
     -- We preserve the low 2 bits for `lw` and `sw` as required by BadVAddr register
+    -- `lh`, `lhu` and `sh` likewise
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;
     -- When IF has an exception, memt_i must be INVALID
@@ -79,12 +82,14 @@ begin
 
     process(all)
         variable loadedByte: std_logic_vector(7 downto 0);
+        variable loadedShort: std_logic_vector(15 downto 0);
     begin
         savingData_o <= (others => '0');
         dataEnable_o <= DISABLE;
         dataWrite <= NO;
         dataByteSelect_o <= "0000";
         loadedByte := (others => '0');
+        loadedShort := (others => '0');
 
         if (rst = RST_ENABLE) then
             toWriteReg_o <= NO;
@@ -142,6 +147,16 @@ begin
                                 -- But the simulator thinks something like 'Z' should be considered
                                 null;
                         end case;
+                    when MEM_LH|MEM_LHU|MEM_SH =>
+                        if (memAddr_i(1) = '0') then
+                            savingData_o <= 16b"0" & memData_i(15 downto 0);
+                            loadedShort := loadedData_i(15 downto 0);
+                            dataByteSelect_o <= "0011";
+                        else
+                            savingData_o <= memData_i(15 downto 0) & 16b"0";
+                            loadedShort := loadedData_i(31 downto 16);
+                            dataByteSelect_o <= "1100";
+                        end if;
                     when others =>
                         null;
                 end case;
@@ -153,13 +168,16 @@ begin
                     when MEM_LBU =>
                         writeRegData_o <= std_logic_vector(resize(unsigned(loadedByte), 32));
                         dataEnable_o <= ENABLE;
+                    when MEM_LH =>
+                        writeRegData_o <= std_logic_vector(resize(signed(loadedShort), 32));
+                        dataEnable_o <= ENABLE;
+                    when MEM_LHU =>
+                        writeRegData_o <= std_logic_vector(resize(unsigned(loadedShort), 32));
+                        dataEnable_o <= ENABLE;
                     when MEM_LW =>
                         writeRegData_o <= loadedData_i;
                         dataEnable_o <= ENABLE;
-                    when MEM_SB =>
-                        dataWrite <= YES;
-                        dataEnable_o <= ENABLE;
-                    when MEM_SW =>
+                    when MEM_SB|MEM_SH|MEM_SW =>
                         dataWrite <= YES;
                         dataEnable_o <= ENABLE;
                     when others =>
