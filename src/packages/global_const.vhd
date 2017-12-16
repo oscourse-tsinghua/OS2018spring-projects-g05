@@ -40,6 +40,7 @@ package global_const is
     constant ZEROS_32: std_logic_vector(31 downto 0) := (others => '0');
     constant ZEROS_31: std_logic_vector(30 downto 0) := (others => '0');
     constant ZEROS_16: std_logic_vector(15 downto 0) := (others => '0');
+    constant ONES_16 : std_logic_vector(15 downto 0) := (others => '1');
 
     --
     -- For Branch instuctions

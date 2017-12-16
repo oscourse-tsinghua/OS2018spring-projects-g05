@@ -426,6 +426,14 @@ begin
                             exceptCause_o <= SYSCALL_CAUSE;
                             isInvalid := NO;
 
+                        when FUNC_SYNC =>
+                            if (inst_i(25 downto 16) == 10ub"0") then
+                                oprSrc1 := INVALID;
+                                oprSrc2 := INVALID;
+                                toWriteReg_o <= NO;
+                                isInvalid := NO;
+                            end if;
+
                         when others =>
                             oprSrc1 := INVALID;
                             oprSrc2 := INVALID;
@@ -490,6 +498,20 @@ begin
                             alut_o <= ALU_MSUBU;
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
+                            isInvalid := NO;
+
+                        when FUNC_BREAK =>
+                            oprSrc1 := INVALID;
+                            oprSrc2 := INVALID;
+                            toWriteReg_o <= NO;
+                            exceptCause_o <= BREAK_CAUSE;
+                            isInvalid := NO;
+
+                        when FUNC_SDBBP =>
+                            oprSrc1 := INVALID;
+                            oprSrc2 := INVALID;
+                            toWriteReg_o <= NO;
+                            exceptCause_o <= BREAK_CAUSE;
                             isInvalid := NO;
 
                         when others =>
@@ -606,6 +628,12 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
+                when OP_CACHE =>
+                    oprSrc1 := INVALID;
+                    oprSrc2 := INVALID;
+                    toWriteReg_o <= NO;
+                    isInvalid := NO;
+
                 when JMP_J =>
                     oprSrc1 := INVALID;
                     oprSrc2 := INVALID;
@@ -692,6 +720,14 @@ begin
                                 oprSrc2 := INVALID;
                                 toWriteReg_o <= YES;
                                 writeRegAddr_o <= instRt;
+                                isInvalid := NO;
+                            end if;
+
+                        when RS_WAIT =>
+                            if (inst_i(InstFuncIdx) = FUNC_WAIT and inst_i(25) = '1') then
+                                oprSrc1 := INVALID;
+                                oprSrc2 := INVALID;
+                                toWriteReg_o <= NO;
                                 isInvalid := NO;
                             end if;
 
@@ -791,13 +827,13 @@ begin
                     end if;
 
                 when IMM =>
-                    operand2 := "0000000000000000" & instImm;
+                    operand2 := 16ub"0" & instImm;
 
                 when SGN_IMM =>
                     if (instImm(15) = '0') then
-                        operand2 := "0000000000000000" & instImm;
+                        operand2 := 16ub"0" & instImm;
                     else
-                        operand2 := "1111111111111111" & instImm;
+                        operand2 := ONES_16 & instImm;
                     end if;
 
                 when others =>
@@ -806,7 +842,7 @@ begin
 
             case oprSrcX is
                 when IMM =>
-                    operandX := "0000000000000000" & instImm;
+                    operandX := 16ub"0" & instImm;
 
                 when others =>
                     operandX := (others => '0');
@@ -841,12 +877,12 @@ begin
                         branchFlag := BRANCH_FLAG;
                     end if;
                 when JMP_BGTZ =>
-                    if (operand1(31) = '0' and operand1 /= "00000000000000000000000000000000") then
+                    if (operand1(31) = '0' and operand1 /= 32ub"0") then
                         branchTargetAddress := pcPlus4 + instOffsetImm - instImmSign;
                         branchFlag := BRANCH_FLAG;
                     end if;
                 when JMP_BLEZ =>
-                    if (operand1(31) = '1' or operand1 = "00000000000000000000000000000000") then
+                    if (operand1(31) = '1' or operand1 = 32ub"0") then
                         branchTargetAddress := pcPlus4 + instOffsetImm - instImmSign;
                         branchFlag := BRANCH_FLAG;
                     end if;
