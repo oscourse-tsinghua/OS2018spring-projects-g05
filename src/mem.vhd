@@ -61,21 +61,16 @@ entity mem is
 end mem;
 
 architecture bhv of mem is
-    signal memAddr: std_logic_vector(AddrWidth);
     signal dataWrite: std_logic;
     signal interrupt: std_logic_vector(ExceptionCauseWidth);
 begin
-    with memt_i select memAddr <=
-        memAddr_i(31 downto 2) & "00"               when MEM_LB|MEM_LBU|MEM_SB,
-        memAddr_i(31 downto 2) & "0" & memAddr_i(0) when MEM_LH|MEM_LHU|MEM_SH,
-        memAddr_i                                   when others;
-    memAddr_o <= memAddr;
-    -- We preserve the low 2 bits for `lw` and `sw` as required by BadVAddr register
-    -- `lh`, `lhu` and `sh` likewise
+    memAddr_o <= memAddr_i(31 downto 2) & "00";
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;
     -- When IF has an exception, memt_i must be INVALID
-    currentAccessAddr_o <= currentInstAddr_i when memt_i = INVALID else memAddr;
+    currentAccessAddr_o <= currentInstAddr_i when memt_i = INVALID else memAddr_i;
+    -- We preserve the low 2 bits for `lw` and `sw` as required by BadVAddr register
+    -- `lh`, `lhu` and `sh` likewise
 
     isTlbwi_o <= isTlbwi_i;
     isTlbwr_o <= isTlbwr_i;
