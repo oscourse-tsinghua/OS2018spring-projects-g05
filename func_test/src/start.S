@@ -2,7 +2,7 @@
 
 /*
  * Copyright (c) 2001 Opsycon AB  (www.opsycon.se)
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -163,7 +163,7 @@ eret_ex:
     b other_ex
     nop
 overflow_ex:
-    addu v0, zero, zero 
+    addu v0, zero, zero
     mfc0 k0, c0_cause
     andi k0, k0, 0x7c # 6..2 exc code
     li   k1, 0x30 # 011_0000
@@ -178,7 +178,7 @@ overflow_ex:
     b other_ex
     nop
 adel_load_ex:
-    addu v0, zero, zero 
+    addu v0, zero, zero
     mfc0 k0, c0_cause
     andi k0, k0, 0x7c # 6..2 exc code
     li   k1, 0x10 # 001_0000
@@ -193,7 +193,7 @@ adel_load_ex:
     b other_ex
     nop
 ades_ex:
-    addu v0, zero, zero 
+    addu v0, zero, zero
     mfc0 k0, c0_cause
     andi k0, k0, 0x7c # 6..2 exc code
     li   k1, 0x14 # 001_0100
@@ -208,7 +208,7 @@ ades_ex:
     b other_ex
     nop
 adel_if_ex:
-    addu v0, zero, zero 
+    addu v0, zero, zero
     mtc0 k1, c0_epc
     mfc0 k0, c0_cause
     andi k0, k0, 0x7c # 6..2 exc code
@@ -224,7 +224,7 @@ adel_if_ex:
     b other_ex
     nop
 reserved_inst_ex:
-    addu v0, zero, zero 
+    addu v0, zero, zero
     mfc0 k0, c0_cause
     andi k0, k0, 0x7c # 6..2 exc code
     li   k1, 0x28 # 010_1000
@@ -255,7 +255,7 @@ other_ex:
     beq k0,zero, 1f
     nop
     addiu v1,v1,0x4
-1:  
+1:
     mtc0  v1,c0_epc
     bne v0, zero, ex_ret
     nop
@@ -500,6 +500,14 @@ inst_test:
     nop
     jal wait_1s
     nop
+    jal n49_lh_test      #lh
+    nop
+    jal wait_1s
+    nop
+    jal n50_lhu_test     #lhu
+    nop
+    jal wait_1s
+    nop
     jal n51_lw_test      #lw
     nop
     jal wait_1s
@@ -513,6 +521,10 @@ inst_test:
  #  jal wait_1s
  #  nop
     jal n52_sb_test      #sb
+    nop
+    jal wait_1s
+    nop
+    jal n53_sh_test      #sh
     nop
     jal wait_1s
     nop
@@ -556,7 +568,22 @@ inst_test:
     nop
     jal wait_1s
     nop
+    la v0, n61_lh_ex_test    #lh_ex
+    jalr v0
+    nop
+    jal wait_1s
+    nop
+    la v0, n62_lhu_ex_test    #lhu_ex
+    jalr v0
+    nop
+    jal wait_1s
+    nop
     la v0, n63_lw_ex_test    #lw_ex
+    jalr v0
+    nop
+    jal wait_1s
+    nop
+    la v0, n64_sh_ex_test    #sh_ex
     jalr v0
     nop
     jal wait_1s
