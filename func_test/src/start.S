@@ -488,7 +488,7 @@ inst_test:
     nop
     jal wait_1s
     nop
-    jal n45_break_test #syscall
+    jal n45_break_test   #break
     nop
     jal wait_1s
     nop
