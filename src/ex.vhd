@@ -414,13 +414,14 @@ begin
                 end if;
             end if;
 
-            if (memt_i = MEM_LW or memt_i = MEM_SW) then
-                if (memAddr_o(1 downto 0) /= "00") then
-                    if (alut_i = ALU_LOAD) then
-                        exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
-                    else
-                        exceptCause_o <= ADDR_ERR_STORE_CAUSE;
-                    end if;
+            if (
+                ((memt_i = MEM_LW or memt_i = MEM_SW) and memAddr_o(1 downto 0) /= "00") or
+                ((memt_i = MEM_LH or memt_i = MEM_LHU or memt_i = MEM_SH) and memAddr_o(0) /= '0')
+            ) then
+                if (alut_i = ALU_LOAD) then
+                    exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
+                else
+                    exceptCause_o <= ADDR_ERR_STORE_CAUSE;
                 end if;
             end if;
         end if;

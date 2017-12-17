@@ -1,0 +1,82 @@
+# Import a package
+# Grammar: "IMPORT <packageName>"
+# "IMPORT" should be in UPPER CASE, same below
+IMPORT alu_const
+
+# Define a signal to be checked
+# Grammar: "DEFINE <signalName> <sub_instace_name.sub_sub_instance_name.(...).signal_name>: <type>"
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+# Execute an assembly instruction
+# Grammar: "RUN <assembly>"
+RUN lui $10, 0x8000
+
+RUN lui $3, 0x0123
+RUN ori $3, $3, 0x4567
+RUN sw  $3, 0x100($10)
+
+RUN lui $3, 0x89ab
+RUN ori $3, $3, 0xcdef
+RUN sw  $3, 0x104($10)
+
+# Addr 100| 101| 102| 103|| 104| 105| 106| 107
+# Byte 67 | 45 | 23 | 01 || ef | cd | ab | 89
+
+RUN or  $4, $0, $0
+RUN lwl $4, 0x104($10)
+ASSERT 15 reg(4) x"000000ef"
+RUN lwr $4, 0x101($10)
+ASSERT 17 reg(4) x"012345ef"
+
+RUN or  $4, $0, $0
+RUN lwl $4, 0x105($10)
+ASSERT 21 reg(4) x"0000cdef"
+RUN lwr $4, 0x102($10)
+ASSERT 23 reg(4) x"0123cdef"
+
+RUN or  $4, $0, $0
+RUN lwr $4, 0x103($10)
+ASSERT 27 reg(4) x"01000000"
+RUN lwl $4, 0x106($10)
+ASSERT 29 reg(4) x"01abcdef"
+
+RUN lwl $4, 0x103($10)
+ASSERT 31 reg(4) x"01234567"
+
+RUN lwr $4, 0x104($10)
+ASSERT 33 reg(4) x"89abcdef"
+
+# IF    | ID    | EX    | MEM   | WB    | assertion | period
+# lui   |       |       |       |       |           |
+# lui   | lui   |       |       |       |           |
+# ori   | lui   | lui   |       |       |           |
+# sw    | ori   | lui   | lui   |       |           |
+# lui   | sw    | ori   | lui   | lui   |           |
+# ori   | lui   | sw    | ori   | lui   | lui       | 6
+# sw    | ori   | lui   | sw    | ori   | lui       |
+# sw    |       | ori   | lui   | sw    | ori       |
+# or    | sw    |       | ori   | lui   | sw        |
+# lwl   | or    | sw    |       | ori   | lui       |
+# lwr   | lwl   | or    | sw    |       | ori       |
+# lwr   |       | lwl   | or    | sw    |           |
+# or    | lwr   |       | lwl   | or    | sw        |
+# or    |       | lwr   |       | lwl   | or        |
+# lwl   | or    |       | lwr   |       | lwl       | 15
+# lwl   |       | or    |       | lwr   |           |
+# lwr   | lwl   |       | or    |       | lwr       | 17
+# or    | lwr   | lwl   |       | or    |           |
+# or    | lwr   |       | lwl   |       | or        |           Stall for dependency
+# or    |       | lwr   |       | lwl   |           |
+# lwr   | or    |       | lwr   |       | lwl       | 21
+# lwr   |       | or    |       | lwr   |           |
+# lwl   | lwr   |       | or    |       | lwr       | 23
+# lwl   | lwl   | lwr   |       | or    |           |
+# lwl   | lwl   |       | lwr   |       | or        |           Stall for dependency
+# lwl   |       | lwl   |       | lwr   |           |
+# lwr   | lwl   |       | lwl   |       | lwr       | 27
+# lwr   |       | lwl   |       | lwl   |           |
+#       | lwr   |       | lwl   |       | lwl       | 29
+#       |       | lwr   |       | lwl   |           | 
+#       |       |       | lwr   |       | lwl       | 31
+#       |       |       |       | lwr   |           |
+#       |       |       |       |       | lwr       | 33
