@@ -111,6 +111,8 @@ package inst_const is
 
     constant JMP_BLTZ: std_logic_vector(InstRtWidth) := "00000";
     constant JMP_BGEZ: std_logic_vector(InstRtWidth) := "00001";
+    constant JMP_BLTZAL: std_logic_vector(InstRtWidth) := "10000";
+    constant JMP_BGEZAL: std_logic_vector(InstRtWidth) := "10001";
 
     constant JMP_BEQ: std_logic_vector(InstOpWidth) := "000100";
     constant JMP_BGTZ: std_logic_vector(InstOpWidth) := "000111";
