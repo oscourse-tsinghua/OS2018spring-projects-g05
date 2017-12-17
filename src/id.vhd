@@ -511,7 +511,6 @@ begin
                             oprSrc1 := INVALID;
                             oprSrc2 := INVALID;
                             toWriteReg_o <= NO;
-                            exceptCause_o <= BREAK_CAUSE;
                             isInvalid := NO;
 
                         when others =>
@@ -885,7 +884,7 @@ begin
                     if (instImm(15) = '0') then
                         operand2 := 16ub"0" & instImm;
                     else
-                        operand2 := ONES_16 & instImm;
+                        operand2 := 16sb"1" & instImm;
                     end if;
 
                 when others =>
