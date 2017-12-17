@@ -3,7 +3,7 @@
 <!--                                                         -->
 <!-- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="20" Path="D:/docs/projects/nCore/thinpad_top/thinpad_top.xpr">
+<Project Version="7" Minor="20" Path="C:/Users/Xembo/CO/thinpad_top/thinpad_top.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
     <Option Name="Id" Val="1e0777dd008c45fcbaffd6b18f2c35e9"/>
@@ -1155,6 +1155,7 @@
       </Config>
     </FileSet>
     <FileSet Name="loadstore3" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/loadstore3">
+      <Filter Type="Srcs"/>
       <File Path="$PPRDIR/../sim/output/loadstore/loadstore3/loadstore3_test_const.vhd">
         <FileInfo SFType="VHDL2008">
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -1183,6 +1184,7 @@
       </Config>
     </FileSet>
     <FileSet Name="loadstore4" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/loadstore4">
+      <Filter Type="Srcs"/>
       <File Path="$PPRDIR/../sim/output/loadstore/loadstore4/loadstore4_test_const.vhd">
         <FileInfo SFType="VHDL2008">
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -1204,6 +1206,40 @@
       <Config>
         <Option Name="DesignMode" Val="RTL"/>
         <Option Name="TopModule" Val="loadstore4_tb"/>
+        <Option Name="TopLib" Val="xil_defaultlib"/>
+        <Option Name="TransportPathDelay" Val="0"/>
+        <Option Name="TransportIntDelay" Val="0"/>
+        <Option Name="SrcSet" Val="sources_1"/>
+      </Config>
+    </FileSet>
+    <FileSet Name="nop_equivalents" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/nop_equivalents">
+      <File Path="$PSRCDIR/nop_equivalents/imports/nop_equivalents/nop_equivalents_test_const.vhd">
+        <FileInfo SFType="VHDL2008">
+          <Attr Name="ImportPath" Val="$PPRDIR/../sim/output/nop_equivalents/nop_equivalents/nop_equivalents_test_const.vhd"/>
+          <Attr Name="ImportTime" Val="1513500457"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/nop_equivalents/imports/nop_equivalents/nop_equivalents_fake_ram.vhd">
+        <FileInfo SFType="VHDL2008">
+          <Attr Name="ImportPath" Val="$PPRDIR/../sim/output/nop_equivalents/nop_equivalents/nop_equivalents_fake_ram.vhd"/>
+          <Attr Name="ImportTime" Val="1513500457"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/nop_equivalents/imports/nop_equivalents/nop_equivalents_tb.vhd">
+        <FileInfo SFType="VHDL2008">
+          <Attr Name="ImportPath" Val="$PPRDIR/../sim/output/nop_equivalents/nop_equivalents/nop_equivalents_tb.vhd"/>
+          <Attr Name="ImportTime" Val="1513500457"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <Config>
+        <Option Name="DesignMode" Val="RTL"/>
+        <Option Name="TopModule" Val="nop_equivalents_tb"/>
         <Option Name="TopLib" Val="xil_defaultlib"/>
         <Option Name="TransportPathDelay" Val="0"/>
         <Option Name="TransportIntDelay" Val="0"/>
