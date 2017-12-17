@@ -1,5 +1,5 @@
 IMPORT global_const
-DEFINE reg regfile_ist.regAr$25y: RegAr$25yType
+DEFINE reg regfile_ist.regArray: RegArrayType
 
 RUN sdbbp
 RUN wait
