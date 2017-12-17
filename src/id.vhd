@@ -427,7 +427,7 @@ begin
                             isInvalid := NO;
 
                         when FUNC_SYNC =>
-                            if (inst_i(25 downto 16) == 10ub"0") then
+                            if (inst_i(25 downto 16) =0ub"0") then
                                 oprSrc1 := INVALID;
                                 oprSrc2 := INVALID;
                                 toWriteReg_o <= NO;

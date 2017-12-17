@@ -488,6 +488,10 @@ inst_test:
     nop
     jal wait_1s
     nop
+    jal n45_break_test #syscall
+    nop
+    jal wait_1s
+    nop
     jal n46_syscall_test #syscall
     nop
     jal wait_1s

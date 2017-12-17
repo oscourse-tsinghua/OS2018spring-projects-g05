@@ -159,7 +159,7 @@ begin
                     regArr(CAUSE_REG)(CauseExcCodeBits) <= exceptCause_i;
                 end if;
                 case (exceptCause_i) is
-                    when ERET_CAUSE =>
+                    when ERET_CAUSE | BREAK_CAUSE =>
                         regArr(STATUS_REG)(STATUS_EXL_BIT) <= '0';
                     when TLB_LOAD_CAUSE|TLB_STORE_CAUSE|ADDR_ERR_LOAD_OR_IF_CAUSE|ADDR_ERR_STORE_CAUSE =>
                         regArr(BAD_V_ADDR_REG) <= currentAccessAddr_i;

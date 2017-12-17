@@ -133,7 +133,7 @@ package inst_const is
     --
     -- Exceptions
     --
-    constant RS_WAIT: std_logic_vector(InstRsWidth) := "10000"
+    constant RS_WAIT: std_logic_vector(InstRsWidth) := "10000";
     constant FUNC_SYSCALL: std_logic_vector(InstFuncWidth) := "001100";
     constant FUNC_ERET: std_logic_vector(InstFuncWidth) := "011000";
     constant FUNC_BREAK: std_logic_vector(InstFuncWidth) := "001101";
