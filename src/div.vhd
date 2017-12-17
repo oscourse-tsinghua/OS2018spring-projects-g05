@@ -20,7 +20,7 @@ architecture bhv of div is
     signal state: integer;
 begin
 
-    busy_o <= PIPELINE_STOP when enable_i = ENABLE and state /= 31 else PIPELINE_NONSTOP;
+    busy_o <= PIPELINE_STOP when enable_i = ENABLE and state /= 32 else PIPELINE_NONSTOP;
     quotient_o <= buf(LoDataWidth);
     remainder_o <= buf(HiDataWidth);
 
