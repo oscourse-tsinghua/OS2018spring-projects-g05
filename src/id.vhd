@@ -412,7 +412,7 @@ begin
                             oprSrc2 := INVALID;
                             jumpToRs := YES;
                             branchFlag := BRANCH_FLAG;
-                            alut_o <= ALU_JALR;
+                            alut_o <= ALU_JBAL;
                             nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                             linkAddr_o <= pcPlus8;
                             toWriteReg_o <= YES;
@@ -621,7 +621,7 @@ begin
                     oprSrc1 := INVALID;
                     oprSrc1 := INVALID;
                     branchFlag := BRANCH_FLAG;
-                    alut_o <= ALU_JAL;
+                    alut_o <= ALU_JBAL;
                     nextInstInDelaySlot_o <= IN_DELAY_SLOT_FLAG;
                     linkAddr_o <= pcPlus8;
                     branchTargetAddress := immInstrAddr;
@@ -835,13 +835,13 @@ begin
                         when JMP_BGEZAL =>
                             if (operand1(31) = '0') then
                                 branchToJump := YES;
-                                branchToLink := YES;
                             end if;
+                            branchToLink := YES;
                         when JMP_BLTZAL =>
                             if (operand1(31) = '1') then
                                 branchToJump := YES;
-                                branchToLink := YES;
                             end if;
+                            branchToLink := YES;
                         when others =>
                             null;
                     end case;
@@ -868,11 +868,13 @@ begin
             if (branchToJump = YES) then
                 branchTargetAddress := pcPlus4 + instOffsetImm - instImmSign;
                 branchFlag := BRANCH_FLAG;
-                if (branchToLink = YES) then
-                    linkAddr_o <= pcPlus8;
-                    toWriteReg_o <= YES;
-                    writeRegAddr_o <= instRd;
-                end if;
+            end if;
+
+            if (branchToLink = YES) then
+                linkAddr_o <= pcPlus8;
+                toWriteReg_o <= YES;
+                writeRegAddr_o <= "11111";
+                alut_o <= ALU_JBAL;
             end if;
         end if;
 
