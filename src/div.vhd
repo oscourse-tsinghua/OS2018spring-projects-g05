@@ -32,8 +32,12 @@ begin
                 buf <= (others => '0');
                 state <= 0;
             else
-                movedBuf(HiDataWidth) := buf(62 downto 31);
-                movedBuf(LoDataWidth) := buf(30 downto 0) & '0';
+                if (state = 0) then
+                    movedBuf := 31ux"0" & dividend_i & '0';
+                else
+                    movedBuf(HiDataWidth) := buf(62 downto 31);
+                    movedBuf(LoDataWidth) := buf(30 downto 0) & '0';
+                end if;
                 if (movedBuf(HiDataWidth) >= divider_i) then
                     movedBuf(0) := '1';
                     movedBuf(HiDataWidth) := movedBuf(HiDataWidth) - divider_i;
