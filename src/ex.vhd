@@ -390,7 +390,39 @@ begin
                         writeLoData_o <= res64(LoDataWidth);
                     end if;
 
-                when ALU_DIV | ALU_DIVU =>
+                when ALU_DIV =>
+                    toWriteHi_o <= YES;
+                    toWriteLo_o <= YES;
+                    divEnable_o <= ENABLE;
+                    toStall_o <= divBusy_i;
+
+                    if (operand1_i(31) = '0') then
+                        if (operand2_i(31) = '0') then
+                            writeHiData_o <= remainder_i;
+                            writeLoData_o <= quotient_i;
+                            dividend_o <= operand1_i;
+                            divider_o <= operand2_i;
+                        else
+                            writeHiData_o <= remainder_i;
+                            writeLoData_o <= complement(quotient_i);
+                            dividend_o <= operand1_i;
+                            divider_o <= complement(operand2_i);
+                        end if;
+                    else
+                        if (operand2_i(31) = '0') then
+                            writeHiData_o <= complement(remainder_i);
+                            writeLoData_o <= complement(quotient_i);
+                            dividend_o <= complement(operand1_i);
+                            divider_o <= operand2_i;
+                        else
+                            writeHiData_o <= complement(remainder_i);
+                            writeLoData_o <= quotient_i;
+                            dividend_o <= complement(operand1_i);
+                            divider_o <= complement(operand2_i);
+                        end if;
+                    end if;
+
+                when ALU_DIVU =>
                     toWriteHi_o <= YES;
                     writeHiData_o <= remainder_i;
                     toWriteLo_o <= YES;
