@@ -578,6 +578,30 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
+                -- For LWL and LWR, we load rt here, fill the bytes to be loaded
+                -- in MEM, and write it back in WB. This might be slow because a
+                -- LWL is usually followed by a LWR, in which case there will be
+                -- a pipeline stall. Luckily, LWL and LWR instructions are few.
+                when OP_LWL =>
+                    oprSrc1 := REG;
+                    oprSrc2 := REG;
+                    oprSrcX := IMM;
+                    alut_o <= ALU_STORE; -- Because we want to load rt
+                    memt_o <= MEM_LWL;
+                    toWriteReg_o <= YES;
+                    writeRegAddr_o <= instRt;
+                    isInvalid := NO;
+
+                when OP_LWR =>
+                    oprSrc1 := REG;
+                    oprSrc2 := REG;
+                    oprSrcX := IMM;
+                    alut_o <= ALU_STORE; -- Because we want to load rt
+                    memt_o <= MEM_LWR;
+                    toWriteReg_o <= YES;
+                    writeRegAddr_o <= instRt;
+                    isInvalid := NO;
+
                 when OP_SB =>
                     oprSrc1 := REG;
                     oprSrc2 := REG;

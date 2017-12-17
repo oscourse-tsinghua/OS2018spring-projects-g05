@@ -78,6 +78,7 @@ begin
     process(all)
         variable loadedByte: std_logic_vector(7 downto 0);
         variable loadedShort: std_logic_vector(15 downto 0);
+        variable loadedMask: std_logic_vector(31 downto 0);
     begin
         savingData_o <= (others => '0');
         dataEnable_o <= DISABLE;
@@ -85,6 +86,7 @@ begin
         dataByteSelect_o <= "0000";
         loadedByte := (others => '0');
         loadedShort := (others => '0');
+        loadedMask := (others => '0');
 
         if (rst = RST_ENABLE) then
             toWriteReg_o <= NO;
@@ -119,6 +121,42 @@ begin
                     when MEM_LW|MEM_SW =>
                         savingData_o <= memData_i;
                         dataByteSelect_o <= "1111";
+                    when MEM_LWL =>
+                        case memAddr_i(1 downto 0) is
+                            when "00" =>
+                                loadedMask := 32ux"00_00_00_ff";
+                                dataByteSelect_o <= "1000";
+                            when "01" =>
+                                loadedMask := 32ux"00_00_ff_ff";
+                                dataByteSelect_o <= "1100";
+                            when "10" =>
+                                loadedMask := 32ux"00_ff_ff_ff";
+                                dataByteSelect_o <= "1110";
+                            when "11" =>
+                                loadedMask := 32ux"ff_ff_ff_ff";
+                                dataByteSelect_o <= "1111";
+                            when others =>
+                                -- Although there is actually no other cases
+                                -- But the simulator thinks something like 'Z' should be considered
+                                null;
+                        end case;
+                    when MEM_LWR =>
+                        case memAddr_i(1 downto 0) is
+                            when "00" =>
+                                loadedMask := 32ux"ff_ff_ff_ff";
+                                dataByteSelect_o <= "1111";
+                            when "01" =>
+                                loadedMask := 32ux"ff_ff_ff_00";
+                                dataByteSelect_o <= "0111";
+                            when "10" =>
+                                loadedMask := 32ux"ff_ff_00_00";
+                                dataByteSelect_o <= "0011";
+                            when "11" =>
+                                loadedMask := 32ux"ff_00_00_00";
+                                dataByteSelect_o <= "0001";
+                            when others =>
+                                null;
+                        end case;
                     when MEM_LB|MEM_LBU|MEM_SB =>
                         case memAddr_i(1 downto 0) is
                             when "00" =>
@@ -138,8 +176,6 @@ begin
                                 loadedByte := loadedData_i(31 downto 24);
                                 dataByteSelect_o <= "1000";
                             when others =>
-                                -- Although there is actually no other cases
-                                -- But the simulator thinks something like 'Z' should be considered
                                 null;
                         end case;
                     when MEM_LH|MEM_LHU|MEM_SH =>
@@ -171,6 +207,9 @@ begin
                         dataEnable_o <= ENABLE;
                     when MEM_LW =>
                         writeRegData_o <= loadedData_i;
+                        dataEnable_o <= ENABLE;
+                    when MEM_LWL|MEM_LWR =>
+                        writeRegData_o <= (loadedData_i and loadedMask) or (memData_i and not loadedMask);
                         dataEnable_o <= ENABLE;
                     when MEM_SB|MEM_SH|MEM_SW =>
                         dataWrite <= YES;

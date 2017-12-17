@@ -73,9 +73,11 @@ package inst_const is
     --
     constant OP_LB: std_logic_vector(InstOpWidth) := "100000";
     constant OP_LBU: std_logic_vector(InstOpWidth) := "100100";
-    constant OP_LW: std_logic_vector(InstOpWidth) := "100011";
     constant OP_LH: std_logic_vector(InstOpWidth) := "100001";
     constant OP_LHU: std_logic_vector(InstOpWidth) := "100101";
+    constant OP_LW: std_logic_vector(InstOpWidth) := "100011";
+    constant OP_LWL: std_logic_vector(InstOpWidth) := "100010";
+    constant OP_LWR: std_logic_vector(InstOpWidth) := "100110";
     constant OP_SB: std_logic_vector(InstOpWidth) := "101000";
     constant OP_SH: std_logic_vector(InstOpWidth) := "101001";
     constant OP_SW: std_logic_vector(InstOpWidth) := "101011";
