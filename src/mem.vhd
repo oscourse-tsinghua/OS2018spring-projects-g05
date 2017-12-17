@@ -61,30 +61,32 @@ entity mem is
 end mem;
 
 architecture bhv of mem is
-    signal memAddr: std_logic_vector(AddrWidth);
     signal dataWrite: std_logic;
     signal interrupt: std_logic_vector(ExceptionCauseWidth);
 begin
-    memAddr <= memAddr_i when
-        (memt_i = MEM_LW or memt_i = MEM_SW) else memAddr_i(31 downto 2) & "00";
-    memAddr_o <= memAddr;
-    -- We preserve the low 2 bits for `lw` and `sw` as required by BadVAddr register
+    memAddr_o <= memAddr_i(31 downto 2) & "00";
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;
     -- When IF has an exception, memt_i must be INVALID
-    currentAccessAddr_o <= currentInstAddr_i when memt_i = INVALID else memAddr;
+    currentAccessAddr_o <= currentInstAddr_i when memt_i = INVALID else memAddr_i;
+    -- We preserve the low 2 bits for `lw` and `sw` as required by BadVAddr register
+    -- `lh`, `lhu` and `sh` likewise
 
     isTlbwi_o <= isTlbwi_i;
     isTlbwr_o <= isTlbwr_i;
 
     process(all)
         variable loadedByte: std_logic_vector(7 downto 0);
+        variable loadedShort: std_logic_vector(15 downto 0);
+        variable loadedMask: std_logic_vector(31 downto 0);
     begin
         savingData_o <= (others => '0');
         dataEnable_o <= DISABLE;
         dataWrite <= NO;
         dataByteSelect_o <= "0000";
         loadedByte := (others => '0');
+        loadedShort := (others => '0');
+        loadedMask := (others => '0');
 
         if (rst = RST_ENABLE) then
             toWriteReg_o <= NO;
@@ -119,6 +121,42 @@ begin
                     when MEM_LW|MEM_SW =>
                         savingData_o <= memData_i;
                         dataByteSelect_o <= "1111";
+                    when MEM_LWL =>
+                        case memAddr_i(1 downto 0) is
+                            when "00" =>
+                                loadedMask := 32ux"00_00_00_ff";
+                                dataByteSelect_o <= "1000";
+                            when "01" =>
+                                loadedMask := 32ux"00_00_ff_ff";
+                                dataByteSelect_o <= "1100";
+                            when "10" =>
+                                loadedMask := 32ux"00_ff_ff_ff";
+                                dataByteSelect_o <= "1110";
+                            when "11" =>
+                                loadedMask := 32ux"ff_ff_ff_ff";
+                                dataByteSelect_o <= "1111";
+                            when others =>
+                                -- Although there is actually no other cases
+                                -- But the simulator thinks something like 'Z' should be considered
+                                null;
+                        end case;
+                    when MEM_LWR =>
+                        case memAddr_i(1 downto 0) is
+                            when "00" =>
+                                loadedMask := 32ux"ff_ff_ff_ff";
+                                dataByteSelect_o <= "1111";
+                            when "01" =>
+                                loadedMask := 32ux"ff_ff_ff_00";
+                                dataByteSelect_o <= "0111";
+                            when "10" =>
+                                loadedMask := 32ux"ff_ff_00_00";
+                                dataByteSelect_o <= "0011";
+                            when "11" =>
+                                loadedMask := 32ux"ff_00_00_00";
+                                dataByteSelect_o <= "0001";
+                            when others =>
+                                null;
+                        end case;
                     when MEM_LB|MEM_LBU|MEM_SB =>
                         case memAddr_i(1 downto 0) is
                             when "00" =>
@@ -138,10 +176,18 @@ begin
                                 loadedByte := loadedData_i(31 downto 24);
                                 dataByteSelect_o <= "1000";
                             when others =>
-                                -- Although there is actually no other cases
-                                -- But the simulator thinks something like 'Z' should be considered
                                 null;
                         end case;
+                    when MEM_LH|MEM_LHU|MEM_SH =>
+                        if (memAddr_i(1) = '0') then
+                            savingData_o <= 16b"0" & memData_i(15 downto 0);
+                            loadedShort := loadedData_i(15 downto 0);
+                            dataByteSelect_o <= "0011";
+                        else
+                            savingData_o <= memData_i(15 downto 0) & 16b"0";
+                            loadedShort := loadedData_i(31 downto 16);
+                            dataByteSelect_o <= "1100";
+                        end if;
                     when others =>
                         null;
                 end case;
@@ -153,13 +199,19 @@ begin
                     when MEM_LBU =>
                         writeRegData_o <= std_logic_vector(resize(unsigned(loadedByte), 32));
                         dataEnable_o <= ENABLE;
+                    when MEM_LH =>
+                        writeRegData_o <= std_logic_vector(resize(signed(loadedShort), 32));
+                        dataEnable_o <= ENABLE;
+                    when MEM_LHU =>
+                        writeRegData_o <= std_logic_vector(resize(unsigned(loadedShort), 32));
+                        dataEnable_o <= ENABLE;
                     when MEM_LW =>
                         writeRegData_o <= loadedData_i;
                         dataEnable_o <= ENABLE;
-                    when MEM_SB =>
-                        dataWrite <= YES;
+                    when MEM_LWL|MEM_LWR =>
+                        writeRegData_o <= (loadedData_i and loadedMask) or (memData_i and not loadedMask);
                         dataEnable_o <= ENABLE;
-                    when MEM_SW =>
+                    when MEM_SB|MEM_SH|MEM_SW =>
                         dataWrite <= YES;
                         dataEnable_o <= ENABLE;
                     when others =>
