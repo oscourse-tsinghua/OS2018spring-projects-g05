@@ -56,6 +56,7 @@ architecture bhv of datapath is
     -- a: hi_lo
     -- b: ctrl
     -- c: cp0
+    -- d: div
 
     -- Signal connecting pc_reg and if_id --
     signal pc_12: std_logic_vector(AddrWidth);
@@ -130,6 +131,12 @@ architecture bhv of datapath is
 
     -- Signals connecting ex and cp0 --
     signal cp0RegReadAddr_6c: std_logic_vector(CP0RegAddrWidth);
+
+    -- Signals connecting ex and div --
+    signal divEnable_6d: std_logic;
+    signal dividend_6d, divider_6d: std_logic_vector(DataWidth);
+    signal quotient_d6, remainder_d6: std_logic_vector(DataWidth);
+    signal divBusy_d6: std_logic;
 
     -- Signals connecting ex_mem and mem --
     signal toWriteReg_78: std_logic;
@@ -406,6 +413,13 @@ begin
             tempProduct_o => tempProduct_67,
             cnt_o => cnt_67,
 
+            divEnable_o => divEnable_6d,
+            dividend_o => dividend_6d,
+            divider_o => divider_6d,
+            divBusy_i => divBusy_d6,
+            quotient_i => quotient_d6,
+            remainder_i => remainder_d6,
+
             cp0RegData_i => data_c6,
             memCP0RegData_i => cp0RegData_86,
             memCP0RegWriteAddr_i => cp0RegWriteAddr_86,
@@ -429,6 +443,17 @@ begin
     exWriteRegAddr_64 <= writeRegAddr_67;
     exWriteRegData_64 <= writeRegData_67;
     lastMemt_64 <= memt_67;
+
+    div_ist: entity work.div
+        port map (
+            clk => clk,
+            enable_i => divEnable_6d,
+            dividend_i => dividend_6d,
+            divider_i => divider_6d,
+            busy_o => divBusy_d6,
+            quotient_o => quotient_d6,
+            remainder_o => remainder_d6
+        );
 
     ex_mem_ist: entity work.ex_mem
         port map (

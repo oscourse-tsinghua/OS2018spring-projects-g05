@@ -396,6 +396,20 @@ begin
                             writeRegAddr_o <= (others => '0');
                             isInvalid := NO;
 
+                        when FUNC_DIV =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_DIV;
+                            toWriteReg_o <= NO;
+                            isInvalid := NO;
+
+                        when FUNC_DIVU =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_DIVU;
+                            toWriteReg_o <= NO;
+                            isInvalid := NO;
+
                         when JMP_JR =>
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;

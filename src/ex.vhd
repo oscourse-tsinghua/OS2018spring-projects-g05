@@ -47,6 +47,12 @@ entity ex is
         tempProduct_o: out std_logic_vector(DoubleDataWidth);
         cnt_o: out std_logic_vector(CntWidth);
 
+        -- interact with div --
+        divEnable_o: out std_logic;
+        dividend_o, divider_o: out std_logic_vector(DataWidth);
+        divBusy_i: in std_logic;
+        quotient_i, remainder_i: in std_logic_vector(DataWidth);
+
         -- interact with CP0 --
         cp0RegData_i: in std_logic_vector(DataWidth);
         memCP0RegData_i: in std_logic_vector(DataWidth);
@@ -226,6 +232,9 @@ begin
         writeHiData_o <= (others => '0');
         writeLoData_o <= (others => '0');
         cp0RegReadAddr_o <= (others => '0');
+        divEnable_o <= DISABLE;
+        dividend_o <= (others => '0');
+        divider_o <= (others => '0');
 
         exceptCause_o <= exceptCause_i;
 
@@ -357,7 +366,7 @@ begin
                     toWriteLo_o <= YES;
                     writeLoData_o <= product(LoDataWidth);
 
-                when ALU_MADD|ALU_MADDU|ALU_MSUB|ALU_MSUBU =>
+                when ALU_MADD | ALU_MADDU | ALU_MSUB | ALU_MSUBU =>
                     if (cnt_i = "00") then
                         calcMult <= '1';
                         multip1 <= operand1_i;
@@ -380,6 +389,16 @@ begin
                         writeHiData_o <= res64(HiDataWidth);
                         writeLoData_o <= res64(LoDataWidth);
                     end if;
+
+                when ALU_DIV | ALU_DIVU =>
+                    toWriteHi_o <= YES;
+                    writeHiData_o <= remainder_i;
+                    toWriteLo_o <= YES;
+                    writeLoData_o <= quotient_i;
+                    divEnable_o <= ENABLE;
+                    toStall_o <= divBusy_i;
+                    dividend_o <= operand1_i;
+                    divider_o <= operand2_i;
 
                 when ALU_MFC0 =>
                     cp0RegReadAddr_o <= operand1_i(4 downto 0);

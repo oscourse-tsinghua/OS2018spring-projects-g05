@@ -108,6 +108,9 @@ package inst_const is
     constant FUNC_MSUB: std_logic_vector(InstFuncWidth) := "000100";
     constant FUNC_MSUBU: std_logic_vector(InstFuncWidth) := "000101";
 
+    constant FUNC_DIV: std_logic_vector(InstFuncWidth) := "011010";
+    constant FUNC_DIVU: std_logic_vector(InstFuncWidth) := "011011";
+
     --
     -- Jump Opcodes
     --
