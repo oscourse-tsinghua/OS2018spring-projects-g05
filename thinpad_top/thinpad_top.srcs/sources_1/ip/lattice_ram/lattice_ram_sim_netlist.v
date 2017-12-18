@@ -1,7 +1,7 @@
 // Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2017.2 (win64) Build 1909853 Thu Jun 15 18:39:09 MDT 2017
-// Date        : Wed Dec 13 13:16:23 2017
+// Date        : Mon Dec 18 16:12:22 2017
 // Host        : DESKTOP-JPEQ6FJ running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim
 //               E:/Development/nCore/nCore/thinpad_top/thinpad_top.srcs/sources_1/ip/lattice_ram/lattice_ram_sim_netlist.v
