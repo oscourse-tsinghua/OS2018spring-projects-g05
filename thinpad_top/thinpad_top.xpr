@@ -1242,7 +1242,7 @@
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2016"/>
         <Step Id="synth_design">
-          <Option Id="MoreOptsStr"><![CDATA[-verilog_define FUNC_TEST]]></Option>
+          <Option Id="MoreOptsStr"><![CDATA[-verilog_define USE_BOOTLOADER]]></Option>
         </Step>
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
