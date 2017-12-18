@@ -1,0 +1,100 @@
+IMPORT global_const
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x15, 0($2)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($2)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x07, 0($15)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($31)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($20)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN cache 0x10, 0($25)
+RUN sdbbp
+RUN wait
+RUN sync
+RUN ori $2, $2, 0x0001
+ASSERT 9 reg(2) 32ux"0000"

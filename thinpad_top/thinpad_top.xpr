@@ -3,7 +3,7 @@
 <!--                                                         -->
 <!-- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="20" Path="D:/docs/projects/nCore/thinpad_top/thinpad_top.xpr">
+<Project Version="7" Minor="20" Path="E:/Development/nCore/nCore/thinpad_top/thinpad_top.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
     <Option Name="Id" Val="1e0777dd008c45fcbaffd6b18f2c35e9"/>
@@ -175,6 +175,12 @@
         </FileInfo>
       </File>
       <File Path="$PPRDIR/../src/ex.vhd">
+        <FileInfo SFType="VHDL2008">
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../src/div.vhd">
         <FileInfo SFType="VHDL2008">
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -1155,6 +1161,7 @@
       </Config>
     </FileSet>
     <FileSet Name="loadstore3" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/loadstore3">
+      <Filter Type="Srcs"/>
       <File Path="$PPRDIR/../sim/output/loadstore/loadstore3/loadstore3_test_const.vhd">
         <FileInfo SFType="VHDL2008">
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -1183,6 +1190,7 @@
       </Config>
     </FileSet>
     <FileSet Name="loadstore4" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/loadstore4">
+      <Filter Type="Srcs"/>
       <File Path="$PPRDIR/../sim/output/loadstore/loadstore4/loadstore4_test_const.vhd">
         <FileInfo SFType="VHDL2008">
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -1234,7 +1242,7 @@
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2016"/>
         <Step Id="synth_design">
-          <Option Id="MoreOptsStr"><![CDATA[-verilog_define USE_BOOTLOADER]]></Option>
+          <Option Id="MoreOptsStr"><![CDATA[-verilog_define FUNC_TEST]]></Option>
         </Step>
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>

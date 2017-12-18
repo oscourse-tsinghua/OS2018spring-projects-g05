@@ -111,6 +111,8 @@ package inst_const is
     constant FUNC_DIV: std_logic_vector(InstFuncWidth) := "011010";
     constant FUNC_DIVU: std_logic_vector(InstFuncWidth) := "011011";
 
+    constant FUNC_WAIT: std_logic_vector(InstFuncWidth) := "100000";
+
     --
     -- Jump Opcodes
     --
@@ -141,8 +143,11 @@ package inst_const is
     --
     -- Exceptions
     --
+    constant RS_WAIT: std_logic_vector(InstRsWidth) := "10000";
     constant FUNC_SYSCALL: std_logic_vector(InstFuncWidth) := "001100";
     constant FUNC_ERET: std_logic_vector(InstFuncWidth) := "011000";
+    constant FUNC_BREAK: std_logic_vector(InstFuncWidth) := "001101";
+    constant FUNC_SDBBP: std_logic_vector(InstFuncWidth) := "111111";
 
     --
     -- Special OP groups
@@ -150,5 +155,11 @@ package inst_const is
     constant OP_SPECIAL: std_logic_vector(InstOpWidth) := "000000";
     constant OP_SPECIAL2: std_logic_vector(InstOpWidth) := "011100";
     constant OP_JMPSPECIAL: std_logic_vector(InstOpWidth) := "000001";
+
+    --
+    -- Cache(unimplemented)
+    --
+    constant FUNC_SYNC: std_logic_vector(InstFuncWidth) := "001111";
+    constant OP_CACHE: std_logic_vector(InstOpWidth) := "101111";
 
 end inst_const;
