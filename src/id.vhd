@@ -441,12 +441,19 @@ begin
                             isInvalid := NO;
 
                         when FUNC_SYNC =>
-                            if (inst_i(25 downto 16) =0ub"0") then
+                            if (inst_i(25 downto 16) =10ub"0") then
                                 oprSrc1 := INVALID;
                                 oprSrc2 := INVALID;
                                 toWriteReg_o <= NO;
                                 isInvalid := NO;
                             end if;
+
+                        when FUNC_BREAK =>
+                            oprSrc1 := INVALID;
+                            oprSrc2 := INVALID;
+                            toWriteReg_o <= NO;
+                            exceptCause_o <= BREAK_CAUSE;
+                            isInvalid := NO;
 
                         when others =>
                             oprSrc1 := INVALID;
@@ -512,13 +519,6 @@ begin
                             alut_o <= ALU_MSUBU;
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
-                            isInvalid := NO;
-
-                        when FUNC_BREAK =>
-                            oprSrc1 := INVALID;
-                            oprSrc2 := INVALID;
-                            toWriteReg_o <= NO;
-                            exceptCause_o <= BREAK_CAUSE;
                             isInvalid := NO;
 
                         when FUNC_SDBBP =>
