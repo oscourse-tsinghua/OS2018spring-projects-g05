@@ -108,6 +108,9 @@ package inst_const is
     constant FUNC_MSUB: std_logic_vector(InstFuncWidth) := "000100";
     constant FUNC_MSUBU: std_logic_vector(InstFuncWidth) := "000101";
 
+    constant FUNC_DIV: std_logic_vector(InstFuncWidth) := "011010";
+    constant FUNC_DIVU: std_logic_vector(InstFuncWidth) := "011011";
+
     constant FUNC_WAIT: std_logic_vector(InstFuncWidth) := "100000";
 
     --
@@ -118,6 +121,8 @@ package inst_const is
 
     constant JMP_BLTZ: std_logic_vector(InstRtWidth) := "00000";
     constant JMP_BGEZ: std_logic_vector(InstRtWidth) := "00001";
+    constant JMP_BLTZAL: std_logic_vector(InstRtWidth) := "10000";
+    constant JMP_BGEZAL: std_logic_vector(InstRtWidth) := "10001";
 
     constant JMP_BEQ: std_logic_vector(InstOpWidth) := "000100";
     constant JMP_BGTZ: std_logic_vector(InstOpWidth) := "000111";

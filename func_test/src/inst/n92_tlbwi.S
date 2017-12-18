@@ -10,7 +10,7 @@
 
 LEAF(n92_tlbwi_test)
     .set noreorder
-    lui  a0, 0x5c00
+    li  a0, 0x5c
 ###test inst
     li s2, 0x0000
     li k0, 0x0010

@@ -368,6 +368,14 @@ inst_test:
     nop
     jal wait_1s
     nop
+    jal n11_div_test     #div
+    nop
+    jal wait_1s
+    nop
+    jal n12_divu_test    #divu
+    nop
+    jal wait_1s
+    nop
     jal n13_mult_test    #mult
     nop
     jal wait_1s
@@ -453,6 +461,14 @@ inst_test:
     jal wait_1s
     nop
     jal n34_bltz_test    #bltz
+    nop
+    jal wait_1s
+    nop
+    jal n35_bltzal_test   #bltzal
+    nop
+    jal wait_1s
+    nop
+    jal n36_bgezal_test  #bgezal
     nop
     jal wait_1s
     nop
@@ -637,6 +653,16 @@ inst_test:
     nop
     jal wait_1s
     nop
+    la v0, n74_bltzal_ds_test   #bltzal_ds
+    jalr v0
+    nop
+    jal wait_1s
+    nop
+    la v0, n75_bgezal_ds_test  #bgezal_ds
+    jalr v0
+    nop
+    jal wait_1s
+    nop
     la v0, n76_j_ds_test       #j_ds
     jalr v0
     nop
@@ -683,6 +709,16 @@ inst_test:
     jal wait_1s
     nop
     la v0, n85_bltz_ex_ds_test    #bltz_ds
+    jalr v0
+    nop
+    jal wait_1s
+    nop
+    la v0, n86_bltzal_ex_ds_test   #bltzal_ds
+    jalr v0
+    nop
+    jal wait_1s
+    nop
+    la v0, n87_bgezal_ex_ds_test  #bgezal_ds
     jalr v0
     nop
     jal wait_1s
