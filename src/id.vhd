@@ -173,6 +173,7 @@ begin
         variable isInvalid, jumpToRs, condJump, branchToJump, branchToLink: std_logic;
         variable branchFlag: std_logic;
         variable branchTargetAddress: std_logic_vector(AddrWidth);
+        variable toStall: std_logic;
     begin
         oprSrc1 := INVALID;
         oprSrc2 := INVALID;
@@ -181,7 +182,7 @@ begin
         memt_o <= INVALID;
         toWriteReg_o <= NO;
         writeRegAddr_o <= (others => '0');
-        toStall_o <= PIPELINE_NONSTOP;
+        toStall := PIPELINE_NONSTOP;
         linkAddr_o <= (others => '0');
         branchTargetAddress := (others => '0');
         branchFlag := NOT_BRANCH_FLAG;
@@ -845,7 +846,7 @@ begin
                         if (instRs = "00000") then
                             operand1 := (others => '0');
                         elsif (lastMemt_i /= INVALID) then
-                            toStall_o <= PIPELINE_STOP;
+                            toStall := PIPELINE_STOP;
                         end if;
                     end if;
 
@@ -887,7 +888,7 @@ begin
                         if (instRt = "00000") then
                             operand2 := (others => '0');
                         elsif (lastMemt_i /= INVALID) then
-                            toStall_o <= PIPELINE_STOP;
+                            toStall := PIPELINE_STOP;
                         end if;
                     end if;
 
@@ -985,10 +986,15 @@ begin
             exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
         end if;
 
+        if (toStall = PIPELINE_STOP) then
+            branchFlag := NOT_BRANCH_FLAG; -- See pc_reg.vhd for reason
+        end if;
+
         operand1_o <= operand1;
         operand2_o <= operand2;
         operandX_o <= operandX;
         branchFlag_o <= branchFlag;
         branchTargetAddress_o <= branchTargetAddress;
+        toStall_o <= toStall;
     end process;
 end bhv;
