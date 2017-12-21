@@ -18,10 +18,12 @@ package cp0_const is
     constant STATUS_REG:        integer := 12;
     constant CAUSE_REG:         integer := 13;
     constant EPC_REG:           integer := 14;
-    constant EBASE_REG:          integer := 15;
-    constant CONFIG_REG:        integer := 16;
+    constant EBASE_REG:         integer := 15;
+    constant CONFIG_REG:        integer := 16; -- Not implemented
+    constant WATCHLO_REG:       integer := 18; -- Not implemented
+    constant WATCHHI_REG:       integer := 19; -- Not implemented
     -- Max implemented ID of CP0 registers
-    constant CP0_MAX_ID: integer := 16;
+    constant CP0_MAX_ID: integer := 19;
 
     --
     -- Bits of EntryHi register
