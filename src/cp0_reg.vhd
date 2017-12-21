@@ -128,6 +128,8 @@ begin
                 regArr(EPC_REG) <= (others => '0');
                 regArr(EBASE_REG) <= (31 => '1', others => '0');
                 regArr(CONFIG_REG) <= (others => '0');
+                regArr(WATCHLO_REG) <= (others => '0');
+                regArr(WATCHHI_REG) <= (others => '0');
             else
                 regArr(CAUSE_REG)(CauseIpHardBits) <= int_i;
 
