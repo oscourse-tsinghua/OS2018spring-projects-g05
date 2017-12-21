@@ -88,13 +88,21 @@ architecture bhv of ex is
         return (not x) + 1;
     end complement64;
 
-    function overflow(x, y: std_logic_vector(DataWidth)) return boolean is
+    function addOverflow(x, y: std_logic_vector(DataWidth)) return boolean is
         variable res: std_logic_vector(DataWidth);
     begin
         res := x + y;
         return ((x(31)  or y(31)) = '0' and res(31) = '1') or
                ((x(31) and y(31)) = '1' and res(31) = '0');
-    end overflow;
+    end addOverflow;
+
+    function subOverflow(x, y: std_logic_vector(DataWidth)) return boolean is
+        variable res: std_logic_vector(DataWidth);
+    begin
+        res := x - y;
+        return (x(31) and not y(31) and not res(31)) = '1' or -- Negative - positive -> positive
+               (not x(31) and y(31) and res(31)) = '1'; -- Positive - negative -> negative
+   end subOverflow;
 
     signal realHiData, realLoData: std_logic_vector(DataWidth) := (others => '0');
     signal clo, clz: std_logic_vector(DataWidth);
@@ -210,8 +218,6 @@ begin
         variable res: std_logic_vector(DataWidth);
         variable res64: std_logic_vector(DoubleDataWidth);
         variable ovSum: std_logic;
-        variable resultSum: std_logic_vector(DataWidth);
-        variable reg2IMux: std_logic_vector(DataWidth);
     begin
         toWriteHi_o <= NO;
         toWriteLo_o <= NO;
@@ -239,19 +245,9 @@ begin
         exceptCause_o <= exceptCause_i;
 
         res64 := (others => 'X');
-        resultSum := (others => 'X');
-        reg2IMux := (others => 'X');
-        ovSum := 'X'; -- Otherwise it will introduce a level latch to keep the prior value
+        ovSum := NO; -- Otherwise it will introduce a level latch to keep the prior value
 
         if (rst = RST_DISABLE) then
-            if (alut_i = ALU_SUB or alut_i = ALU_SUBU or alut_i = ALU_SLT) then
-                reg2IMux := not(operand2_i) + 1;
-            else
-                reg2IMux := operand2_i;
-            end if;
-            resultSum := operand1_i + reg2IMux;
-            ovSum := (((not operand1_i(31)) and (not reg2IMux(31))) and resultSum(31))
-                        or ((operand1_i(31) and reg2IMux(31)) and (not resultSum(31)));
             writeRegAddr_o <= writeRegAddr_i;
             case alut_i is
                 when ALU_OR => writeRegData_o <= operand1_i or operand2_i;
@@ -302,9 +298,8 @@ begin
                     memData_o <= operand2_i;
 
                 when ALU_ADD =>
-                    if (overflow(operand1_i, operand2_i)) then
-                        toWriteReg_o <= NO;
-                        writeRegData_o <= (others => '0');
+                    if (addOverflow(operand1_i, operand2_i)) then
+                        ovSum := YES;
                     else
                         writeRegData_o <= operand1_i + operand2_i;
                     end if;
@@ -313,9 +308,8 @@ begin
                     writeRegData_o <= operand1_i + operand2_i;
 
                 when ALU_SUB =>
-                    if (overflow(operand1_i, complement(operand2_i))) then
-                        toWriteReg_o <= NO;
-                        writeRegData_o <= (others => '0');
+                    if (subOverflow(operand1_i, operand2_i)) then
+                        ovSum := YES;
                     else
                         writeRegData_o <= operand1_i - operand2_i;
                     end if;
@@ -325,7 +319,7 @@ begin
 
                 when ALU_SLT =>
                     res := operand1_i - operand2_i;
-                    if (not overflow(operand1_i, complement(operand2_i))) then
+                    if (not subOverflow(operand1_i, operand2_i)) then
                         writeRegData_o <= ZEROS_31 & res(31);
                     else
                         writeRegData_o <= ZEROS_31 & (not res(31));
@@ -458,7 +452,6 @@ begin
             if ((alut_i = ALU_ADD) or (alut_i = ALU_SUB)) then
                 if (ovSum = YES) then
                     toWriteReg_o <= NO;
-                    -- No need to care about priority. If there is already an exception, we will not be here
                     exceptCause_o <= OVERFLOW_CAUSE;
                 else
                     toWriteReg_o <= YES;
