@@ -57,6 +57,7 @@ architecture bhv of cp0_reg is
     type RegArray is array (0 to CP0_MAX_ID) of std_logic_vector(DataWidth);
     signal regArr, curArr: RegArray;
     -- curArr including the data that will be written to regArr in the next period
+    signal timerInt: std_logic;
 begin
     status_o <= curArr(STATUS_REG);
     cause_o <= curArr(CAUSE_REG);
@@ -64,9 +65,7 @@ begin
 
     data_o <= curArr(conv_integer(raddr_i));
 
-    timerInt_o <= INTERRUPT_ASSERT when
-                  curArr(COMPARE_REG) /= 32ux"0" and curArr(COMPARE_REG) = curArr(COUNT_REG) else
-                  INTERRUPT_NOT_ASSERT;
+    timerInt_o <= timerInt;
 
     isKernelMode_o <= curArr(STATUS_REG)(STATUS_ERL_BIT) or
                       curArr(STATUS_REG)(STATUS_EXL_BIT) or
@@ -88,9 +87,6 @@ begin
         end loop;
         if (rst = RST_DISABLE and we_i = ENABLE) then
             case (conv_integer(waddr_i)) is
-                when COMPARE_REG =>
-                    curArr(COMPARE_REG) <= data_i;
-                    curArr(COUNT_REG) <= (others => '0'); -- Side effect
                 when CAUSE_REG =>
                     curArr(CAUSE_REG)(CauseIpSoftBits) <= data_i(CauseIpSoftBits);
                     curArr(CAUSE_REG)(CAUSE_IV_BIT) <= data_i(CAUSE_IV_BIT);
@@ -130,13 +126,15 @@ begin
                 regArr(CONFIG_REG) <= (others => '0');
                 regArr(WATCHLO_REG) <= (others => '0');
                 regArr(WATCHHI_REG) <= (others => '0');
+
+                timerInt <= INTERRUPT_NOT_ASSERT;
             else
                 regArr(CAUSE_REG)(CauseIpHardBits) <= int_i;
 
-                if (regArr(COUNT_REG) /= curArr(COMPARE_REG)) then
-                    regArr(COUNT_REG) <= regArr(COUNT_REG) + 1;
+                if (regArr(COUNT_REG) + 1 = regArr(COMPARE_REG)) then
+                    timerInt <= INTERRUPT_ASSERT;
                 end if;
-                -- COUNT will be reset when COMPARE is written
+                regArr(COUNT_REG) <= regArr(COUNT_REG) + 1;
 
                 if (regArr(RANDOM_REG) = regArr(WIRED_REG)) then
                     regArr(RANDOM_REG) <= conv_std_logic_vector(TLB_ENTRY_NUM - 1, 32);
@@ -147,6 +145,9 @@ begin
                 if (we_i = ENABLE) then
                     regArr(conv_integer(waddr_i)) <= curArr(conv_integer(waddr_i));
                     -- We only assign the `waddr_i`-th register, in order not to interfere the counters above
+                    if (conv_integer(waddr_i) = COMPARE_REG) then
+                        timerInt <= INTERRUPT_NOT_ASSERT; -- Side effect
+                    end if;
                 end if;
 
                 if ((exceptCause_i /= NO_CAUSE) and (exceptCause_i /= ERET_CAUSE)) then
