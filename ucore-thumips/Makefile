@@ -101,7 +101,7 @@ MAKEDEPEND = $(CLANG) -M $(CFLAGS) $(INCLUDES) -o $(DEPDIR)/$*.d $<
 
 .PHONY: all checkdirs clean
 
-all: checkdirs boot/loader.bin obj/ucore-kernel-initrd
+all: checkdirs boot/loader.bin obj/ucore-kernel-initrd obj/ucore.ub
 
 $(shell mkdir -p $(DEP_DIR))
 
@@ -189,6 +189,10 @@ $(OBJDIR)/ucore-kernel-initrd:  $(BUILD_DIR) $(TOOL_MKSFS) $(OBJ) $(USER_APP_BIN
 	$(LD) $(FPGA_LD_FLAGS) -nostdlib -n -G 0 -static -T tools/kernel.ld $(OBJ) \
 				 $(USER_OBJDIR)/initrd.img.o -o $@
 	rm -rf $(ROOTFS_DIR)
+
+$(OBJDIR)/ucore.ub: $(OBJDIR)/ucore-kernel-initrd
+	$(OBJCOPY) -O binary -v $^ $(OBJDIR)/ucore.bin
+	mkimage -A mips -O u-boot -T kernel -C none -a 0x80000040 -e 0x80000040 -n ucore-thumips -d $(OBJDIR)/ucore.bin $@
 
 boot/loader.bin: boot/bootasm.S
 	$(CC) $(CFLAGS) -g -c -o boot/loader.o $^
