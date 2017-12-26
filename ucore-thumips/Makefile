@@ -6,8 +6,7 @@ ON_FPGA :=y
 
 V       := @
 
-#GCCPREFIX:=mips-sde-elf-
-GCCPREFIX ?= /home/guest/cpu/build-gcc/mips_gcc/bin/mips-sde-elf-
+GCCPREFIX ?= mips-sde-elf-
 
 # eliminate default suffix rules
 .SUFFIXES: .c .S .h
@@ -66,14 +65,14 @@ INCLUDES  := $(addprefix -I,$(SRC_DIR))
 INCLUDES  += -I$(SRCDIR)/include
 
 ifeq  ($(ON_FPGA), y)
-USER_APPLIST:= sh #ls 
-INITRD_BLOCK_CNT:=300 
+USER_APPLIST:= pwd cat sh ls forktest yield hello faultreadkernel faultread badarg pgdir exit sleep
+INITRD_BLOCK_CNT:=4000
 FPGA_LD_FLAGS += -S
 MACH_DEF := -DMACH_FPGA
 else
 USER_APPLIST:= pwd cat sh ls forktest yield hello faultreadkernel faultread badarg waitkill pgdir exit sleep
 # 2M
-INITRD_BLOCK_CNT:=4000 
+INITRD_BLOCK_CNT:=4000
 MACH_DEF := -DMACH_QEMU
 endif
 
@@ -100,7 +99,7 @@ MAKEDEPEND = $(CLANG) -M $(CFLAGS) $(INCLUDES) -o $(DEPDIR)/$*.d $<
 #vpath %.c $(SRC_DIR)
 #vpath %.S $(SRC_DIR)
 
-.PHONY: all checkdirs clean 
+.PHONY: all checkdirs clean
 
 all: checkdirs boot/loader.bin obj/ucore-kernel-initrd
 
@@ -119,7 +118,7 @@ obj/ucore-kernel-piggy: $(BUILD_DIR)  $(OBJ) $(USER_APP_BINS) tools/kernel.ld
 $(DEPDIR)/%.d: $(SRCDIR)/%.c
 	@echo DEP $<
 	@set -e; rm -f $@; \
-		$(CC) -MM -MT "$(OBJDIR)/$*.o $@" $(CFLAGS) $(INCLUDES) $< > $@; 
+		$(CC) -MM -MT "$(OBJDIR)/$*.o $@" $(CFLAGS) $(INCLUDES) $< > $@;
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) -c -mips1 $(INCLUDES) $(CFLAGS) $(MACH_DEF) $<  -o $@
