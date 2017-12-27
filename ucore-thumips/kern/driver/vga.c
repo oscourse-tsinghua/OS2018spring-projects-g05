@@ -2,80 +2,63 @@
 #include <defs.h>
 #include <thumips.h>
 
-static int ltr = 2, ltc = 1, ltrn = 0, ltcn = 0, buflen = 0;
-static uint8_t buf[64 * 24];
+#define LINES 24
+#define COLUMNS 64 // COLUMNS should be multiple of 4
+#define CHAR_HEIGHT 16
+#define CHAR_WIDTH 8
 
-void _vga_put_one_char(uint8_t ch) {
+static int lineSt, lineEn; // Circulative, [lineSt, lineEn]
+static int offset; // Horizontal position of current char
+static uint8_t lines[LINES][COLUMNS];
+
+void _vga_put_one_char(int ltrn, int ltcn, uint8_t ch) {
+  const int ltr = ltrn * CHAR_HEIGHT, ltc = ltcn * CHAR_WIDTH;
   uint32_t latcAddr = LATTICE_BASE + (uint32_t)ch * 16;
   uint32_t latc;
   int pos = 0, r, c;
-  for (r = 0; r < 16; ++r) {
+  for (r = 0; r < CHAR_HEIGHT; ++r) {
     if ((r & 3) == 0) {
       latc = inw(latcAddr);
       latcAddr += 4;
       pos = 31;
     }
-    for (c = 0; c < 8; ++c) {
-      outb(VGA_BASE + (ltr + r) * 640 + ltc + c, 0);
-      *((volatile uint8_t *)VGA_BASE + (ltr + r) * 640 + ltc + c) = 0;
-      if ((latc >> pos) % 2 == 1) {
+    for (c = 0; c < CHAR_WIDTH; ++c) {
+      if ((latc >> pos) % 2 == 1)
         outb(VGA_BASE + (ltr + r) * 640 + ltc + c, 0xff);
-      }
+      else
+        outb(VGA_BASE + (ltr + r) * 640 + ltc + c, 0);
       --pos;
     }
-  }
-
-  ++ltcn;
-  if (ltcn == 64) {
-    ltcn = 0;
-    ++ltrn;
-    ltc = 1;
-    ltr += 20;
-  }
-  else {
-    ltc += 10;
   }
 }
 
 void _vga_flush() {
-  int k = 0;
-  uint32_t addr;
-  for (addr = VGA_BASE; k < 64 * 24 - 24 ; ++k, ++addr) {
-    _vga_put_one_char(buf[k]);
+  int ltrn, ltcn;
+  for (ltrn = 0; ltrn < LINES; ltrn++) {
+    const int lineID = (lineSt + ltrn) % LINES;
+    for (ltcn = 0; ltcn < COLUMNS; ltcn++)
+      _vga_put_one_char(ltrn, ltcn, lines[lineID][ltcn]);
   }
-  for (k = 0; k < 64; ++k) {
-    _vga_put_one_char('\0');
-  }
-  ltr = 462;
-  ltc = 1;
-  ltrn = 23;
-  ltcn = 0;
 }
 
-void _vga_scroll() {
-  ltr = 2;
-  ltc = 1;
-  ltrn = ltcn = 0;
-  int k;
-  for (k = 0; k < 64 * 24 - 64; ++k) {
-    buf[k] = buf[k + 64];
+void _vga_nextline() {
+  offset = 0;
+  lineEn = (lineEn + 1) % LINES;
+  if (lineEn == lineSt) {
+    int i = 0;
+    for (i = 0; i < COLUMNS; i += 4)
+      *((uint32_t *)(lines[lineSt] + i)) = 0;
+    lineSt = (lineSt + 1) % LINES;
+    _vga_flush();
   }
-  for (k = 64 * 24 - 64; k < 64 * 24; ++k) {
-    buf[k] = 0;
-  }
-  buflen -= 64;
-  _vga_flush();
 }
 
 void vga_init() {
-  ltr = 2;
-  ltc = 1;
-  ltrn = 0;
-  ltcn = 0;
-  buflen = 0;
+  lineSt = lineEn = 0;
+  offset = 0;
   int i;
-  for (i = 0; i < 64 * 24; i += 4) {
-    *((uint32_t *)(buf + i)) = 0;
+  for (i = 0; i < LINES * COLUMNS; i += 4) {
+    *((uint32_t *)(lines + i)) = 0;
   }
   uint32_t addr;
   for (addr = VGA_BASE; addr < VGA_TOP; ++addr) {
@@ -85,16 +68,12 @@ void vga_init() {
 
 void vga_putc(uint8_t ch) {
   if (ch == '\n') {
-    int k = 64 - buflen % 64;
-    while (k--) {
-      vga_putc('\0');
-    }
+    _vga_nextline();
     return;
   }
-  if (buflen == 64 * 24) {
-    _vga_scroll();
-  }
-  buf[buflen] = ch;
-  ++buflen;
-  _vga_put_one_char(ch);
+  if (++offset == COLUMNS)
+    _vga_nextline();
+  lines[lineEn][offset] = ch;
+  _vga_put_one_char((lineEn - lineSt + LINES) % LINES, offset, ch);
 }
+
