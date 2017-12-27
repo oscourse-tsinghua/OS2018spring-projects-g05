@@ -6,6 +6,8 @@
 #define COLUMNS 64 // COLUMNS should be multiple of 4
 #define CHAR_HEIGHT 16
 #define CHAR_WIDTH 8
+#define LINE_OFFSET 2
+#define COLUMN_OFFSET 1
 
 static int lineSt, lineEn; // Circulative, [lineSt, lineEn]
 static int offset; // Horizontal position of current char
@@ -27,9 +29,9 @@ void _vga_put_one_char(int ltrn, int ltcn, uint8_t ch) {
     }
     for (c = 0; c < CHAR_WIDTH; ++c) {
       if ((latc >> latBit) % 2 == 1)
-        outb(VGA_BASE + (ltr + r) * 640 + ltc + c, 0xff);
+        outb(VGA_BASE + (ltr + r + LINE_OFFSET) * 640 + ltc + c + COLUMN_OFFSET, 0xff);
       else
-        outb(VGA_BASE + (ltr + r) * 640 + ltc + c, 0);
+        outb(VGA_BASE + (ltr + r + LINE_OFFSET) * 640 + ltc + c + COLUMN_OFFSET, 0);
       latBit--;
     }
   }
@@ -39,8 +41,10 @@ void _vga_flush() {
   int ltrn, ltcn;
   for (ltrn = 0; ltrn < LINES; ltrn++) {
     const int lineID = (lineSt + ltrn) % LINES;
+    const int lastID = (lineID + LINES - 1) % LINES;
     for (ltcn = 0; ltcn < COLUMNS; ltcn++)
-      _vga_put_one_char(ltrn, ltcn, lines[lineID][ltcn]);
+      if (lines[lineID][ltcn] != lines[lastID][ltcn])
+        _vga_put_one_char(ltrn, ltcn, lines[lineID][ltcn]);
   }
 }
 
@@ -76,9 +80,10 @@ void vga_putc(uint8_t ch) {
     _vga_nextline();
     return;
   }
-  if (++offset == COLUMNS)
+  if (offset == COLUMNS)
     _vga_nextline();
   lines[lineEn][offset] = ch;
   _vga_put_one_char((lineEn - lineSt + LINES) % LINES, offset, ch);
+  offset++;
 }
 
