@@ -413,25 +413,26 @@ lattice_ram_ctrl lattice_ram_ctrl_ist(
     .busy_o(ltcBusy)
 );
 
+wire ethTriStateWrite;
 eth_ctrl eth_ctrl_ist(
     .clk(clk25),
     .rst(rst),
     .enable_i(ethEnable),
     .readEnable_i(ethReadEnable),
     .addr_i(addr),
-    .readData_o(ethDataLoad),
-    .writeData_i(ethDataSave),
     .writeBusy_o(ethWriteBusy),
     .int_o(ethInt),
+    .triStateWrite_o(ethTriStateWrite),
 
     .ethInt_i(dm9k_int),
     .ethCmd_o(dm9k_cmd),
     .ethWE_o(dm9k_we_n),
     .ethRD_o(dm9k_rd_n),
     .ethCS_o(dm9k_cs_n),
-    .ethRst_o(dm9k_rst_n),
-    .ethData_io(dm9k_data)
+    .ethRst_o(dm9k_rst_n)
 );
+assign dm9k_data = ethTriStateWrite ? ethDataSave[15:0] : 16'hzzzz;
+assign ethDataLoad = {16'b0, dm9k_data};
 
 always@(posedge clk25) begin
     if (rst == 1) begin

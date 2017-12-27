@@ -6,55 +6,37 @@ entity eth_ctrl is
     port (
         clk, rst: in std_logic;
         enable_i, readEnable_i: in std_logic; -- read enable means write disable
-        writeData_i: in std_logic_vector(DataWidth);
-        readData_o: out std_logic_vector(DataWidth);
         addr_i: in std_logic_vector(AddrWidth);
         writeBusy_o: out std_logic;
         int_o: out std_logic;
+        triStateWrite_o: out std_logic;
 
         ethInt_i: in std_logic;
-        ethCmd_o, ethWE_o, ethRD_o, ethCS_o, ethRst_o: out std_logic;
-        ethData_io: inout std_logic_vector(15 downto 0)
+        ethCmd_o, ethWE_o, ethRD_o, ethCS_o, ethRst_o: out std_logic
     );
 end eth_ctrl;
 
 architecture bhv of eth_ctrl is
-    type StateType is (INIT, GET);
+    type StateType is (READ, WRITE);
     signal state: StateType;
-    signal latch: std_logic;
 begin
+    triStateWrite_o <= '1' when state = WRITE else '0';
+
     int_o <= ethInt_i;
     ethCmd_o <= addr_i(2);
-    ethWE_o <= not (enable_i and (not readEnable_i) and latch);
-    ethRD_o <= not (enable_i and readEnable_i);
+    ethWE_o <= '0' when state = WRITE and clk = '1' else '1';
+    ethRD_o <= not readEnable_i;
     ethCS_o <= not enable_i;
     ethRst_o <= not rst;
 
-    readData_o <= 16ux"0" & ethData_io when enable_i and readEnable_i else (others => '0');
-    ethData_io <= writeData_i(15 downto 0);
-
-    writeBusy_o <= PIPELINE_STOP when state = INIT and readEnable_i = DISABLE else PIPELINE_NONSTOP;
+    writeBusy_o <= PIPELINE_STOP when state = READ and readEnable_i = DISABLE else PIPELINE_NONSTOP;
 
     process (clk) begin
         if (rising_edge(clk)) then
-            if (rst = RST_ENABLE or enable_i = DISABLE or readEnable_i = ENABLE) then
-                state <= INIT;
+            if (rst = RST_DISABLE and state = READ and readEnable_i = DISABLE) then
+                state <= WRITE;
             else
-                if (state = INIT) then
-                    state <= GET;
-                else
-                    state <= INIT;
-                end if;
-            end if;
-        end if;
-    end process;
-
-    process(clk) begin
-        if (falling_edge(clk)) then
-            if (state = GET) then
-                latch <= '1';
-            else
-                latch <= '0';
+                state <= READ;
             end if;
         end if;
     end process;
