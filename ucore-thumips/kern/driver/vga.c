@@ -10,24 +10,27 @@
 static int lineSt, lineEn; // Circulative, [lineSt, lineEn]
 static int offset; // Horizontal position of current char
 static uint8_t lines[LINES][COLUMNS];
+// Prefetched lattice, because main memory (1 period read) is faster
+// than lattice memory (2 periods read)
+static uint32_t lattice[128][CHAR_HEIGHT * CHAR_WIDTH / 32];
 
 void _vga_put_one_char(int ltrn, int ltcn, uint8_t ch) {
   const int ltr = ltrn * CHAR_HEIGHT, ltc = ltcn * CHAR_WIDTH;
-  uint32_t latcAddr = LATTICE_BASE + (uint32_t)ch * 16;
+  int r, c;
+  int latBit = 31, latWord = 0;
   uint32_t latc;
-  int pos = 0, r, c;
   for (r = 0; r < CHAR_HEIGHT; ++r) {
     if ((r & 3) == 0) {
-      latc = inw(latcAddr);
-      latcAddr += 4;
-      pos = 31;
+      latc = lattice[ch][latWord];
+      latWord++;
+      latBit = 31;
     }
     for (c = 0; c < CHAR_WIDTH; ++c) {
-      if ((latc >> pos) % 2 == 1)
+      if ((latc >> latBit) % 2 == 1)
         outb(VGA_BASE + (ltr + r) * 640 + ltc + c, 0xff);
       else
         outb(VGA_BASE + (ltr + r) * 640 + ltc + c, 0);
-      --pos;
+      latBit--;
     }
   }
 }
@@ -60,6 +63,8 @@ void vga_init() {
   for (i = 0; i < LINES * COLUMNS; i += 4) {
     *((uint32_t *)(lines + i)) = 0;
   }
+  for (i = 0; i < 128 * CHAR_HEIGHT * CHAR_WIDTH / 32; i++)
+    *((uint32_t *)lattice + i) = *((uint32_t *)LATTICE_BASE + i);
   uint32_t addr;
   for (addr = VGA_BASE; addr < VGA_TOP; ++addr) {
     outb(addr, 0);
