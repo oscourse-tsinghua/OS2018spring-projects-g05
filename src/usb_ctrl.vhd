@@ -32,8 +32,8 @@ begin
     usbRst_o <= not rst;
     usbCS_o <= not devEnable_i;
     writeState <= '1' when (state /= 1) and (state /= 5) else '0';
-    usbWE_o <= (not devEnable_i) and (not writeEnable_i) and writeState;
-    usbRD_o <= (not devEnable_i) and (not readEnable_i);
+    usbWE_o <= not (devEnable_i and writeEnable_i and writeState);
+    usbRD_o <= not (devEnable_i and readEnable_i);
     usbData_io <= writeData_i(7 downto 0);
     int_o <= usbInt_i;
     usbDACK_o <= '1';
