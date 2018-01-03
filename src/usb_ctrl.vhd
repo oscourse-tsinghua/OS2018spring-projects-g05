@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 use work.global_const.all;
 
 entity usb_ctrl is
@@ -23,13 +24,15 @@ end usb_ctrl;
 
 architecture bhv of usb_ctrl is
     signal state: integer;
+    signal writeState: std_logic;
     signal readData: std_logic_vector(7 downto 0);
 begin
 
     usbA0_o <= addr_i(2);
     usbRst_o <= not rst;
     usbCS_o <= not devEnable_i;
-    usbWE_o <= (not devEnable_i) and (not writeEnable_i) and (state >= 2) and (state <= 4);
+    writeState <= '1' when (state /= 1) and (state /= 5) else '0';
+    usbWE_o <= (not devEnable_i) and (not writeEnable_i) and writeState;
     usbRD_o <= (not devEnable_i) and (not readEnable_i);
     usbData_io <= writeData_i(7 downto 0);
     int_o <= usbInt_i;
