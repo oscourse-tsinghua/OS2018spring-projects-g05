@@ -377,26 +377,27 @@ serial_ctrl serial_ctrl_ist(
     .txdData_o(txdData)
 );
 
+wire usbTriStateWrite;
 usb_ctrl usb_ctrl_ist(
     .clk(clk25),
     .rst(rst),
     .devEnable_i(usbEnable),
     .addr_i(addr),
     .readEnable_i(usbReadEnable),
-    .readData_o(usbReadData),
     .writeEnable_i(usbWriteEnable),
-    .writeData_i(usbWriteData),
     .busy_o(usbBusy),
     .int_o(usbInt),
+    .triStateWrite_o(usbTriStateWrite),
     .usbA0_o(sl811_a0),
     .usbWE_o(sl811_we_n),
     .usbRD_o(sl811_rd_n),
     .usbCS_o(sl811_cs_n),
     .usbRst_o(sl811_rst_n),
     .usbDACK_o(sl811_dack),
-    .usbInt_i(sl811_int),
-    .usbData_io(sl811_data)
+    .usbInt_i(sl811_int)
 );
+assign sl811_data = usbTriStateWrite ? usbWriteData[7:0] : 8'hzz;
+assign usbReadData = {24'b0, sl811_data};
 
 boot_ctrl boot_ctrl_ist(
     .addr_i(addr),
