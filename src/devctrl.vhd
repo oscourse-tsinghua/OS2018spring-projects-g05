@@ -102,6 +102,10 @@ begin
         ledData_o <= (others => '0');
         numEnable_o <= DISABLE;
         numData_o <= (others => '0');
+        usbEnable_o <= DISABLE;
+        usbReadEnable_o <= DISABLE;
+        usbWriteEnable_o <= DISABLE;
+        usbWriteData_o <= (others => '0');
 
         if (devEnable_i = ENABLE) then
             if (devPhysicalAddr_i <= 32ux"3fffff") then
@@ -118,8 +122,6 @@ begin
                 ram1DataSave_o <= devDataSave_i;
                 devDataLoad_o <= ram1DataLoad_i;
                 devBusy_o <= ram1WriteBusy_i;
-            elsif (devPhysicalAddr_i = 32ux"f000000") then
-                -- keyboard --
             elsif (devPhysicalAddr_i >= 32ux"1e000000" and devPhysicalAddr_i <= 32ux"1effffff") then
                 -- flash --
                 flashEnable_o <= ENABLE;
@@ -161,6 +163,14 @@ begin
                 ethDataSave_o <= devDataSave_i;
                 devDataLoad_o <= ethDataLoad_i;
                 devBusy_o <= ethWriteBusy_i;
+            elsif (devPhysicalAddr_i >= 32ux"1c020000" and devPhysicalAddr_i <= 32ux"1c020004") then
+                -- USB --
+                usbEnable_o <= ENABLE;
+                usbReadEnable_o <= not devWrite_i;
+                usbWriteEnable_o <= devWrite_i;
+                usbWriteData_o <= devDataSave_i;
+                devDataLoad_o <= usbReadData_i;
+                devBusy_o <= usbBusy_i;
             end if;
         end if;
     end process;
