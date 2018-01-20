@@ -308,9 +308,9 @@ regfile实体的接口定义见Table~\ref{tb:regfile-interface}。
 \textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
 \hline rst                     & 1                      & I     & 上层          & 同步重置 \\
 \hline clk                     & 1                      & I     & 上层          & 时钟 \\
-\hline writeEnable\_i          & 1                      & I     & id            & 写入使能 \\
-\hline writeAddr\_i            & RegAddrWidth           & I     & id            & 写入地址 \\
-\hline writeData\_i            & DataWidth              & I     & id            & 写入数据 \\
+\hline writeEnable\_i          & 1                      & I     & mem\_wb       & 写入使能 \\
+\hline writeAddr\_i            & RegAddrWidth           & I     & mem\_wb       & 写入地址 \\
+\hline writeData\_i            & DataWidth              & I     & mem\_wb       & 写入数据 \\
 \hline readEnable1\_i          & 1                      & I     & id            & 第一路读出使能 \\
 \hline readAddr1\_i            & RegAddrWidth           & I     & id            & 第一路读出地址 \\
 \hline readData1\_i            & DataWidth              & O     & id            & 第一路读出数据 \\
@@ -781,6 +781,38 @@ mem\_wb实体的接口定义见Table~\ref{tb:memwb-interface}。
 重置时，各寄存器置零或无效值。
 
 \subsubsection{hi\_lo}
+
+\paragraph{功能}\mbox{}
+
+乘除法HI/LO寄存器。HI寄存器用于保存积的高32位或余数，LO寄存器用于保存积的低32位或商。
+
+\paragraph{接口}\mbox{}
+
+hi\_lo实体的接口定义见Table~\ref{tb:hilo-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{17cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline clk                     & 1                      & I     & 上层         & 时钟 \\
+\hline rst                     & 1                      & I     & 上层         & 同步重置 \\
+\hline writeHiEnable\_i        & 1                      & I     & mem\_wb      & HI寄存器写使能 \\
+\hline writeLoEnable\_i        & 1                      & I     & mem\_wb      & LO寄存器写使能 \\
+\hline writeHiData\_i          & DataWidth              & I     & mem\_wb      & HI寄存器写数据 \\
+\hline writeLoData\_i          & DataWidth              & I     & mem\_wb      & LO寄存器写数据 \\
+\hline readHiData\_o           & DataWidth              & O     & ex           & HI寄存器读数据 \\
+\hline readLoData\_o           & DataWidth              & O     & ex           & LO寄存器读数据 \\
+\hline
+\end{tabular*}
+\caption{hi\_lo实体的接口}
+\label{tb:hilo-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+hi\_lo实体支持同时进行的两路读和两路写操作。若写入使能，则在时钟上升沿处置相应的寄存器为写入数据（时序逻辑）；读出数据时刻等于寄存器的当前值（组合逻辑）。（hi\_lo寄存器中未进行数据旁路，数据旁路是直接在mem\_wb实体中进行的，为了解耦和，将来可以移至此实体中）。
+
 \subsubsection{ctrl}
 \subsubsection{cp0\_reg}
 
