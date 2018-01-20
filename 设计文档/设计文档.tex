@@ -25,6 +25,7 @@
 
 \usepackage{textgreek}
 
+
 \begin{document}
 \begin{titlepage}
 \fancyhead[CH]{}
@@ -254,6 +255,8 @@ pc\_reg实体的接口定义见Table~\ref{tb:pcreg-interface}。
 
 if\_id是取指阶段与译码阶段间的阶段寄存器，用于保存某个周期取指的结果，在下一个周期交予译码阶段。作为阶段寄存器，if\_id会接受ctrl实体的控制。
 
+本实体可能会向流水线引入的新异常有：读入地址无效异常、读入TLB缺失异常。
+
 \paragraph{接口}\mbox{}
 
 if\_id实体的接口定义见Table~\ref{tb:ifid-interface}。
@@ -324,6 +327,81 @@ regfile实体的接口定义见Table~\ref{tb:regfile-interface}。
 重置时所有寄存器将会被置零。
 
 \subsubsection{id}
+
+\paragraph{功能}\mbox{}
+
+本实体实现了MIPS五级流水线的译码阶段。
+
+本实体可能向流水线引入的新异常有：指令无效异常、系统调用、断点异常、ERET（nCore通过MIPS预留的14号异常实现ERET指令）、读入地址无效异常（当分支/跳转目标地址无效时触发）。
+
+\paragraph{接口}\mbox{}
+
+id实体的接口定义见Table~\ref{tb:id-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{17cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline rst                     & 1                      & I     & 上层          & 重置 \\
+\hline pc\_i                   & AddrWidth              & I     & if\_id        & 指令地址 \\
+\hline inst\_i                 & InstWidth              & I     & if\_id        & 指令 \\
+\hline regData1\_i             & DataWidth              & I     & regfile       & 通用寄存器堆的第一路读出数据 \\
+\hline regData2\_i             & DataWidth              & I     & regfile       & 通用寄存器堆的第二路读出数据 \\
+\hline exToWriteReg\_i         & 1                      & I     & ex            & 自执行阶段旁路的通用寄存器写使能 \\
+\hline exToWriteRegAddr\_i     & RegAddrWidth           & I     & ex            & 自执行阶段旁路的通用寄存器写地址 \\
+\hline exToWriteRegData\_i     & DataWidth              & I     & ex            & 自执行阶段旁路的通用寄存器写数据 \\
+\hline memToWriteReg\_i        & 1                      & I     & ex            & 自访存阶段旁路的通用寄存器写使能 \\
+\hline memToWriteRegAddr\_i    & RegAddrWidth           & I     & ex            & 自访存阶段旁路的通用寄存器写地址 \\
+\hline memToWriteRegData\_i    & DataWidth              & I     & ex            & 自访存阶段旁路的通用寄存器写数据 \\
+\hline toStall\_o              & 1                      & O     & ctrl          & 请求暂停 \\
+\hline regReadEnable1\_o       & 1                      & O     & regfile       & 通用寄存器堆的第一路读出使能 \\
+\hline regReadEnable2\_o       & 1                      & O     & regfile       & 通用寄存器堆的第二路读出使能 \\
+\hline regReadAddr1\_o         & RegAddrWidth           & O     & regfile       & 通用寄存器堆的第一路读出地址 \\
+\hline regReadAddr2\_o         & RegAddrWidth           & O     & regfile       & 通用寄存器堆的第二路读出地址 \\
+\hline alut\_o                 & 由综合器指定(枚举类型) & O     & id\_ex        & 译码结果：运算器运算类型 \\
+\hline memt\_o                 & 由综合器指定(枚举类型) & O     & id\_ex        & 译码结果：访存类型 \\
+\hline lastMemt\_i             & 由综合器指定(枚举类型) & I     & id\_ex        & 上一条指令的访存类型，用于判断是否需要暂停 \\
+\hline operand1\_o             & DataWidth              & O     & id\_ex        & 译码结果：操作数1 \\
+\hline operand2\_o             & DataWidth              & O     & id\_ex        & 译码结果：操作数2 \\
+\hline operandX\_o             & DataWidth              & O     & id\_ex        & 译码结果：附加操作数 \\
+\hline toWriteReg\_o           & 1                      & O     & id\_ex        & 译码结果：通用寄存器写使能 \\
+\hline writeRegAddr\_o         & RegAddrWidth           & O     & id\_ex        & 译码结果：通用寄存器写地址 \\
+\hline isInDelaySlot\_i        & 1                      & I     & id\_ex        & 高电平表示本指令在延迟槽内 \\
+\hline isInDelaySlot\_o        & 1                      & O     & id\_ex        & 高电平表示本指令在延迟槽内 \\
+\hline nextInstInDelaySlot\_o  & 1                      & O     & id\_ex        & 高电平表示下一条指令是延迟槽 \\
+\hline branchFlag\_o           & 1                      & O     & pc\_reg       & 分支/跳转使能 \\
+\hline branchTargetAddress\_o  & AddrWidth              & O     & pc\_reg       & 分支/跳转地址 \\
+\hline linkAddr\_o             & AddrWidth              & O     & id\_ex        & JAL和JALR指令的链接地址 \\
+\hline valid\_i                & 1                      & I     & if\_id        & 高电平表示此指令不是空泡 \\
+\hline valid\_o                & 1                      & O     & id\_ex        & 高电平表示此指令不是空泡 \\
+\hline exceptCause\_i          & ExceptionCauseWidth    & I     & if\_id        & 截止译码阶段前发生的异常类型或无异常 \\
+\hline exceptCause\_o          & ExceptionCauseWidth    & O     & id\_ex        & 截止译码阶段后发生的异常类型或无异常 \\
+\hline currentInstAddr\_o      & AddrWidth              & O     & id\_ex        & 指令地址 \\
+\hline
+\end{tabular*}
+\caption{id实体的接口}
+\label{tb:id-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+id实体是组合逻辑电路，与时钟无关。
+
+id实体的主要功能是译码，即根据指令各个比特的模式得出该指令的操作类型和操作数。
+
+解析操作类型的过程直接却繁琐，直接之处在于只需根据MIPS32定义的各指令比特模式判断即可；繁琐在于指令总数众多，而且MIPS32为了节省比特，或出于历史原因，各指令的比特模式并不完全统一。id实体在实现译码时，简单嵌套了若干层VHDL的case语句进行匹配。未通过case语句找到匹配的指令视作无效指令，应抛出异常。值得注意的是，许多指令要求其中某一段或几段比特为全零，为了减少冗余代码，id实体中复用了一个函数zeroJudge专门用于检查此要求。
+
+id实体对于解析操作数的过程则进行了更好的代码复用。虽然不同指令的操作数（形式地址）含义不同，即寻址方式不同，但操作数的含义均为以下两种之一：寄存器地址，或在指令字中不同位置的立即数（依不同情况需进行符号扩展或零扩展）。id实体在解析操作类型时先以并解析出操作数的含义，然后交由专门的逻辑解析操作数的值。若操作数为立即数，则判断其位置及扩展方式，从指令字中解析。若操作数为寄存器地址，则从regfile实体读取，但还应考虑注意数据冲突：如果来自执行阶段旁路的寄存器写入地址与要读取的寄存器地址相同，则应取用来自旁路的值；若来自执行阶段的旁路数据不适用，还应考虑来自访存阶段的旁路数据。然而，对于上一条指令是访存指令的数据冲突，则不能通过数据旁路解决，此时id实体会向ctrl实体申请流水线中截至译码阶段的部分暂停一个周期。
+
+大多数指令只有不多于两个的操作数，对应id实体的前缀为operand1和operand2两组输出信号，这两组输出信号实现了所有上述操作数类型。对于变址寻址的store指令，还需要第三个操作数，此操作数只需实现立即数寻址即可。故id实体将其作为附加操作数输出，即前缀为operandX的一组信号。
+
+id实体还需处理分支/跳转逻辑。若某条指令为分支/跳转指令，id实体会先判断该分支是否有效（或为无条件的跳转），然后向pc\_reg实体输出跳转使能和跳转目标地址。此外，id实体还会判断跳转的目标地址是否为有效地址（指令字长的整数倍的地址），若为无效地址则抛出相应异常。
+
+某些指令是在译码阶段就可以辨别的自陷指令，例如SYSCALL。此外nCore也利用自陷机制来实现ERET指令。对于这类指令，id实体会将相应的异常输出到流水线上。
+
+以上逻辑较为复杂，导致代码中有较长的process。为了代码复用，还引入了若干中间变量和辅助函数。尽管如此，却不必担心影响性能，因为整个id实体是一个组合逻辑电路，VHDL综合器会将其视作一个整体进行优化。
+
 \subsubsection{id\_ex}
 \subsubsection{ex}
 \subsubsection{div}
