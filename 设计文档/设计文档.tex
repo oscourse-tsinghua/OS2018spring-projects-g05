@@ -503,8 +503,8 @@ ex实体的接口定义见Table~\ref{tb:ex-interface}。
 \hline wbToWriteLo\_i          & 1                      & I     & mem\_wb       & 写回阶段旁路的LO寄存器写使能 \\
 \hline wbToWriteHiData\_i      & DataWidth              & I     & mem\_wb       & 写回阶段旁路的HI寄存器值 \\
 \hline wbToWriteLoData\_i      & DataWidth              & I     & mem\_wb       & 写回阶段旁路的LO寄存器值 \\
-\hline toWriteHi\_o            & DataWidth              & O     & ex\_mem       & 执行结果：写入HI寄存器的使能 \\
-\hline toWriteLo\_o            & DataWidth              & O     & ex\_mem       & 执行结果：写入LO寄存器的使能 \\
+\hline toWriteHi\_o            & 1                      & O     & ex\_mem       & 执行结果：写入HI寄存器的使能 \\
+\hline toWriteLo\_o            & 1                      & O     & ex\_mem       & 执行结果：写入LO寄存器的使能 \\
 \hline writeHiData\_o          & DataWidth              & O     & ex\_mem       & 执行结果：写入HI寄存器的值 \\
 \hline writeLoData\_o          & DataWidth              & O     & ex\_mem       & 执行结果：写入LO寄存器的值 \\
 \hline memAddr\_o              & AddrWidth              & O     & ex\_mem       & 执行结果：访存地址 \\
@@ -607,12 +607,12 @@ ex\_mem实体的接口定义见Table~\ref{tb:exmem-interface}。
 \hline toWriteReg\_o           & 1                      & O     & mem           & 译码结果：通用寄存器写使能 \\
 \hline writeRegAddr\_o         & RegAddrWidth           & O     & mem           & 译码结果：通用寄存器写地址 \\
 \hline writeRegData\_o         & DataWidth              & O     & mem           & 执行结果：通用寄存器写数据 \\
-\hline toWriteHi\_i            & DataWidth              & I     & ex            & 执行结果：写入HI寄存器的使能 \\
-\hline toWriteLo\_i            & DataWidth              & I     & ex            & 执行结果：写入LO寄存器的使能 \\
+\hline toWriteHi\_i            & 1                      & I     & ex            & 执行结果：写入HI寄存器的使能 \\
+\hline toWriteLo\_i            & 1                      & I     & ex            & 执行结果：写入LO寄存器的使能 \\
 \hline writeHiData\_i          & DataWidth              & I     & ex            & 执行结果：写入HI寄存器的值 \\
 \hline writeLoData\_i          & DataWidth              & I     & ex            & 执行结果：写入LO寄存器的值 \\
-\hline toWriteHi\_o            & DataWidth              & O     & mem           & 执行结果：写入HI寄存器的使能 \\
-\hline toWriteLo\_o            & DataWidth              & O     & mem           & 执行结果：写入LO寄存器的使能 \\
+\hline toWriteHi\_o            & 1                      & O     & mem           & 执行结果：写入HI寄存器的使能 \\
+\hline toWriteLo\_o            & 1                      & O     & mem           & 执行结果：写入LO寄存器的使能 \\
 \hline writeHiData\_o          & DataWidth              & O     & mem           & 执行结果：写入HI寄存器的值 \\
 \hline writeLoData\_o          & DataWidth              & O     & mem           & 执行结果：写入LO寄存器的值 \\
 \hline memt\_i                 & 由综合器指定(枚举类型) & I     & ex            & 译码结果：访存类型 \\
@@ -655,6 +655,81 @@ ex\_mem实体的接口定义见Table~\ref{tb:exmem-interface}。
 重置时，各寄存器置零或无效值。
 
 \subsubsection{mem}
+
+\paragraph{功能}\mbox{}
+
+本实体实现了MIPS五级流水线的访存阶段。本实体不仅处理访存逻辑，作为五级流水线中最后一个能产生异常的阶段，也负责将之前各阶段的异常汇总并报告给ctrl和cp0\_reg实体。
+
+本实体可能向流水线引入的新异常有：外设中断、读/写地址无效异常、读/写TLB缺失异常。
+
+\paragraph{接口}\mbox{}
+
+mem实体的接口定义见Table~\ref{tb:mem-interface}。
+\begin{longtable}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline \endhead rst            & 1                      & I     & 上层          & 重置 \\
+\hline memt\_i                 & 由综合器指定(枚举类型) & I     & ex\_mem       & 译码结果：访存类型 \\
+\hline memAddr\_i              & AddrWidth              & I     & ex\_mem       & 执行结果：访存地址 \\
+\hline memData\_i              & DataWidth              & I     & ex\_mem       & 执行结果：访存写入数据 \\
+\hline toWriteReg\_i           & 1                      & I     & ex\_mem       & 译码结果：通用寄存器写使能 \\
+\hline writeRegAddr\_i         & RegAddrWidth           & I     & ex\_mem       & 译码结果：通用寄存器写地址 \\
+\hline writeRegData\_i         & DataWidth              & I     & ex\_mem       & 执行结果：通用寄存器写数据 \\
+\hline toWriteReg\_o           & 1                      & O     & mem\_wb、id   & 译码结果：通用寄存器写使能 \\
+\hline writeRegAddr\_o         & RegAddrWidth           & O     & mem\_wb、id   & 译码结果：通用寄存器写地址 \\
+\hline writeRegData\_o         & DataWidth              & O     & mem\_wb、id   & 执行结果：通用寄存器写数据 \\
+\hline toWriteHi\_i            & 1                      & I     & ex\_mem       & 执行结果：写入HI寄存器的使能 \\
+\hline toWriteLo\_i            & 1                      & I     & ex\_mem       & 执行结果：写入LO寄存器的使能 \\
+\hline writeHiData\_i          & DataWidth              & I     & ex\_mem       & 执行结果：写入HI寄存器的值 \\
+\hline writeLoData\_i          & DataWidth              & I     & ex\_mem       & 执行结果：写入LO寄存器的值 \\
+\hline toWriteHi\_o            & 1                      & O     & mem\_wb、ex   & 执行结果：写入HI寄存器的使能 \\
+\hline toWriteLo\_o            & 1                      & O     & mem\_wb、ex   & 执行结果：写入LO寄存器的使能 \\
+\hline writeHiData\_o          & DataWidth              & O     & mem\_wb、ex   & 执行结果：写入HI寄存器的值 \\
+\hline writeLoData\_o          & DataWidth              & O     & mem\_wb、ex   & 执行结果：写入LO寄存器的值 \\
+\hline memExcept\_i            & ExceptionCauseWidth    & I     & 上层          & 访存中产生的异常或无异常 \\
+\hline loadedData\_i           & DataWidth              & I     & 上层          & 访存读出的数据 \\
+\hline savingData\_o           & DataWidth              & O     & 上层          & 访存写入的数据 \\
+\hline memAddr\_o              & AddrWidth              & O     & 上层          & 访存地址 \\
+\hline dataEnable\_o           & 1                      & O     & 上层          & 访存使能 \\
+\hline dataWrite\_o            & 1                      & O     & 上层          & 访存写使能 \\
+\hline dataByteSelect\_o       & 3..0                   & O     & 上层          & 访存字节选择 \\
+\hline cp0RegWriteAddr\_i      & CP0RegAddrWidth        & I     & ex\_mem       & 执行结果：CP0寄存器写地址 \\
+\hline cp0RegData\_i           & DataWidth              & I     & ex\_mem       & 执行结果：写入的CP0寄存器值 \\
+\hline cp0RegWe\_i             & 1                      & I     & ex\_mem       & 执行结果：写入的CP0寄存器使能 \\
+\hline cp0RegWriteAddr\_o      & CP0RegAddrWidth        & O     & mem\_wb、ex   & 执行结果：CP0寄存器写地址 \\
+\hline cp0RegData\_o           & DataWidth              & O     & mem\_wb、ex   & 执行结果：写入的CP0寄存器值 \\
+\hline cp0RegWe\_o             & 1                      & O     & mem\_wb、ex   & 执行结果：写入的CP0寄存器使能 \\
+\hline isTlbwi\_i              & 1                      & I     & ex\_mem       & 执行结果：高电平表示本指令是TLBWI \\
+\hline isTlbwr\_i              & 1                      & I     & ex\_mem       & 执行结果：高电平表示本指令是TLBWR \\
+\hline isTlbwi\_o              & 1                      & O     & mem\_wb       & 执行结果：高电平表示本指令是TLBWI \\
+\hline isTlbwr\_o              & 1                      & O     & mem\_wb       & 执行结果：高电平表示本指令是TLBWR \\
+\hline valid\_i                & 1                      & I     & ex\_mem       & 高电平表示此指令不是空泡 \\
+\hline exceptCause\_i          & ExceptionCauseWidth    & I     & ex\_mem       & 截至访存阶段前发生的异常类型或无异常 \\
+\hline exceptCause\_o          & ExceptionCauseWidth    & O     & ctrl、cp0\_reg& 截至访存阶段后发生的异常类型或无异常 \\
+\hline isInDelaySlot\_i        & 1                      & I     & ex\_mem       & 高电平表示本指令在延迟槽内 \\
+\hline isInDelaySlot\_o        & 1                      & O     & ctrl          & 高电平表示本指令在延迟槽内 \\
+\hline currentInstAddr\_i      & AddrWidth              & I     & ex\_mem       & 指令地址 \\
+\hline currentInstAddr\_o      & AddrWidth              & O     & ctrl          & 指令地址 \\
+\hline cp0Status\_i            & DataWidth              & I     & cp0\_reg      & CP0 Status寄存器值 \\
+\hline cp0Cause\_i             & DataWidth              & I     & cp0\_reg      & CP0 Cause寄存器值 \\
+\hline currentAccessAddr\_o    & AddrWidth              & O     & cp0\_reg      & 当前试图访存的地址（产生异常用）\\
+\hline
+\caption{mem实体的接口}
+\label{tb:mem-interface}
+\end{longtable}
+
+\paragraph{设计}\mbox{}
+
+mem实体是组合逻辑电路，与时钟无关。
+
+作为访存阶段，mem实体的主要功能是访存。mem实体按各访存类型的要求，计算出按字对齐的最终访存地址和字节选择信号并输出。mem实体输出的访存地址、要写入的数据、使能信号直接发往上层（访存控制层），交由上层执行访存任务，上层获得访存的结果数据或异常后返回给mem实体。
+
+值得注意的是，访存发生异常时，CP0的BadVAddr寄存器应保存指令试图访存的原始地址，而不是经mem对齐后的地址，故原始地址不能丢弃。
+
+访存阶段是MIPS五级流水线中最后一个可能产生异常的阶段，所以还担负着汇总此指令在此前所有阶段产生的异常并交予ctrl和cp0\_reg实体的任务。MIPS的异常响应优先级与流水线顺序一致，故当有多个异常同时发生时，应优先报告在流水线更早的阶段产生的异常。虽然外设中断不在流水线的任何一级产生，但也应在mem实体统一处理。mem实体会向cp0\_reg实体查询是否有活跃的外设中断，如有，按类似其他异常的方式处理。
+
+另一点值得注意的是，外设产生异常时，处在访存阶段的可能是空泡。如果此时产生异常，将无法记录异常返回地址。故应等访存阶段中不是空泡时再处理中断。
+
 \subsubsection{mem\_wb}
 \subsubsection{hi\_lo}
 \subsubsection{ctrl}
