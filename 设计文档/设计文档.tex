@@ -95,10 +95,11 @@ Prof.~Weidong \textsc{Liu}
 \begin{tabular*}{15cm}{l|l|p{10cm}}  
 \hline  
 \textbf{常量}&\textbf{值}&\textbf{功能} \\
-\hline InstWidth        & 0..31    & 指令宽度 \\
-\hline DataWidth        & 0..31    & 数据宽度 \\
-\hline AddrWidth        & 0..31    & 地址宽度 \\
-\hline StallWidth       & 0..5     & 暂停信号宽度，每个分量对应一个需要被暂停的客体 \\
+\hline InstWidth            & 31..0    & 指令宽度 \\
+\hline DataWidth            & 31..0    & 数据宽度 \\
+\hline AddrWidth            & 31..0    & 地址宽度 \\
+\hline StallWidth           & 5..0     & 暂停信号宽度，每个分量对应一个需要被暂停的客体 \\
+\hline ExceptionCauseWidth  & 4..0     & 异常编号的宽度 \\
 \hline 
 \end{tabular*}  
 \caption{常量}
@@ -194,11 +195,11 @@ nCore自底向上分为三个层次：数据通路、访存控制和I/O。数据
 
 \subsubsection{pc\_reg}
 
-\paragraph{功能}\mbox{}\\
+\paragraph{功能}\mbox{}
 
 pc\_reg实现了程序计数器（PC）的寄存器。PC中储存了当前处于取指阶段指令的地址。每个周期PC会发生改变，根据pc\_reg的输入，改变分为顺序执行、分支/跳转、异常跳转三种情况。
 
-\paragraph{参数}\mbox{}\\
+\paragraph{参数}\mbox{}
 
 pc\_reg实体的参数定义见Table~\ref{tb:pcreg-parameter}。
 \begin{table}[!htb]
@@ -214,7 +215,7 @@ pc\_reg实体的参数定义见Table~\ref{tb:pcreg-parameter}。
 \end{center}
 \end{table}
 
-\paragraph{接口}\mbox{}\\
+\paragraph{接口}\mbox{}
 
 pc\_reg实体的接口定义见Table~\ref{tb:pcreg-interface}。
 \begin{table}[!htb]
@@ -230,7 +231,7 @@ pc\_reg实体的接口定义见Table~\ref{tb:pcreg-interface}。
 \hline flush\_i                & 1             & I     & ctrl          & 高电平表示发生了异常 \\
 \hline newPc\_i                & AddrWidth     & I     & ctrl          & 异常处理向量 \\
 \hline pc\_o                   & AddrWidth     & O     & if\_id, 上层  & PC \\
-\hline pcEnable\_o             & 1             & O     & if\_id        & 高电平 表示此指令不是空泡 \\
+\hline pcEnable\_o             & 1             & O     & if\_id        & 高电平表示此指令不是空泡 \\
 \hline 
 \end{tabular*}  
 \caption{pc\_reg实体的接口}
@@ -238,13 +239,49 @@ pc\_reg实体的接口定义见Table~\ref{tb:pcreg-interface}。
 \end{center}
 \end{table}
 
-\paragraph{设计}\mbox{}\\
+\paragraph{设计}\mbox{}
 
 每个时钟上升沿，若发生了异常，则置PC为异常处理向量，否则判断取指阶段是否被暂停。若被暂停，则PC不变；若未被暂停，则判断是否发生了分支/跳转。若是，则置PC为分支/跳转目标，否则置PC为下一条指令地址（PC+4）。
 
 其中，在判断分支/跳转时，正常情况下，表示是否跳转以及跳转目标的信号来自译码阶段。但是若上一个周期取指阶段被暂停了，此周期译码阶段会是空泡，导致接收不到上述信号。故pc\_reg会在取指暂停时依旧接收跳转相关信号并保存之，待恢复执行后使用。
 
 \subsubsection{if\_id}
+
+\paragraph{功能}\mbox{}
+
+if\_id是取指阶段与译码阶段间的阶段寄存器，用于保存某个周期取指的结果，在下一个周期交予译码阶段。作为阶段寄存器，if\_id会接受ctrl实体的控制。
+
+\paragraph{接口}\mbox{}
+
+if\_id实体的接口定义见Table~\ref{tb:ifid-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline rst                     & 1                      & I     & 上层          & 同步重置 \\
+\hline clk                     & 1                      & I     & 上层          & 时钟 \\
+\hline pc\_i                   & AddrWidth              & I     & pc\_reg       & PC \\
+\hline instEnable\_i           & 1                      & I     & pc\_reg       & 高电平表示此指令不是空泡 \\
+\hline inst\_i                 & InstWidth              & I     & 上层          & 指令 \\
+\hline exceptCause\_i          & ExceptionCauseWidth    & I     & 上层          & 取指异常类型或无异常 \\
+\hline pc\_o                   & AddrWidth              & O     & id            & PC \\
+\hline valid\_o                & 1                      & O     & id            & 高电平表示此指令不是空泡 \\
+\hline inst\_o                 & InstWidth              & O     & id            & 指令 \\
+\hline exceptCause\_o          & ExceptionCauseWidth    & O     & id            & 取指异常类型或无异常 \\
+\hline stall\_i                & StallWidth             & I     & ctrl          & 对应if\_id的分量为高电平表示需要暂停 \\
+\hline flush\_i                & 1                      & I     & ctrl          & 高电平表示流水线需要清空 \\
+\hline
+\end{tabular*}
+\caption{if\_id实体的接口}
+\label{tb:ifid-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+若流水线需要清空，则输出零/无效信号；否则，若流水线暂停，则保持上一个周期的值；否则，将阶段寄存器的值置为来自取指阶段的值。
+
 \subsubsection{regfile}
 \subsubsection{id}
 \subsubsection{id\_ex}
