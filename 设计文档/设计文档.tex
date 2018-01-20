@@ -814,6 +814,77 @@ hi\_lo实体的接口定义见Table~\ref{tb:hilo-interface}。
 hi\_lo实体支持同时进行的两路读和两路写操作。若写入使能，则在时钟上升沿处置相应的寄存器为写入数据（时序逻辑）；读出数据时刻等于寄存器的当前值（组合逻辑）。（hi\_lo寄存器中未进行数据旁路，数据旁路是直接在mem\_wb实体中进行的，为了解耦和，将来可以移至此实体中）。
 
 \subsubsection{ctrl}
+
+\paragraph{功能}\mbox{}
+
+ctrl实体用于控制流水线。当被请求暂停某部分流水线时，ctrl会向受影响的各级阶段寄存器发出暂停命令。当发生异常时，ctrl会向各级阶段寄存器发出清空命令，还会告知pc\_reg实体异常处理向量的入口地址。
+
+\paragraph{参数}\mbox{}
+
+ctrl实体的参数定义见Table~\ref{tb:ctrl-parameter}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l}
+\hline
+\textbf{参数}&\textbf{类型}&\textbf{功能} \\
+\hline instEntranceAddr        & std\_logic\_vector(AddrWidth)    & 重置后PC的值 \\
+\hline exceptBootBaseAddr      & std\_logic\_vector(AddrWidth)    & 启动时异常处理向量的基地址 \\
+\hline tlbRefillExl0Offset     & std\_logic\_vector(AddrWidth)    & 异常态下TLB缺失异常的偏移量 \\
+\hline generalExceptOffset     & std\_logic\_vector(AddrWidth)    & 一般的异常处理向量的基地址 \\
+\hline interruptIv1Offset      & std\_logic\_vector(AddrWidth)    & $Cause_{IV}=1$时的中断异常偏移量 \\
+\hline
+\end{tabular*}
+\caption{ctrl实体的参数}
+\label{tb:ctrl-parameter}
+\end{center}
+\end{table}
+
+\paragraph{接口}\mbox{}
+
+ctrl实体的接口定义见Table~\ref{tb:ctrl-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{17cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline clk                     & 1                      & I     & 上层         & 时钟 \\
+\hline rst                     & 1                      & I     & 上层         & 同步重置 \\
+\hline ifToStall\_i            & 1                      & I     & 上层         & 高电平表示请求暂停取指阶段 \\
+\hline idToStall\_i            & 1                      & I     & id           & 高电平表示请求暂停截至译码阶段的所有阶段 \\
+\hline exToStall\_i            & 1                      & I     & ex           & 高电平表示请求暂停截至执行阶段的所有阶段 \\
+\hline memToStall\_i           & 1                      & I     & 上层         & 高电平表示请求暂停截至访存阶段的所有阶段 \\
+\hline stall\_o                & StallWidth             & O     & 各阶段寄存器 & 暂停命令：每个分量对应一个需要被暂停的客体 \\
+\hline exceptionBase\_i        & DataWidth              & I     & cp0\_reg     & 异常处理向量基地址 \\
+\hline exceptCause\_i          & ExceptionCauseWidth    & I     & mem          & 异常类型或无异常 \\
+\hline cp0Status\_i            & DataWidth              & I     & cp0\_reg     & CP0 Status寄存器值 \\
+\hline cp0Cause\_i             & DataWidth              & I     & cp0\_reg     & CP0 Cause寄存器值 \\
+\hline cp0Epc\_i               & DataWidth              & I     & cp0\_reg     & CP0 Epc寄存器值 \\
+\hline newPC\_o                & AddrWidth              & O     & pc\_reg      & 发生异常时跳转的目标地址 \\
+\hline flush\_o                & 1                      & O     & 各阶段寄存器 & 高电平表示命令各级阶段寄存器进行清空 \\
+\hline toWriteBadVAddr\_o      & 1                      & O     & cp0\_reg     & CP0 BadVAddr寄存器写使能 \\
+\hline badVAddr\_o             & AddrWidth              & O     & cp0\_reg     & CP0 BadVAddr寄存器写数据 \\
+\hline
+\end{tabular*}
+\caption{ctrl实体的接口}
+\label{tb:ctrl-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+当收到暂停请求时，假设请求暂停的是阶段$X$及其之前的所有阶段，ctrl实体则向阶段$X$与阶段$X+1$间的阶段寄存器，及其之前所有阶段寄存器发出暂停命令，其余阶段寄存器不受影响。
+
+当发生异常时，ctrl实体向所有的阶段寄存器发出清空命令。此外，还需向pc\_reg实体发送PC跳转目标，具体计算分为如下情况：
+
+\begin{enumerate}
+    \item 若此“异常”不是真正的异常，而是ERET指令（ERET指令用异常的形式处理），则向CP0协处理器查询ERET寄存器，其值即跳转目标；
+    \item 若为真正的异常，则向CP0协处理器查询当前的配置，根据配置确定选用参数中定义的异常处理向量基地址中的哪一个，以及确定是否选用参数中定义的特殊的偏移量。然后根据异常类型，最终确定异常处理向量的偏移量。异常处理向量的基地址与偏移量的和即跳转目标。
+\end{enumerate}
+
+如上所述，异常处理向量的基地址和偏移量可以使用参数配置，这是为了方便地综合出用于不同环境，例如功能测例、\textmu Core和u-boot，的目标逻辑。
+
+CP0 ERET寄存器中记录的异常返回地址可能是无效的。在此情形下，应立即触发一个新的地址无效异常，并向CP0 BadVAddr寄存器写入相应的无效地址。
+
 \subsubsection{cp0\_reg}
 
 %%%%%%%%%%%%%%%%%%%%%%
