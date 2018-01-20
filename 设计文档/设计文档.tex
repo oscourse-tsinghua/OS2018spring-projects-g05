@@ -731,6 +731,55 @@ mem实体是组合逻辑电路，与时钟无关。
 另一点值得注意的是，外设产生异常时，处在访存阶段的可能是空泡。如果此时产生异常，将无法记录异常返回地址。故应等访存阶段中不是空泡时再处理中断。
 
 \subsubsection{mem\_wb}
+
+\paragraph{功能}\mbox{}
+
+mem\_wb是访存阶段与写回阶段间的阶段寄存器，用于保存某个周期访存的结果，在下一个周期交予写回阶段。作为阶段寄存器，mem\_wb会接受ctrl实体的控制。
+
+\paragraph{接口}\mbox{}
+
+mem\_wb实体的接口定义见Table~\ref{tb:memwb-interface}。
+\begin{longtable}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline \endhead rst            & 1                      & I     & 上层          & 同步重置 \\
+\hline clk                     & 1                      & I     & 上层          & 时钟 \\
+\hline stall\_i                & StallWidth             & I     & ctrl          & 对应if\_id的分量为高电平表示需要暂停 \\
+\hline toWriteReg\_i           & 1                      & I     & mem           & 译码结果：通用寄存器写使能 \\
+\hline writeRegAddr\_i         & RegAddrWidth           & I     & mem           & 译码结果：通用寄存器写地址 \\
+\hline writeRegData\_i         & DataWidth              & I     & mem           & 执行结果：通用寄存器写数据 \\
+\hline toWriteReg\_o           & 1                      & O     & regfile       & 译码结果：通用寄存器写使能 \\
+\hline writeRegAddr\_o         & RegAddrWidth           & O     & regfile       & 译码结果：通用寄存器写地址 \\
+\hline writeRegData\_o         & DataWidth              & O     & regfile       & 执行结果：通用寄存器写数据 \\
+\hline toWriteHi\_i            & 1                      & I     & mem           & 执行结果：写入HI寄存器的使能 \\
+\hline toWriteLo\_i            & 1                      & I     & mem           & 执行结果：写入LO寄存器的使能 \\
+\hline writeHiData\_i          & DataWidth              & I     & mem           & 执行结果：写入HI寄存器的值 \\
+\hline writeLoData\_i          & DataWidth              & I     & mem           & 执行结果：写入LO寄存器的值 \\
+\hline toWriteHi\_o            & 1                      & O     & hi\_lo、ex    & 执行结果：写入HI寄存器的使能 \\
+\hline toWriteLo\_o            & 1                      & O     & hi\_lo、ex    & 执行结果：写入LO寄存器的使能 \\
+\hline writeHiData\_o          & DataWidth              & O     & hi\_lo、ex    & 执行结果：写入HI寄存器的值 \\
+\hline writeLoData\_o          & DataWidth              & O     & hi\_lo、ex    & 执行结果：写入LO寄存器的值 \\
+\hline memCP0RegWriteAddr\_i   & CP0RegAddrWidth        & I     & mem           & 执行结果：CP0寄存器写地址 \\
+\hline memCP0RegData\_i        & DataWidth              & I     & mem           & 执行结果：写入的CP0寄存器值 \\
+\hline memCP0RegWe\_i          & 1                      & I     & mem           & 执行结果：写入的CP0寄存器使能 \\
+\hline wbCP0RegWriteAddr\_o    & CP0RegAddrWidth        & O     & cp0\_reg      & 执行结果：CP0寄存器写地址 \\
+\hline wbCP0RegData\_o         & DataWidth              & O     & cp0\_reg      & 执行结果：写入的CP0寄存器值 \\
+\hline wbCP0RegWe\_o           & 1                      & O     & cp0\_reg      & 执行结果：写入的CP0寄存器使能 \\
+\hline isTlbwi\_i              & 1                      & I     & mem           & 执行结果：高电平表示本指令是TLBWI \\
+\hline isTlbwr\_i              & 1                      & I     & mem           & 执行结果：高电平表示本指令是TLBWR \\
+\hline isTlbwi\_o              & 1                      & O     & cp0\_reg      & 执行结果：高电平表示本指令是TLBWI \\
+\hline isTlbwr\_o              & 1                      & O     & cp0\_reg      & 执行结果：高电平表示本指令是TLBWR \\
+\hline
+\caption{mem\_wb实体的接口}
+\label{tb:memwb-interface}
+\end{longtable}
+
+\paragraph{设计}\mbox{}
+
+各阶段寄存器的值在时钟上升沿发生如下变化：若流水线需要清空，或是ctrl实体恰好暂停了访存阶段，却没有暂停后续的写回阶段，则置零/无效信号，因为没有指令可供写回阶段执行；否则，若访存和写回阶段均被暂停，则维持上一个周期的值，以便写回阶段重复执行；再否则，置为来自访存阶段的值，让写回阶段获得新指令。
+
+重置时，各寄存器置零或无效值。
+
 \subsubsection{hi\_lo}
 \subsubsection{ctrl}
 \subsubsection{cp0\_reg}
