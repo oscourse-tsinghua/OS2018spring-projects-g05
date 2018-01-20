@@ -286,7 +286,9 @@ if\_id实体的接口定义见Table~\ref{tb:ifid-interface}。
 
 \paragraph{设计}\mbox{}
 
-各阶段寄存器的值在时钟上升沿发生如下变化：若流水线需要清空，则置零/无效信号，与进行重置时表现相同；否则，若流水线暂停，则保持上一个周期的值；否则，置为来自取指阶段的值。
+各阶段寄存器的值在时钟上升沿发生如下变化：若流水线需要清空，或是ctrl实体恰好暂停了取指阶段，却没有暂停后续的译码阶段，则置零/无效信号，因为没有指令可供译码阶段执行；否则，若取值和译码阶段均被暂停，则维持上一个周期的值，以便译码阶段重复执行；再否则，置为来自取指阶段的值，让译码阶段获得新指令。
+
+重置时，各寄存器置零或无效值。
 
 \subsubsection{regfile}
 
@@ -371,11 +373,11 @@ id实体的接口定义见Table~\ref{tb:id-interface}。
 \hline nextInstInDelaySlot\_o  & 1                      & O     & id\_ex        & 高电平表示下一条指令是延迟槽 \\
 \hline branchFlag\_o           & 1                      & O     & pc\_reg       & 分支/跳转使能 \\
 \hline branchTargetAddress\_o  & AddrWidth              & O     & pc\_reg       & 分支/跳转地址 \\
-\hline linkAddr\_o             & AddrWidth              & O     & id\_ex        & JAL和JALR指令的链接地址 \\
+\hline linkAddr\_o             & AddrWidth              & O     & id\_ex        & 译码结果：JAL和JALR指令的链接地址 \\
 \hline valid\_i                & 1                      & I     & if\_id        & 高电平表示此指令不是空泡 \\
 \hline valid\_o                & 1                      & O     & id\_ex        & 高电平表示此指令不是空泡 \\
-\hline exceptCause\_i          & ExceptionCauseWidth    & I     & if\_id        & 截止译码阶段前发生的异常类型或无异常 \\
-\hline exceptCause\_o          & ExceptionCauseWidth    & O     & id\_ex        & 截止译码阶段后发生的异常类型或无异常 \\
+\hline exceptCause\_i          & ExceptionCauseWidth    & I     & if\_id        & 截至译码阶段前发生的异常类型或无异常 \\
+\hline exceptCause\_o          & ExceptionCauseWidth    & O     & id\_ex        & 截至译码阶段后发生的异常类型或无异常 \\
 \hline currentInstAddr\_o      & AddrWidth              & O     & id\_ex        & 指令地址 \\
 \hline
 \end{tabular*}
@@ -388,7 +390,7 @@ id实体的接口定义见Table~\ref{tb:id-interface}。
 
 id实体是组合逻辑电路，与时钟无关。
 
-id实体的主要功能是译码，即根据指令各个比特的模式得出该指令的操作类型和操作数。
+id实体的主要功能是译码，即根据指令各个比特的模式得出该指令的操作类型（包括运算器类型、访存类型、是否需要写入寄存器等）和操作数。
 
 解析操作类型的过程直接却繁琐，直接之处在于只需根据MIPS32定义的各指令比特模式判断即可；繁琐在于指令总数众多，而且MIPS32为了节省比特，或出于历史原因，各指令的比特模式并不完全统一。id实体在实现译码时，简单嵌套了若干层VHDL的case语句进行匹配。未通过case语句找到匹配的指令视作无效指令，应抛出异常。值得注意的是，许多指令要求其中某一段或几段比特为全零，为了减少冗余代码，id实体中复用了一个函数zeroJudge专门用于检查此要求。
 
@@ -403,6 +405,64 @@ id实体还需处理分支/跳转逻辑。若某条指令为分支/跳转指令�
 以上逻辑较为复杂，导致代码中有较长的process。为了代码复用，还引入了若干中间变量和辅助函数。尽管如此，却不必担心影响性能，因为整个id实体是一个组合逻辑电路，VHDL综合器会将其视作一个整体进行优化。
 
 \subsubsection{id\_ex}
+
+\paragraph{功能}\mbox{}
+
+id\_ex是译码阶段与执行阶段间的阶段寄存器，用于保存某个周期译码的结果，在下一个周期交予执行阶段。作为阶段寄存器，id\_ex会接受ctrl实体的控制。
+
+\paragraph{接口}\mbox{}
+
+id\_ex实体的接口定义见Table~\ref{tb:idex-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{17cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline rst                     & 1                      & I     & 上层          & 同步重置 \\
+\hline clk                     & 1                      & I     & 上层          & 时钟 \\
+\hline stall\_i                & StallWidth             & I     & ctrl          & 对应if\_id的分量为高电平表示需要暂停 \\
+\hline flush\_i                & 1                      & I     & ctrl          & 高电平表示流水线需要清空 \\
+\hline alut\_i                 & 由综合器指定(枚举类型) & I     & id            & 译码结果：运算器运算类型 \\
+\hline memt\_i                 & 由综合器指定(枚举类型) & I     & id            & 译码结果：访存类型 \\
+\hline operand1\_i             & DataWidth              & I     & id            & 译码结果：操作数1 \\
+\hline operand2\_i             & DataWidth              & I     & id            & 译码结果：操作数2 \\
+\hline operandX\_i             & DataWidth              & I     & id            & 译码结果：附加操作数 \\
+\hline toWriteReg\_i           & 1                      & I     & id            & 译码结果：通用寄存器写使能 \\
+\hline writeRegAddr\_i         & RegAddrWidth           & I     & id            & 译码结果：通用寄存器写地址 \\
+\hline idlinkAddresss\_i       & AddrWidth              & I     & id            & 译码结果：JAL和JALR指令的链接地址 \\
+\hline idIsInDelaySlot\_i      & 1                      & I     & id            & 高电平表示本指令在延迟槽内 \\
+\hline nextInstInDelaySlot\_i  & 1                      & I     & id            & 高电平表示下一条指令是延迟槽 \\
+\hline idCurrentInstAddr\_i    & AddrWidth              & I     & id            & 指令地址 \\
+\hline idExceptCause\_i        & ExceptionCauseWidth    & I     & id            & 截至译码阶段后的异常类型或无异常 \\
+\hline valid\_i                & 1                      & I     & id            & 高电平表示此指令不是空泡 \\
+\hline alut\_o                 & 由综合器指定(枚举类型) & O     & ex            & 译码结果：运算器运算类型 \\
+\hline memt\_o                 & 由综合器指定(枚举类型) & O     & ex            & 译码结果：访存类型 \\
+\hline operand1\_o             & DataWidth              & O     & ex            & 译码结果：操作数1 \\
+\hline operand2\_o             & DataWidth              & O     & ex            & 译码结果：操作数2 \\
+\hline operandX\_o             & DataWidth              & O     & ex            & 译码结果：附加操作数 \\
+\hline toWriteReg\_o           & 1                      & O     & ex            & 译码结果：通用寄存器写使能 \\
+\hline writeRegAddr\_o         & RegAddrWidth           & O     & ex            & 译码结果：通用寄存器写地址 \\
+\hline exlinkAddress\_o        & AddrWidth              & O     & ex            & 译码结果：JAL和JALR指令的链接地址 \\
+\hline exIsInDelaySlot\_o      & 1                      & O     & ex            & 高电平表示本指令（当前在EX阶段的指令）在延迟槽内 \\
+\hline isInDelaySlot\_o        & 1                      & O     & id            & 高电平表示本指令（当前在ID阶段的指令）在延迟槽内 \\
+\hline exCurrentInstAddr\_o    & AddrWidth              & O     & ex            & 指令地址 \\
+\hline exExceptCause\_o        & ExceptionCauseWidth    & O     & ex            & 截至译码阶段后的异常类型或无异常 \\
+\hline valid\_o                & 1                      & O     & ex            & 高电平表示此指令不是空泡 \\
+\hline
+\end{tabular*}
+\caption{id\_ex实体的接口}
+\label{tb:idex-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+各阶段寄存器的值在时钟上升沿发生如下变化：若流水线需要清空，或是ctrl实体恰好暂停了译码阶段，却没有暂停后续的执行阶段，则置零/无效信号，因为没有指令可供执行阶段执行；否则，若译码和执行阶段均被暂停，则维持上一个周期的值，以便译码执行重复执行；再否则，置为来自取指译码的值，让执行阶段获得新指令。
+
+唯一例外的是：isInDelaySlot\_o是用于在下一个周期告知译码阶段“译码阶段中的指令是否在延迟槽中”的，并不传递到下一阶段。当译码阶段被暂停时，不管执行阶段被暂停与否，都应保持上一个周期的值。
+
+重置时，各寄存器置零或无效值。
+
 \subsubsection{ex}
 \subsubsection{div}
 \subsubsection{ex\_mem}
