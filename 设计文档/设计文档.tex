@@ -25,6 +25,7 @@
 
 \usepackage{textgreek}
 
+\usepackage{longtable}
 
 \begin{document}
 \begin{titlepage}
@@ -101,6 +102,7 @@ Prof.~Weidong \textsc{Liu}
 \hline AddrWidth            & 31..0    & 地址宽度 \\
 \hline RegAddrWidth         & 4..0     & 寄存器地址宽度 \\
 \hline StallWidth           & 5..0     & 暂停信号宽度，每个分量对应一个需要被暂停的客体 \\
+\hline CP0RegAddrWidth      & 4..0     & CP0寄存器地址宽度（仅可容纳nCore实现了的部分寄存器） \\
 \hline ExceptionCauseWidth  & 4..0     & 异常编号的宽度 \\
 \hline 
 \end{tabular*}  
@@ -464,6 +466,88 @@ id\_ex实体的接口定义见Table~\ref{tb:idex-interface}。
 重置时，各寄存器置零或无效值。
 
 \subsubsection{ex}
+
+\paragraph{功能}\mbox{}
+
+本实体实现了MIPS五级流水线的执行阶段。对于算数逻辑运算指令，执行阶段负责计算运算结果。对于访存指令（MIPS的访存指令均为变址寻址），执行阶段负责计算访存地址，并将要写入的数据（如有）从译码阶段解析出的操作数传递至访存阶段。对于与HI/LO寄存器或CP0协处理器交互的指令，执行阶段负责解析出比译码阶段更具体的操作类型和操作数。
+
+本实体可能向流水线引入的新异常有：算术溢出异常、读入地址无效异常、输出地址无效异常。
+
+\paragraph{接口}\mbox{}
+
+ex实体的接口定义见Table~\ref{tb:ex-interface}。
+\begin{longtable}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline \endhead rst            & 1                      & I     & 上层          & 重置 \\
+\hline alut\_i                 & 由综合器指定(枚举类型) & I     & id\_ex        & 译码结果：运算器运算类型 \\
+\hline memt\_i                 & 由综合器指定(枚举类型) & I     & id\_ex        & 译码结果：访存类型 \\
+\hline operand1\_i             & DataWidth              & I     & id\_ex        & 译码结果：操作数1 \\
+\hline operand2\_i             & DataWidth              & I     & id\_ex        & 译码结果：操作数2 \\
+\hline operandX\_i             & DataWidth              & I     & id\_ex        & 译码结果：附加操作数 \\
+\hline toWriteReg\_i           & 1                      & I     & id\_ex        & 译码结果：通用寄存器写使能 \\
+\hline writeRegAddr\_i         & RegAddrWidth           & I     & id\_ex        & 译码结果：通用寄存器写地址 \\
+\hline linkAddr\_i             & AddrWidth              & I     & id\_ex        & 译码结果：JAL和JALR指令的链接地址 \\
+\hline isInDelaySlot\_i        & 1                      & I     & id\_ex        & 高电平表示本指令在延迟槽内 \\
+\hline toStall\_o              & 1                      & O     & ctrl          & 请求暂停 \\
+\hline toWriteReg\_o           & 1                      & O     & ex\_mem       & 译码结果：通用寄存器写使能 \\
+\hline writeRegAddr\_o         & RegAddrWidth           & O     & ex\_mem       & 译码结果：通用寄存器写地址 \\
+\hline writeRegData\_o         & DataWidth              & O     & ex\_mem       & 执行结果：通用寄存器写数据 \\
+\hline hi\_i                   & DataWidth              & I     & hi\_lo        & 读出HI寄存器的值 \\
+\hline lo\_i                   & DataWidth              & I     & hi\_lo        & 读出LO寄存器的值 \\
+\hline memToWriteHi\_i         & 1                      & I     & mem           & 访存阶段旁路的HI寄存器写使能 \\
+\hline memToWriteLo\_i         & 1                      & I     & mem           & 访存阶段旁路的LO寄存器写使能 \\
+\hline memToWriteHiData\_i     & DataWidth              & I     & mem           & 访存阶段旁路的HI寄存器值 \\
+\hline memToWriteLoData\_i     & DataWidth              & I     & mem           & 访存阶段旁路的LO寄存器值 \\
+\hline wbToWriteHi\_i          & 1                      & I     & mem\_wb       & 写回阶段旁路的HI寄存器写使能 \\
+\hline wbToWriteLo\_i          & 1                      & I     & mem\_wb       & 写回阶段旁路的LO寄存器写使能 \\
+\hline wbToWriteHiData\_i      & DataWidth              & I     & mem\_wb       & 写回阶段旁路的HI寄存器值 \\
+\hline wbToWriteLoData\_i      & DataWidth              & I     & mem\_wb       & 写回阶段旁路的LO寄存器值 \\
+\hline toWriteHi\_i            & DataWidth              & O     & ex\_mem       & 执行结果：写入HI寄存器的值 \\
+\hline toWriteLo\_i            & DataWidth              & O     & ex\_mem       & 执行结果：写入LO寄存器的值 \\
+\hline memAddr\_o              & AddrWidth              & O     & ex\_mem       & 执行结果：访存地址 \\
+\hline memData\_o              & DataWidth              & O     & ex\_mem       & 执行结果：访存写入数据 \\
+\hline tempProduct\_i          & 63..0                  & I     & ex\_mem       & 乘法中间结果：部分积 \\
+\hline cnt\_i                  & 1..0                   & I     & ex\_mem       & 乘法中间结果：乘加、乘减指令的阶段 \\
+\hline tempProduct\_o          & 63..0                  & O     & ex\_mem       & 乘法中间结果：部分积 \\
+\hline cnt\_o                  & 1..0                   & O     & ex\_mem       & 乘法中间结果：乘加、乘减指令的阶段 \\
+\hline divEnable\_o            & 1                      & O     & div           & 除法器使能 \\
+\hline dividend\_o             & DataWidth              & O     & div           & 被除数 \\
+\hline divider\_o              & DataWidth              & O     & div           & 除数 \\
+\hline divBusy\_i              & 1                      & I     & div           & 高电平表示除法器正忙 \\
+\hline quotient\_i             & DataWidth              & I     & div           & 商 \\
+\hline remainder\_i            & DataWidth              & I     & div           & 余数 \\
+\hline cp0RegReadAddr\_o       & CP0RegAddrWidth        & O     & cp0\_reg      & CP0寄存器读地址 \\
+\hline cp0RegData\_i           & DataWidth              & I     & cp0\_reg      & 读出的CP0寄存器值 \\
+\hline cp0RegWriteAddr\_o      & CP0RegAddrWidth        & O     & ex\_mem       & 执行结果：CP0寄存器写地址 \\
+\hline cp0RegData\_o           & DataWidth              & O     & ex\_mem       & 执行结果：写入的CP0寄存器值 \\
+\hline memCP0RegWe\_i          & 1                      & I     & mem           & 访存阶段旁路的CP0寄存器写使能 \\
+\hline memCP0RegWriteAddr\_i   & CP0RegAddrWidth        & I     & mem           & 访存阶段旁路的CP0寄存器写地址 \\
+\hline memCP0RegWriteData\_i   & DataWidth              & I     & mem           & 访存阶段旁路的CP0寄存器写数据 \\
+\hline isTlbwi\_o              & 1                      & O     & ex\_mem       & 执行结果：高电平表示本指令是TLBWI \\
+\hline isTlbwr\_o              & 1                      & O     & ex\_mem       & 执行结果：高电平表示本指令是TLBWR \\
+\hline valid\_i                & 1                      & I     & id\_ex        & 高电平表示此指令不是空泡 \\
+\hline valid\_o                & 1                      & O     & ex\_mem       & 高电平表示此指令不是空泡 \\
+\hline exceptCause\_i          & ExceptionCauseWidth    & I     & id\_ex        & 截至执行阶段前发生的异常类型或无异常 \\
+\hline exceptCause\_o          & ExceptionCauseWidth    & O     & ex\_mem       & 截至执行阶段后发生的异常类型或无异常 \\
+\hline currentInstAddr\_i      & AddrWidth              & I     & id\_ex        & 指令地址 \\
+\hline currentInstAddr\_o      & AddrWidth              & O     & ex\_mem       & 指令地址 \\
+\hline isInDelaySlot\_o        & 1                      & O     & ex\_mem       & 高电平表示本指令在延迟槽内 \\
+\hline
+\caption{ex实体的接口}
+\label{tb:ex-interface}
+\end{longtable}
+
+\paragraph{设计}\mbox{}
+
+执行阶段与访存阶段类似，也是纯组合逻辑电路，与时钟无关。其实现逻辑也是根据输入的不同操作类型，对数据进行不同处理。如果操作数来自于HI/LO寄存器或CP0协处理器，也要通过数据旁路解决数据冲突（由于hi\_lo实体未进行旁路处理，关于HI/LO寄存器，需处理来自访存和写回两个阶段的旁路，而对于CP0协处理器，只需处理来自访存的旁路。此处可待日后重构优化）。
+
+乘法、除法、乘加和乘减指令较为复杂，故分多个周期完成。为了解耦合，除法在单独的除法器实体div中完成，而乘法、乘加和乘减在ex实体中完成（日后也可将乘法、乘加和乘减移至单独实体以进一步减少耦合）。为了保持ex实体为纯粹的组合逻辑电路，乘法、乘加和乘减所需的中间状态存储于阶段寄存器ex\_mem实体中：每个周期结束前将中间结果保存在ex\_mem中，待下一个周期开始时再取回。当某条多周期指令还未处理完成时，ex实体会向ctrl实体发出暂停请求，暂停流水线ex及其之前的部分。
+
+ex寄存器可能抛出两类异常。一是某些算术指令要求在溢出时抛出的算术溢出异常；二是变址寻址时若计算出的访存地址无效，需抛出读或写的地址无效异常。
+
+此外，ex实体中求补码、判断溢出的逻辑被使用多次，故复用为函数。
+
 \subsubsection{div}
 \subsubsection{ex\_mem}
 \subsubsection{mem}
