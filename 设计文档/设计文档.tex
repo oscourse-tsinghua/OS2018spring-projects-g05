@@ -549,6 +549,37 @@ ex寄存器可能抛出两类异常。一是某些算术指令要求在溢出时
 此外，ex实体中求补码、判断溢出的逻辑被使用多次，故复用为函数。
 
 \subsubsection{div}
+
+\paragraph{功能}\mbox{}
+
+独立的除法器。
+
+\paragraph{接口}\mbox{}
+
+div实体的接口定义见Table~\ref{tb:div-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{17cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline clk                     & 1                      & I     & 上层         & 时钟 \\
+\hline enable\_i               & 1                      & I     & ex           & 使能 \\
+\hline dividend\_i             & DataWidth              & I     & ex           & 被除数 \\
+\hline divider\_i              & DataWidth              & I     & ex           & 除数 \\
+\hline busy\_o                 & 1                      & O     & ex           & 高电平表示除法器正忙 \\
+\hline quotient\_o             & DataWidth              & O     & ex           & 商 \\
+\hline remainder\_o            & DataWidth              & O     & ex           & 余数 \\
+\hline
+\end{tabular*}
+\caption{div实体的接口}
+\label{tb:div-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+本实体实现了32位除数和被除数的一位原码恢复余数除法器，即需要32个周期完成除法。当运算还未结束时，div实体会通过busy\_o信号告知ex实体等待。若DIV指令的操作数为负数，需在ex实体先转换成原码再进行计算，最后再于ex实体将商和余数转换回补码。
+
 \subsubsection{ex\_mem}
 \subsubsection{mem}
 \subsubsection{mem\_wb}
