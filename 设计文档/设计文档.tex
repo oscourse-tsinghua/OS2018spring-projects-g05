@@ -104,6 +104,8 @@ Prof.~Weidong \textsc{Liu}
 \hline StallWidth           & 5..0     & 暂停信号宽度，每个分量对应一个需要被暂停的客体 \\
 \hline CP0RegAddrWidth      & 4..0     & CP0寄存器地址宽度（仅可容纳nCore实现了的部分寄存器） \\
 \hline ExceptionCauseWidth  & 4..0     & 异常编号的宽度 \\
+\hline IntWidth             & 5..0     & 外设中断编号宽度 \\
+\hline TLBIndexWidth        & 3..0     & TLB表项索引宽度 \\
 \hline 
 \end{tabular*}  
 \caption{常量}
@@ -707,9 +709,9 @@ mem实体的接口定义见Table~\ref{tb:mem-interface}。
 \hline exceptCause\_i          & ExceptionCauseWidth    & I     & ex\_mem       & 截至访存阶段前发生的异常类型或无异常 \\
 \hline exceptCause\_o          & ExceptionCauseWidth    & O     & ctrl、cp0\_reg& 截至访存阶段后发生的异常类型或无异常 \\
 \hline isInDelaySlot\_i        & 1                      & I     & ex\_mem       & 高电平表示本指令在延迟槽内 \\
-\hline isInDelaySlot\_o        & 1                      & O     & ctrl          & 高电平表示本指令在延迟槽内 \\
+\hline isInDelaySlot\_o        & 1                      & O     & cp0\_reg      & 高电平表示本指令在延迟槽内 \\
 \hline currentInstAddr\_i      & AddrWidth              & I     & ex\_mem       & 指令地址 \\
-\hline currentInstAddr\_o      & AddrWidth              & O     & ctrl          & 指令地址 \\
+\hline currentInstAddr\_o      & AddrWidth              & O     & cp0\_reg          & 指令地址 \\
 \hline cp0Status\_i            & DataWidth              & I     & cp0\_reg      & CP0 Status寄存器值 \\
 \hline cp0Cause\_i             & DataWidth              & I     & cp0\_reg      & CP0 Cause寄存器值 \\
 \hline currentAccessAddr\_o    & AddrWidth              & O     & cp0\_reg      & 当前试图访存的地址（产生异常用）\\
@@ -886,6 +888,67 @@ ctrl实体的接口定义见Table~\ref{tb:ctrl-interface}。
 CP0 ERET寄存器中记录的异常返回地址可能是无效的。在此情形下，应立即触发一个新的地址无效异常，并向CP0 BadVAddr寄存器写入相应的无效地址。
 
 \subsubsection{cp0\_reg}
+
+\paragraph{功能}\mbox{}
+
+CP0协处理器。
+
+\paragraph{接口}\mbox{}
+
+cp0\_reg实体的接口定义见Table~\ref{tb:cp0reg-interface}。
+\begin{longtable}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline \endhead rst            & 1                      & I     & 上层          & 同步重置 \\
+\hline clk                     & 1                      & I     & 上层          & 时钟 \\
+\hline we\_i                   & 1                      & I     & mem\_wb       & CP0寄存器写使能 \\
+\hline waddr\_i                & CP0RegAddrWidth        & I     & mem\_wb       & CP0寄存器写地址 \\
+\hline data\_i                 & DataWidth              & I     & mem\_wb       & CP0寄存器写数据 \\
+\hline raddr\_i                & CP0RegAddrWidth        & I     & mem\_wb       & CP0寄存器读地址 \\
+\hline data\_o                 & DataWidth              & O     & ex            & CP0寄存器读数据 \\
+\hline int\_i                  & IntWidth               & I     & 上层          & 外设中断 \\
+\hline timerInt\_o             & 1                      & O     & 上层          & 时钟中断 \\
+\hline cp0Status\_o            & DataWidth              & O     & ctrl、mem     & CP0 Status寄存器值 \\
+\hline cp0Cause\_o             & DataWidth              & O     & ctrl、mem     & CP0 Cause寄存器值 \\
+\hline cp0Epc\_o               & DataWidth              & O     & ctrl          & CP0 Epc寄存器值 \\
+\hline exceptCause\_i          & ExceptionCauseWidth    & I     & mem           & 异常类型或无异常 \\
+\hline currentInstAddr\_i      & AddrWidth              & I     & mem           & 指令地址 \\
+\hline currentAccessAddr\_i    & AddrWidth              & I     & mem           & 当前试图访存的地址（产生异常用）\\
+\hline isInDelaySlot\_i        & 1                      & I     & mem           & 高电平表示本指令在延迟槽内 \\
+\hline isKernelMode\_o         & 1                      & O     & 上层          & 高电平表示当前处于内核态 \\
+\hline isTlbwi\_i              & 1                      & I     & mem\_wb       & 高电平表示本指令是TLBWI \\
+\hline isTlbwr\_i              & 1                      & I     & mem\_wb       & 高电平表示本指令是TLBWR \\
+\hline entryWrite\_o           & 1                      & O     & 上层          & TLB写使能 \\
+\hline entryIndex\_o           & TLBIndexWidth          & O     & 上层          & 要写的TLB表项索引 \\
+\hline entry\_o                & 3*32(复合类型)         & O     & 上层          & 要写的TLB表项内容 \\
+\hline ctrlBadVAddr\_i         & 1                      & I     & ctrl          & ctrl写BadVAddr寄存器的使能 \\
+\hline ctrlToWriteBadVAddr\_i  & 1                      & I     & ctrl          & ctrl写BadVAddr寄存器的数据 \\
+\hline cp0EBaseAddr\_o         & AddrWidth              & O     & ctrl          & 异常处理向量的基地址 \\
+\hline
+\caption{cp0\_reg实体的接口}
+\label{tb:cp0reg-interface}
+\end{longtable}
+
+\paragraph{设计}\mbox{}
+
+CP0虽被称为协处理器，但其本质上是一个寄存器堆，所以首先要具有寄存器堆的基本功能。cp0\_reg支持同时进行的一路读和一路写。写使能时，在时钟上升沿将相应寄存器的值置为输入信号（时序逻辑）；输出信号时刻与所需寄存器的值相等（组合逻辑）。当写地址与读地址相等时，输出信号置为即将被写入的数据，即进行了数据旁路。
+
+不过，cp0\_reg实体还支持一些非通用（固定用途）的读写，列举如下（下文使用$X_Y$表示$X$寄存器的$Y$字段）：
+
+输入：
+
+\begin{enumerate}
+    \item $Cause_{IP[7:2]}$表示外设中断。每个时钟上升沿，该值都会刷新为上层给出的最新值。注意，虽然时钟中断是CP0协处理器自身发出的，但是为了实现上的逻辑统一，是先输出到上层再从上层输入回来的，与其他中断的处理逻辑一致。
+    \item 当发生异常时，cp0\_reg会在将$Cause_{ExcCode}$中记录异常原因、在$Cause_{BD}$中记录是否在延迟槽中、在$Status_{EXL}$中设置异常级别、在$EPC$中记录一场返回地址。发生某些异常时，还需设置$BadVAddr$、$EntryHi$等寄存器。
+    \item 当异常返回地址错误时，ctrl实体可能需要写入$BadVAddr$寄存器（参见ctrl实体的说明）。
+\end{enumerate}
+
+输出：
+\begin{enumerate}
+    \item $Status$、$Cause$、$EPC$寄存器需要被ctrl和mem实体不断地查询，故直接输出给这两个实体。
+    \item 上层其他模块需获知当前处在用户态还是内核态，故直接输出给上层。
+    \item 当执行TLBWI或TLBWR指令时，需要将$EntryHi$、$EntryLo0$和$EntryLo1$输出给访存控制层的TLB模块。
+\end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%
 %     BODY END       %
