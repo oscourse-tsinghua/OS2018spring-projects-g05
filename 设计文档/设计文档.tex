@@ -98,6 +98,7 @@ Prof.~Weidong \textsc{Liu}
 \hline InstWidth            & 31..0    & 指令宽度 \\
 \hline DataWidth            & 31..0    & 数据宽度 \\
 \hline AddrWidth            & 31..0    & 地址宽度 \\
+\hline RegAddrWidth         & 4..0     & 寄存器地址宽度 \\
 \hline StallWidth           & 5..0     & 暂停信号宽度，每个分量对应一个需要被暂停的客体 \\
 \hline ExceptionCauseWidth  & 4..0     & 异常编号的宽度 \\
 \hline 
@@ -245,6 +246,8 @@ pc\_reg实体的接口定义见Table~\ref{tb:pcreg-interface}。
 
 其中，在判断分支/跳转时，正常情况下，表示是否跳转以及跳转目标的信号来自译码阶段。但是若上一个周期取指阶段被暂停了，此周期译码阶段会是空泡，导致接收不到上述信号。故pc\_reg会在取指暂停时依旧接收跳转相关信号并保存之，待恢复执行后使用。
 
+重置时，PC会被置为由参数指定的的程序入口地址。
+
 \subsubsection{if\_id}
 
 \paragraph{功能}\mbox{}
@@ -280,9 +283,46 @@ if\_id实体的接口定义见Table~\ref{tb:ifid-interface}。
 
 \paragraph{设计}\mbox{}
 
-若流水线需要清空，则输出零/无效信号；否则，若流水线暂停，则保持上一个周期的值；否则，将阶段寄存器的值置为来自取指阶段的值。
+各阶段寄存器的值在时钟上升沿发生如下变化：若流水线需要清空，则置零/无效信号，与进行重置时表现相同；否则，若流水线暂停，则保持上一个周期的值；否则，置为来自取指阶段的值。
 
 \subsubsection{regfile}
+
+\paragraph{功能}\mbox{}
+
+实现了32个通用寄存器，支持同时进行两路读和一路写操作。
+
+\paragraph{接口}\mbox{}
+
+regfile实体的接口定义见Table~\ref{tb:regfile-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline rst                     & 1                      & I     & 上层          & 同步重置 \\
+\hline clk                     & 1                      & I     & 上层          & 时钟 \\
+\hline writeEnable\_i          & 1                      & I     & id            & 写入使能 \\
+\hline writeAddr\_i            & RegAddrWidth           & I     & id            & 写入地址 \\
+\hline writeData\_i            & DataWidth              & I     & id            & 写入数据 \\
+\hline readEnable1\_i          & 1                      & I     & id            & 第一路读出使能 \\
+\hline readAddr1\_i            & RegAddrWidth           & I     & id            & 第一路读出地址 \\
+\hline readData1\_i            & DataWidth              & O     & id            & 第一路读出数据 \\
+\hline readEnable2\_i          & 1                      & I     & id            & 第二路读出使能 \\
+\hline readAddr2\_i            & RegAddrWidth           & I     & id            & 第二路读出地址 \\
+\hline readData2\_i            & DataWidth              & O     & id            & 第二路读出数据 \\
+\hline
+\end{tabular*}
+\caption{regfile实体的接口}
+\label{tb:regfile-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+写入使能时，寄存器的值在时钟上升沿时置为输入的值（时序逻辑）。读出使能时，立即输出当前寄存器的值（组合逻辑）。特殊地，当读出地址与写入地址相同时，输出将要被写入的值（数据旁路）。此外寄存器0的输出永远是0。
+
+重置时所有寄存器将会被置零。
+
 \subsubsection{id}
 \subsubsection{id\_ex}
 \subsubsection{ex}
