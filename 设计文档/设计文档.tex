@@ -1107,7 +1107,7 @@ memctrl是组合逻辑电路，与时钟无关。
     \item 否则，当指令访存被使能时，将去往/来自上层的指令访存的信号与去往/来自下层的统一访存信号相连，并补充指令访存省略的相关控制信号，例如写使能为低电平。
 \end{enumerate}
 
-从上述逻辑可以看出，memctrl本质上是一个多路二选一选择器。
+从上述逻辑可以看出，memctrl本质上是一个二选一选择器。
 
 \subsubsection{mmu}
 
@@ -1227,6 +1227,121 @@ conv\_endian元件的接口定义见Table~\ref{tb:convendian-interface}。
 \paragraph{设计}\mbox{}
 
 尽管nCore需要运行的目标程序都是小端序的，但在调试时构造一个大端序的仿真环境更为方便，因为这样可以将指令字原封不动地写入被仿真虚拟存储器里。实体conv\_endian\_load和conv\_endian\_save引入了编译期可选的字节序转换，为在不同的环境下运行或调试提供了便利。
+
+\section{I/O层}
+
+\subsection{概述}
+
+本层将访存控制层提供的统一访存请求特化到不同的外设上。
+
+本层包含的所有实体见Table~\ref{tb:io-entities}：
+
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l}
+\hline
+\textbf{实体}&\textbf{功能} \\
+\hline thinpad\_top & 顶层实体 \\
+\hline cpu & 访存控制层 \\
+\hline clk\_ctrl & 时钟驱动器 \\
+\hline dev\_ctrl & 多路选择器，用于将访存请求转发给各设备的驱动实体 \\
+\hline base\_sram\_ctrl, ext\_sram\_ctrl & SRAM存储器驱动 \\
+\hline flash\_ctrl & Flash存储器驱动 \\
+\hline vga\_ctrl & 显示器驱动 \\
+\hline serial\_ctrl & 串口驱动 \\
+\hline usb\_ctrl & USB驱动 \\
+\hline boot\_ctrl & 启动用ROM驱动 \\
+\hline lattice\_ram\_ctrl & 字体专用存储器驱动 \\
+\hline eth\_ctrl & 以太网驱动 \\
+\hline
+\end{tabular*}
+\caption{访存控制层的实体}
+\label{tb:io-entities}
+\end{center}
+\end{table}
+
+\subsection{整体设计}
+
+在典型的计算机组成中，会使用总线连接各个设备驱动器。但是在nCore中，所有的设备驱动器均享有独立的FPGA芯片引脚，故只需实现一个多路选择器，从所有设备驱动器中选择一个连向cpu实体即可。这项工作由devctrl实体完成，它判断当前的访存地址落在哪个设备的地址段内，从而选择某一设备驱动器，即将数据和使能信号转发至该设备驱动器，或从该设备驱动器接收。
+
+从逻辑上看，所有设备驱动器均是同一个基类的子类。虽然VHDL中并不能直接实现面向对象编程，但在nCore的实现中，除省略某些值为常量的接口外，所有设备驱动器都有统一的接口格式。
+
+此外，并不是所有数据或控制信号都要由devctrl转发，由于使能信号以外的输入信号是不会对不使能的设备驱动器产生副作用的，所以地址信号和字节选择信号可以不加区分地发往所有设备。
+
+I/O层的主要数据/控制流见Figure~\ref{fig:io-data-flow}。
+
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[width=.8\textwidth]{io-data-flow.png}
+	\caption{I/O数据/控制流}
+    \label{fig:io-data-flow}
+\end{figure}
+
+\subsection{各实体说明}
+
+\subsubsection{cpu}
+
+\paragraph{功能}\mbox{}
+
+cpu是访存控制层的顶层实体。具体说明请见本文访存控制层一节。
+
+\paragraph{参数}\mbox{}
+
+cpu实体的参数定义见Table~\ref{tb:cpu-parameter}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l}
+\hline
+\textbf{参数}&\textbf{类型}&\textbf{功能} \\
+\hline instEntranceAddr        & std\_logic\_vector(AddrWidth)    & 重置后PC的值 \\
+\hline exceptBootBaseAddr      & std\_logic\_vector(AddrWidth)    & 启动时异常处理向量的基地址 \\
+\hline tlbRefillExl0Offset     & std\_logic\_vector(AddrWidth)    & 异常态下TLB缺失异常的偏移量 \\
+\hline generalExceptOffset     & std\_logic\_vector(AddrWidth)    & 一般的异常处理向量的基地址 \\
+\hline interruptIv1Offset      & std\_logic\_vector(AddrWidth)    & $Cause_{IV}=1$时的中断异常偏移量 \\
+\hline convEndianEnable        & boolean                          & 字节转换使能 \\
+\hline
+\end{tabular*}
+\caption{cpu实体的参数}
+\label{tb:cpu-parameter}
+\end{center}
+\end{table}
+
+\paragraph{接口}\mbox{}
+
+cpu实体的接口定义见Table~\ref{tb:cpu-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline rst     & 1                      & I     & 外部          & 同步重置 \\
+\hline clk                     & 1                      & I     & clk\_ctrl     & 时钟 \\
+\hline devDataLoad\_i          & DataWidth              & I     & dev\_ctrl     & 访存读数据 \\
+\hline devDataSave\_o          & DataWidth              & O     & dev\_ctrl     & 访存写数据 \\
+\hline devPhysicalAddr\_o      & AddrWidth              & O     & dev\_ctrl、各设备驱动 & 访存读/写地址 \\
+\hline devEnable\_o            & 1                      & O     & dev\_ctrl     & 访存访存使能 \\
+\hline devWrite\_o             & 1                      & O     & dev\_ctrl     & 访存写使能 \\
+\hline devByteSelect\_o        & 3..0                   & O     & 各设备驱动    & 访存字节选择 \\
+\hline devBusy\_i              & 1                      & I     & dev\_ctrl     & 访存访存暂停 \\
+\hline int\_i                  & IntWidth               & I     & cpu、外部     & 外设中断 \\
+\hline timerInt\_o             & 1                      & O     & cpu           & 时钟中断 \\
+\hline
+\end{tabular*}
+\caption{cpu实体的接口}
+\label{tb:cpu-interface}
+\end{center}
+\end{table}
+
+\subsubsection{clk\_ctrl}
+\subsubsection{dev\_ctrl}
+\subsubsection{base\_sram\_ctrl, ext\_sram\_ctrl}
+\subsubsection{flash\_ctrl}
+\subsubsection{vga\_ctrl}
+\subsubsection{serial\_ctrl}
+\subsubsection{usb\_ctrl}
+\subsubsection{boot\_ctrl}
+\subsubsection{lattice\_ram\_ctrl}
+\subsubsection{eth\_ctrl}
 
 %%%%%%%%%%%%%%%%%%%%%%
 %     BODY END       %
