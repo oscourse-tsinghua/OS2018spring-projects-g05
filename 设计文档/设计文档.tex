@@ -1551,7 +1551,7 @@ Flash存储器的驱动器
 
 \paragraph{接口}\mbox{}
 
-flash\_ctrl元件的接口定义见Table~\ref{tb:flashctrl-interface}。
+flash\_ctrl实体的接口定义见Table~\ref{tb:flashctrl-interface}。
 \begin{table}[!htb]
 \begin{center}
 \begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
@@ -1574,7 +1574,7 @@ flash\_ctrl元件的接口定义见Table~\ref{tb:flashctrl-interface}。
 \hline flVpen\_o               & 1                      & O     & 外部          & 芯片擦除/编程/锁使能 \\
 \hline
 \end{tabular*}
-\caption{flash\_ctrl元件}
+\caption{flash\_ctrl实体}
 \label{tb:flashctrl-interface}
 \end{center}
 \end{table}
@@ -1584,10 +1584,245 @@ flash\_ctrl元件的接口定义见Table~\ref{tb:flashctrl-interface}。
 flash\_ctrl只支持Flash的读操作，并且每条指令只能读16位。由于Flash的延迟太高，每次读操作需要持续三个周期，读未完成时flash\_ctrl会向cpu请求暂停。
 
 \subsubsection{vga\_ctrl}
+
+\paragraph{功能}\mbox{}
+
+显示器的驱动器。实验电路板上的显示接口虽为HDMI，但vga\_ctrl以操作VGA的方式操作之。
+
+\paragraph{接口}\mbox{}
+
+vga\_ctrl实体的接口定义见Table~\ref{tb:vgactrl-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline rst                     & 1                      & I     & 外部          & 同步重置 \\
+\hline clk                     & 1                      & I     & clk\_ctrl     & 时钟 \\
+\hline devEnable\_i            & 1                      & I     & devctrl       & 使能 \\
+\hline addr\_i                 & AddrWidth              & I     & cpu           & 地址 \\
+\hline writeEnable\_i          & 1                      & I     & devctrl       & 写使能 \\
+\hline writeData\_i            & DataWidth              & I     & devctrl       & 写数据 \\
+\hline writeByteSelect\_i      & 3..0                   & I     & cpu           & 字节选择 \\
+\hline de\_o                   & 1                      & O     & 外部          & 显示区标志 \\
+\hline rgb\_o                  & 7..0                   & O     & 外部          & 输出的颜色 \\
+\hline hs\_o                   & 1                      & O     & 外部          & 行同步 \\
+\hline vs\_o                   & 1                      & O     & 外部          & 场同步 \\
+\hline
+\end{tabular*}
+\caption{vga\_ctrl实体}
+\label{tb:vgactrl-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+vga\_ctrl围绕一个用FPGA片内RAM实现的显存编写。显存大小为$640 \times 480$像素，按行优先编址。
+
+对内，cpu可以直接操作此显存，就像操作一个普通的SRAM驱动器一样。vga\_ctrl做的也仅仅是将片内RAM的接口改写成与I/O层其他驱动器一致。
+
+对外，vga\_ctrl则不断地扫描一个$800 \times 525$像素的区域，每个周期扫描一个像素。若扫描的像素点落在$[0,640) \times [0,480)$区域内，则从显存中读取像素并输出给显示器，此区域被称为显示区；剩下的区域被称为消隐区，用于进行同步（如Figure~\ref{fig:vga-scan}）。扫描范围中每行的后160列处于消隐区内，不输出有效数据，其中第656至752列置行同步信号（如Figure~\ref{fig:vga-hsync}）；扫面范围中每列后45行处于消隐区内，不输出有效数据，其中第490至491行置场同步信号（如Figure~\ref{fig:vga-vsync}）。
+
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[width=.5\textwidth]{vga-scan.png}
+	\caption{扫描区域}
+    \label{fig:vga-scan}
+\end{figure}
+\begin{figure}[ht]
+	\centering
+	\begin{minipage}{.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{hsync.png}
+        \caption{行同步}
+        \label{fig:vga-hsync}
+    \end{minipage}
+	\begin{minipage}{.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{vsync.png}
+		\caption{场同步}
+        \label{fig:vga-vsync}
+	\end{minipage}
+\end{figure}
+
 \subsubsection{serial\_ctrl}
+
+\paragraph{功能}\mbox{}
+
+serial\_ctrl与async\_receiver、async\_transmiter共同构成了串口驱动器。async\_receiver、async\_transmiter负责具体的收发，而serial\_ctrl提供了与I/O层其他驱动器一致的接口。
+
+\paragraph{接口}\mbox{}
+
+serial\_ctrl实体的接口定义见Table~\ref{tb:serialctrl-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline rst                     & 1                      & I     & 外部              & 同步重置 \\
+\hline clk                     & 1                      & I     & clk\_ctrl         & 时钟 \\
+\hline enable\_i               & 1                      & I     & devctrl           & 使能 \\
+\hline mode\_i                 & 1                      & I     & cpu               & 状态/数据切换（地址最低位） \\
+\hline dataSave\_i             & DataWidth              & I     & devctrl           & 写数据 \\
+\hline dataLoad\_o             & DataWidth              & O     & devctrl           & 读数据 \\
+\hline int\_o                  & 1                      & O     & cpu               & 中断请求 \\
+\hline rxdReady\_i             & 1                      & I     & async\_receiver   & async\_receiver准备好 \\
+\hline rxdData\_i              & 7..0                   & I     & async\_receiver   & async\_receiver接收的字节 \\
+\hline txdBusy\_i              & 1                      & I     & async\_transmiter & async\_transmiter正忙 \\
+\hline txdStart\_o             & 1                      & O     & async\_transmiter & 命令async\_transmiter开始发送 \\
+\hline txdData\_o              & 7..0                   & O     & async\_transmiter & async\_transmiter发送的字节 \\
+\hline
+\end{tabular*}
+\caption{serial\_ctrl实体}
+\label{tb:serialctrl-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+串口分配有两个地址：0xBFD003FC、0xBFD003F8。前者用于查询当前状态，是只读的，最低为和次低位分别表示“可以发送数据”及“有数据到来”；后者用于收发数据，是可读可写的，但只有有数据到来时，读出的数据才有效，只有可以发送数据时，写入的数据才被处理。
+
+serial\_ctrl对于两个不同的地址，将数据映射简单映射到async\_receiver和/或async\_transmiter的不同信号上即可。唯一需要serial\_ctrl处理的是：async\_receiver在收到新数据后，该数据只在一个时钟周期内有效，serial\_ctrl需要将此数据和标记“有数据到来”的状态信号存储下来供以后读出，并在数据被读出后将标记“有数据到来”的信号重置。
+
+此外，有新数据到来时，serial\_ctrl会向cpu请求中断。
+
 \subsubsection{async\_receiver}
+
+\paragraph{功能}\mbox{}
+
+从串口接收数据。当新字节到来后RxD\_data\_ready置1，RxD\_data输出该字节，维持一个周期。
+
+\paragraph{参数}\mbox{}
+
+async\_receiver实体的参数定义见Table~\ref{tb:asyncreceiver-parameter}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l}
+\hline
+\textbf{参数}&\textbf{类型}&\textbf{功能} \\
+\hline ClkFrequency        & integer    & 时钟频率 \\
+\hline Baud                & integer    & 串口波特率 \\
+\hline
+\end{tabular*}
+\caption{async\_receiver实体的参数}
+\label{tb:asyncreceiver-parameter}
+\end{center}
+\end{table}
+
+\paragraph{接口}\mbox{}
+
+async\_receiver实体的接口定义见Table~\ref{tb:asyncreceiver-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline clk                     & 1                      & I     & clk\_ctrl         & 时钟 \\
+\hline RxD                     & 1                      & I     & 外部              & 串口线 \\
+\hline RxD\_data\_ready        & 1                      & O     & serial\_ctrl      & 高电平表示有数据到来 \\
+\hline RxD\_data               & 7..0                   & O     & serial\_ctrl      & 接收到的字节 \\
+\hline
+\end{tabular*}
+\caption{async\_receiver实体}
+\label{tb:asyncreceiver-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+本实体由课程提供。
+
 \subsubsection{async\_transmiter}
+
+\paragraph{功能}\mbox{}
+
+向串口发送数据。当TxD\_busy为0时可以通过向TxD\_data输入字节来发送。
+
+\paragraph{参数}\mbox{}
+
+async\_transmiter实体的参数定义见Table~\ref{tb:asynctransmiter-parameter}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l}
+\hline
+\textbf{参数}&\textbf{类型}&\textbf{功能} \\
+\hline ClkFrequency        & integer    & 时钟频率 \\
+\hline Baud                & integer    & 串口波特率 \\
+\hline
+\end{tabular*}
+\caption{async\_transmiter实体的参数}
+\label{tb:asynctransmiter-parameter}
+\end{center}
+\end{table}
+
+\paragraph{接口}\mbox{}
+
+async\_transmiter实体的接口定义见Table~\ref{tb:asynctransmiter-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline clk                     & 1                      & I     & clk\_ctrl         & 时钟 \\
+\hline TxD                     & 1                      & I     & 外部              & 串口线 \\
+\hline TxD\_busy               & 1                      & O     & serial\_ctrl      & 高电平表示正在发送数据 \\
+\hline TxD\_data               & 7..0                   & I     & serial\_ctrl      & 要发送的字节 \\
+\hline
+\end{tabular*}
+\caption{async\_transmiter实体}
+\label{tb:asynctransmiter-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+本实体由课程提供。
+
 \subsubsection{usb\_ctrl}
+
+\paragraph{功能}\mbox{}
+
+USB接口驱动器。
+
+\paragraph{接口}\mbox{}
+
+usb\_ctrl实体的接口定义见Table~\ref{tb:usbctrl-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline rst                     & 1                      & I     & 外部          & 同步重置 \\
+\hline clk                     & 1                      & I     & clk\_ctrl     & 时钟 \\
+\hline devEnable\_i            & 1                      & I     & devctrl       & 使能 \\
+\hline addr\_i                 & AddrWidth              & I     & cpu           & 地址 \\
+\hline readEnable\_i           & 1                      & I     & devctrl       & 读使能 \\
+\hline writeEnable\_i          & 1                      & I     & devctrl       & 写使能 \\
+\hline busy\_o                 & 1                      & O     & devctrl       & 暂停请求 \\
+\hline int\_o                  & 1                      & O     & cpu           & 中断请求 \\
+\hline triStateWrite\_o        & 1                      & O     & N/A           & 高电平表示应向三态总线上写 \\
+\hline usbA0\_o                & 1                      & O     & 外部          & 芯片地址/数据切换 \\
+\hline usbCS\_o                & 1                      & O     & 外部          & 芯片$\overline{\text{使能}}$ \\
+\hline usbWE\_ o               & 1                      & O     & 外部          & 芯片$\overline{\text{写使能}}$ \\
+\hline usbRD\_o                & 1                      & O     & 外部          & 芯片$\overline{\text{读使能}}$ \\
+\hline usbRst\_o               & 1                      & O     & 外部          & 芯片$\overline{\text{重置}}$ \\
+\hline usbDACK\_o              & 1                      & O     & 外部          & 芯片$\overline{\text{DMA模式使能}}$ \\
+\hline usbInt\_i               & 1                      & I     & 外部          & 芯片中断请求 \\
+\hline
+\end{tabular*}
+\caption{usb\_ctrl实体}
+\label{tb:usbctrl-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+从CPU看来，USB就是一组可读可写的寄存器。每次读写时，先向0x1C020000写入寄存器地址，再于0x1C020004进行读写即可。usb\_ctrl只需在访问地址0x1C020000时置usbDACK\_o为0，在访问0x1C020004时置usbDACK\_o为1以切换模式。接收/发送数据时，USB控制器也使用了三态信号，此处实现于SRAM控制器一致，不再赘述。
+
+由于USB设备速度较慢，读写均需要5个周期完成。未完成时，usb\_ctrl会向cpu请求暂停。
+
+此外，usb\_ctrl会向cpu转发USB的中断请求。
+
 \subsubsection{boot\_ctrl}
 \subsubsection{lattice\_ram\_ctrl}
 \subsubsection{eth\_ctrl}
