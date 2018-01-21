@@ -1056,6 +1056,57 @@ datapath实体的接口定义见Table~\ref{tb:datapath-interface}。
 \label{tb:datapath-interface}
 \end{longtable}
 
+\subsubsection{memctrl}
+
+\paragraph{功能}\mbox{}
+
+处理指令访存（取指）和数据访存之间的结构冲突。
+
+\paragraph{接口}\mbox{}
+
+memctrl实体的接口定义见Table~\ref{tb:memctrl-interface}。
+\begin{longtable}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline \endhead instData\_o    & InstWidth              & O     & datapath      & 指令读数据 \\
+\hline instAddr\_i             & AddrWidth              & I     & datapath      & 指令读地址 \\
+\hline instEnable\_i           & 1                      & I     & datapath      & 指令读使能 \\
+\hline instStall\_o            & 1                      & O     & datapath      & 指令访存暂停 \\
+\hline instExcept\_o           & ExceptionCauseWidth    & O     & datapath      & 指令访存异常 \\
+\hline dataData\_o             & DataWidth              & O     & datapath      & 数据读数据 \\
+\hline dataData\_i             & DataWidth              & I     & datapath      & 数据写数据 \\
+\hline dataAddr\_i             & AddrWidth              & I     & datapath      & 数据读/写地址 \\
+\hline dataEnable\_i           & 1                      & I     & datapath      & 数据访存使能 \\
+\hline dataWrite\_i            & 1                      & I     & datapath      & 数据写使能 \\
+\hline dataByteSelect\_i       & 3..0                   & I     & datapath      & 数据字节选择 \\
+\hline dataStall\_i            & 1                      & O     & datapath      & 数据访存暂停 \\
+\hline dataExcept\_o           & ExceptionCauseWidth    & O     & datapath      & 数据访存异常 \\
+\hline devData\_i              & DataWidth              & I     & conv\_endian\_load & 统一访存读数据 \\
+\hline devData\_o              & DataWidth              & O     & conv\_endian\_save & 统一访存写数据 \\
+\hline devAddr\_o              & AddrWidth              & O     & mmu           & 统一访存读/写地址 \\
+\hline devEnable\_o            & 1                      & O     & mmu           & 统一访存访存使能 \\
+\hline devWrite\_o             & 1                      & O     & 上层          & 统一访存写使能 \\
+\hline devByteSelect\_o        & 3..0                   & O     & 上层          & 统一访存字节选择 \\
+\hline devBusy\_i              & 1                      & I     & 上层          & 统一访存访存暂停 \\
+\hline devExcept\_i            & ExceptionCauseWidth    & I     & mmu           & 统一访存访存异常 \\
+\hline
+\caption{memctrl实体的接口}
+\label{tb:memctrl-interface}
+\end{longtable}
+
+\paragraph{设计}\mbox{}
+
+memctrl是组合逻辑电路，与时钟无关。
+
+处理指令访存与数据访存的结构冲突时，数据访存的优先级更高。因为如果反过来，优先进行指令访存，而暂停了流水线的访存阶段（数据访存），其之前的取指阶段（指令访存）也会被暂停，导致两种访存都无法进行。因此，memctrl实体的逻辑如下：
+
+\begin{enumerate}
+    \item 当数据访存被使能时，向datapath发出暂停流水线取指阶段（插入空泡）的请求，将去往/来自上层的数据访存的信号与去往/来自下层的统一访存信号相连，忽略指令访存使能信号；
+    \item 否则，当指令访存被使能时，将去往/来自上层的指令访存的信号与去往/来自下层的统一访存信号相连，并补充指令访存省略的相关控制信号，例如写使能为低电平。
+\end{enumerate}
+
+从上述逻辑可以看出，memctrl本质上是一个多路二选一选择器。
+
 %%%%%%%%%%%%%%%%%%%%%%
 %     BODY END       %
 %%%%%%%%%%%%%%%%%%%%%%
