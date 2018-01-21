@@ -1086,11 +1086,11 @@ memctrl实体的接口定义见Table~\ref{tb:memctrl-interface}。
 \hline devData\_i              & DataWidth              & I     & conv\_endian\_load & 统一访存读数据 \\
 \hline devData\_o              & DataWidth              & O     & conv\_endian\_save & 统一访存写数据 \\
 \hline devAddr\_o              & AddrWidth              & O     & mmu           & 统一访存读/写地址 \\
-\hline devEnable\_o            & 1                      & O     & mmu           & 统一访存访存使能 \\
+\hline devEnable\_o            & 1                      & O     & mmu           & 统一访存使能 \\
 \hline devWrite\_o             & 1                      & O     & 上层          & 统一访存写使能 \\
 \hline devByteSelect\_o        & 3..0                   & O     & 上层          & 统一访存字节选择 \\
-\hline devBusy\_i              & 1                      & I     & 上层          & 统一访存访存暂停 \\
-\hline devExcept\_i            & ExceptionCauseWidth    & I     & mmu           & 统一访存访存异常 \\
+\hline devBusy\_i              & 1                      & I     & 上层          & 统一访存暂停 \\
+\hline devExcept\_i            & ExceptionCauseWidth    & I     & mmu           & 统一访存异常 \\
 \hline
 \caption{memctrl实体的接口}
 \label{tb:memctrl-interface}
@@ -1244,11 +1244,14 @@ conv\_endian元件的接口定义见Table~\ref{tb:convendian-interface}。
 \hline thinpad\_top & 顶层实体 \\
 \hline cpu & 访存控制层 \\
 \hline clk\_ctrl & 时钟驱动器 \\
-\hline dev\_ctrl & 多路选择器，用于将访存请求转发给各设备的驱动实体 \\
+\hline segL, segH & 七段数码管驱动器 \\
+\hline devctrl & 多路选择器，用于将访存请求转发给各设备的驱动实体 \\
 \hline base\_sram\_ctrl, ext\_sram\_ctrl & SRAM存储器驱动 \\
 \hline flash\_ctrl & Flash存储器驱动 \\
 \hline vga\_ctrl & 显示器驱动 \\
 \hline serial\_ctrl & 串口驱动 \\
+\hline async\_receiver & 串口接收器 \\
+\hline async\_transmiter & 串口发送器 \\
 \hline usb\_ctrl & USB驱动 \\
 \hline boot\_ctrl & 启动用ROM驱动 \\
 \hline lattice\_ram\_ctrl & 字体专用存储器驱动 \\
@@ -1264,7 +1267,7 @@ conv\_endian元件的接口定义见Table~\ref{tb:convendian-interface}。
 
 在典型的计算机组成中，会使用总线连接各个设备驱动器。但是在nCore中，所有的设备驱动器均享有独立的FPGA芯片引脚，故只需实现一个多路选择器，从所有设备驱动器中选择一个连向cpu实体即可。这项工作由devctrl实体完成，它判断当前的访存地址落在哪个设备的地址段内，从而选择某一设备驱动器，即将数据和使能信号转发至该设备驱动器，或从该设备驱动器接收。
 
-从逻辑上看，所有设备驱动器均是同一个基类的子类。虽然VHDL中并不能直接实现面向对象编程，但在nCore的实现中，除省略某些值为常量的接口外，所有设备驱动器都有统一的接口格式。
+从逻辑上看，所有设备驱动器均是同一个基类的子类。虽然VHDL中并不能直接实现面向对象编程，但在nCore的实现中，除省略某些值为常量的接口外，所有设备驱动器都尽量统一了接口格式。
 
 此外，并不是所有数据或控制信号都要由devctrl转发，由于使能信号以外的输入信号是不会对不使能的设备驱动器产生副作用的，所以地址信号和字节选择信号可以不加区分地发往所有设备。
 
@@ -1278,6 +1281,8 @@ I/O层的主要数据/控制流见Figure~\ref{fig:io-data-flow}。
 \end{figure}
 
 \subsection{各实体说明}
+
+以下介绍除访存控制层除顶层实体外的各实体。顶层实体thinpad\_top的功能即本层功能，接口即本层所有来源/去向标为“外部”的接口，不再列表叙述。
 
 \subsubsection{cpu}
 
@@ -1314,15 +1319,15 @@ cpu实体的接口定义见Table~\ref{tb:cpu-interface}。
 \begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
 \hline
 \textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
-\hline rst     & 1                      & I     & 外部          & 同步重置 \\
+\hline rst                     & 1                      & I     & 外部          & 同步重置 \\
 \hline clk                     & 1                      & I     & clk\_ctrl     & 时钟 \\
-\hline devDataLoad\_i          & DataWidth              & I     & dev\_ctrl     & 访存读数据 \\
-\hline devDataSave\_o          & DataWidth              & O     & dev\_ctrl     & 访存写数据 \\
-\hline devPhysicalAddr\_o      & AddrWidth              & O     & dev\_ctrl、各设备驱动 & 访存读/写地址 \\
-\hline devEnable\_o            & 1                      & O     & dev\_ctrl     & 访存访存使能 \\
-\hline devWrite\_o             & 1                      & O     & dev\_ctrl     & 访存写使能 \\
+\hline devDataLoad\_i          & DataWidth              & I     & devctrl       & 访存读数据 \\
+\hline devDataSave\_o          & DataWidth              & O     & devctrl       & 访存写数据 \\
+\hline devPhysicalAddr\_o      & AddrWidth              & O     & devctrl、各设备驱动 & 访存读/写地址 \\
+\hline devEnable\_o            & 1                      & O     & devctrl       & 访存使能 \\
+\hline devWrite\_o             & 1                      & O     & devctrl       & 访存写使能 \\
 \hline devByteSelect\_o        & 3..0                   & O     & 各设备驱动    & 访存字节选择 \\
-\hline devBusy\_i              & 1                      & I     & dev\_ctrl     & 访存访存暂停 \\
+\hline devBusy\_i              & 1                      & I     & devctrl       & 访存暂停 \\
 \hline int\_i                  & IntWidth               & I     & cpu、外部     & 外设中断 \\
 \hline timerInt\_o             & 1                      & O     & cpu           & 时钟中断 \\
 \hline
@@ -1333,11 +1338,157 @@ cpu实体的接口定义见Table~\ref{tb:cpu-interface}。
 \end{table}
 
 \subsubsection{clk\_ctrl}
-\subsubsection{dev\_ctrl}
+
+\paragraph{功能}\mbox{}
+
+clk\_ctrl是时钟驱动器，负责根据晶振产生的50MHz时钟信号生成nCore所需频率（目前是25MHz）的时钟信号。
+
+clk\_ctrl逻辑上并不是I/O层的一部分，但由于所有时序逻辑实体都需要时钟，所以时钟驱动器必须至于最顶层实体处，即I/O层中。
+
+\paragraph{接口}\mbox{}
+
+clk\_ctrl实体的接口定义见Table~\ref{tb:clkctrl-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline clk\_in1                & 1                      & I     & 外部                  & 时钟输入 \\
+\hline clk\_out1               & 1                      & O     & 各时序逻辑实体        & 时钟输出 \\
+\hline
+\end{tabular*}
+\caption{clk\_ctrl实体的接口}
+\label{tb:clkctrl-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+clk\_ctrl直接例化了Xilinx的IP核。
+
+\subsubsection{segL, segH}
+
+\paragraph{功能}\mbox{}
+
+七段数码管驱动器（译码器）。segL和segH均例化了元件SEG7\_LUT，分别驱动实验电路板上的低位数字和高位数字。
+
+\paragraph{接口}\mbox{}
+
+SEG7\_LUT元件的接口定义见Table~\ref{tb:seg7lut-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline oSEG1                   & 7                      & O     & 外部                  & 译码输出 \\
+\hline iDIG                    & 4                      & I     & devctrl             & 二进制输入 \\
+\hline
+\end{tabular*}
+\caption{SEG7\_LUT元件}
+\label{tb:seg7lut-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+元件SEG7\_LUT由课程提供。
+
+\subsubsection{devctrl}
+
+\paragraph{功能}\mbox{}
+
+根据访存地址选择相应的设备驱动器，将cpu的数据和控制信号连接至该驱动器。
+
+\paragraph{接口}\mbox{}
+
+devctrl实体的接口定义见Table~\ref{tb:devctrl-interface}。
+\begin{longtable}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline \endhead devEnable\_i   & 1                      & I     & cpu               & 统一访存使能 \\
+\hline devWrite\_i             & 1                      & I     & cpu               & 统一访存写使能 \\
+\hline devBusy\_o              & 1                      & O     & cpu               & 统一访存暂停 \\
+\hline devDataSave\_i          & DataWidth              & I     & cpu               & 统一访存写数据 \\
+\hline devDataLoad\_o          & DataWidth              & O     & cpu               & 统一访存读数据 \\
+\hline devPhysicalAddr\_i      & AddrWidth              & I     & cpu               & 统一访存读/写地址 \\
+\hline ram0Enable\_o           & 1                      & O     & base\_sram\_ctrl  & SRAM0使能 \\
+\hline ram0ReadEnable\_o       & 1                      & O     & base\_sram\_ctrl  & SRAM0读使能，即$\overline{\text{写使能}}$ \\
+\hline ram0DataSave\_o         & DataWidth              & O     & base\_sram\_ctrl  & SRAM0写数据 \\
+\hline ram0DataLoad\_i         & DataWidth              & I     & base\_sram\_ctrl  & SRAM0读数据 \\
+\hline ram0WriteBusy\_i        & 1                      & I     & base\_sram\_ctrl  & SRAM0暂停 \\
+\hline ram1Enable\_o           & 1                      & O     & ext\_sram\_ctrl   & SRAM1使能 \\
+\hline ram1ReadEnable\_o       & 1                      & O     & ext\_sram\_ctrl   & SRAM1读使能，即$\overline{\text{写使能}}$ \\
+\hline ram1DataSave\_o         & DataWidth              & O     & ext\_sram\_ctrl   & SRAM1写数据 \\
+\hline ram1DataLoad\_i         & DataWidth              & I     & ext\_sram\_ctrl   & SRAM1读数据 \\
+\hline ram1WriteBusy\_i        & 1                      & I     & ext\_sram\_ctrl   & SRAM1暂停 \\
+\hline flashEnable\_o          & 1                      & O     & flash\_ctrl       & Flash使能 \\
+\hline flashReadEnable\_o      & 1                      & O     & flash\_ctrl       & Flash读使能，即$\overline{\text{写使能}}$ \\
+\hline flashDataLoad\_i        & DataWidth              & I     & flash\_ctrl       & Flash读数据 \\
+\hline flashBusy\_i            & 1                      & I     & flash\_ctrl       & Flash暂停 \\
+\hline vgaEnable\_o            & 1                      & O     & vga\_ctrl         & 显示器使能 \\
+\hline vgaWriteEnable\_o       & 1                      & O     & vga\_ctrl         & 显示器写使能 \\
+\hline vgaWriteData\_o         & DataWidth              & O     & vga\_ctrl         & 显示器写数据 \\
+\hline comEnable\_o            & 1                      & O     & serial\_ctrl      & 串口使能 \\
+\hline comReadEnable\_o        & 1                      & O     & serial\_ctrl      & 串口读使能，即$\overline{\text{写使能}}$ \\
+\hline comDataSave\_o          & DataWidth              & O     & serial\_ctrl      & 串口写数据 \\
+\hline comDataLoad\_i          & DataWidth              & I     & serial\_ctrl      & 串口读数据 \\
+\hline usbEnable\_o            & 1                      & O     & usb\_ctrl         & USB使能 \\
+\hline usbReadEnable\_o        & 1                      & O     & usb\_ctrl         & USB读使能 \\
+\hline usbReadData\_i          & DataWidth              & I     & usb\_ctrl         & USB读数据 \\
+\hline usbWriteEnable\_o       & 1                      & O     & usb\_ctrl         & USB写使能 \\
+\hline usbWriteData\_o         & DataWidth              & O     & usb\_ctrl         & USB写数据 \\
+\hline usbBusy\_i              & 1                      & I     & usb\_ctrl         & USB暂停 \\
+\hline bootDataLoad\_i         & DataWidth              & I     & boot\_ctrl        & 启动用ROM读数据 \\
+\hline ltcEnable\_o            & 1                      & O     & lattice\_ram\_ctrl& 点阵（字体）存储器使能 \\
+\hline ltcReadEnable\_o        & 1                      & O     & lattice\_ram\_ctrl& 点阵（字体）存储器读使能，即$\overline{\text{写使能}}$ \\
+\hline ltcDataLoad\_i          & DataWidth              & I     & lattice\_ram\_ctrl& 点阵（字体）存储器读数据 \\
+\hline ltcBusy\_i              & 1                      & I     & lattice\_ram\_ctrl& 点阵（字体）存储器暂停 \\
+\hline ethEnable\_o            & 1                      & O     & eth\_ctrl         & 以太网使能 \\
+\hline ethReadEnable\_o        & 1                      & O     & eth\_ctrl         & 以太网读使能，即$\overline{\text{写使能}}$ \\
+\hline ethDataSave\_o          & DataWidth              & O     & eth\_ctrl         & 以太网写数据 \\
+\hline ethDataLoad\_i          & DataWidth              & I     & eth\_ctrl         & 以太网读数据 \\
+\hline ethWriteBusy\_i         & 1                      & I     & eth\_ctrl         & 以太网暂停 \\
+\hline ledEnable\_o            & 1                      & O     & 外部              & LED使能 \\
+\hline ledData\_o              & DataWidth              & O     & 外部              & LED写数据 \\
+\hline numEnable\_o            & 1                      & O     & segL、segH        & 七段数码管使能 \\
+\hline numData\_o              & DataWidth              & O     & segL、segH        & 七段数码管写数据 \\
+\hline
+\caption{devctrl实体的接口}
+\label{tb:devctrl-interface}
+\end{longtable}
+
+\paragraph{设计}\mbox{}
+
+各设备的地址段分配见Table~\ref{tb:dev-addr}，devctrl按此规则选择即可。部分设备是只读或只写的，则相应写或读的信号可以省略；部分设备是不会请求暂停的，故暂停信号可以省略。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular}{p{7.5cm}|p{7.5cm}}
+\hline
+\textbf{设备}&\textbf{地址段} \\
+\hline RAM0             & 0x00000000 - 0x003FFFFF \\
+\hline RAM1             & 0x00400000 - 0x007FFFFF \\
+\hline Flash            & 0x1E000000 - 0x1EFFFFFF \\
+\hline 启动用ROM        & 0x1FC00000 - 0x1FC00FFF \\
+\hline 串口             & 0x1FD003F8 - 0x1FD003FC \\
+\hline LED              & 0x1FD0F000 \\
+\hline 七段数码管       & 0x1FD0F010 \\
+\hline 显示器           & 0x1FE00000 - 0x1FE4AFFF \\
+\hline 点阵（字体）存储器&0x1FE4B000 - 0x1FE4B7FF \\
+\hline 以太网           & 0x1C020100 - 0x1C020104 \\
+\hline USB              & 0x1C020000 - 0x1C020004 \\
+\hline
+\end{tabular}
+\caption{外设地址分配}
+\label{tb:dev-addr}
+\end{center}
+\end{table}
+
 \subsubsection{base\_sram\_ctrl, ext\_sram\_ctrl}
 \subsubsection{flash\_ctrl}
 \subsubsection{vga\_ctrl}
 \subsubsection{serial\_ctrl}
+\subsubsection{async\_receiver}
+\subsubsection{async\_transmiter}
 \subsubsection{usb\_ctrl}
 \subsubsection{boot\_ctrl}
 \subsubsection{lattice\_ram\_ctrl}
