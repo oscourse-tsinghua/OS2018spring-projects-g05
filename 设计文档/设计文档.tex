@@ -1819,13 +1819,113 @@ usb\_ctrl实体的接口定义见Table~\ref{tb:usbctrl-interface}。
 
 从CPU看来，USB就是一组可读可写的寄存器。每次读写时，先向0x1C020000写入寄存器地址，再于0x1C020004进行读写即可。usb\_ctrl只需在访问地址0x1C020000时置usbDACK\_o为0，在访问0x1C020004时置usbDACK\_o为1以切换模式。接收/发送数据时，USB控制器也使用了三态信号，此处实现于SRAM控制器一致，不再赘述。
 
-由于USB设备速度较慢，读写均需要5个周期完成。未完成时，usb\_ctrl会向cpu请求暂停。
+由于USB设备速度较慢，读写均需要5个周期完成。与SRAM控制器的考虑类似，为了防止时序错误，在第1~5个周期中，只有第2~4个周期置写使能，第1和5个周期只进行等待。未完成时，usb\_ctrl会向cpu请求暂停。
 
 此外，usb\_ctrl会向cpu转发USB的中断请求。
 
 \subsubsection{boot\_ctrl}
+
+\paragraph{功能}\mbox{}
+
+存储了启动用指令的ROM。其中的指令用以将程序从Flash加载到RAM中。
+
+\paragraph{接口}\mbox{}
+
+boot\_ctrl实体的接口定义见Table~\ref{tb:bootctrl-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline addr\_i                 & AddrWidth              & I     & cpu           & 地址 \\
+\hline readData\_o             & DataWidth              & O     & devctrl       & 数据 \\
+\hline
+\end{tabular*}
+\caption{boot\_ctrl实体}
+\label{tb:bootctrl-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+boot\_ctrl本质上并非单独的存储器，而是FPGA中的组合逻辑（查找表），是通过VHDL的分支语句实现的。
+
+boot\_ctrl内含\textmu Core的启动指令，此段指令也适用于启动其他任何MIPS32程序。具体地，此段指令可以解析Flash中存储的ELF格式的程序，忽略其中的可重定向信息，将该程序的指令逐个填写在RAM中正确的位置上。最后，跳转到0x80000000开始执行被启动的程序。
+
 \subsubsection{lattice\_ram\_ctrl}
+
+\paragraph{功能}\mbox{}
+
+存储了字体点阵的专用存储器的驱动。
+
+\paragraph{接口}\mbox{}
+
+lattice\_ram\_ctrl实体的接口定义见Table~\ref{tb:latticeramctrl-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline rst                     & 1                      & I     & 外部          & 同步重置 \\
+\hline clk                     & 1                      & I     & clk\_ctrl     & 时钟 \\
+\hline devEnable\_i            & 1                      & I     & devctrl       & 使能 \\
+\hline readEnable\_i           & 1                      & I     & devctrl       & 读使能 \\
+\hline addr\_i                 & AddrWidth              & I     & cpu           & 地址 \\
+\hline readData\_o             & DataWidth              & O     & devctrl       & 数据 \\
+\hline busy\_o                 & 1                      & O     & devctrl       & 暂停请求 \\
+\hline
+\end{tabular*}
+\caption{lattice\_ram\_ctrl实体}
+\label{tb:latticeramctrl-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+字体存储器是用FPGA的片内RAM实现的，lattice\_ram\_ctrl做的仅仅是将其接口映射成与其他I/O层驱动器一致的形式。特别地，FPGA的片内RAM不支持异步读操作，即只能在时钟上升沿处读出数据，所以从字体存储器读出每个字需要两个周期。读出还未完成时，lattice\_ram\_ctrl会向cpu请求暂停。
+
 \subsubsection{eth\_ctrl}
+
+\paragraph{功能}\mbox{}
+
+以太网驱动器。
+
+\paragraph{接口}\mbox{}
+
+eth\_ctrl实体的接口定义见Table~\ref{tb:ethctrl-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline rst                     & 1                      & I     & 外部          & 同步重置 \\
+\hline clk                     & 1                      & I     & clk\_ctrl     & 时钟 \\
+\hline enable\_i               & 1                      & I     & devctrl       & 使能 \\
+\hline readEnable\_i           & 1                      & I     & devctrl       & 读使能，即$\overline{\text{写使能}}$ \\
+\hline addr\_i                 & AddrWidth              & I     & cpu           & 地址 \\
+\hline writeBusy\_o            & 1                      & O     & devctrl       & 暂停请求 \\
+\hline int\_o                  & 1                      & O     & cpu           & 中断请求 \\
+\hline triStateWrite\_o        & 1                      & O     & N/A           & 高电平表示应向三态总线上写 \\
+\hline ethInt\_i               & 1                      & I     & 外部          & 中断请求 \\
+\hline ethCmd\_o               & 1                      & O     & 外部          & 芯片地址/数据切换 \\
+\hline ethCS\_o                & 1                      & O     & 外部          & 芯片$\overline{\text{使能}}$ \\
+\hline ethWE\_ o               & 1                      & O     & 外部          & 芯片$\overline{\text{写使能}}$ \\
+\hline ethRD\_o                & 1                      & O     & 外部          & 芯片$\overline{\text{读使能}}$ \\
+\hline ethRst\_o               & 1                      & O     & 外部          & 芯片$\overline{\text{重置}}$ \\
+\hline
+\end{tabular*}
+\caption{eth\_ctrl实体}
+\label{tb:ethctrl-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+与USB类似，从CPU看来，以太网就是一组可读可写的寄存器。每次读写时，先向0x1C020100写入寄存器地址，再于0x1C020104进行读写即可。eth\_ctrl只需在访问地址0x1C020100时置ethCmd\_o为0，在访问0x1C020104时置ethCmd\_o为1以切换模式。接收/发送数据时，以太网控制器也使用了三态信号，此处实现于SRAM控制器一致，不再赘述。
+
+出于与SRAM控制器类似的考虑，为了防止时序错误，收到写请求时，eth\_ctrl会等待下一个时钟上升沿到来才开始写入，并且提前半个周期撤回写使能。一个写操作共需两个周期，操作未完成时，usb\_ctrl会向cpu请求暂停。
+
+此外，usb\_ctrl会向cpu转发USB的中断请求。
 
 %%%%%%%%%%%%%%%%%%%%%%
 %     BODY END       %
