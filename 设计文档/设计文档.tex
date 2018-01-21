@@ -950,6 +950,112 @@ CP0虽被称为协处理器，但其本质上是一个寄存器堆，所以首�
     \item 当执行TLBWI或TLBWR指令时，需要将$EntryHi$、$EntryLo0$和$EntryLo1$输出给访存控制层的TLB模块。
 \end{enumerate}
 
+\section{访存控制层}
+
+\subsection{概述}
+
+数据通路层的广义访存请求有：从虚地址取指令、从虚地址读数据、向虚地址写数据。访存控制层对其进行处理后，对外的访存请求统一为：从实地址读数据、向实地址写数据。
+
+本层包含的所有实体见Table~\ref{tb:mem-entities}：
+
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular}{p{7.5cm}|p{7.5cm}}  
+\hline  
+\textbf{实体}&\textbf{功能} \\
+\hline cpu & 顶层实体 \\
+\hline datapath & 数据通路层 \\
+\hline conv\_endian\_load、conv\_endian\_save & 字节序转换（非必需） \\
+\hline memctrl & 解决取指与访存的结构冲突 \\
+\hline mmu & 虚实地址转换 \\
+\hline 
+\end{tabular}  
+\caption{访存控制层的实体}
+\label{tb:mem-entities}
+\end{center}
+\end{table}
+
+\subsection{整体设计}
+
+访存控制层对数据通路层的指令访存（取指）和数据访存进行了两至三步处理：
+
+\begin{enumerate}
+    \item memctrl实体通过暂停部分流水线（插入空泡）的方式处理指令访存（取指）和数据访存之间的结构冲突，将其合并为统一的访存请求；
+    \item mmu实体进一步将请求中的虚地址转化为实地址；
+    \item 对读和写数据进行字节序转换（编译时可使能或不使能）。
+\end{enumerate}
+
+访存控制层的主要数据/控制流见Figure~\ref{fig:mem-data-flow}，其中控制输出包括使能、写使能、字节选择，控制输入包括暂停、异常。
+
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[width=.8\textwidth]{mem-data-flow.png}
+	\caption{访存控制层数据/控制流}
+    \label{fig:mem-data-flow}
+\end{figure}
+
+\subsection{各实体说明}
+
+以下介绍除访存控制层除顶层实体外的各实体。顶层实体cpu的说明见上层（I/O层）。
+
+\subsubsection{datapath}
+
+\paragraph{功能}\mbox{}
+
+数据通路层顶层实体（详细说明见本文数据通路层一节）。
+
+\paragraph{参数}\mbox{}
+
+datapath实体的参数定义见Table~\ref{tb:datapath-parameter}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l}
+\hline
+\textbf{参数}&\textbf{类型}&\textbf{功能} \\
+\hline instEntranceAddr        & std\_logic\_vector(AddrWidth)    & 重置后PC的值 \\
+\hline exceptBootBaseAddr      & std\_logic\_vector(AddrWidth)    & 启动时异常处理向量的基地址 \\
+\hline tlbRefillExl0Offset     & std\_logic\_vector(AddrWidth)    & 异常态下TLB缺失异常的偏移量 \\
+\hline generalExceptOffset     & std\_logic\_vector(AddrWidth)    & 一般的异常处理向量的基地址 \\
+\hline interruptIv1Offset      & std\_logic\_vector(AddrWidth)    & $Cause_{IV}=1$时的中断异常偏移量 \\
+\hline
+\end{tabular*}
+\caption{datapath实体的参数}
+\label{tb:datapath-parameter}
+\end{center}
+\end{table}
+
+\paragraph{接口}\mbox{}
+
+datapath实体的接口定义见Table~\ref{tb:datapath-interface}。
+\begin{longtable}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline \endhead rst            & 1                      & I     & 上层          & 同步重置 \\
+\hline clk                     & 1                      & I     & 上层          & 时钟 \\
+\hline instData\_i             & InstWidth              & I     & memctrl       & 指令读数据 \\
+\hline instAddr\_o             & AddrWidth              & O     & memctrl       & 指令读地址 \\
+\hline instEnable\_o           & 1                      & O     & memctrl       & 指令读使能 \\
+\hline dataData\_i             & DataWidth              & I     & memctrl       & 数据读数据 \\
+\hline dataData\_o             & DataWidth              & O     & memctrl       & 数据写数据 \\
+\hline dataAddr\_o             & AddrWidth              & O     & memctrl       & 数据读/写地址 \\
+\hline dataEnable\_o           & 1                      & O     & memctrl       & 数据访存使能 \\
+\hline dataWrite\_o            & 1                      & O     & memctrl       & 数据写使能 \\
+\hline dataByteSelect\_o       & 3..0                   & O     & memctrl       & 数据字节选择 \\
+\hline instExcept\_i           & ExceptionCauseWidth    & I     & memctrl       & 指令访存异常 \\
+\hline dataExcept\_i           & ExceptionCauseWidth    & I     & memctrl       & 数据访存异常 \\
+\hline ifToStall\_i            & 1                      & I     & memctrl       & 指令访存暂停 \\
+\hline memToStall\_i           & 1                      & I     & memctrl       & 数据访存暂停 \\
+\hline int\_i                  & IntWidth               & I     & 上层          & 外设中断 \\
+\hline timerInt\_o             & 1                      & O     & 上层          & 时钟中断 \\
+\hline isKernelMode\_o         & 1                      & O     & mmu           & 高电平表示当前处于内核态 \\
+\hline entryWrite\_o           & 1                      & O     & mmu           & TLB写使能 \\
+\hline entryIndex\_o           & TLBIndexWidth          & O     & mmu           & 要写的TLB表项索引 \\
+\hline entry\_o                & 3*32(复合类型)         & O     & mmu           & 要写的TLB表项内容 \\
+\hline
+\caption{datapath实体的接口}
+\label{tb:datapath-interface}
+\end{longtable}
+
 %%%%%%%%%%%%%%%%%%%%%%
 %     BODY END       %
 %%%%%%%%%%%%%%%%%%%%%%
