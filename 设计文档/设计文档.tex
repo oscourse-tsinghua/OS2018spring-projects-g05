@@ -815,6 +815,8 @@ hi\_lo实体的接口定义见Table~\ref{tb:hilo-interface}。
 
 hi\_lo实体支持同时进行的两路读和两路写操作。若写入使能，则在时钟上升沿处置相应的寄存器为写入数据（时序逻辑）；读出数据时刻等于寄存器的当前值（组合逻辑）。（hi\_lo寄存器中未进行数据旁路，数据旁路是直接在mem\_wb实体中进行的，为了解耦和，将来可以移至此实体中）。
 
+重置时，HI和LO寄存器均置零。
+
 \subsubsection{ctrl}
 
 \paragraph{功能}\mbox{}
@@ -965,9 +967,9 @@ CP0虽被称为协处理器，但其本质上是一个寄存器堆，所以首�
 \textbf{实体}&\textbf{功能} \\
 \hline cpu & 顶层实体 \\
 \hline datapath & 数据通路层 \\
-\hline conv\_endian\_load、conv\_endian\_save & 字节序转换（非必需） \\
 \hline memctrl & 解决取指与访存的结构冲突 \\
 \hline mmu & 虚实地址转换 \\
+\hline conv\_endian\_load、conv\_endian\_save & 字节序转换（非必需） \\
 \hline 
 \end{tabular}  
 \caption{访存控制层的实体}
@@ -1106,6 +1108,80 @@ memctrl是组合逻辑电路，与时钟无关。
 \end{enumerate}
 
 从上述逻辑可以看出，memctrl本质上是一个多路二选一选择器。
+
+\subsubsection{mmu}
+
+\paragraph{功能}\mbox{}
+
+mmu实体根据MIPS32的地址映射方案，对不同地址分别使用直接偏移或查找TLB的方式进行翻译，并识别非法地址。mmu实体还负责TLB表项的维护工作。
+
+\paragraph{接口}\mbox{}
+
+mmu实体的接口定义见Table~\ref{tb:mmu-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline rst                     & 1                      & I     & 上层          & 同步重置 \\
+\hline clk                     & 1                      & I     & 上层          & 时钟 \\
+\hline enable\_i               & 1                      & I     & memctrl       & 使能 \\
+\hline enable\_o               & 1                      & O     & 上层          & 使能 \\
+\hline isLoad\_i               & 1                      & I     & memctrl       & 读使能，即$\overline{\text{写使能}}$ \\
+\hline isKernelMode\_i         & 1                      & I     & memctrl       & 高电平表示当前处于内核态 \\
+\hline addr\_i                 & AddrWidth              & I     & memctrl       & 虚地址 \\
+\hline addr\_o                 & AddrWidth              & O     & 上层          & 实地址 \\
+\hline entryWrite\_i           & 1                      & I     & memctrl       & TLB写使能 \\
+\hline index\_i                & TLBIndexWidth          & I     & memctrl       & 要写的TLB表项索引 \\
+\hline entry\_i                & 3*32(复合类型)         & I     & memctrl       & 要写的TLB表项内容 \\
+\hline exceptCause\_o          & ExceptionCauseWidth    & O     & memctrl       & 异常类型或无异常 \\
+\hline
+\end{tabular*}
+\caption{mmu实体的接口}
+\label{tb:mmu-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+MIPS32规定的地址映射方案如Table~\ref{tb:mem-map}。由于nCore没有实现缓存，故可省略缓存相关约定。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l}
+\hline
+\textbf{段}&\textbf{虚拟地址(VA)}&\textbf{权限}&\textbf{物理地址(PA)} \\
+\hline kuseg & 0x00000000 - 0x7FFFFFFF & 用户态 & TLB \\
+\hline kseg0 & 0x80000000 - 0x9FFFFFFF & 内核态 & 0x00000000 - 0x1FFFFFFF \\
+\hline kseg1 & 0xA0000000 - 0xBFFFFFFF & 内核态 & 0x00000000 - 0x1FFFFFFF \\
+\hline kseg2 & 0xC0000000 - 0xFFFFFFFF & 内核态 & TLB \\
+\hline
+\end{tabular*}
+\caption{地址映射方案}
+\label{tb:mem-map}
+\end{center}
+\end{table}
+
+根据地址映射方案，mmu实体翻译地址的过程如下。翻译过程由组合逻辑实现，与时钟无关。
+
+\begin{enumerate}
+    \item 大于等于0x80000000的地址需要内核态才能访问，若不是内核态，则产生读/写地址异常。
+    \item 若虚地址落在kseg0段，直接减去0x80000000的偏移量即完成翻译。
+    \item 若虚地址落在kseg1段，直接减去0xA0000000的偏移量即完成翻译。
+    \item 否则需要使用TLB进行翻译，过程如下
+    \begin{enumerate}
+        \item mmu实体实现了16路全相联的TLB。MIPS32在不做配置的情况下，每页内存大小为4KB，故地址的高20位为页号，低12位为页内偏移量。MIPS32规定虚地址空间中连续的两个虚页共用同一个TLB表项，故应在所有16项中找出虚地址的高19位与表项中记载的相符的那一项。
+        \item 对于找出的这一项，当且仅当其ASID（地址空间标识符）域与当前CP0中记载相符，或其中两个实页的G（全局）位均为1时，此项才有效。
+        \item 在找出的TLB表项的两个实页中找出对应的一页，当且仅当该页的V（有效）位为1时，此页才有效。
+        \item 最后，还需检查该实页的D（脏）位，若D位为1则不能进行写操作。
+    \end{enumerate}
+    若以上任何一项不符，均产生读/写TLB缺失异常。
+\end{enumerate}
+
+按照MIPS32的约定，无论有效与否，TLB中是不会同时存在两个虚地址相同的页的，所以效率最高的查找方式是对TLB每一项进行不分先后的并行查找。一旦在某一项中找到了该虚页对应的实页，就将该实页号输出到一个总线上。然而，由于无法在FPGA芯片内实现三态逻辑，即无法实现上述总线，只能进行有先后次序的查找。尽管如此，查找过程依然是一个组合逻辑过程，VHDL综合器会将其视作一个整体进行优化，逻辑的许多部分依然是并行执行的，故不会造成显著的性能损失。
+
+此外还有一点值得注意：目标程序\textmu Core可能违反上述约定，即\textmu Core可能向不同的TLB表项写入相同地址的虚页。因此，当在TLB中查询到某一个虚页并发现其无效时，不能放弃查询。必须检查完所有的表项后，才能确定是否发生了TLB缺失。
+
+mmu实体还负责TLB的维护工作，即向TLB表项中写入新值。此情形下，TLB与寄存器堆无异，只需在时钟上升沿处将表项值更新为输入值即可（写入操作为时序逻辑）。重置时，各表项置零。
 
 %%%%%%%%%%%%%%%%%%%%%%
 %     BODY END       %
