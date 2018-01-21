@@ -1484,6 +1484,65 @@ devctrl实体的接口定义见Table~\ref{tb:devctrl-interface}。
 \end{table}
 
 \subsubsection{base\_sram\_ctrl, ext\_sram\_ctrl}
+
+\paragraph{功能}\mbox{}
+
+base\_sram\_ctrl和ext\_sram\_ctrl均例化了元件sram\_ctrl，分别SRAM0与SRAM1存储器的控制器。
+
+\paragraph{接口}\mbox{}
+
+sram\_ctrl元件的接口定义见Table~\ref{tb:sramctrl-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline rst                     & 1                      & I     & 外部          & 同步重置 \\
+\hline clk                     & 1                      & I     & clk\_ctrl     & 时钟 \\
+\hline enable\_i               & 1                      & I     & devctrl       & 使能 \\
+\hline readEnable\_i           & 1                      & I     & devctrl       & 读使能，即$\overline{\text{写使能}}$ \\
+\hline addr\_i                 & AddrWidth              & I     & cpu           & 地址 \\
+\hline byteSelect\_i           & 3..0                   & I     & cpu           & 字节选择 \\
+\hline busy\_o                 & 1                      & O     & devctrl       & 暂停请求 \\
+\hline triStateWrite\_o        & 1                      & O     & N/A（下文详述）&高电平表示应向三态总线上写 \\
+\hline addr\_o                 & 19..0                  & O     & 外部          & 芯片地址（按字编制） \\
+\hline be\_n\_o                & 3..0                   & O     & 外部          & 芯片$\overline{\text{字节选择}}$ \\
+\hline ce\_n\_o                & 1                      & O     & 外部          & 芯片$\overline{\text{使能}}$ \\
+\hline oe\_n\_o                & 1                      & O     & 外部          & 芯片$\overline{\text{读使能}}$ \\
+\hline we\_n\_o                & 1                      & O     & 外部          & 芯片$\overline{\text{写使能}}$ \\
+\hline
+\end{tabular*}
+\caption{sram\_ctrl元件}
+\label{tb:sramctrl-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+实验电路板上的SRAM芯片是异步的，这意味着随时可以通过组合逻辑的方式读而不需等待时钟。但这样并不意味着随时可写，随时写入可能会导致两类错误：
+
+\begin{enumerate}
+    \item 若写使能刚刚被置就立即写入，可能由于地址还未被稳定地计算出来，导致破坏其他存储单元；
+    \item 若写入完成后，写使能信号比数据和地址还晚撤出，可能破坏已写入的数据，也可能破坏其他存储单元。
+\end{enumerate}
+
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[width=.8\textwidth]{sram-ctrl.png}
+	\caption{SRAM时序}
+    \label{fig:sram-ctrl}
+\end{figure}
+
+为了解决以上问题，sram\_ctrl中为写入操作设计了一个简单的状态机。以Figure~\ref{fig:sram-ctrl}为例：$writeEnable$表示写使能；$stat$表示状态，可能取值为$READ$或$WRITE$。若$stat=READ$且$writeEnable=0$，例如$0 \le TIME \le 2$时，则随时可读。
+
+$TIME=3$时$writeEnable$被置为1，此时不再可读，但出于上述第1点原因，并不能立即写入，sram\_ctrl会向cpu发出暂停信号，使此写请求保持到写一个周期。当下一个时钟上升沿到来时，$stat$被置为$WRITE$，此时芯片的写使能才被置，进行写操作。然而，又出于上述第二点原因，只有$stat=WRITE$且$clk=1$时芯片的写使能才被置。也就是说，芯片的写使能会提早半个周期撤出。所以只有$TIME=5$时可以进行写操作，而$TIME=6$时不可以。
+
+当下一个上升沿来临时，即$TIME=7$时，写操作全部完成，$stat$恢复为$READ$，SRAM重新进入随时可读的状态。
+
+SRAM读写的另一个问题是三态信号的使用。进行读操作时，外设向信号写入，sram\_ctrl读；进行写操作时，sram\_ctrl向信号写入，外设读。应确保不会有两个主体同时向三态信号写入，以免发生短路。三态信号的读写也应避免上述的两点时序错误，分析可知，sram\_ctrl应在$stat=WRITE$时写三态信号，其余时间读或忽略。
+
+由于FPGA中只有I/O模块具有操作三态信号的能力，使用VHDL开发时不建议在非顶层实体中使用三态信号，以免综合器将其视为普通信号却难以发现。所以sram\_ctrl并没有直接操作三态信号，而是输出triStateWrite\_o控制信号，表明应向三态信号写，还是从三态信号读。对三态信号的直接操作在thinpad\_top实体中完成。
+
 \subsubsection{flash\_ctrl}
 \subsubsection{vga\_ctrl}
 \subsubsection{serial\_ctrl}
