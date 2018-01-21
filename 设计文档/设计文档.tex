@@ -1183,6 +1183,51 @@ MIPS32规定的地址映射方案如Table~\ref{tb:mem-map}。由于nCore没有�
 
 mmu实体还负责TLB的维护工作，即向TLB表项中写入新值。此情形下，TLB与寄存器堆无异，只需在时钟上升沿处将表项值更新为输入值即可（写入操作为时序逻辑）。重置时，各表项置零。
 
+\subsubsection{conv\_endian\_load、conv\_endian\_save}
+
+\paragraph{功能}\mbox{}
+
+实体conv\_endian\_load和conv\_endian\_save实现字节序转换，可通过参数使能。不使能时输出与输入相同。
+
+这两个实体是同一个元件conv\_endian的例化，分别负责输入和输出两个方向的字节序转换，以下统一叙述。
+
+\paragraph{参数}\mbox{}
+
+conv\_endian元件的参数定义见Table~\ref{tb:convendian-parameter}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l}
+\hline
+\textbf{参数}&\textbf{类型}&\textbf{功能} \\
+\hline enable        & boolean    & 使能 \\
+\hline
+\end{tabular*}
+\caption{conv\_endian元件的参数}
+\label{tb:convendian-parameter}
+\end{center}
+\end{table}
+
+\paragraph{接口}\mbox{}
+
+conv\_endian元件的接口定义见Table~\ref{tb:convendian-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline input                   & DataWidth              & I     & memctrl(conv\_endian\_save), 上层(conv\_endian\_load)   & 输入 \\
+\hline output                  & DataWidth              & O     & memctrl(conv\_endian\_load), 上层(conv\_endian\_save)   & 输出 \\
+\hline
+\end{tabular*}
+\caption{conv\_endian元件的接口}
+\label{tb:convendian-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+尽管nCore需要运行的目标程序都是小端序的，但在调试时构造一个大端序的仿真环境更为方便，因为这样可以将指令字原封不动地写入被仿真虚拟存储器里。实体conv\_endian\_load和conv\_endian\_save引入了编译期可选的字节序转换，为在不同的环境下运行或调试提供了便利。
+
 %%%%%%%%%%%%%%%%%%%%%%
 %     BODY END       %
 %%%%%%%%%%%%%%%%%%%%%%
