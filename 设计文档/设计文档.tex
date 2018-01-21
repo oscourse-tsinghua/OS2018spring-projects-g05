@@ -1544,6 +1544,45 @@ SRAM读写的另一个问题是三态信号的使用。进行读操作时，外�
 由于FPGA中只有I/O模块具有操作三态信号的能力，使用VHDL开发时不建议在非顶层实体中使用三态信号，以免综合器将其视为普通信号却难以发现。所以sram\_ctrl并没有直接操作三态信号，而是输出triStateWrite\_o控制信号，表明应向三态信号写，还是从三态信号读。对三态信号的直接操作在thinpad\_top实体中完成。
 
 \subsubsection{flash\_ctrl}
+
+\paragraph{功能}\mbox{}
+
+Flash存储器的驱动器
+
+\paragraph{接口}\mbox{}
+
+flash\_ctrl元件的接口定义见Table~\ref{tb:flashctrl-interface}。
+\begin{table}[!htb]
+\begin{center}
+\begin{tabular*}{15cm}{l|l|l|l|p{5cm}}
+\hline
+\textbf{信号}&\textbf{宽度}&\textbf{I/O}&\textbf{来源/去向}&\textbf{功能} \\
+\hline rst                     & 1                      & I     & 外部          & 同步重置 \\
+\hline clk                     & 1                      & I     & clk\_ctrl     & 时钟 \\
+\hline devEnable\_i            & 1                      & I     & devctrl       & 使能 \\
+\hline readEnable\_i           & 1                      & I     & devctrl       & 读使能，即$\overline{\text{写使能}}$ \\
+\hline readData\_o             & DataWidth              & O     & devctrl       & 读数据 \\
+\hline addr\_i                 & AddrWidth              & I     & cpu           & 地址 \\
+\hline busy\_o                 & 1                      & O     & devctrl       & 暂停请求 \\
+\hline flRst\_o                & 1                      & O     & 外部          & 芯片$\overline{\text{重置}}$ \\
+\hline flCE\_o                 & 1                      & O     & 外部          & 芯片$\overline{\text{使能}}$ \\
+\hline flOE\_o                 & 1                      & O     & 外部          & 芯片$\overline{\text{读使能}}$ \\
+\hline flWE\_ o                & 1                      & O     & 外部          & 芯片$\overline{\text{写使能}}$ \\
+\hline flAddr\_o               & 22..0                  & O     & 外部          & 芯片地址（按字编制） \\
+\hline flData\_i               & 15..0                  & I     & 外部          & 芯片读数据 \\
+\hline flByte\_o               & 1                      & O     & 外部          & 芯片$\overline{\text{字节选择}}$ \\
+\hline flVpen\_o               & 1                      & O     & 外部          & 芯片擦除/编程/锁使能 \\
+\hline
+\end{tabular*}
+\caption{flash\_ctrl元件}
+\label{tb:flashctrl-interface}
+\end{center}
+\end{table}
+
+\paragraph{设计}\mbox{}
+
+flash\_ctrl只支持Flash的读操作，并且每条指令只能读16位。由于Flash的延迟太高，每次读操作需要持续三个周期，读未完成时flash\_ctrl会向cpu请求暂停。
+
 \subsubsection{vga\_ctrl}
 \subsubsection{serial\_ctrl}
 \subsubsection{async\_receiver}
