@@ -40,6 +40,7 @@ entity datapath is
         entryIndexValid_i: in std_logic;
         entryIndex_o: out std_logic_vector(TLBIndexWidth);
         entryWrite_o: out std_logic;
+        entry_i: in TLBEntry;
         entry_o: out TLBEntry
     );
 end datapath;
@@ -677,6 +678,7 @@ begin
             entryIndexValid_i => entryIndexValid_i,
             entryIndex_o => entryIndex_o,
             entryWrite_o => entryWrite_o,
+            entry_i => entry_i,
             entry_o => entry_o,
             cp0EBaseAddr_o => cp0EBaseAddr_cb
         );

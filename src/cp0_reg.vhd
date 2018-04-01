@@ -43,6 +43,7 @@ entity cp0_reg is
         entryIndexValid_i: in std_logic;
         entryIndex_o: out std_logic_vector(TLBIndexWidth);
         entryWrite_o: out std_logic;
+        entry_i: in TLBEntry;
         entry_o: out TLBEntry;
 
         -- Connect ctrl, for address error after eret instruction
@@ -143,13 +144,20 @@ begin
                     regArr(RANDOM_REG) <= regArr(RANDOM_REG) - 1;
                 end if;
 
+                -- According to MIPS Spec. Vol. III, Table 7-1
+                -- Software should pad 2 spaces for TLBP -> MFC0 INDEX
+                -- And 3 spaces for TLBR -> MFC0 EntryHi (why EntryLo0/1 is not mentioned)
+                -- So no forwarding is needed here
                 if (cp0Sp_i = CP0SP_TLBP) then
-                    -- According to MIPS Spec. Vol. III, Table 7-1
-                    -- Software should pad 2 spaces for TLBP -> MFC0 INDEX
-                    -- So no forwarding is needed here
                     regArr(INDEX_REG) <= 32x"0";
                     regArr(INDEX_REG)(31) <= not entryIndexValid_i;
                     regArr(INDEX_REG)(TLBIndexWidth) <= entryIndex_i;
+                elsif (cp0Sp_i = CP0SP_TLBR) then
+                    regArr(ENTRY_HI_REG) <= entry_i.hi;
+                    regArr(ENTRY_LO0_REG) <= entry_i.lo0;
+                    regArr(ENTRY_LO1_REG) <= entry_i.lo1;
+                    regArr(ENTRY_LO0_REG)(ENTRY_LO_G_BIT) <= entry_i.lo0(ENTRY_LO_G_BIT) and entry_i.lo1(ENTRY_LO_G_BIT);
+                    regArr(ENTRY_LO1_REG)(ENTRY_LO_G_BIT) <= entry_i.lo0(ENTRY_LO_G_BIT) and entry_i.lo1(ENTRY_LO_G_BIT);
                 end if;
 
                 if (we_i = ENABLE) then

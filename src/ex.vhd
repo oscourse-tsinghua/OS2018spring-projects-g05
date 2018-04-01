@@ -448,6 +448,9 @@ begin
                 when ALU_TLBP =>
                     cp0Sp_o <= CP0SP_TLBP;
 
+                when ALU_TLBR =>
+                    cp0Sp_o <= CP0SP_TLBR;
+
                 when others =>
                     toWriteReg_o <= NO;
             end case;

@@ -27,7 +27,8 @@ entity mmu is
         index_o: out std_logic_vector(TLBIndexWidth);
         indexValid_o: out std_logic;
         entryWrite_i: in std_logic;
-        entry_i: in TLBEntry
+        entry_i: in TLBEntry;
+        entry_o: out TLBEntry
     );
 end mmu;
 
@@ -137,5 +138,7 @@ begin
             end if;
         end loop;
     end process;
+
+    entry_o <= entries(conv_integer(index_i));
 end bhv;
 
