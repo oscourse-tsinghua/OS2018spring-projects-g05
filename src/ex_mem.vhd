@@ -3,6 +3,7 @@ use ieee.std_logic_1164.all;
 use work.global_const.all;
 use work.mem_const.all;
 use work.except_const.all;
+use work.cp0_const.all;
 
 entity ex_mem is
     port (
@@ -42,10 +43,8 @@ entity ex_mem is
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_o: out std_logic;
-        isTlbwi_i: in std_logic;
-        isTlbwr_i: in std_logic;
-        isTlbwi_o: out std_logic;
-        isTlbwr_o: out std_logic;
+        cp0Sp_i: in CP0Special;
+        cp0Sp_o: out CP0Special;
 
         -- for exception --
         valid_i: in std_logic;
@@ -92,8 +91,7 @@ begin
                 cp0RegWe_o <= NO;
                 cp0RegData_o <= (others => '0');
                 cp0RegWriteAddr_o <= (others => '0');
-                isTlbwi_o <= NO;
-                isTlbwr_o <= NO;
+                cp0Sp_o <= INVALID;
 
                 valid_o <= NO;
 
@@ -118,8 +116,7 @@ begin
                 cp0RegWe_o <= cp0RegWe_i;
                 cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
                 cp0RegData_o <= cp0RegData_i;
-                isTlbwi_o <= isTlbwi_i;
-                isTlbwr_o <= isTlbwr_i;
+                cp0Sp_o <= cp0Sp_i;
 
                 exceptCause_o <= exceptCause_i;
                 isInDelaySlot_o <= isInDelaySlot_i;

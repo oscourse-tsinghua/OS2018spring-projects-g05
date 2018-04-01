@@ -8,6 +8,7 @@ use work.global_const.all;
 use work.alu_const.all;
 use work.mem_const.all;
 use work.except_const.all;
+use work.cp0_const.all;
 
 entity ex is
     port (
@@ -62,8 +63,7 @@ entity ex is
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_o: out std_logic;
-        isTlbwi_o: out std_logic;
-        isTlbwr_o: out std_logic;
+        cp0Sp_o: out CP0Special;
 
         -- for exception --
         valid_i: in std_logic;
@@ -233,8 +233,7 @@ begin
         cp0RegWe_o <= NO;
         cp0RegWriteAddr_o <= (others => '0');
         cp0RegData_o <= (others => '0');
-        isTlbwi_o <= NO;
-        isTlbwr_o <= NO;
+        cp0Sp_o <= INVALID;
         writeHiData_o <= (others => '0');
         writeLoData_o <= (others => '0');
         cp0RegReadAddr_o <= (others => '0');
@@ -441,10 +440,10 @@ begin
                     cp0RegData_o <= operand2_i;
 
                 when ALU_TLBWI =>
-                    isTlbwi_o <= YES;
+                    cp0Sp_o <= CP0SP_TLBWI;
 
                 when ALU_TLBWR =>
-                    isTlbwr_o <= YES;
+                    cp0Sp_o <= CP0SP_TLBWR;
 
                 when others =>
                     toWriteReg_o <= NO;

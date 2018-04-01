@@ -38,8 +38,7 @@ entity cp0_reg is
         isKernelMode_o: out std_logic;
 
         -- For MMU
-        isTlbwi_i: in std_logic;
-        isTlbwr_i: in std_logic;
+        cp0Sp_i: in CP0Special;
         entryIndex_o: out std_logic_vector(TLBIndexWidth);
         entryWrite_o: out std_logic;
         entry_o: out TLBEntry;
@@ -71,9 +70,9 @@ begin
                       curArr(STATUS_REG)(STATUS_EXL_BIT) or
                       not curArr(STATUS_REG)(STATUS_UM_BIT);
 
-    entryIndex_o <= curArr(RANDOM_REG)(TLBIndexWidth) when isTlbwr_i = '1' else curArr(INDEX_REG)(TLBIndexWidth);
+    entryIndex_o <= curArr(RANDOM_REG)(TLBIndexWidth) when cp0Sp_i = CP0SP_TLBWR else curArr(INDEX_REG)(TLBIndexWidth);
 
-    entryWrite_o <= isTlbwi_i or isTlbwr_i;
+    entryWrite_o <= '1' when cp0Sp_i = CP0SP_TLBWI or cp0Sp_i = CP0SP_TLBWR else '0';
 
     entry_o.hi <= curArr(ENTRY_HI_REG);
     entry_o.lo0 <= curArr(ENTRY_LO0_REG);

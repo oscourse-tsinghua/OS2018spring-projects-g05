@@ -3,6 +3,10 @@ use ieee.std_logic_1164.all;
 use work.global_const.all;
 
 package cp0_const is
+    type CP0Special is ( -- Special CP0 Operation Type
+        INVALID, CP0SP_TLBWI, CP0SP_TLBWR
+    );
+
     --
     -- ids of special usage registers.
     --
