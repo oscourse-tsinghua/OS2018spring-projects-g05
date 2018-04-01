@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
--- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_unsigned
+-- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_signed
 --       Use numeric_std if signed number is needed (different API)
 use work.global_const.all;
 use work.alu_const.all;
@@ -444,6 +444,9 @@ begin
 
                 when ALU_TLBWR =>
                     cp0Sp_o <= CP0SP_TLBWR;
+
+                when ALU_TLBP =>
+                    cp0Sp_o <= CP0SP_TLBP;
 
                 when others =>
                     toWriteReg_o <= NO;

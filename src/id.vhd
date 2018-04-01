@@ -831,6 +831,10 @@ begin
                                 isInvalid := NO;
                                 alut_o <= ALU_TLBWR;
 
+                            when FUNC_TLBP =>
+                                isInvalid := NO;
+                                alut_o <= ALU_TLBP;
+
                             when others =>
                                 null;
                         end case;

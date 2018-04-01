@@ -1,7 +1,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
--- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_unsigned
+-- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_signed
 --       Use numeric_std if signed number is needed (different API)
 use work.global_const.all;
 use work.except_const.all;
@@ -21,8 +22,10 @@ entity mmu is
         enable_o: out std_logic;
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
 
-        -- Update TLB entry
+        -- Manage TLB entry
         index_i: in std_logic_vector(TLBIndexWidth);
+        index_o: out std_logic_vector(TLBIndexWidth);
+        indexValid_o: out std_logic;
         entryWrite_i: in std_logic;
         entry_i: in TLBEntry
     );
@@ -115,6 +118,24 @@ begin
                 entries(conv_integer(index_i)) <= entry_i;
             end if;
         end if;
+    end process;
+
+    -- Probe entry
+    -- Here might be some bugs with the synthesisier, which failed to work with `process(all)`
+    process (entries, entry_i) begin
+        index_o <= 4x"0";
+        indexValid_o <= '0';
+        for i in 0 to TLB_ENTRY_NUM - 1 loop
+            if (entries(i).hi(EntryHiVPN2Bits) = entry_i.hi(EntryHiVPN2Bits)) then
+                if (
+                    (entries(i).lo0(ENTRY_LO_G_BIT) and entries(i).lo1(ENTRY_LO_G_BIT)) = '1' or -- global
+                    entries(i).hi(EntryHiASIDBits) = entry_i.hi(EntryHiASIDBits) -- ASID match
+                ) then
+                    index_o <= conv_std_logic_vector(i, 4);
+                    indexValid_o <= '1';
+                end if;
+            end if;
+        end loop;
     end process;
 end bhv;
 

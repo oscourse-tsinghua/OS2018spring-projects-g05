@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
--- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_unsigned
+-- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_signed
 --       Use numeric_std if signed number is needed (different API)
 use work.global_const.all;
 use work.except_const.all;
@@ -39,6 +39,8 @@ entity cp0_reg is
 
         -- For MMU
         cp0Sp_i: in CP0Special;
+        entryIndex_i: in std_logic_vector(TLBIndexWidth);
+        entryIndexValid_i: in std_logic;
         entryIndex_o: out std_logic_vector(TLBIndexWidth);
         entryWrite_o: out std_logic;
         entry_o: out TLBEntry;
@@ -139,6 +141,15 @@ begin
                     regArr(RANDOM_REG) <= conv_std_logic_vector(TLB_ENTRY_NUM - 1, 32);
                 else
                     regArr(RANDOM_REG) <= regArr(RANDOM_REG) - 1;
+                end if;
+
+                if (cp0Sp_i = CP0SP_TLBP) then
+                    -- According to MIPS Spec. Vol. III, Table 7-1
+                    -- Software should pad 2 spaces for TLBP -> MFC0 INDEX
+                    -- So no forwarding is needed here
+                    regArr(INDEX_REG) <= 32x"0";
+                    regArr(INDEX_REG)(31) <= not entryIndexValid_i;
+                    regArr(INDEX_REG)(TLBIndexWidth) <= entryIndex_i;
                 end if;
 
                 if (we_i = ENABLE) then

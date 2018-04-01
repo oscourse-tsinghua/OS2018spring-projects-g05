@@ -141,6 +141,7 @@ package inst_const is
     constant RS_MT: std_logic_vector(InstRsWidth) := "00100";
     constant FUNC_TLBWI: std_logic_vector(InstFuncWidth) := "000010";
     constant FUNC_TLBWR: std_logic_vector(InstFuncWidth) := "000110";
+    constant FUNC_TLBP: std_logic_vector(InstFuncWidth) := "001000";
 
     --
     -- Exceptions

@@ -36,6 +36,8 @@ entity datapath is
 
         -- To MMU
         isKernelMode_o: out std_logic;
+        entryIndex_i: in std_logic_vector(TLBIndexWidth);
+        entryIndexValid_i: in std_logic;
         entryIndex_o: out std_logic_vector(TLBIndexWidth);
         entryWrite_o: out std_logic;
         entry_o: out TLBEntry
@@ -671,6 +673,8 @@ begin
             timerInt_o => timerInt_o,
             isKernelMode_o => isKernelMode_o,
             cp0Sp_i => cp0Sp_9c,
+            entryIndex_i => entryIndex_i,
+            entryIndexValid_i => entryIndexValid_i,
             entryIndex_o => entryIndex_o,
             entryWrite_o => entryWrite_o,
             entry_o => entry_o,
