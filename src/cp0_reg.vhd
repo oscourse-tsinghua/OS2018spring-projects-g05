@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
--- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_unsigned
+-- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_signed
 --       Use numeric_std if signed number is needed (different API)
 use work.global_const.all;
 use work.except_const.all;
@@ -38,10 +38,12 @@ entity cp0_reg is
         isKernelMode_o: out std_logic;
 
         -- For MMU
-        isTlbwi_i: in std_logic;
-        isTlbwr_i: in std_logic;
+        cp0Sp_i: in CP0Special;
+        entryIndex_i: in std_logic_vector(TLBIndexWidth);
+        entryIndexValid_i: in std_logic;
         entryIndex_o: out std_logic_vector(TLBIndexWidth);
         entryWrite_o: out std_logic;
+        entry_i: in TLBEntry;
         entry_o: out TLBEntry;
 
         -- Connect ctrl, for address error after eret instruction
@@ -71,9 +73,9 @@ begin
                       curArr(STATUS_REG)(STATUS_EXL_BIT) or
                       not curArr(STATUS_REG)(STATUS_UM_BIT);
 
-    entryIndex_o <= curArr(RANDOM_REG)(TLBIndexWidth) when isTlbwr_i = '1' else curArr(INDEX_REG)(TLBIndexWidth);
+    entryIndex_o <= curArr(RANDOM_REG)(TLBIndexWidth) when cp0Sp_i = CP0SP_TLBWR else curArr(INDEX_REG)(TLBIndexWidth);
 
-    entryWrite_o <= isTlbwi_i or isTlbwr_i;
+    entryWrite_o <= '1' when cp0Sp_i = CP0SP_TLBWI or cp0Sp_i = CP0SP_TLBWR else '0';
 
     entry_o.hi <= curArr(ENTRY_HI_REG);
     entry_o.lo0 <= curArr(ENTRY_LO0_REG);
@@ -140,6 +142,22 @@ begin
                     regArr(RANDOM_REG) <= conv_std_logic_vector(TLB_ENTRY_NUM - 1, 32);
                 else
                     regArr(RANDOM_REG) <= regArr(RANDOM_REG) - 1;
+                end if;
+
+                -- According to MIPS Spec. Vol. III, Table 7-1
+                -- Software should pad 2 spaces for TLBP -> MFC0 INDEX
+                -- And 3 spaces for TLBR -> MFC0 EntryHi (why EntryLo0/1 is not mentioned)
+                -- So no forwarding is needed here
+                if (cp0Sp_i = CP0SP_TLBP) then
+                    regArr(INDEX_REG) <= 32x"0";
+                    regArr(INDEX_REG)(31) <= not entryIndexValid_i;
+                    regArr(INDEX_REG)(TLBIndexWidth) <= entryIndex_i;
+                elsif (cp0Sp_i = CP0SP_TLBR) then
+                    regArr(ENTRY_HI_REG) <= entry_i.hi;
+                    regArr(ENTRY_LO0_REG) <= entry_i.lo0;
+                    regArr(ENTRY_LO1_REG) <= entry_i.lo1;
+                    regArr(ENTRY_LO0_REG)(ENTRY_LO_G_BIT) <= entry_i.lo0(ENTRY_LO_G_BIT) and entry_i.lo1(ENTRY_LO_G_BIT);
+                    regArr(ENTRY_LO1_REG)(ENTRY_LO_G_BIT) <= entry_i.lo0(ENTRY_LO_G_BIT) and entry_i.lo1(ENTRY_LO_G_BIT);
                 end if;
 
                 if (we_i = ENABLE) then
