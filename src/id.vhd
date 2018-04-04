@@ -675,6 +675,22 @@ begin
                     memt_o <= MEM_SW;
                     isInvalid := NO;
 
+                when OP_SWL =>
+                    oprSrc1 := REG;
+                    oprSrc2 := REG;
+                    oprSrcX := IMM;
+                    alut_o <= ALU_STORE;
+                    memt_o <= MEM_SWL;
+                    isInvalid := NO;
+
+                when OP_SWR =>
+                    oprSrc1 := REG;
+                    oprSrc2 := REG;
+                    oprSrcX := IMM;
+                    alut_o <= ALU_STORE;
+                    memt_o <= MEM_SWR;
+                    isInvalid := NO;
+
                 when OP_ADDI =>
                     oprSrc1 := REG;
                     oprSrc2 := SGN_IMM;
@@ -871,6 +887,14 @@ begin
                             when FUNC_TLBWR =>
                                 isInvalid := NO;
                                 alut_o <= ALU_TLBWR;
+
+                            when FUNC_TLBP =>
+                                isInvalid := NO;
+                                alut_o <= ALU_TLBP;
+
+                            when FUNC_TLBR =>
+                                isInvalid := NO;
+                                alut_o <= ALU_TLBR;
 
                             when others =>
                                 null;

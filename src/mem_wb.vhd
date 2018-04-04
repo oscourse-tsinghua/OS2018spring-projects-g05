@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use work.global_const.all;
+use work.cp0_const.all;
 
 entity mem_wb is
     port (
@@ -26,10 +27,8 @@ entity mem_wb is
         wbCP0RegData_o: out std_logic_vector(DataWidth);
         wbCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         wbCP0RegWe_o: out std_logic;
-        isTlbwi_i: in std_logic;
-        isTlbwr_i: in std_logic;
-        isTlbwi_o: out std_logic;
-        isTlbwr_o: out std_logic;
+        cp0Sp_i: in CP0Special;
+        cp0Sp_o: out CP0Special;
 
         -- for exception --
         flush_i: in std_logic
@@ -58,8 +57,7 @@ begin
                 wbCP0RegData_o <= (others => '0');
                 wbCP0RegWriteAddr_o <= (others => '0');
 
-                isTlbwi_o <= NO;
-                isTlbwr_o <= NO;
+                cp0Sp_o <= INVALID;
             elsif (stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                 toWriteReg_o <= toWriteReg_i;
                 writeRegAddr_o <= writeRegAddr_i;
@@ -74,8 +72,7 @@ begin
                 wbCP0RegWriteAddr_o <= memCP0RegWriteAddr_i;
                 wbCP0RegData_o <= memCP0RegData_i;
 
-                isTlbwi_o <= isTlbwi_i;
-                isTlbwr_o <= isTlbwr_i;
+                cp0Sp_o <= cp0Sp_i;
             end if;
         end if;
     end process;

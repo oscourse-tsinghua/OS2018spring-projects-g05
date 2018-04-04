@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
--- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_unsigned
+-- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_signed
 --       Use numeric_std if signed number is needed (different API)
 use work.global_const.all;
 use work.except_const.all;

@@ -49,9 +49,10 @@ architecture bhv of cpu is
     signal instExcept, dataExcept, devExcept: std_logic_vector(ExceptionCauseWidth);
 
     signal isKernelMode: std_logic;
-    signal entryIndex: std_logic_vector(TLBIndexWidth);
+    signal entryIndexSave, entryIndexLoad: std_logic_vector(TLBIndexWidth);
+    signal entryIndexValid: std_logic;
     signal entryWrite: std_logic;
-    signal entry: TLBEntry;
+    signal entrySave, entryLoad: TLBEntry;
 
     signal dataLoadConv, dataSaveConv: std_logic_vector(DataWidth);
     signal byteSelectConv: std_logic_vector(3 downto 0);
@@ -96,9 +97,12 @@ begin
             enable_o => devEnable_o,
             exceptCause_o => devExcept,
 
-            index_i => entryIndex,
+            index_i => entryIndexSave,
+            index_o => entryIndexLoad,
+            indexValid_o => entryIndexValid,
             entryWrite_i => entryWrite,
-            entry_i => entry
+            entry_i => entrySave,
+            entry_o => entryLoad
         );
 
     memctrl_ist: entity work.memctrl
@@ -158,9 +162,12 @@ begin
             int_i => int_i,
             timerInt_o => timerInt_o,
             isKernelMode_o => isKernelMode,
-            entryIndex_o => entryIndex,
+            entryIndex_i => entryIndexLoad,
+            entryIndexValid_i => entryIndexValid,
+            entryIndex_o => entryIndexSave,
             entryWrite_o => entryWrite,
-            entry_o => entry
+            entry_i => entryLoad,
+            entry_o => entrySave
         );
 
 end bhv;

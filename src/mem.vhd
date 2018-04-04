@@ -41,10 +41,8 @@ entity mem is
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_o: out std_logic;
-        isTlbwi_i: in std_logic;
-        isTlbwr_i: in std_logic;
-        isTlbwi_o: out std_logic;
-        isTlbwr_o: out std_logic;
+        cp0Sp_i: in CP0Special;
+        cp0Sp_o: out CP0Special;
 
         -- for exception --
         valid_i: in std_logic;
@@ -72,8 +70,7 @@ begin
     -- We preserve the low 2 bits for `lw` and `sw` as required by BadVAddr register
     -- `lh`, `lhu` and `sh` likewise
 
-    isTlbwi_o <= isTlbwi_i;
-    isTlbwr_o <= isTlbwr_i;
+    cp0Sp_o <= cp0Sp_i;
 
     process(all)
         variable loadedByte: std_logic_vector(7 downto 0);
@@ -121,17 +118,18 @@ begin
                     when MEM_LW|MEM_SW =>
                         savingData_o <= memData_i;
                         dataByteSelect_o <= "1111";
-                    when MEM_LWL =>
+                    when MEM_LWL|MEM_SWL =>
+                        savingData_o <= memData_i;
                         case memAddr_i(1 downto 0) is
                             when "00" =>
                                 loadedMask := 32ux"00_00_00_ff";
-                                dataByteSelect_o <= "1000";
+                                dataByteSelect_o <= "0001"; -- Read this from right(low) to left(high)!!
                             when "01" =>
                                 loadedMask := 32ux"00_00_ff_ff";
-                                dataByteSelect_o <= "1100";
+                                dataByteSelect_o <= "0011";
                             when "10" =>
                                 loadedMask := 32ux"00_ff_ff_ff";
-                                dataByteSelect_o <= "1110";
+                                dataByteSelect_o <= "0111";
                             when "11" =>
                                 loadedMask := 32ux"ff_ff_ff_ff";
                                 dataByteSelect_o <= "1111";
@@ -140,20 +138,21 @@ begin
                                 -- But the simulator thinks something like 'Z' should be considered
                                 null;
                         end case;
-                    when MEM_LWR =>
+                    when MEM_LWR|MEM_SWR =>
+                        savingData_o <= memData_i;
                         case memAddr_i(1 downto 0) is
                             when "00" =>
                                 loadedMask := 32ux"ff_ff_ff_ff";
                                 dataByteSelect_o <= "1111";
                             when "01" =>
                                 loadedMask := 32ux"ff_ff_ff_00";
-                                dataByteSelect_o <= "0111";
+                                dataByteSelect_o <= "1110";
                             when "10" =>
                                 loadedMask := 32ux"ff_ff_00_00";
-                                dataByteSelect_o <= "0011";
+                                dataByteSelect_o <= "1100";
                             when "11" =>
                                 loadedMask := 32ux"ff_00_00_00";
-                                dataByteSelect_o <= "0001";
+                                dataByteSelect_o <= "1000";
                             when others =>
                                 null;
                         end case;
@@ -211,7 +210,7 @@ begin
                     when MEM_LWL|MEM_LWR =>
                         writeRegData_o <= (loadedData_i and loadedMask) or (memData_i and not loadedMask);
                         dataEnable_o <= ENABLE;
-                    when MEM_SB|MEM_SH|MEM_SW =>
+                    when MEM_SB|MEM_SH|MEM_SW|MEM_SWL|MEM_SWR =>
                         dataWrite <= YES;
                         dataEnable_o <= ENABLE;
                     when others =>

@@ -1,0 +1,58 @@
+# Line starting with '#' is comment
+# The comment should be in seperated lines
+
+# Import a package
+# Grammar: "IMPORT <packageName>"
+# "IMPORT" should be in UPPER CASE, same below
+
+# Define a signal to be checked
+# Grammar: "DEFINE <signalName> <sub_instace_name.sub_sub_instance_name.(...).signal_name>: <type>"
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+# Execute an assembly instruction
+# Grammar: "RUN <assembly>"
+
+# MIPS Spec. Vol. III Table 7-1: Typical spaceing padded by software
+# MTC0 Index/EntryHi -> TLBWI/TLBR : 2
+# TLBWI -> TLBR : 3
+# TLBR -> MFC0 EntryHi : 3
+
+RUN lui $3, 0x0123
+RUN lui $4, 0x4567
+RUN lui $5, 0x89ab
+RUN ori $6, $0, 0x1
+RUN mtc0 $3, $10
+RUN mtc0 $4, $2
+RUN mtc0 $5, $3
+RUN mtc0 $6, $0
+RUN nop
+RUN nop
+RUN tlbwi
+
+RUN lui $3, 0x1111
+RUN lui $4, 0x2222
+RUN lui $5, 0x3333
+RUN ori $6, $0, 0x2
+RUN mtc0 $3, $10
+RUN mtc0 $4, $2
+RUN mtc0 $5, $3
+RUN mtc0 $6, $0
+RUN nop
+RUN nop
+RUN tlbwi
+
+RUN ori $6, $0, 0x1
+RUN mtc0 $6, $0
+RUN nop
+RUN nop
+RUN tlbr
+RUN nop
+RUN nop
+RUN nop
+RUN mfc0 $7, $10
+RUN mfc0 $8, $2
+RUN mfc0 $9, $3
+# Only 0..29 bits are writeable
+ASSERT 36 reg(7) 32ux"01230000"
+ASSERT 37 reg(8) 32ux"05670000"
+ASSERT 38 reg(9) 32ux"09ab0000"
