@@ -69,6 +69,11 @@ package inst_const is
     constant FUNC_MTLO: std_logic_vector(InstFuncWidth) := "010011";
 
     --
+    -- TRAP
+    --
+    constant FUNC_TNE: std_logic_vector(InstFuncWidth) := "110110";
+
+    --
     -- Memory OP codes
     --
     constant OP_LB: std_logic_vector(InstOpWidth) := "100000";
@@ -120,16 +125,22 @@ package inst_const is
     constant JMP_JR: std_logic_vector(InstFuncWidth):= "001000";
 
     constant JMP_BLTZ: std_logic_vector(InstRtWidth) := "00000";
+    constant JMP_BLTZL: std_logic_vector(InstRtWidth) := "00010";
     constant JMP_BGEZ: std_logic_vector(InstRtWidth) := "00001";
+    constant JMP_BGEZL: std_logic_vector(InstRtWidth) := "00011";
     constant JMP_BLTZAL: std_logic_vector(InstRtWidth) := "10000";
     constant JMP_BGEZAL: std_logic_vector(InstRtWidth) := "10001";
 
     constant JMP_BEQ: std_logic_vector(InstOpWidth) := "000100";
+    constant JMP_BEQL: std_logic_vector(InstOpWidth) := "010100";
     constant JMP_BGTZ: std_logic_vector(InstOpWidth) := "000111";
+    constant JMP_BGTZL: std_logic_vector(InstOpWidth) := "010111";
     constant JMP_BLEZ: std_logic_vector(InstOpWidth) := "000110";
+    constant JMP_BLEZL: std_logic_vector(InstOpWidth) := "010110";
     constant JMP_J: std_logic_vector(InstOpWidth) := "000010";
     constant JMP_JAL: std_logic_vector(InstOpWidth) := "000011";
     constant JMP_BNE: std_logic_vector(InstOpWidth) := "000101";
+    constant JMP_BNEL: std_logic_vector(InstOpWidth) := "010101";
 
     --
     -- CP0

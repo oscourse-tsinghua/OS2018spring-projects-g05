@@ -1,0 +1,12 @@
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+RUN ori $2, $2, 0x4
+RUN addi $2, $2, 0x8
+RUN xor $3, $3, $3
+RUN ori $4, 0x03
+RUN addi $2, $2, 0x2
+RUN addi $3, $3, 0x1
+RUN bnel $3, $4, -0xc
+RUN addi $2, $2, 0x100
+ASSERT 21 reg(2) x"00000212"
+ASSERT 30 reg(2) x"00000212"
