@@ -221,7 +221,7 @@ architecture bhv of datapath is
     signal flush_b9: std_logic;
 
     -- Signals connecting id and ctrl --
-    signal idToStall_4b: std_logic;
+    signal idToStall_4b, blNullify_4b: std_logic;
 
     -- Signals connecting ex and ctrl --
     signal exToStall_6b: std_logic;
@@ -318,6 +318,7 @@ begin
             memWriteRegData_i => memWriteRegData_84,
             isInDelaySlot_i => isInDelaySlot_54,
             toStall_o => idToStall_4b,
+            blNullify_o => blNullify_4b,
             regReadEnable1_o => regReadEnable1_43,
             regReadEnable2_o => regReadEnable2_43,
             regReadAddr1_o => regReadAddr1_43,
@@ -634,6 +635,7 @@ begin
             clk => clk,
             ifToStall_i => ifToStall_i,
             idToStall_i => idToStall_4b,
+            blNullify_i => blNullify_4b,
             exToStall_i => exToStall_6b,
             memToStall_i => memToStall_i,
             stall_o => stall,

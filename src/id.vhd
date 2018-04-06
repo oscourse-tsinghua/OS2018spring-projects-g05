@@ -45,6 +45,7 @@ entity id is
         branchTargetAddress_o: out std_logic_vector(AddrWidth);
         linkAddr_o: out std_logic_vector(AddrWidth);
         isInDelaySlot_o: out std_logic;
+        blNullify_o: out std_logic; -- for "branch likely": skipping the delay slot is equivalent to nullifying next inst
 
         -- For Exceptions --
         valid_i: in std_logic;
@@ -89,7 +90,7 @@ architecture bhv of id is
                         rdShouleBeZero := true;
                     when JMP_JALR =>
                         rtShouleBeZero := true;
-                    when FUNC_MULT | FUNC_MULTU=>
+                    when FUNC_MULT | FUNC_MULTU =>
                         rdShouleBeZero := true;
                     when others =>
                 end case;
@@ -173,7 +174,7 @@ begin
         variable isInvalid, jumpToRs, condJump, branchToJump, branchToLink: std_logic;
         variable branchFlag: std_logic;
         variable branchTargetAddress: std_logic_vector(AddrWidth);
-        variable toStall: std_logic;
+        variable toStall, blNullify, branchLikely, tneFlag: std_logic;
     begin
         oprSrc1 := INVALID;
         oprSrc2 := INVALID;
@@ -183,6 +184,10 @@ begin
         toWriteReg_o <= NO;
         writeRegAddr_o <= (others => '0');
         toStall := PIPELINE_NONSTOP;
+        blNullify := PIPELINE_NONSTOP;
+        branchLikely := NO;
+        tneFlag := NO;
+
         linkAddr_o <= (others => '0');
         branchTargetAddress := (others => '0');
         branchFlag := NOT_BRANCH_FLAG;
@@ -454,6 +459,14 @@ begin
                             oprSrc2 := INVALID;
                             toWriteReg_o <= NO;
                             exceptCause_o <= BREAK_CAUSE;
+                            isInvalid := NO;
+
+                        when FUNC_TNE =>
+                            oprSrc1 := REG;
+                            oprSrc2 := REG;
+                            toWriteReg_o <= NO;
+                            writeRegAddr_o <= (others => '0');
+                            tneFlag := YES;
                             isInvalid := NO;
 
                         when others =>
@@ -747,6 +760,15 @@ begin
                     writeRegAddr_o <= (others => '0');
                     isInvalid := NO;
 
+                when JMP_BEQL =>
+                    condJump := YES;
+                    oprSrc1 := REG;
+                    oprSrc2 := REG;
+                    toWriteReg_o <= NO;
+                    writeRegAddr_o <= (others => '0');
+                    isInvalid := NO;
+                    branchLikely := YES;
+
                 when OP_JMPSPECIAL =>
                     case (instRt) is
                         when JMP_BLTZ | JMP_BLTZAL =>
@@ -755,11 +777,25 @@ begin
                             oprSrc2 := INVALID;
                             isInvalid := NO;
 
+                        when JMP_BLTZL =>
+                            condJump := YES;
+                            oprSrc1 := REG;
+                            oprSrc2 := INVALID;
+                            isInvalid := NO;
+                            branchLikely := YES;
+
                         when JMP_BGEZ | JMP_BGEZAL =>
                             condJump := YES;
                             oprSrc1 := REG;
                             oprSrc2 := INVALID;
                             isInvalid := NO;
+
+                        when JMP_BGEZL =>
+                            condJump := YES;
+                            oprSrc1 := REG;
+                            oprSrc2 := INVALID;
+                            isInvalid := NO;
+                            branchLikely := YES;
 
                         when others =>
                             null;
@@ -771,17 +807,38 @@ begin
                     oprSrc2 := INVALID;
                     isInvalid := NO;
 
+                when JMP_BGTZL =>
+                    condJump := YES;
+                    oprSrc1 := REG;
+                    oprSrc2 := INVALID;
+                    isInvalid := NO;
+                    branchLikely := YES;
+
                 when JMP_BLEZ =>
                     condJump := YES;
                     oprSrc1 := REG;
                     oprSrc2 := INVALID;
                     isInvalid := NO;
 
+                when JMP_BLEZL =>
+                    condJump := YES;
+                    oprSrc1 := REG;
+                    oprSrc2 := INVALID;
+                    isInvalid := NO;
+                    branchLikely := YES;
+
                 when JMP_BNE =>
                     condJump := YES;
                     oprSrc1 := REG;
                     oprSrc2 := REG;
                     isInvalid := NO;
+
+                when JMP_BNEL =>
+                    condJump := YES;
+                    oprSrc1 := REG;
+                    oprSrc2 := REG;
+                    isInvalid := NO;
+                    branchLikely := YES;
 
                 when OP_COP0 =>
                     case (instRs) is
@@ -950,11 +1007,11 @@ begin
             case (instOp) is
                 when OP_JMPSPECIAL =>
                     case (instRt) is
-                        when JMP_BGEZ =>
+                        when JMP_BGEZ | JMP_BGEZL =>
                             if (operand1(31) = '0') then
                                 branchToJump := YES;
                             end if;
-                        when JMP_BLTZ =>
+                        when JMP_BLTZ | JMP_BLTZL =>
                             if (operand1(31) = '1') then
                                 branchToJump := YES;
                             end if;
@@ -971,19 +1028,19 @@ begin
                         when others =>
                             null;
                     end case;
-                when JMP_BEQ =>
+                when JMP_BEQ | JMP_BEQL =>
                     if (operand1 = operand2) then
                         branchToJump := YES;
                     end if;
-                when JMP_BGTZ =>
+                when JMP_BGTZ | JMP_BGTZL =>
                     if (operand1(31) = '0' and operand1 /= 32ux"0") then
                         branchToJump := YES;
                     end if;
-                when JMP_BLEZ =>
+                when JMP_BLEZ | JMP_BLEZL =>
                     if (operand1(31) = '1' or operand1 = 32ux"0") then
                         branchToJump := YES;
                     end if;
-                when JMP_BNE =>
+                when JMP_BNE | JMP_BNEL =>
                     if (operand1 /= operand2) then
                         branchToJump := YES;
                     end if;
@@ -994,6 +1051,8 @@ begin
             if (branchToJump = YES) then
                 branchTargetAddress := pcPlus4 + instOffsetImm - instImmSign;
                 branchFlag := BRANCH_FLAG;
+            elsif (branchLikely = YES) then
+                blNullify := PIPELINE_STOP;
             end if;
 
             if (branchToLink = YES) then
@@ -1014,11 +1073,16 @@ begin
             branchFlag := NOT_BRANCH_FLAG; -- See pc_reg.vhd for reason
         end if;
 
+        if (tneFlag = YES and operand1 /= operand2) then
+            exceptCause_o <= TRAP_CAUSE;
+        end if;
+
         operand1_o <= operand1;
         operand2_o <= operand2;
         operandX_o <= operandX;
         branchFlag_o <= branchFlag;
         branchTargetAddress_o <= branchTargetAddress;
         toStall_o <= toStall;
+        blNullify_o <= blNullify;
     end process;
 end bhv;

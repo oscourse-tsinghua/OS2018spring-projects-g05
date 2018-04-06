@@ -26,7 +26,7 @@ entity ctrl is
         rst, clk: in std_logic;
 
         -- Stall
-        ifToStall_i, idToStall_i, exToStall_i, memToStall_i: in std_logic;
+        ifToStall_i, idToStall_i, exToStall_i, memToStall_i, blNullify_i: in std_logic;
         stall_o: out std_logic_vector(StallWidth);
 
         -- Exception
@@ -93,6 +93,8 @@ begin
                     stall_o <= "111100";
                 elsif (idToStall_i = PIPELINE_STOP) then
                     stall_o <= "111000";
+                elsif (blNullify_i = PIPELINE_STOP) then
+                    stall_o <= "010000";
                 elsif (ifToStall_i = PIPELINE_STOP) then
                     stall_o <= "110000";
                 else
