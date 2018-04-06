@@ -24,6 +24,7 @@ package except_const is
     constant BREAK_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"9";
     constant INVALID_INST_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"10";
     constant OVERFLOW_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"12";
+    constant TRAP_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"13";
     constant ERET_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"14";
     -- Cause of eret is not in standard. We do this because 14~22 is reserved
 end except_const;

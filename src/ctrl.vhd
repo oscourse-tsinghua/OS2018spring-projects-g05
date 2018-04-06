@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
--- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_unsigned
+-- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_signed
 --       Use numeric_std if signed number is needed (different API)
 use work.global_const.all;
 use work.except_const.all;
@@ -27,7 +27,7 @@ entity ctrl is
         rst, clk: in std_logic;
 
         -- Stall
-        ifToStall_i, idToStall_i, exToStall_i, memToStall_i: in std_logic;
+        ifToStall_i, idToStall_i, exToStall_i, memToStall_i, blNullify_i: in std_logic;
         stall_o: out std_logic_vector(StallWidth);
 
         -- Exception
@@ -102,6 +102,8 @@ begin
                     stall_o <= "111100";
                 elsif ((idToStall_i = PIPELINE_STOP) or (isIdEhb_i = '1' and isMtc0 = '1')) then
                     stall_o <= "111000";
+                elsif (blNullify_i = PIPELINE_STOP) then
+                    stall_o <= "010000";
                 elsif (ifToStall_i = PIPELINE_STOP) then
                     stall_o <= "110000";
                 else

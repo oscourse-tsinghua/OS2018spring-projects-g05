@@ -36,9 +36,12 @@ entity datapath is
 
         -- To MMU
         isKernelMode_o: out std_logic;
+        entryIndex_i: in std_logic_vector(TLBIndexWidth);
+        entryIndexValid_i: in std_logic;
         entryIndex_o: out std_logic_vector(TLBIndexWidth);
         entryWrite_o: out std_logic;
         entryFlush_o: out std_logic;
+        entry_i: in TLBEntry;
         entry_o: out TLBEntry
     );
 end datapath;
@@ -124,8 +127,9 @@ architecture bhv of datapath is
     signal cp0RegData_67: std_logic_vector(DataWidth);
     signal cp0RegWriteAddr_67: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWe_67: std_logic;
-    signal isTlbwi_67, isTlbwr_67: std_logic;
     signal isTlbINVF_67: std_logic;
+
+    signal cp0Sp_67: CP0Special;
     signal tempProduct_67, tempProduct_76: std_logic_vector(DoubleDataWidth);
     signal cnt_67, cnt_76: std_logic_vector(CntWidth);
     signal exceptCause_67: std_logic_vector(ExceptionCauseWidth);
@@ -155,8 +159,8 @@ architecture bhv of datapath is
     signal cp0RegData_78: std_logic_vector(DataWidth);
     signal cp0RegWriteAddr_78: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWe_78: std_logic;
-    signal isTlbwi_78, isTlbwr_78: std_logic;
     signal isTlbINVF_78: std_logic;
+    signal cp0Sp_78: CP0Special;
     signal exceptCause_78: std_logic_vector(ExceptionCauseWidth);
     signal currentInstAddr_78: std_logic_vector(AddrWidth);
     signal isInDelaySlot_78: std_logic;
@@ -184,9 +188,9 @@ architecture bhv of datapath is
     signal cp0RegData_89: std_logic_vector(DataWidth);
     signal cp0RegWriteAddr_89: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWe_89: std_logic;
-    signal isTlbwi_89, isTlbwr_89: std_logic;
     signal isTlbINVF_89: std_logic;
     signal isMemMtc0_89: std_logic;
+    signal cp0Sp_89: CP0Special;
 
     -- Signals connecting mem_wb and regfile --
     signal toWriteReg_93: std_logic;
@@ -205,8 +209,8 @@ architecture bhv of datapath is
     signal wbCP0RegData_9c: std_logic_vector(DataWidth);
     signal wbCP0RegWriteAddr_9c: std_logic_vector(CP0RegAddrWidth);
     signal wbCP0RegWe_9c: std_logic;
-    signal isTlbwi_9c, isTlbwr_9c: std_logic;
     signal isTlbINVF_9c: std_logic;
+    signal cp0Sp_9c: CP0Special;
 
     -- Signals connecting hi_lo and ex --
     signal hiData_a6, loData_a6: std_logic_vector(DataWidth);
@@ -229,8 +233,8 @@ architecture bhv of datapath is
     signal isWbMtc0_9b: std_logic;
 
     -- Signals connecting id and ctrl --
-    signal idToStall_4b: std_logic;
     signal isIdEhb_4b: std_logic;
+    signal idToStall_4b, blNullify_4b: std_logic;
 
     -- Signals connecting ex and ctrl --
     signal exToStall_6b: std_logic;
@@ -329,6 +333,7 @@ begin
             memWriteRegData_i => memWriteRegData_84,
             isInDelaySlot_i => isInDelaySlot_54,
             toStall_o => idToStall_4b,
+            blNullify_o => blNullify_4b,
             regReadEnable1_o => regReadEnable1_43,
             regReadEnable2_o => regReadEnable2_43,
             regReadAddr1_o => regReadAddr1_43,
@@ -446,9 +451,8 @@ begin
             cp0RegData_o => cp0RegData_67,
             cp0RegWriteAddr_o => cp0RegWriteAddr_67,
             cp0RegWe_o => cp0RegWe_67,
-            isTlbwi_o => isTlbwi_67,
-            isTlbwr_o => isTlbwr_67,
             isTlbINVF_o => isTlbINVF_67,
+            cp0Sp_o => cp0Sp_67,
 
             valid_i => valid_56,
             valid_o => valid_67,
@@ -517,12 +521,10 @@ begin
             cp0RegWriteAddr_o => cp0RegWriteAddr_78,
             cp0RegWe_o => cp0RegWe_78,
 
-            isTlbwi_i => isTlbwi_67,
-            isTlbwr_i => isTlbwr_67,
             isTlbINVF_i => isTlbINVF_67,
-            isTLbwi_o => isTlbwi_78,
-            isTlbwr_o => isTlbwr_78,
             isTlbINVF_o => isTlbINVF_78,
+            cp0Sp_i => cp0Sp_67,
+            cp0Sp_o => cp0Sp_78,
 
             flush_i => flush_b7,
             valid_i => valid_67,
@@ -575,12 +577,10 @@ begin
             cp0RegWriteAddr_o => cp0RegWriteAddr_89,
             cp0RegWe_o => cp0RegWe_89,
 
-            isTlbwi_i => isTlbwi_78,
-            isTlbwr_i => isTlbwr_78,
             isTlbINVF_i => isTlbINVF_78,
-            isTLbwi_o => isTlbwi_89,
-            isTlbwr_o => isTlbwr_89,
             isTlbINVF_o => isTlbINVF_89,
+            cp0Sp_i => cp0Sp_78,
+            cp0Sp_o => cp0Sp_89,
 
             valid_i => valid_78,
             exceptCause_i => exceptCause_78,
@@ -637,14 +637,12 @@ begin
             wbCP0RegWriteAddr_o => wbCP0RegWriteAddr_9c,
             wbCP0RegWe_o => wbCP0RegWe_9c,
 
-            isTlbwi_i => isTlbwi_89,
-            isTlbwr_i => isTlbwr_89,
             isTlbINVF_i => isTlbINVF_89,
-            isTLbwi_o => isTlbwi_9c,
-            isTlbwr_o => isTlbwr_9c,
             isTlbINVF_o => isTlbINVF_9c,
 
             flush_i => flush_b9,
+            cp0Sp_i => cp0Sp_89,
+            cp0Sp_o => cp0Sp_9c,
 
             isMemMtc0_i => isMemMtc0_89,
             isWbMtc0_o => isWbMtc0_9b
@@ -677,6 +675,7 @@ begin
             clk => clk,
             ifToStall_i => ifToStall_i,
             idToStall_i => idToStall_4b,
+            blNullify_i => blNullify_4b,
             exToStall_i => exToStall_6b,
             memToStall_i => memToStall_i,
             stall_o => stall,
@@ -720,12 +719,14 @@ begin
             cause_o => cause_c8,
             timerInt_o => timerInt_o,
             isKernelMode_o => isKernelMode_o,
-            isTlbwi_i => isTlbwi_9c,
-            isTlbwr_i => isTlbwr_9c,
             isTlbINVF_i => isTlbINVF_9c,
+            entryFlush_o => entryFlush_o,
+            cp0Sp_i => cp0Sp_9c,
+            entryIndex_i => entryIndex_i,
+            entryIndexValid_i => entryIndexValid_i,
             entryIndex_o => entryIndex_o,
             entryWrite_o => entryWrite_o,
-            entryFlush_o => entryFlush_o,
+            entry_i => entry_i,
             entry_o => entry_o,
             cp0EBaseAddr_o => cp0EBaseAddr_cb
         );
