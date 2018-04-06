@@ -51,6 +51,7 @@ architecture bhv of cpu is
     signal isKernelMode: std_logic;
     signal entryIndex: std_logic_vector(TLBIndexWidth);
     signal entryWrite: std_logic;
+    signal entryFlush: std_logic;
     signal entry: TLBEntry;
 
     signal dataLoadConv, dataSaveConv: std_logic_vector(DataWidth);
@@ -98,6 +99,7 @@ begin
 
             index_i => entryIndex,
             entryWrite_i => entryWrite,
+            entryFlush_i => entryFlush,
             entry_i => entry
         );
 
@@ -160,6 +162,7 @@ begin
             isKernelMode_o => isKernelMode,
             entryIndex_o => entryIndex,
             entryWrite_o => entryWrite,
+            entryFlush_o => entryFlush,
             entry_o => entry
         );
 

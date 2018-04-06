@@ -1,0 +1,65 @@
+# Line starting with '#' is comment
+# The comment should be in seperated lines
+
+# Import a package
+# Grammar: "IMPORT <packageName>"
+# "IMPORT" should be in UPPER CASE, same below
+
+# Define a signal to be checked
+# Grammar: "DEFINE <signalName> <sub_instace_name.sub_sub_instance_name.(...).signal_name>: <type>"
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+# Execute an assembly instruction
+# Grammar: "RUN <assembly>"
+
+# 0x04
+RUN ori $2, 0x07
+
+# 0x08
+RUN mtc0 $2, $3
+
+# 0x0c
+RUN mtc0 $2, $2
+
+# 0x10
+RUN tlbwr
+
+# 0x14
+# I don't know why should I write TLBINVF in this format.
+RUN c0 0x4
+
+# 0x18
+RUN nop
+
+# 0x1c
+RUN nop
+
+# 0x20
+RUN nop
+
+# 0x24
+RUN nop
+
+# 0x28
+# Note: if we do not have EHB-like instructions here, this insertion should not be adjancent to the TLBINVF, and the nearest place in this version is here.
+RUN sw $2, 0x8($0)
+
+# 0x2c
+RUN nop
+
+# 0x30
+RUN nop
+
+# 0x34
+RUN nop
+
+# 0x38
+RUN j 0x030
+
+# 0x3c
+RUN nop
+
+# 0x40 BAD_V_ADDR
+# If TLBINVF works fine, we will come here.
+RUN ori $23, $0, 0xffff
+ASSERT 23 reg(23) 32ux"ffff"

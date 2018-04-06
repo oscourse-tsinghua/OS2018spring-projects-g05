@@ -1,10 +1,10 @@
 -- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2017.2 (win64) Build 1909853 Thu Jun 15 18:39:09 MDT 2017
--- Date        : Sat Nov 25 01:59:04 2017
--- Host        : DESKTOP-JPEQ6FJ running 64-bit major release  (build 9200)
+-- Date        : Thu Apr  5 09:57:07 2018
+-- Host        : DESKTOP-GEFPJRO running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode synth_stub
---               e:/Development/nCore/nCore/thinpad_top/thinpad_top.srcs/sources_1/ip/vga_ram/vga_ram_stub.vhdl
+--               C:/Users/XEMBO/Documents/GitHub/OS2018spring-projects-g05/thinpad_top/thinpad_top.srcs/sources_1/ip/vga_ram/vga_ram_stub.vhdl
 -- Design      : vga_ram
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7a100tfgg676-2L

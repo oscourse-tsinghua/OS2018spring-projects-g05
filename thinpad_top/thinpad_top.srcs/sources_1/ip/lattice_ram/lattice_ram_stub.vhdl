@@ -1,10 +1,10 @@
 -- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2017.2 (win64) Build 1909853 Thu Jun 15 18:39:09 MDT 2017
--- Date        : Mon Dec 18 16:12:22 2017
--- Host        : DESKTOP-JPEQ6FJ running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode synth_stub
---               E:/Development/nCore/nCore/thinpad_top/thinpad_top.srcs/sources_1/ip/lattice_ram/lattice_ram_stub.vhdl
+-- Date        : Thu Apr  5 09:56:03 2018
+-- Host        : DESKTOP-GEFPJRO running 64-bit major release  (build 9200)
+-- Command     : write_vhdl -force -mode synth_stub -rename_top lattice_ram -prefix
+--               lattice_ram_ lattice_ram_stub.vhdl
 -- Design      : lattice_ram
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7a100tfgg676-2L

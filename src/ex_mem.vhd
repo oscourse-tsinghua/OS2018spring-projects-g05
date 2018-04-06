@@ -44,8 +44,10 @@ entity ex_mem is
         cp0RegWe_o: out std_logic;
         isTlbwi_i: in std_logic;
         isTlbwr_i: in std_logic;
+        isTlbINVF_i: in std_logic;
         isTlbwi_o: out std_logic;
         isTlbwr_o: out std_logic;
+        isTlbINVF_o: out std_logic;
 
         -- for exception --
         valid_i: in std_logic;
@@ -56,8 +58,11 @@ entity ex_mem is
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         isInDelaySlot_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth);
+        flush_i: in std_logic;
 
-        flush_i: in std_logic
+        -- for hazard barrier --
+        isExMtc0_i: in std_logic;
+        isMemMtc0_o: out std_logic
     );
 end ex_mem;
 
@@ -94,8 +99,11 @@ begin
                 cp0RegWriteAddr_o <= (others => '0');
                 isTlbwi_o <= NO;
                 isTlbwr_o <= NO;
+                isTlbINVF_o <= NO;
 
                 valid_o <= NO;
+
+                isMemMtc0_o <= NO;
 
                 if (stall_i(EX_STOP_IDX) = PIPELINE_STOP and stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                     tempProduct_o <= tempProduct_i;
@@ -120,6 +128,7 @@ begin
                 cp0RegData_o <= cp0RegData_i;
                 isTlbwi_o <= isTlbwi_i;
                 isTlbwr_o <= isTlbwr_i;
+                isTlbINVF_o <= isTlbINVF_i;
 
                 exceptCause_o <= exceptCause_i;
                 isInDelaySlot_o <= isInDelaySlot_i;
@@ -129,6 +138,7 @@ begin
 
                 tempProduct_o <= tempProduct_i;
                 cnt_o <= cnt_i;
+                isMemMtc0_o <= isExMtc0_i;
             end if;
         end if;
     end process;

@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
+use ieee.numeric_std.all;
 -- NOTE: std_logic_unsigned cannot be used at the same time with std_logic_unsigned
 --       Use numeric_std if signed number is needed (different API)
 use work.global_const.all;
@@ -36,7 +37,13 @@ entity ctrl is
         newPC_o: out std_logic_vector(AddrWidth);
         flush_o: out std_logic;
         toWriteBadVAddr_o: out std_logic;
-        badVAddr_o: out std_logic_vector(AddrWidth)
+        badVAddr_o: out std_logic_vector(AddrWidth);
+        
+        -- Hazard Barrier
+        isIdEhb_i: in std_logic;
+        isExMtc0_i: in std_logic;
+        isMemMtc0_i: in std_logic;
+        isWbMtc0_i: in std_logic
     );
 end ctrl;
 
@@ -46,9 +53,11 @@ architecture bhv of ctrl is
 begin
     process(all)
         variable newPC: std_logic_vector(AddrWidth);
+        variable isMtc0: std_logic;
     begin
         newPC_o <= (others => '0');
         newPC := (others => 'X');
+        isMtc0 := isExMtc0_i or isMemMtc0_i or isWbMtc0_i;
         if (rst = RST_ENABLE) then
             stall_o <= (others => '0');
             flush_o <= '0';
@@ -91,7 +100,7 @@ begin
                     stall_o <= "111110";
                 elsif (exToStall_i = PIPELINE_STOP) then
                     stall_o <= "111100";
-                elsif (idToStall_i = PIPELINE_STOP) then
+                elsif ((idToStall_i = PIPELINE_STOP) or (isIdEhb_i = '1' and isMtc0 = '1')) then
                     stall_o <= "111000";
                 elsif (ifToStall_i = PIPELINE_STOP) then
                     stall_o <= "110000";

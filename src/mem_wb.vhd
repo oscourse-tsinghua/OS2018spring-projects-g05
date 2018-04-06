@@ -28,11 +28,17 @@ entity mem_wb is
         wbCP0RegWe_o: out std_logic;
         isTlbwi_i: in std_logic;
         isTlbwr_i: in std_logic;
+        isTlbINVF_i: in std_logic;
         isTlbwi_o: out std_logic;
         isTlbwr_o: out std_logic;
+        isTlbINVF_o: out std_logic;
 
         -- for exception --
-        flush_i: in std_logic
+        flush_i: in std_logic;
+
+        -- for hazard barrier --
+        isMemMtc0_i: in std_logic;
+        isWbMtc0_o: out std_logic
     );
 end mem_wb;
 
@@ -60,6 +66,8 @@ begin
 
                 isTlbwi_o <= NO;
                 isTlbwr_o <= NO;
+                isTlbINVF_o <= NO;
+                isWbMtc0_o <= NO;
             elsif (stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                 toWriteReg_o <= toWriteReg_i;
                 writeRegAddr_o <= writeRegAddr_i;
@@ -76,6 +84,9 @@ begin
 
                 isTlbwi_o <= isTlbwi_i;
                 isTlbwr_o <= isTlbwr_i;
+                isTlbINVF_o <= isTlbINVF_i;
+
+                isWbMtc0_o <= isMemMtc0_i;
             end if;
         end if;
     end process;

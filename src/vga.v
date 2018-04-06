@@ -1,3 +1,4 @@
+/*
 `timescale 1ns / 1ps
 //
 // WIDTH: bits in register hdata & vdata
@@ -56,3 +57,4 @@ assign vsync = ((vdata >= VFP) && (vdata < VSP)) ? VSPP : !VSPP;
 assign data_enable = ((hdata < HSIZE) & (vdata < VSIZE));
 
 endmodule
+*/

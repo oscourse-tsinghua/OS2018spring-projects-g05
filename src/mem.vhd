@@ -43,8 +43,10 @@ entity mem is
         cp0RegWe_o: out std_logic;
         isTlbwi_i: in std_logic;
         isTlbwr_i: in std_logic;
+        isTlbINVF_i: in std_logic;
         isTlbwi_o: out std_logic;
         isTlbwr_o: out std_logic;
+        isTlbINVF_o: out std_logic;
 
         -- for exception --
         valid_i: in std_logic;
@@ -56,7 +58,11 @@ entity mem is
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         isInDelaySlot_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth);
-        currentAccessAddr_o: out std_logic_vector(AddrWidth)
+        currentAccessAddr_o: out std_logic_vector(AddrWidth);
+
+        -- for hazard barrier --
+        isMemMtc0_i: in std_logic;
+        isMemMtc0_o: out std_logic
     );
 end mem;
 
@@ -74,6 +80,8 @@ begin
 
     isTlbwi_o <= isTlbwi_i;
     isTlbwr_o <= isTlbwr_i;
+    isTlbINVF_o <= isTlbINVF_i;
+    isMemMtc0_o <= isMemMtc0_i;
 
     process(all)
         variable loadedByte: std_logic_vector(7 downto 0);

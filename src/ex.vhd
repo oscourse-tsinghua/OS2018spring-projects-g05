@@ -64,6 +64,7 @@ entity ex is
         cp0RegWe_o: out std_logic;
         isTlbwi_o: out std_logic;
         isTlbwr_o: out std_logic;
+        isTlbINVF_o: out std_logic;
 
         -- for exception --
         valid_i: in std_logic;
@@ -72,7 +73,11 @@ entity ex is
         currentInstAddr_i: in std_logic_vector(AddrWidth);
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         isInDelaySlot_o: out std_logic;
-        currentInstAddr_o: out std_logic_vector(AddrWidth)
+        currentInstAddr_o: out std_logic_vector(AddrWidth);
+
+        -- for hazard barrier --
+        isExMtc0_i: in std_logic;
+        isExMtc0_o: out std_logic
     );
 end ex;
 
@@ -114,6 +119,7 @@ architecture bhv of ex is
     signal reg1Ltreg2: std_logic;
 begin
     memt_o <= memt_i;
+    isExMtc0_o <= isExMtc0_i;
 
     clo <= 32ux"00" when operand1_i(31) = '0' else 32ux"01" when operand1_i(30) = '0' else
            32ux"02" when operand1_i(29) = '0' else 32ux"03" when operand1_i(28) = '0' else
@@ -235,6 +241,7 @@ begin
         cp0RegData_o <= (others => '0');
         isTlbwi_o <= NO;
         isTlbwr_o <= NO;
+        isTlbINVF_o <= NO;
         writeHiData_o <= (others => '0');
         writeLoData_o <= (others => '0');
         cp0RegReadAddr_o <= (others => '0');
@@ -281,6 +288,9 @@ begin
 
                 when ALU_MFLO =>
                     writeRegData_o <= realLoData;
+
+                when ALU_MFH =>
+                    writeRegAddr_o <= (others => '0');
 
                 when ALU_MTHI =>
                     toWriteHi_o <= YES;
@@ -445,6 +455,9 @@ begin
 
                 when ALU_TLBWR =>
                     isTlbwr_o <= YES;
+
+                when ALU_TLBINVF =>
+                    isTlbINVF_o <= YES;
 
                 when others =>
                     toWriteReg_o <= NO;

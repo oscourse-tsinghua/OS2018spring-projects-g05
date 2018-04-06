@@ -40,8 +40,10 @@ entity cp0_reg is
         -- For MMU
         isTlbwi_i: in std_logic;
         isTlbwr_i: in std_logic;
+        isTlbINVF_i: in std_logic;
         entryIndex_o: out std_logic_vector(TLBIndexWidth);
         entryWrite_o: out std_logic;
+        entryFlush_o: out std_logic;
         entry_o: out TLBEntry;
 
         -- Connect ctrl, for address error after eret instruction
@@ -74,6 +76,7 @@ begin
     entryIndex_o <= curArr(RANDOM_REG)(TLBIndexWidth) when isTlbwr_i = '1' else curArr(INDEX_REG)(TLBIndexWidth);
 
     entryWrite_o <= isTlbwi_i or isTlbwr_i;
+    entryFlush_o <= isTlbINVF_i;
 
     entry_o.hi <= curArr(ENTRY_HI_REG);
     entry_o.lo0 <= curArr(ENTRY_LO0_REG);
