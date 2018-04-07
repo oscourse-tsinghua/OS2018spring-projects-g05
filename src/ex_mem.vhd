@@ -43,8 +43,6 @@ entity ex_mem is
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_o: out std_logic;
-        isTlbINVF_i: in std_logic;
-        isTlbINVF_o: out std_logic;
         cp0Sp_i: in CP0Special;
         cp0Sp_o: out CP0Special;
 
@@ -96,7 +94,6 @@ begin
                 cp0RegWe_o <= NO;
                 cp0RegData_o <= (others => '0');
                 cp0RegWriteAddr_o <= (others => '0');
-                isTlbINVF_o <= NO;
                 cp0Sp_o <= INVALID;
 
                 valid_o <= NO;
@@ -124,7 +121,6 @@ begin
                 cp0RegWe_o <= cp0RegWe_i;
                 cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
                 cp0RegData_o <= cp0RegData_i;
-                isTlbINVF_o <= isTlbINVF_i;
                 cp0Sp_o <= cp0Sp_i;
 
                 exceptCause_o <= exceptCause_i;

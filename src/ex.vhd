@@ -63,7 +63,6 @@ entity ex is
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_o: out std_logic;
-        isTlbINVF_o: out std_logic;
         cp0Sp_o: out CP0Special;
 
         -- for exception --
@@ -239,7 +238,6 @@ begin
         cp0RegWe_o <= NO;
         cp0RegWriteAddr_o <= (others => '0');
         cp0RegData_o <= (others => '0');
-        isTlbINVF_o <= NO;
         cp0Sp_o <= INVALID;
         writeHiData_o <= (others => '0');
         writeLoData_o <= (others => '0');
@@ -462,7 +460,7 @@ begin
                     cp0Sp_o <= CP0SP_TLBR;
 
                 when ALU_TLBINVF =>
-                    isTlbINVF_o <= YES;
+                    cp0Sp_o <= CP0SP_TLBINVF;
 
                 when others =>
                     toWriteReg_o <= NO;

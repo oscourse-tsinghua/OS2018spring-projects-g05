@@ -41,8 +41,6 @@ entity mem is
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_o: out std_logic;
-        isTlbINVF_i: in std_logic;
-        isTlbINVF_o: out std_logic;
         cp0Sp_i: in CP0Special;
         cp0Sp_o: out CP0Special;
 
@@ -76,7 +74,6 @@ begin
     -- We preserve the low 2 bits for `lw` and `sw` as required by BadVAddr register
     -- `lh`, `lhu` and `sh` likewise
 
-    isTlbINVF_o <= isTlbINVF_i;
     isMemMtc0_o <= isMemMtc0_i;
     cp0Sp_o <= cp0Sp_i;
 

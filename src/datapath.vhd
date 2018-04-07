@@ -127,7 +127,6 @@ architecture bhv of datapath is
     signal cp0RegData_67: std_logic_vector(DataWidth);
     signal cp0RegWriteAddr_67: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWe_67: std_logic;
-    signal isTlbINVF_67: std_logic;
 
     signal cp0Sp_67: CP0Special;
     signal tempProduct_67, tempProduct_76: std_logic_vector(DoubleDataWidth);
@@ -159,7 +158,6 @@ architecture bhv of datapath is
     signal cp0RegData_78: std_logic_vector(DataWidth);
     signal cp0RegWriteAddr_78: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWe_78: std_logic;
-    signal isTlbINVF_78: std_logic;
     signal cp0Sp_78: CP0Special;
     signal exceptCause_78: std_logic_vector(ExceptionCauseWidth);
     signal currentInstAddr_78: std_logic_vector(AddrWidth);
@@ -188,7 +186,6 @@ architecture bhv of datapath is
     signal cp0RegData_89: std_logic_vector(DataWidth);
     signal cp0RegWriteAddr_89: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWe_89: std_logic;
-    signal isTlbINVF_89: std_logic;
     signal isMemMtc0_89: std_logic;
     signal cp0Sp_89: CP0Special;
 
@@ -209,7 +206,6 @@ architecture bhv of datapath is
     signal wbCP0RegData_9c: std_logic_vector(DataWidth);
     signal wbCP0RegWriteAddr_9c: std_logic_vector(CP0RegAddrWidth);
     signal wbCP0RegWe_9c: std_logic;
-    signal isTlbINVF_9c: std_logic;
     signal cp0Sp_9c: CP0Special;
 
     -- Signals connecting hi_lo and ex --
@@ -451,7 +447,6 @@ begin
             cp0RegData_o => cp0RegData_67,
             cp0RegWriteAddr_o => cp0RegWriteAddr_67,
             cp0RegWe_o => cp0RegWe_67,
-            isTlbINVF_o => isTlbINVF_67,
             cp0Sp_o => cp0Sp_67,
 
             valid_i => valid_56,
@@ -521,8 +516,6 @@ begin
             cp0RegWriteAddr_o => cp0RegWriteAddr_78,
             cp0RegWe_o => cp0RegWe_78,
 
-            isTlbINVF_i => isTlbINVF_67,
-            isTlbINVF_o => isTlbINVF_78,
             cp0Sp_i => cp0Sp_67,
             cp0Sp_o => cp0Sp_78,
 
@@ -577,8 +570,6 @@ begin
             cp0RegWriteAddr_o => cp0RegWriteAddr_89,
             cp0RegWe_o => cp0RegWe_89,
 
-            isTlbINVF_i => isTlbINVF_78,
-            isTlbINVF_o => isTlbINVF_89,
             cp0Sp_i => cp0Sp_78,
             cp0Sp_o => cp0Sp_89,
 
@@ -636,9 +627,6 @@ begin
             wbCP0RegData_o => wbCP0RegData_9c,
             wbCP0RegWriteAddr_o => wbCP0RegWriteAddr_9c,
             wbCP0RegWe_o => wbCP0RegWe_9c,
-
-            isTlbINVF_i => isTlbINVF_89,
-            isTlbINVF_o => isTlbINVF_9c,
 
             flush_i => flush_b9,
             cp0Sp_i => cp0Sp_89,
@@ -719,7 +707,6 @@ begin
             cause_o => cause_c8,
             timerInt_o => timerInt_o,
             isKernelMode_o => isKernelMode_o,
-            isTlbINVF_i => isTlbINVF_9c,
             entryFlush_o => entryFlush_o,
             cp0Sp_i => cp0Sp_9c,
             entryIndex_i => entryIndex_i,
