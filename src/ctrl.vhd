@@ -41,9 +41,9 @@ entity ctrl is
         
         -- Hazard Barrier
         isIdEhb_i: in std_logic;
-        isExMtc0_i: in std_logic;
-        isMemMtc0_i: in std_logic;
-        isWbMtc0_i: in std_logic
+        excp0regWe_i: in std_logic;
+        memcp0regWe_i: in std_logic;
+        wbcp0regWe_i: in std_logic
     );
 end ctrl;
 
@@ -57,7 +57,7 @@ begin
     begin
         newPC_o <= (others => '0');
         newPC := (others => 'X');
-        isMtc0 := isExMtc0_i or isMemMtc0_i or isWbMtc0_i;
+        isMtc0 := excp0regWe_i or memcp0regWe_i or wbcp0regWe_i;
         if (rst = RST_ENABLE) then
             stall_o <= (others => '0');
             flush_o <= '0';

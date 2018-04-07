@@ -38,7 +38,6 @@ entity id is
         toWriteReg_o: out std_logic;
         writeRegAddr_o: out std_logic_vector(RegAddrWidth);
         isIdEhb_o: out std_logic;
-        isIdMtc0_o: out std_logic;
 
         -- For ju instructions --
         isInDelaySlot_i: in std_logic;
@@ -202,7 +201,6 @@ begin
         regReadEnable2_o <= DISABLE;
         regReadAddr2_o <= (others => '0');
         isIdEhb_o <= NO;
-        isIdMtc0_o <= NO;
 
         -- Assign 'X' to them, otherwise it will introduce a level latch to keep prior values
         operand1 := (others => 'X');
@@ -333,7 +331,6 @@ begin
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
                             isInvalid := NO;
-                            isIdMtc0_o <= YES;
 
                         when FUNC_MTLO =>
                             oprSrc1 := REG;
@@ -342,7 +339,6 @@ begin
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
                             isInvalid := NO;
-                            isIdMtc0_o <= YES;
 
                         when FUNC_ADD =>
                             oprSrc1 := REG;
@@ -859,7 +855,6 @@ begin
                                 toWriteReg_o <= NO;
                                 writeRegAddr_o <= (others => '0');
                                 isInvalid := NO;
-                                isIdMtc0_o <= YES;
                             end if;
 
                         when RS_MF =>

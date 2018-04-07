@@ -92,7 +92,6 @@ architecture bhv of datapath is
     signal valid_45: std_logic;
     signal exceptCause_45: std_logic_vector(ExceptionCauseWidth);
     signal currentInstAddr_45: std_logic_vector(AddrWidth);
-    signal isIdMtc0_45: std_logic;
 
     -- Signals connecting id_ex and ex --
     signal alut_56: AluType;
@@ -107,7 +106,6 @@ architecture bhv of datapath is
     signal exExceptCause_56: std_logic_vector(ExceptionCauseWidth);
     signal exCurrentInstAddr_56: std_logic_vector(AddrWidth);
     signal valid_56: std_logic;
-    signal isExMtc0_56: std_logic;
 
     -- Signals connecting ex and id --
     signal exToWriteReg_64: std_logic;
@@ -136,7 +134,6 @@ architecture bhv of datapath is
     signal currentInstAddr_67: std_logic_vector(AddrWidth);
     signal isInDelaySlot_67: std_logic;
     signal valid_67: std_logic;
-    signal isExMtc0_67: std_logic;
 
     -- Signals connecting ex and cp0 --
     signal cp0RegReadAddr_6c: std_logic_vector(CP0RegAddrWidth);
@@ -165,7 +162,6 @@ architecture bhv of datapath is
     signal currentInstAddr_78: std_logic_vector(AddrWidth);
     signal isInDelaySlot_78: std_logic;
     signal valid_78: std_logic;
-    signal isMemMtc0_78: std_logic;
 
     -- Signals connecting mem and id --
     signal memToWriteReg_84: std_logic;
@@ -189,7 +185,6 @@ architecture bhv of datapath is
     signal cp0RegWriteAddr_89: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWe_89: std_logic;
     signal isTlbINVF_89: std_logic;
-    signal isMemMtc0_89: std_logic;
     signal cp0Sp_89: CP0Special;
 
     -- Signals connecting mem_wb and regfile --
@@ -230,7 +225,7 @@ architecture bhv of datapath is
 
     -- Signals connecting ctrl and mem_wb --
     signal flush_b9: std_logic;
-    signal isWbMtc0_9b: std_logic;
+    signal wbCP0RegWe_9b: std_logic;
 
     -- Signals connecting id and ctrl --
     signal isIdEhb_4b: std_logic;
@@ -238,7 +233,7 @@ architecture bhv of datapath is
 
     -- Signals connecting ex and ctrl --
     signal exToStall_6b: std_logic;
-    signal isExMtc0_6b: std_logic;
+    signal excp0RegWe_6b: std_logic;
 
     -- Signals connecting ctrl and others --
     signal stall: std_logic_vector(StallWidth);
@@ -268,7 +263,7 @@ architecture bhv of datapath is
 
     -- Signals connecting mem and ctrl --
     signal exceptCause_8b: std_logic_vector(ExceptionCauseWidth);
-    signal isMemMtc0_8b: std_logic;
+    signal memCp0RegWe_8b: std_logic;
 
 begin
 
@@ -356,8 +351,7 @@ begin
             exceptCause_i => exceptCause_24,
             exceptCause_o => exceptCause_45,
             currentInstAddr_o => currentInstAddr_45,
-            isIdEhb_o => isIdEhb_4b,
-            isIdMtc0_o => isIdMtc0_45
+            isIdEhb_o => isIdEhb_4b
         );
 
     id_ex_ist: entity work.id_ex
@@ -373,7 +367,6 @@ begin
             writeRegAddr_i => writeRegAddr_45,
             idIsInDelaySlot_i => isInDelaySlot_45,
             idLinkAddress_i => linkAddr_45,
-            isIdMtc0_i => isIdMtc0_45,
             nextInstInDelaySlot_i => nextInstInDelaySlot_45,
             flush_i => flush_b5,
             idExceptCause_i => exceptCause_45,
@@ -391,8 +384,7 @@ begin
             exLinkAddress_o => exLinkAddress_56,
             exExceptCause_o => exExceptCause_56,
             exCurrentInstAddr_o => exCurrentInstAddr_56,
-            valid_o => valid_56,
-            isExMtc0_o => isExMtc0_56
+            valid_o => valid_56
         );
 
     ex_ist: entity work.ex
@@ -460,16 +452,14 @@ begin
             currentInstAddr_i => exCurrentInstAddr_56,
             exceptCause_o => exceptCause_67,
             currentInstAddr_o => currentInstAddr_67,
-            isInDelaySlot_o => isInDelaySlot_67,
+            isInDelaySlot_o => isInDelaySlot_67
 
-            isExMtc0_i => isExMtc0_56,
-            isExMtc0_o => isExMtc0_67
         );
     exToWriteReg_64 <= toWriteReg_67;
     exWriteRegAddr_64 <= writeRegAddr_67;
     exWriteRegData_64 <= writeRegData_67;
     lastMemt_64 <= memt_67;
-    isExMtc0_6b <= isExMtc0_67;
+    excp0RegWe_6b <= cp0RegWe_67;
 
     div_ist: entity work.div
         port map (
@@ -534,10 +524,7 @@ begin
             valid_o => valid_78,
             exceptCause_o => exceptCause_78,
             currentInstAddr_o => currentInstAddr_78,
-            isInDelaySlot_o => isInDelaySlot_78,
-
-            isExMtc0_i => isExMtc0_67,
-            isMemMtc0_o => isMemMtc0_78
+            isInDelaySlot_o => isInDelaySlot_78
         );
 
     mem_ist: entity work.mem
@@ -592,10 +579,7 @@ begin
             exceptCause_o => exceptCause_8c,
             currentInstAddr_o => currentInstAddr_8c,
             currentAccessAddr_o => currentAccessAddr_8c,
-            isInDelaySlot_o => isInDelaySlot_8c,
-
-            isMemMtc0_i => isMemMtc0_78,
-            isMemMtc0_o => isMemMtc0_89
+            isInDelaySlot_o => isInDelaySlot_8c
         );
     memToWriteReg_84 <= toWriteReg_89;
     memWriteRegAddr_84 <= writeRegAddr_89;
@@ -608,7 +592,7 @@ begin
     cp0RegWriteAddr_86 <= cp0RegWriteAddr_89;
     cp0RegWe_86 <= cp0RegWe_89;
     exceptCause_8b <= exceptCause_8c;
-    isMemMtc0_8b <= isMemMtc0_89;
+    memcp0regWe_8b <= cp0regWe_89;
 
     mem_wb_ist: entity work.mem_wb
         port map (
@@ -642,15 +626,13 @@ begin
 
             flush_i => flush_b9,
             cp0Sp_i => cp0Sp_89,
-            cp0Sp_o => cp0Sp_9c,
-
-            isMemMtc0_i => isMemMtc0_89,
-            isWbMtc0_o => isWbMtc0_9b
+            cp0Sp_o => cp0Sp_9c
         );
     wbToWriteHi_96 <= toWriteHi_9a;
     wbToWriteLo_96 <= toWriteLo_9a;
     wbWriteHiData_96 <= writeHiData_9a;
     wbWriteLoData_96 <= writeLoData_9a;
+    wbCP0RegWe_9b <= wbCP0RegWe_9c;
 
     hi_lo_ist: entity work.hi_lo
         port map(
@@ -689,9 +671,9 @@ begin
             toWriteBadVAddr_o => ctrlToWriteBadVAddr_cb,
             badVAddr_o => ctrlBadVAddr_cb,
             isIdEhb_i => isIdEhb_4b,
-            isExMtc0_i => isExMtc0_6b,
-            isMemMtc0_i => isMemMtc0_8b,
-            isWbMtc0_i => isWbMtc0_9b
+            excp0RegWe_i => excp0RegWe_6b,
+            memCP0RegWe_i => memCp0RegWe_8b,
+            wbcp0regWe_i => wbCP0RegWe_9b
         );
     flush_b2 <= flush_b1;
     flush_b5 <= flush_b1;

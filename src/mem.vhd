@@ -56,11 +56,7 @@ entity mem is
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         isInDelaySlot_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth);
-        currentAccessAddr_o: out std_logic_vector(AddrWidth);
-
-        -- for hazard barrier --
-        isMemMtc0_i: in std_logic;
-        isMemMtc0_o: out std_logic
+        currentAccessAddr_o: out std_logic_vector(AddrWidth)
     );
 end mem;
 
@@ -77,7 +73,6 @@ begin
     -- `lh`, `lhu` and `sh` likewise
 
     isTlbINVF_o <= isTlbINVF_i;
-    isMemMtc0_o <= isMemMtc0_i;
     cp0Sp_o <= cp0Sp_i;
 
     process(all)

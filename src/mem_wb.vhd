@@ -33,11 +33,7 @@ entity mem_wb is
         cp0Sp_o: out CP0Special;
 
         -- for exception --
-        flush_i: in std_logic;
-
-        -- for hazard barrier --
-        isMemMtc0_i: in std_logic;
-        isWbMtc0_o: out std_logic
+        flush_i: in std_logic
     );
 end mem_wb;
 
@@ -64,7 +60,6 @@ begin
                 wbCP0RegWriteAddr_o <= (others => '0');
 
                 isTlbINVF_o <= NO;
-                isWbMtc0_o <= NO;
                 cp0Sp_o <= INVALID;
             elsif (stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                 toWriteReg_o <= toWriteReg_i;
@@ -82,7 +77,6 @@ begin
 
                 isTlbINVF_o <= isTlbINVF_i;
 
-                isWbMtc0_o <= isMemMtc0_i;
                 cp0Sp_o <= cp0Sp_i;
             end if;
         end if;
