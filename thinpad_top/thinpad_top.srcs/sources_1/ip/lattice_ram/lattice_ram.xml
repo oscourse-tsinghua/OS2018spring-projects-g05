@@ -750,7 +750,6 @@
         <spirit:name>xilinx_miscfiles</spirit:name>
         <spirit:displayName>Miscellaneous</spirit:displayName>
         <spirit:envIdentifier>:vivado.xilinx.com:misc.files</spirit:envIdentifier>
-<<<<<<< HEAD
         <spirit:fileSetRef>
           <spirit:localName>xilinx_miscfiles_view_fileset</spirit:localName>
         </spirit:fileSetRef>
@@ -788,8 +787,6 @@
         <spirit:displayName>VHDL Synthesis</spirit:displayName>
         <spirit:envIdentifier>vhdlSource:vivado.xilinx.com:synthesis</spirit:envIdentifier>
         <spirit:language>vhdl</spirit:language>
-=======
->>>>>>> master
         <spirit:fileSetRef>
           <spirit:localName>xilinx_vhdlsynthesis_view_fileset</spirit:localName>
         </spirit:fileSetRef>
