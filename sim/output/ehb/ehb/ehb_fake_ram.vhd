@@ -39,7 +39,7 @@ begin
             if (rst = RST_ENABLE) then
                 -- CODE BELOW IS AUTOMATICALLY GENERATED
 words(1) <= x"00_80_02_3c"; -- RUN lui $2, 0x8000
-words(2) <= x"00_00_42_34"; -- RUN ori $2, $2, $0x0018
+words(2) <= x"18_00_42_34"; -- RUN ori $2, $2, 0x0018
 words(3) <= x"00_10_82_40"; -- RUN mtc0 $2, $2
 words(4) <= x"08_04_40_00"; -- RUN jr.hb $2
 words(5) <= x"00_00_00_00"; -- RUN nop
