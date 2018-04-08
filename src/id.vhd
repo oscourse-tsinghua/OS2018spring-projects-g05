@@ -898,7 +898,6 @@ begin
                             when FUNC_ERET =>
                                 isInvalid := NO;
                                 exceptCause_o <= ERET_CAUSE;
-                                isIdEhb_o <= YES;
 
                             when FUNC_TLBWI =>
                                 isInvalid := NO;
