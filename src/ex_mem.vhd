@@ -55,7 +55,6 @@ entity ex_mem is
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         isInDelaySlot_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth);
-
         flush_i: in std_logic
     );
 end ex_mem;

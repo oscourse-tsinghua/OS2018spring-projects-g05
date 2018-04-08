@@ -4,7 +4,8 @@ use work.global_const.all;
 
 package cp0_const is
     type CP0Special is ( -- Special CP0 Operation Type
-        INVALID, CP0SP_TLBWI, CP0SP_TLBWR, CP0SP_TLBP, CP0SP_TLBR
+        INVALID, CP0SP_TLBWI, CP0SP_TLBWR, CP0SP_TLBP, CP0SP_TLBR,
+        CP0SP_TLBINVF
     );
 
     --

@@ -150,15 +150,18 @@ package inst_const is
     constant OP_COP0: std_logic_vector(InstOpWidth) := "010000";
     constant RS_MF: std_logic_vector(InstRsWidth) := "00000";
     constant RS_MT: std_logic_vector(InstRsWidth) := "00100";
+    constant RS_MFH: std_logic_vector(InstRsWidth) := "00010";
+    constant RS_TLBINVF: std_logic_vector(InstRsWidth) := "10000";
     constant FUNC_TLBWI: std_logic_vector(InstFuncWidth) := "000010";
     constant FUNC_TLBWR: std_logic_vector(InstFuncWidth) := "000110";
+    constant FUNC_TLBINVF: std_logic_vector(InstFuncWidth) := "000100";
     constant FUNC_TLBP: std_logic_vector(InstFuncWidth) := "001000";
     constant FUNC_TLBR: std_logic_vector(InstFuncWidth) := "000001";
 
     --
     -- Exceptions
     --
-    constant RS_WAIT: std_logic_vector(InstRsWidth) := "10000";
+    constant RS_WAIT_OR_TLBINVF: std_logic_vector(InstRsWidth) := "10000";
     constant FUNC_SYSCALL: std_logic_vector(InstFuncWidth) := "001100";
     constant FUNC_ERET: std_logic_vector(InstFuncWidth) := "011000";
     constant FUNC_BREAK: std_logic_vector(InstFuncWidth) := "001101";

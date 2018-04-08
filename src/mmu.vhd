@@ -27,6 +27,7 @@ entity mmu is
         index_o: out std_logic_vector(TLBIndexWidth);
         indexValid_o: out std_logic;
         entryWrite_i: in std_logic;
+        entryFlush_i: in std_logic;
         entry_i: in TLBEntry;
         entry_o: out TLBEntry
     );
@@ -117,6 +118,11 @@ begin
                 end loop;
             elsif (entryWrite_i = YES) then
                 entries(conv_integer(index_i)) <= entry_i;
+            elsif (entryFlush_i = YES) then
+                for i in 0 to TLB_ENTRY_NUM - 1 loop
+                    entries(i).lo0(ENTRY_LO_V_BIT) <= '0';
+                    entries(i).lo1(ENTRY_LO_V_BIT) <= '0';
+                end loop;
             end if;
         end if;
     end process;

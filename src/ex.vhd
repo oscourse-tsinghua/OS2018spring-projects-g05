@@ -281,6 +281,9 @@ begin
                 when ALU_MFLO =>
                     writeRegData_o <= realLoData;
 
+                when ALU_MFH =>
+                    writeRegAddr_o <= (others => '0');
+
                 when ALU_MTHI =>
                     toWriteHi_o <= YES;
                     writeHiData_o <= operand1_i;
@@ -450,6 +453,9 @@ begin
 
                 when ALU_TLBR =>
                     cp0Sp_o <= CP0SP_TLBR;
+
+                when ALU_TLBINVF =>
+                    cp0Sp_o <= CP0SP_TLBINVF;
 
                 when others =>
                     toWriteReg_o <= NO;

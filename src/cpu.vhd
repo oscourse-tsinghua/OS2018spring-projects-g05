@@ -52,6 +52,7 @@ architecture bhv of cpu is
     signal entryIndexSave, entryIndexLoad: std_logic_vector(TLBIndexWidth);
     signal entryIndexValid: std_logic;
     signal entryWrite: std_logic;
+    signal entryFlush: std_logic;
     signal entrySave, entryLoad: TLBEntry;
 
     signal dataLoadConv, dataSaveConv: std_logic_vector(DataWidth);
@@ -101,6 +102,8 @@ begin
             index_o => entryIndexLoad,
             indexValid_o => entryIndexValid,
             entryWrite_i => entryWrite,
+
+            entryFlush_i => entryFlush,
             entry_i => entrySave,
             entry_o => entryLoad
         );
@@ -166,6 +169,7 @@ begin
             entryIndexValid_i => entryIndexValid,
             entryIndex_o => entryIndexSave,
             entryWrite_o => entryWrite,
+            entryFlush_o => entryFlush,
             entry_i => entryLoad,
             entry_o => entrySave
         );

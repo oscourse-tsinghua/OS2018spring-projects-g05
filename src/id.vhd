@@ -37,6 +37,7 @@ entity id is
         operandX_o: out std_logic_vector(DataWidth);
         toWriteReg_o: out std_logic;
         writeRegAddr_o: out std_logic_vector(RegAddrWidth);
+        isIdEhb_o: out std_logic;
 
         -- For ju instructions --
         isInDelaySlot_i: in std_logic;
@@ -78,7 +79,7 @@ architecture bhv of id is
 
         case (instOp) is
             when OP_SPECIAL =>
-                if (instFunc /= FUNC_SLL and instFunc /= FUNC_SRL and instFunc /= FUNC_SRA) then
+                if (instFunc /= FUNC_SLL and instFunc /= FUNC_SRL and instFunc /= FUNC_SRA and instFunc /= JMP_JR) then
                     saShouleBeZero := true;
                 end if;
                 case (instFunc) is
@@ -199,6 +200,7 @@ begin
         regReadAddr1_o <= (others => '0');
         regReadEnable2_o <= DISABLE;
         regReadAddr2_o <= (others => '0');
+        isIdEhb_o <= NO;
 
         -- Assign 'X' to them, otherwise it will introduce a level latch to keep prior values
         operand1 := (others => 'X');
@@ -426,6 +428,9 @@ begin
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
                             isInvalid := NO;
+                            if (inst_i(10) = '1') then
+                                isIdEhb_o <= YES;
+                            end if;
 
                         when JMP_JALR =>
                             oprSrc1 := REG;
@@ -862,11 +867,25 @@ begin
                                 isInvalid := NO;
                             end if;
 
-                        when RS_WAIT =>
+                        when RS_WAIT_OR_TLBINVF =>
                             if (inst_i(InstFuncIdx) = FUNC_WAIT and inst_i(25) = '1') then
                                 oprSrc1 := INVALID;
                                 oprSrc2 := INVALID;
                                 toWriteReg_o <= NO;
+                                isInvalid := NO;
+                            elsif (inst_i(20 downto 6) = 15ub"0" and inst_i(InstFuncIdx) = FUNC_TLBINVF) then
+                                isInvalid := NO;
+                                alut_o <= ALU_TLBINVF;
+                            end if;
+
+                        -- Note: in release 6, we need to clear register rt --
+                        when RS_MFH =>
+                            if (inst_i(InstSaFuncIdx) = "00000000") then
+                                alut_o <= ALU_MFH;
+                                oprSrc1 := INVALID;
+                                oprSrc2 := REG;
+                                toWriteReg_o <= YES;
+                                writeRegAddr_o <= instRt;
                                 isInvalid := NO;
                             end if;
 
@@ -879,6 +898,7 @@ begin
                             when FUNC_ERET =>
                                 isInvalid := NO;
                                 exceptCause_o <= ERET_CAUSE;
+                                isIdEhb_o <= YES;
 
                             when FUNC_TLBWI =>
                                 isInvalid := NO;

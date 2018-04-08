@@ -40,6 +40,7 @@ entity datapath is
         entryIndexValid_i: in std_logic;
         entryIndex_o: out std_logic_vector(TLBIndexWidth);
         entryWrite_o: out std_logic;
+        entryFlush_o: out std_logic;
         entry_i: in TLBEntry;
         entry_o: out TLBEntry
     );
@@ -124,6 +125,7 @@ architecture bhv of datapath is
     signal cp0RegData_67: std_logic_vector(DataWidth);
     signal cp0RegWriteAddr_67: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWe_67: std_logic;
+
     signal cp0Sp_67: CP0Special;
     signal tempProduct_67, tempProduct_76: std_logic_vector(DoubleDataWidth);
     signal cnt_67, cnt_76: std_logic_vector(CntWidth);
@@ -219,12 +221,15 @@ architecture bhv of datapath is
 
     -- Signals connecting ctrl and mem_wb --
     signal flush_b9: std_logic;
+    signal wbCP0RegWe_9b: std_logic;
 
     -- Signals connecting id and ctrl --
+    signal isIdEhb_4b: std_logic;
     signal idToStall_4b, blNullify_4b: std_logic;
 
     -- Signals connecting ex and ctrl --
     signal exToStall_6b: std_logic;
+    signal excp0RegWe_6b: std_logic;
 
     -- Signals connecting ctrl and others --
     signal stall: std_logic_vector(StallWidth);
@@ -254,6 +259,7 @@ architecture bhv of datapath is
 
     -- Signals connecting mem and ctrl --
     signal exceptCause_8b: std_logic_vector(ExceptionCauseWidth);
+    signal memCp0RegWe_8b: std_logic;
 
 begin
 
@@ -340,7 +346,8 @@ begin
             valid_o => valid_45,
             exceptCause_i => exceptCause_24,
             exceptCause_o => exceptCause_45,
-            currentInstAddr_o => currentInstAddr_45
+            currentInstAddr_o => currentInstAddr_45,
+            isIdEhb_o => isIdEhb_4b
         );
 
     id_ex_ist: entity work.id_ex
@@ -441,11 +448,13 @@ begin
             exceptCause_o => exceptCause_67,
             currentInstAddr_o => currentInstAddr_67,
             isInDelaySlot_o => isInDelaySlot_67
+
         );
     exToWriteReg_64 <= toWriteReg_67;
     exWriteRegAddr_64 <= writeRegAddr_67;
     exWriteRegData_64 <= writeRegData_67;
     lastMemt_64 <= memt_67;
+    excp0RegWe_6b <= cp0RegWe_67;
 
     div_ist: entity work.div
         port map (
@@ -574,6 +583,7 @@ begin
     cp0RegWriteAddr_86 <= cp0RegWriteAddr_89;
     cp0RegWe_86 <= cp0RegWe_89;
     exceptCause_8b <= exceptCause_8c;
+    memcp0regWe_8b <= cp0regWe_89;
 
     mem_wb_ist: entity work.mem_wb
         port map (
@@ -602,15 +612,15 @@ begin
             wbCP0RegWriteAddr_o => wbCP0RegWriteAddr_9c,
             wbCP0RegWe_o => wbCP0RegWe_9c,
 
+            flush_i => flush_b9,
             cp0Sp_i => cp0Sp_89,
-            cp0Sp_o => cp0Sp_9c,
-
-            flush_i => flush_b9
+            cp0Sp_o => cp0Sp_9c
         );
     wbToWriteHi_96 <= toWriteHi_9a;
     wbToWriteLo_96 <= toWriteLo_9a;
     wbWriteHiData_96 <= writeHiData_9a;
     wbWriteLoData_96 <= writeLoData_9a;
+    wbCP0RegWe_9b <= wbCP0RegWe_9c;
 
     hi_lo_ist: entity work.hi_lo
         port map(
@@ -647,7 +657,11 @@ begin
             cp0Cause_i => cp0Cause_cb,
             cp0Epc_i => cp0Epc_cb,
             toWriteBadVAddr_o => ctrlToWriteBadVAddr_cb,
-            badVAddr_o => ctrlBadVAddr_cb
+            badVAddr_o => ctrlBadVAddr_cb,
+            isIdEhb_i => isIdEhb_4b,
+            excp0RegWe_i => excp0RegWe_6b,
+            memCP0RegWe_i => memCp0RegWe_8b,
+            wbcp0regWe_i => wbCP0RegWe_9b
         );
     flush_b2 <= flush_b1;
     flush_b5 <= flush_b1;
@@ -675,6 +689,7 @@ begin
             cause_o => cause_c8,
             timerInt_o => timerInt_o,
             isKernelMode_o => isKernelMode_o,
+            entryFlush_o => entryFlush_o,
             cp0Sp_i => cp0Sp_9c,
             entryIndex_i => entryIndex_i,
             entryIndexValid_i => entryIndexValid_i,
