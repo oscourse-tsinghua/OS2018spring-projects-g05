@@ -40,8 +40,8 @@ begin
 
     cpu_ist: entity work.cpu
         generic map (
-            instEntranceAddr        => 32ux"8000_0004",
-            exceptBootBaseAddr      => 32ux"8000_0000",
+            instEntranceAddr        => 32ux"A000_0004",
+            exceptBootBaseAddr      => 32ux"A000_0000",
             tlbRefillExl0Offset     => 32ux"40",
             generalExceptOffset     => 32ux"40",
             interruptIv1Offset      => 32ux"40",
@@ -101,13 +101,13 @@ end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 16 * CLK_PERIOD;
-    assert user_reg(31) = x"80000018" severity FAILURE;
+    assert user_reg(31) = x"A0000018" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 17 * CLK_PERIOD;
-    assert user_reg(5) = x"80000020" severity FAILURE;
+    assert user_reg(5) = x"A0000020" severity FAILURE;
     wait;
 end process;
     end block assertBlk;
