@@ -44,6 +44,10 @@ architecture bhv of cpu is
     signal instStall, dataStall: std_logic;
     signal instExcept, dataExcept: std_logic_vector(ExceptionCauseWidth);
 
+    signal cacheEnable, cacheWrite, cacheBusy: std_logic;
+    signal cacheDataSave, cacheDataLoad: std_logic_vector(DataWidth);
+    signal cacheAddr: std_logic_vector(AddrWidth);
+
     signal isKernelMode: std_logic;
     signal entryIndexSave, entryIndexLoad: std_logic_vector(TLBIndexWidth);
     signal entryIndexValid: std_logic;
@@ -79,6 +83,52 @@ begin
         end if;
     end process;
 
+    devWrite_o <= cacheWrite;
+    devDataSave_o <= cacheDataSave;
+    devPhysicalAddr_o <= cacheAddr;
+
+    cache_ist: entity work.cache
+        port map (
+            clk => clk,
+            rst => rst,
+            enable_i => cacheEnable,
+            write_i => cacheWrite,
+            busy_o => cacheBusy,
+            dataSave_i => cacheDataSave,
+            dataLoad_o => cacheDataLoad,
+            addr_i => cacheAddr,
+            enable_o => devEnable_o,
+            busy_i => devBusy_i,
+            dataLoad_i => devDataLoad_i
+        );
+
+    memctrl_ist: entity work.memctrl
+        port map (
+            -- Connect to instruction interface(1) of MMU
+            instEnable_i => instPhyEnable,
+            instData_o => instData,
+            instAddr_i => instPhyAddr,
+            instStall_o => instStall,
+
+            -- Connect to data interface(2) of MMU
+            dataEnable_i => dataPhyEnable,
+            dataWrite_i => dataWrite,
+            dataData_o => dataDataLoad,
+            dataData_i => dataDataSave,
+            dataAddr_i => dataPhyAddr,
+            dataByteSelect_i => dataByteSelect,
+            dataStall_o => dataStall,
+
+            -- Connect to external device
+            devEnable_o => cacheEnable,
+            devWrite_o => cacheWrite,
+            devData_i => dataLoadConv,
+            devData_o => dataSaveConv,
+            devAddr_o => cacheAddr,
+            devByteSelect_o => byteSelectConv,
+            devBusy_i => cacheBusy
+        );
+
     mmu_ist: entity work.mmu
         port map (
             clk => clk,
@@ -107,33 +157,6 @@ begin
             entryFlush_i => entryFlush,
             entry_i => entrySave,
             entry_o => entryLoad
-        );
-
-    memctrl_ist: entity work.memctrl
-        port map (
-            -- Connect to instruction interface(1) of MMU
-            instEnable_i => instPhyEnable,
-            instData_o => instData,
-            instAddr_i => instPhyAddr,
-            instStall_o => instStall,
-
-            -- Connect to data interface(2) of MMU
-            dataEnable_i => dataPhyEnable,
-            dataWrite_i => dataWrite,
-            dataData_o => dataDataLoad,
-            dataData_i => dataDataSave,
-            dataAddr_i => dataPhyAddr,
-            dataByteSelect_i => dataByteSelect,
-            dataStall_o => dataStall,
-
-            -- Connect to external device
-            devEnable_o => devEnable_o,
-            devWrite_o => devWrite_o,
-            devData_i => dataLoadConv,
-            devData_o => dataSaveConv,
-            devAddr_o => devPhysicalAddr_o,
-            devByteSelect_o => byteSelectConv,
-            devBusy_i => devBusy_i
         );
 
     datapath_ist: entity work.datapath
