@@ -24,7 +24,7 @@ architecture bhv of {{{TEST_NAME}}}_fake_ram is
     signal wordAddr: integer;
     signal bitSelect: std_logic_vector(DataWidth);
 begin
-    wordAddr <= to_integer(unsigned(addr_i(31 downto 2)));
+    wordAddr <= to_integer(unsigned(addr_i(RAM_ADDR_WIDTH + 2 - 1 downto 2)));
 
     bitSelect <= (
         31 downto 24 => byteSelect_i(3),
