@@ -84,7 +84,7 @@ begin
     end process;
 
     devWrite_o <= cacheWrite;
-    devDataSave_o <= cacheDataSave;
+    dataSaveConv <= cacheDataSave;
     devPhysicalAddr_o <= cacheAddr;
 
     cache_ist: entity work.cache
@@ -99,7 +99,7 @@ begin
             addr_i => cacheAddr,
             enable_o => devEnable_o,
             busy_i => devBusy_i,
-            dataLoad_i => devDataLoad_i
+            dataLoad_i => dataLoadConv
         );
 
     memctrl_ist: entity work.memctrl
@@ -122,8 +122,8 @@ begin
             -- Connect to external device
             devEnable_o => cacheEnable,
             devWrite_o => cacheWrite,
-            devData_i => dataLoadConv,
-            devData_o => dataSaveConv,
+            devData_i => cacheDataLoad,
+            devData_o => cacheDataSave,
             devAddr_o => cacheAddr,
             devByteSelect_o => byteSelectConv,
             devBusy_i => cacheBusy
