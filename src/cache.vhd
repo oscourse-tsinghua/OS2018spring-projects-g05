@@ -98,6 +98,7 @@ begin
                     if (lidValid = YES) then
                         cacheArr(gid)(lid).data(oid) <= newCached;
                     else
+                        cacheArr(gid)(conv_integer(random)).valid <= (others => NO);
                         cacheArr(gid)(conv_integer(random)).valid(oid) <= YES;
                         cacheArr(gid)(conv_integer(random)).tag <= tagPart;
                         cacheArr(gid)(conv_integer(random)).data(oid) <= newCached;
