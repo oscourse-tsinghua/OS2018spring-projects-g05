@@ -1,0 +1,56 @@
+# Import a package
+# Grammar: "IMPORT <packageName>"
+# "IMPORT" should be in UPPER CASE, same below
+
+# Define a signal to be checked
+# Grammar: "DEFINE <signalName> <sub_instace_name.sub_sub_instance_name.(...).signal_name>: <type>"
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+# Execute an assembly instruction
+# Grammar: "RUN <assembly>"
+
+# 0x04
+RUN lui $10, 0x8000
+
+# 0x08
+RUN ori $11, $10, 0x0014
+
+# 0x0c
+RUN jr $11
+
+# 0x10
+RUN nop
+
+# 0x14 (Now we are in cached segment)
+RUN sw $2, 0x100($10)
+RUN nop
+RUN nop
+RUN addi $8, $8, 1
+RUN j 0x14
+RUN nop
+ASSERT 13 reg(8) 32x"00000000"
+ASSERT 14 reg(8) 32x"00000001"
+ASSERT 19 reg(8) 32x"00000001"
+ASSERT 20 reg(8) 32x"00000002"
+
+# IF    | ID    | EX    | MEM   | WB    | assertion | period (*=assertion)
+# lui   |       |       |       |       |           | 1
+# ori   | lui   |       |       |       |           | 2
+# jr    | ori   | lui   |       |       |           | 3
+# nop   | jr    | ori   | lui   |       |           | 4
+# sw    | nop   | jr    | ori   | lui   |           | 5
+# nop   | sw    | nop   | jr    | ori   | lui       | 6
+# nop   | nop   | sw    | nop   | jr    | ori       | 7
+# ori   | nop   | nop   | sw    | nop   | jr        | 8 (Block here)
+# ori   |       | nop   | nop   | sw    | nop       | 9
+# j     | ori   |       | nop   | nop   | sw        | 10
+# nop   | j     | ori   |       | nop   | nop       | 11
+# sw    | nop   | j     | ori   |       | nop       | 12
+# nop   | sw    | nop   | j     | ori   |           | 13*
+# nop   | nop   | sw    | nop   | j     | ori       | 14*
+# ori   | nop   | nop   | sw    | nop   | j         | 15 (No block here)
+#       | ori   | nop   | nop   | sw    | nop       | 16
+#       |       | ori   | nop   | nop   | sw        | 17
+#       |       |       | ori   | nop   | nop       | 18
+#       |       |       |       | ori   | nop       | 19*
+#       |       |       |       |       | ori       | 20*
