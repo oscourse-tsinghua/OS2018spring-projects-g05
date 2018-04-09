@@ -1,0 +1,62 @@
+# Import a package
+# Grammar: "IMPORT <packageName>"
+# "IMPORT" should be in UPPER CASE, same below
+
+# Define a signal to be checked
+# Grammar: "DEFINE <signalName> <sub_instace_name.sub_sub_instance_name.(...).signal_name>: <type>"
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+# Execute an assembly instruction
+# Grammar: "RUN <assembly>"
+
+# 0x04
+RUN lui $10, 0x8000
+
+# 0x08
+RUN ori $11, $10, 0x0014
+
+# 0x0c
+RUN jr $11
+
+# 0x10
+RUN nop
+
+# 0x14 (Now we are in cached segment)
+RUN ori $2, $2, 0x1234
+
+RUN sw $2, 0x100($10)
+RUN lw $3, 0x100($10)
+ASSERT 12 reg(3) 32x"00001234"
+RUN nop
+RUN ori $9, 0xffff
+ASSERT 14 reg(9) 32x"00000000"
+ASSERT 15 reg(9) 32x"0000ffff"
+
+RUN sw $2, 0x100($10)
+RUN nop
+RUN nop
+RUN ori $8, 0xffff
+ASSERT 19 reg(8) 32x"00000000"
+ASSERT 20 reg(8) 32x"0000ffff"
+
+# IF    | ID    | EX    | MEM   | WB    | assertion | period (*=assertion)
+# lui   |       |       |       |       |           | 1
+# ori   | lui   |       |       |       |           | 2
+# jr    | ori   | lui   |       |       |           | 3
+# nop   | jr    | ori   | lui   |       |           | 4
+# ori   | nop   | jr    | ori   | lui   |           | 5
+# sw    | ori   | nop   | jr    | ori   | lui       | 6
+# lw    | sw    | ori   | nop   | jr    | ori       | 7
+# nop   | lw    | sw    | ori   | nop   | jr        | 8
+# ori   | nop   | lw    | sw    | ori   | nop       | 9  (Block here)
+# ori   |       | nop   | lw    | sw    | ori       | 10 (No block here)
+# sw    | ori   |       | nop   | lw    | sw        | 11
+# nop   | sw    | ori   |       | nop   | lw        | 12*
+# nop   | nop   | sw    | ori   |       | nop       | 13
+# ori   | nop   | nop   | sw    | ori   |           | 14* (Block here)
+# ori   |       | nop   | nop   | sw    | ori       | 15*
+#       | ori   |       | nop   | nop   | sw        | 16
+#       |       | ori   |       | nop   | nop       | 17
+#       |       |       | ori   |       | nop       | 18
+#       |       |       |       | ori   |           | 19*
+#       |       |       |       |       | ori       | 20*

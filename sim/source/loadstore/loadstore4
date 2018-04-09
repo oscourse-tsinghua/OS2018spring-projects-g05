@@ -9,7 +9,7 @@ DEFINE reg regfile_ist.regArray: RegArrayType
 
 # Execute an assembly instruction
 # Grammar: "RUN <assembly>"
-RUN lui $10, 0x8000
+RUN lui $10, 0xA000
 
 RUN lui $3, 0x0123
 RUN ori $3, $3, 0x4567

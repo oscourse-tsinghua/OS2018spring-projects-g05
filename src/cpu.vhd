@@ -30,23 +30,20 @@ end cpu;
 
 architecture bhv of cpu is
 
-    signal instEnable, instPhyEnable: std_logic;
-    signal instData: std_logic_vector(DataWidth);
+    signal instEnable, instPhyEnable, instDevEnable: std_logic;
+    signal instStall, instDevStall: std_logic;
+    signal instData, instDevData: std_logic_vector(DataWidth);
     signal instAddr, instPhyAddr: std_logic_vector(AddrWidth);
 
-    signal dataEnable, dataPhyEnable: std_logic;
+    signal dataEnable, dataPhyEnable, dataDevEnable: std_logic;
+    signal dataStall, dataDevStall: std_logic;
     signal dataWrite: std_logic;
     signal dataDataSave: std_logic_vector(DataWidth);
-    signal dataDataLoad: std_logic_vector(DataWidth);
+    signal dataDataLoad, dataDevDataLoad: std_logic_vector(DataWidth);
     signal dataAddr, dataPhyAddr: std_logic_vector(AddrWidth);
     signal dataByteSelect: std_logic_vector(3 downto 0);
 
-    signal instStall, dataStall: std_logic;
     signal instExcept, dataExcept: std_logic_vector(ExceptionCauseWidth);
-
-    signal cacheEnable, cacheWrite, cacheBusy: std_logic;
-    signal cacheDataSave, cacheDataLoad: std_logic_vector(DataWidth);
-    signal cacheAddr: std_logic_vector(AddrWidth);
 
     signal isKernelMode: std_logic;
     signal entryIndexSave, entryIndexLoad: std_logic_vector(TLBIndexWidth);
@@ -83,50 +80,61 @@ begin
         end if;
     end process;
 
-    devWrite_o <= cacheWrite;
-    dataSaveConv <= cacheDataSave;
-    devPhysicalAddr_o <= cacheAddr;
-
-    cache_ist: entity work.cache
-        port map (
-            clk => clk,
-            rst => rst,
-            enable_i => cacheEnable,
-            write_i => cacheWrite,
-            busy_o => cacheBusy,
-            dataSave_i => cacheDataSave,
-            dataLoad_o => cacheDataLoad,
-            addr_i => cacheAddr,
-            enable_o => devEnable_o,
-            busy_i => devBusy_i,
-            dataLoad_i => dataLoadConv
-        );
-
     memctrl_ist: entity work.memctrl
         port map (
-            -- Connect to instruction interface(1) of MMU
-            instEnable_i => instPhyEnable,
-            instData_o => instData,
+            -- Connect to instruction cache
+            instEnable_i => instDevEnable,
+            instData_o => instDevData,
             instAddr_i => instPhyAddr,
-            instStall_o => instStall,
+            instStall_o => instDevStall,
 
-            -- Connect to data interface(2) of MMU
-            dataEnable_i => dataPhyEnable,
+            -- Connect to data cache
+            dataEnable_i => dataDevEnable,
             dataWrite_i => dataWrite,
-            dataData_o => dataDataLoad,
+            dataData_o => dataDevDataLoad,
             dataData_i => dataDataSave,
             dataAddr_i => dataPhyAddr,
             dataByteSelect_i => dataByteSelect,
-            dataStall_o => dataStall,
+            dataStall_o => dataDevStall,
 
             -- Connect to external device
-            devEnable_o => cacheEnable,
-            devWrite_o => cacheWrite,
-            devData_i => cacheDataLoad,
-            devData_o => cacheDataSave,
-            devAddr_o => cacheAddr,
+            devEnable_o => devEnable_o,
+            devWrite_o => devWrite_o,
+            devData_i => dataLoadConv,
+            devData_o => dataSaveConv,
+            devAddr_o => devPhysicalAddr_o,
             devByteSelect_o => byteSelectConv,
-            devBusy_i => cacheBusy
+            devBusy_i => devBusy_i
+        );
+
+    inst_cache: entity work.cache
+        port map (
+            clk => clk,
+            rst => rst,
+            enable_i => instEnable,
+            write_i => NO,
+            busy_o => instStall,
+            dataSave_i => 32ux"0",
+            dataLoad_o => instData,
+            addr_i => instAddr,
+            enable_o => instDevEnable,
+            busy_i => instDevStall,
+            dataLoad_i => instDevData
+        );
+
+    data_cache: entity work.cache
+        port map (
+            clk => clk,
+            rst => rst,
+            enable_i => dataEnable,
+            write_i => dataWrite,
+            busy_o => dataStall,
+            dataSave_i => dataDataSave,
+            dataLoad_o => dataDataLoad,
+            addr_i => dataAddr,
+            enable_o => dataDevEnable,
+            busy_i => dataDevStall,
+            dataLoad_i => dataDevDataLoad
         );
 
     mmu_ist: entity work.mmu

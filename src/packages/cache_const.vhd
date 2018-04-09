@@ -17,7 +17,7 @@ package cache_const is
 
     type CacheLineDataType is array(0 to CACHE_LINE_SIZE - 1) of std_logic_vector(DataWidth);
     type CacheLineType is record
-        valid: std_logic;
+        valid: std_logic_vector(CACHE_LINE_SIZE - 1 downto 0);
         tag: std_logic_vector(CacheTagWidth);
         data: CacheLineDataType;
     end record;

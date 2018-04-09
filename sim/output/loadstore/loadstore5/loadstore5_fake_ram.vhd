@@ -38,7 +38,7 @@ begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then
                 -- CODE BELOW IS AUTOMATICALLY GENERATED
-words(1) <= x"00_80_0a_3c"; -- RUN lui $10, 0x8000
+words(1) <= x"00_a0_0a_3c"; -- RUN lui $10, 0xA000
 words(2) <= x"ff_ff_03_3c"; -- RUN lui $3, 0xffff
 words(3) <= x"ff_ff_63_34"; -- RUN ori $3, $3, 0xffff
 words(4) <= x"23_01_04_3c"; -- RUN lui $4, 0x0123

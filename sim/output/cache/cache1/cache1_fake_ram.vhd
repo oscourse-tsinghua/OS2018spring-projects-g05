@@ -5,10 +5,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.loadstore4_test_const.all;
+use work.cache1_test_const.all;
 use work.global_const.all;
 
-entity loadstore4_fake_ram is
+entity cache1_fake_ram is
     port (
         clk, rst: in std_logic;
         enable_i, write_i: in std_logic;
@@ -17,9 +17,9 @@ entity loadstore4_fake_ram is
         byteSelect_i: in std_logic_vector(3 downto 0);
         data_o: out std_logic_vector(DataWidth)
     );
-end loadstore4_fake_ram;
+end cache1_fake_ram;
 
-architecture bhv of loadstore4_fake_ram is
+architecture bhv of cache1_fake_ram is
     type WordsArray is array(0 to MAX_RAM_ADDRESS) of std_logic_vector(DataWidth);
     signal words: WordsArray;
     signal wordAddr: integer;
@@ -38,24 +38,19 @@ begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then
                 -- CODE BELOW IS AUTOMATICALLY GENERATED
-words(1) <= x"00_a0_0a_3c"; -- RUN lui $10, 0xA000
-words(2) <= x"23_01_03_3c"; -- RUN lui $3, 0x0123
-words(3) <= x"67_45_63_34"; -- RUN ori $3, $3, 0x4567
-words(4) <= x"00_01_43_ad"; -- RUN sw  $3, 0x100($10)
-words(5) <= x"ab_89_03_3c"; -- RUN lui $3, 0x89ab
-words(6) <= x"ef_cd_63_34"; -- RUN ori $3, $3, 0xcdef
-words(7) <= x"04_01_43_ad"; -- RUN sw  $3, 0x104($10)
-words(8) <= x"25_20_00_00"; -- RUN or  $4, $0, $0
-words(9) <= x"04_01_44_89"; -- RUN lwl $4, 0x104($10)
-words(10) <= x"01_01_44_99"; -- RUN lwr $4, 0x101($10)
-words(11) <= x"25_20_00_00"; -- RUN or  $4, $0, $0
-words(12) <= x"05_01_44_89"; -- RUN lwl $4, 0x105($10)
-words(13) <= x"02_01_44_99"; -- RUN lwr $4, 0x102($10)
-words(14) <= x"25_20_00_00"; -- RUN or  $4, $0, $0
-words(15) <= x"03_01_44_99"; -- RUN lwr $4, 0x103($10)
-words(16) <= x"06_01_44_89"; -- RUN lwl $4, 0x106($10)
-words(17) <= x"03_01_44_89"; -- RUN lwl $4, 0x103($10)
-words(18) <= x"04_01_44_99"; -- RUN lwr $4, 0x104($10)
+words(1) <= x"00_80_0a_3c"; -- RUN lui $10, 0x8000
+words(2) <= x"14_00_4b_35"; -- RUN ori $11, $10, 0x0014
+words(3) <= x"08_00_60_01"; -- RUN jr $11
+words(4) <= x"00_00_00_00"; -- RUN nop
+words(5) <= x"34_12_42_34"; -- RUN ori $2, $2, 0x1234
+words(6) <= x"00_01_42_ad"; -- RUN sw $2, 0x100($10)
+words(7) <= x"00_01_43_8d"; -- RUN lw $3, 0x100($10)
+words(8) <= x"00_00_00_00"; -- RUN nop
+words(9) <= x"ff_ff_29_35"; -- RUN ori $9, 0xffff
+words(10) <= x"00_01_42_ad"; -- RUN sw $2, 0x100($10)
+words(11) <= x"00_00_00_00"; -- RUN nop
+words(12) <= x"00_00_00_00"; -- RUN nop
+words(13) <= x"ff_ff_08_35"; -- RUN ori $8, 0xffff
             elsif ((enable_i = '1') and (write_i = '1')) then
                 words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
             end if;

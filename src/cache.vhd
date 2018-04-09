@@ -43,11 +43,11 @@ begin
 
     gid <= conv_integer(groupPart);
     oid <= conv_integer(offsetPart);
-    process(all) begin
+    process(enable_i, cacheArr, gid, oid, tagPart) begin -- Here's issue #6 again!
+        lidValid <= NO;
         if (enable_i = ENABLE) then -- Otherwise gid/oid may be out of range in simulation
-            lidValid <= NO;
             for i in 0 to CACHE_WAY_NUM - 1 loop
-                if (cacheArr(gid)(i).valid = YES and cacheArr(gid)(i).tag = tagPart) then
+                if (cacheArr(gid)(i).valid(oid) = YES and cacheArr(gid)(i).tag = tagPart) then
                     lid <= i;
                     lidValid <= YES;
                 end if;
@@ -78,30 +78,33 @@ begin
     process (clk)
         variable newCached: std_logic_vector(DataWidth);
     begin
-        if (rst = RST_ENABLE) then
-            for i in 0 to CACHE_GROUP_NUM - 1 loop
-                for j in 0 to CACHE_WAY_NUM - 1 loop
-                    cacheArr(i)(j).valid <= NO;
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                for i in 0 to CACHE_GROUP_NUM - 1 loop
+                    for j in 0 to CACHE_WAY_NUM - 1 loop
+                        cacheArr(i)(j).valid <= (others => NO);
+                    end loop;
                 end loop;
-            end loop;
-            random <= (others => '0');
-        elsif (enable_i = ENABLE and (write_i = YES or busy_i = PIPELINE_NONSTOP)) then
-            newCached := (others => 'X');
-            if (write_i = YES) then
-                newCached := dataSave_i;
+                random <= (others => '0');
             else
-                newCached := dataLoad_i;
-            end if;
+                if (enable_i = ENABLE and (write_i = YES or busy_i = PIPELINE_NONSTOP)) then
+                    newCached := (others => 'X');
+                    if (write_i = YES) then
+                        newCached := dataSave_i;
+                    else
+                        newCached := dataLoad_i;
+                    end if;
 
-            if (lidValid = YES) then
-                cacheArr(gid)(lid).data(oid) <= newCached;
-            else
-                cacheArr(gid)(conv_integer(random)).valid <= YES;
-                cacheArr(gid)(conv_integer(random)).tag <= tagPart;
-                cacheArr(gid)(conv_integer(random)).data(oid) <= newCached;
+                    if (lidValid = YES) then
+                        cacheArr(gid)(lid).data(oid) <= newCached;
+                    else
+                        cacheArr(gid)(conv_integer(random)).valid(oid) <= YES;
+                        cacheArr(gid)(conv_integer(random)).tag <= tagPart;
+                        cacheArr(gid)(conv_integer(random)).data(oid) <= newCached;
+                    end if;
+                end if;
+                random <= random + 1;
             end if;
-
-            random <= random + 1;
         end if;
     end process;
 end bhv;
