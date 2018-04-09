@@ -45,6 +45,7 @@ begin
     oid <= conv_integer(offsetPart);
     process(enable_i, cacheArr, gid, oid, tagPart) begin -- Here's issue #6 again!
         lidValid <= NO;
+        lid <= 0;
         if (enable_i = ENABLE) then -- Otherwise gid/oid may be out of range in simulation
             for i in 0 to CACHE_WAY_NUM - 1 loop
                 if (cacheArr(gid)(i).valid(oid) = YES and cacheArr(gid)(i).tag = tagPart) then
