@@ -41,16 +41,16 @@ ASSERT 20 reg(8) 32x"00000002"
 # sw    | nop   | jr    | ori   | lui   |           | 5
 # nop   | sw    | nop   | jr    | ori   | lui       | 6
 # nop   | nop   | sw    | nop   | jr    | ori       | 7
-# ori   | nop   | nop   | sw    | nop   | jr        | 8 (Block here)
-# ori   |       | nop   | nop   | sw    | nop       | 9
-# j     | ori   |       | nop   | nop   | sw        | 10
-# nop   | j     | ori   |       | nop   | nop       | 11
-# sw    | nop   | j     | ori   |       | nop       | 12
-# nop   | sw    | nop   | j     | ori   |           | 13*
-# nop   | nop   | sw    | nop   | j     | ori       | 14*
-# ori   | nop   | nop   | sw    | nop   | j         | 15 (No block here)
-#       | ori   | nop   | nop   | sw    | nop       | 16
-#       |       | ori   | nop   | nop   | sw        | 17
-#       |       |       | ori   | nop   | nop       | 18
-#       |       |       |       | ori   | nop       | 19*
-#       |       |       |       |       | ori       | 20*
+# addi  | nop   | nop   | sw    | nop   | jr        | 8 (Block here)
+# addi  |       | nop   | nop   | sw    | nop       | 9
+# j     | addi  |       | nop   | nop   | sw        | 10
+# nop   | j     | addi  |       | nop   | nop       | 11
+# sw    | nop   | j     | addi  |       | nop       | 12
+# nop   | sw    | nop   | j     | addi  |           | 13*
+# nop   | nop   | sw    | nop   | j     | addi      | 14*
+# addi  | nop   | nop   | sw    | nop   | j         | 15 (No block here)
+#       | addi  | nop   | nop   | sw    | nop       | 16
+#       |       | addi  | nop   | nop   | sw        | 17
+#       |       |       | addi  | nop   | nop       | 18
+#       |       |       |       | addi  | nop       | 19*
+#       |       |       |       |       | addi      | 20*

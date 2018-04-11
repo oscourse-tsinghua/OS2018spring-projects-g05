@@ -54,6 +54,8 @@ architecture bhv of cpu is
     signal entryFlush: std_logic;
     signal entrySave, entryLoad: TLBEntry;
 
+    signal devEnable, devWrite, devBusy: std_logic;
+    signal devAddr: std_logic_vector(AddrWidth);
     signal dataLoadConv, dataSaveConv: std_logic_vector(DataWidth);
     signal byteSelectConv: std_logic_vector(3 downto 0);
 
@@ -82,6 +84,10 @@ begin
         end if;
     end process;
 
+    devEnable_o <= devEnable;
+    devWrite_o <= devWrite;
+    devPhysicalAddr_o <= devAddr;
+    devBusy <= devBusy_i;
     memctrl_ist: entity work.memctrl
         port map (
             -- Connect to instruction cache
@@ -100,45 +106,55 @@ begin
             dataStall_o => dataDevStall,
 
             -- Connect to external device
-            devEnable_o => devEnable_o,
-            devWrite_o => devWrite_o,
+            devEnable_o => devEnable,
+            devWrite_o => devWrite,
             devData_i => dataLoadConv,
             devData_o => dataSaveConv,
-            devAddr_o => devPhysicalAddr_o,
+            devAddr_o => devAddr,
             devByteSelect_o => byteSelectConv,
-            devBusy_i => devBusy_i
+            devBusy_i => devBusy
         );
 
     inst_cache: entity work.cache
         port map (
             clk => clk,
             rst => rst,
-            enable_i => instPhyEnable,
-            write_i => NO,
+            qryEnable_i => instPhyEnable,
+            qryWrite_i => NO,
             caching_i => instCaching,
-            busy_o => instStall,
-            dataSave_i => 32ux"0",
-            dataLoad_o => instData,
-            addr_i => instPhyAddr,
-            enable_o => instDevEnable,
-            busy_i => instDevStall,
-            dataLoad_i => instDevData
+            qryBusy_o => instStall,
+            qryDataLoad_o => instData,
+            qryAddr_i => instPhyAddr,
+            devEnable_o => instDevEnable,
+            devBusy_i => instDevStall,
+            devDataLoad_i => instDevData,
+            updEnable_i => devEnable,
+            updWrite_i => devWrite,
+            updBusy_i => devBusy,
+            updDataSave_i => dataSaveConv,
+            updDataLoad_i => dataLoadConv,
+            updAddr_i => devAddr
         );
 
     data_cache: entity work.cache
         port map (
             clk => clk,
             rst => rst,
-            enable_i => dataPhyEnable,
-            write_i => dataWrite,
+            qryEnable_i => dataPhyEnable,
+            qryWrite_i => dataWrite,
             caching_i => dataCaching,
-            busy_o => dataStall,
-            dataSave_i => dataDataSave,
-            dataLoad_o => dataDataLoad,
-            addr_i => dataPhyAddr,
-            enable_o => dataDevEnable,
-            busy_i => dataDevStall,
-            dataLoad_i => dataDevDataLoad
+            qryBusy_o => dataStall,
+            qryDataLoad_o => dataDataLoad,
+            qryAddr_i => dataPhyAddr,
+            devEnable_o => dataDevEnable,
+            devBusy_i => dataDevStall,
+            devDataLoad_i => dataDevDataLoad,
+            updEnable_i => devEnable,
+            updWrite_i => devWrite,
+            updBusy_i => devBusy,
+            updDataSave_i => dataSaveConv,
+            updDataLoad_i => dataLoadConv,
+            updAddr_i => devAddr
         );
 
     mmu_ist: entity work.mmu

@@ -12,86 +12,99 @@ entity cache is
         clk, rst: in std_logic;
 
         -- To CPU
-        enable_i, write_i, caching_i: in std_logic;
-        busy_o: out std_logic;
-        dataSave_i: in std_logic_vector(DataWidth);
-        dataLoad_o: out std_logic_vector(DataWidth);
-        addr_i: in std_logic_vector(AddrWidth);
+        qryEnable_i, qryWrite_i, caching_i: in std_logic;
+        qryBusy_o: out std_logic;
+        qryDataLoad_o: out std_logic_vector(DataWidth);
+        qryAddr_i: in std_logic_vector(AddrWidth);
 
         -- To device
-        enable_o: out std_logic;
-        busy_i: in std_logic;
-        dataLoad_i: in std_logic_vector(DataWidth)
+        devEnable_o: out std_logic;
+        devBusy_i: in std_logic;
+        devDataLoad_i: in std_logic_vector(DataWidth);
+
+        -- Update (From devctrl, because there are 2 caches)
+        updEnable_i, updWrite_i, updBusy_i: in std_logic;
+        updDataSave_i, updDataLoad_i: in std_logic_vector(DataWidth);
+        updAddr_i: in std_logic_vector(AddrWidth)
     );
 end cache;
 
 architecture bhv of cache is
     signal cacheArr: CacheArrType;
 
-    signal tagPart: std_logic_vector(CacheTagWidth);
-    signal groupPart: std_logic_vector(CacheGroupWidth);
-    signal offsetPart: std_logic_vector(CacheOffsetWidth);
+    procedure locate(
+        signal addr_i: in std_logic_vector(AddrWidth);
+        variable lidValid_o: out std_logic;
+        variable gid_o, lid_o, oid_o: out integer
+    ) is
+        variable tagPart: std_logic_vector(CacheTagWidth);
+        variable groupPart: std_logic_vector(CacheGroupWidth);
+        variable offsetPart: std_logic_vector(CacheOffsetWidth);
+        variable lidValid: std_logic;
+        variable gid, lid, oid: integer;
+    begin
+        tagPart := addr_i(CacheTagWidth);
+        groupPart := addr_i(CacheGroupWidth);
+        offsetPart := addr_i(CacheOffsetWidth);
 
-    signal gid, lid, oid: integer;
-    signal lidValid: std_logic;
+        gid := conv_integer(groupPart);
+        oid := conv_integer(offsetPart);
+        lidValid := NO;
+        lid := 0;
+        for i in 0 to CACHE_WAY_NUM - 1 loop
+            if (cacheArr(gid)(i).valid = YES and cacheArr(gid)(i).tag = tagPart) then
+                lid := i;
+                lidValid := YES;
+            end if;
+        end loop;
 
-    signal useDev: std_logic;
+        lidValid_o := lidValid;
+        gid_o := gid;
+        lid_o := lid;
+        oid_o := oid;
+    end locate;
 
     signal random: std_logic_vector(CACHE_WAY_BITS - 1 downto 0);
+
 begin
-    tagPart <= addr_i(CacheTagWidth);
-    groupPart <= addr_i(CacheGroupWidth);
-    offsetPart <= addr_i(CacheOffsetWidth);
 
-    gid <= conv_integer(groupPart);
-    oid <= conv_integer(offsetPart);
-    process(enable_i, cacheArr, gid, oid, tagPart) begin -- Here's issue #6 again!
-        lidValid <= NO;
-        lid <= 0;
-        if (enable_i = ENABLE) then -- Otherwise gid/oid may be out of range in simulation
-            for i in 0 to CACHE_WAY_NUM - 1 loop
-                if (cacheArr(gid)(i).valid = YES and cacheArr(gid)(i).tag = tagPart) then
-                    lid <= i;
-                    lidValid <= YES;
-                end if;
-            end loop;
-        end if;
-    end process;
+    process (cacheArr, caching_i, qryEnable_i, qryWrite_i, qryAddr_i, devBusy_i, devDataLoad_i) -- Issue #6 agian
+        variable lidValid: std_logic;
+        variable gid, lid, oid: integer;
+    begin
+        devEnable_o <= DISABLE;
+        qryBusy_o <= PIPELINE_NONSTOP;
+        qryDataLoad_o <= 32ux"0";
 
-    process (enable_i, caching_i, write_i, lidValid, cacheArr, gid, lid, oid) begin
-        useDev <= NO;
-        if (enable_i = ENABLE) then
-            useDev <= YES;
+        if (qryEnable_i = ENABLE) then
+            devEnable_o <= ENABLE;
+            qryBusy_o <= devBusy_i;
+            qryDataLoad_o <= devDataLoad_i;
+
+            locate(
+                addr_i => qryAddr_i,
+                lidValid_o => lidValid,
+                gid_o => gid,
+                lid_o => lid,
+                oid_o => oid
+            );
             if (
                 caching_i = YES and
-                write_i = NO and -- Always write through
+                qryWrite_i = NO and -- Always write through
                 lidValid = YES and -- Cache line hit
                 cacheArr(gid)(lid).data(oid).valid = YES -- Cache cell hit
             ) then
-                useDev <= NO;
-            end if;
-        end if;
-    end process;
-
-    process (enable_i, useDev, busy_i, dataLoad_i, cacheArr, gid, lid, oid) begin
-        enable_o <= DISABLE;
-        busy_o <= PIPELINE_NONSTOP;
-        dataLoad_o <= 32ux"0";
-        if (enable_i = ENABLE) then
-            if (useDev = YES) then
-                enable_o <= ENABLE;
-                busy_o <= busy_i;
-                dataLoad_o <= dataLoad_i;
-            else
-                enable_o <= DISABLE;
-                busy_o <= PIPELINE_NONSTOP;
-                dataLoad_o <= cacheArr(gid)(lid).data(oid).data;
+                devEnable_o <= DISABLE;
+                qryBusy_o <= PIPELINE_NONSTOP;
+                qryDataLoad_o <= cacheArr(gid)(lid).data(oid).data;
             end if;
         end if;
     end process;
 
     process (clk)
         variable newCached: std_logic_vector(DataWidth);
+        variable lidValid: std_logic;
+        variable gid, lid, oid: integer;
     begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then
@@ -107,23 +120,27 @@ begin
                 end loop;
                 random <= (others => '0');
             else
-                if (enable_i = ENABLE and (
-                    write_i = YES or -- Writing
-                    (useDev = YES and busy_i = PIPELINE_NONSTOP) -- Read finished
-                )) then
+                if (updEnable_i = ENABLE and updBusy_i = PIPELINE_NONSTOP) then
                     newCached := (others => 'X');
-                    if (write_i = YES) then
-                        newCached := dataSave_i;
+                    if (updWrite_i = YES) then
+                        newCached := updDataSave_i;
                     else
-                        newCached := dataLoad_i;
+                        newCached := updDataLoad_i;
                     end if;
 
+                    locate(
+                        addr_i => updAddr_i,
+                        lidValid_o => lidValid,
+                        gid_o => gid,
+                        lid_o => lid,
+                        oid_o => oid
+                    );
                     if (lidValid = YES) then
                         cacheArr(gid)(lid).data(oid).valid <= YES;
                         cacheArr(gid)(lid).data(oid).data <= newCached;
                     else
                         cacheArr(gid)(conv_integer(random)).valid <= YES;
-                        cacheArr(gid)(conv_integer(random)).tag <= tagPart;
+                        cacheArr(gid)(conv_integer(random)).tag <= updAddr_i(CacheTagWidth);
                         for k in 0 to CACHE_LINE_SIZE - 1 loop
                             cacheArr(gid)(conv_integer(random)).data(k).valid <= NO;
                         end loop;
