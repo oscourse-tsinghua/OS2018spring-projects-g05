@@ -20,6 +20,7 @@ entity mmu is
         addr1_i, addr2_i: in std_logic_vector(AddrWidth);
         addr1_o, addr2_o: out std_logic_vector(AddrWidth);
         enable1_o, enable2_o: out std_logic;
+        caching1_o, caching2_o: out std_logic;
         exceptCause1_o, exceptCause2_o: out std_logic_vector(ExceptionCauseWidth);
 
         -- Manage TLB entry
@@ -42,6 +43,7 @@ architecture bhv of mmu is
         signal addr_i: in std_logic_vector(AddrWidth);
         signal addr_o: out std_logic_vector(AddrWidth);
         signal enable_o: out std_logic;
+        signal caching_o: out std_logic;
         signal exceptCause_o: out std_logic_vector(ExceptionCauseWidth)
     ) is
         variable targetLo: std_logic_vector(DataWidth);
@@ -51,6 +53,7 @@ architecture bhv of mmu is
         exceptCause_o <= NO_CAUSE;
         enable_o <= enable_i;
         addr_o <= (others => '0');
+        caching_o <= YES;
         if (enable_i = ENABLE) then
             addrExcept := false;
             tlbExcept := true;
@@ -64,9 +67,10 @@ architecture bhv of mmu is
                 addr_o <= addr_i - 32x"80000000";
                 tlbExcept := false;
             elsif (addr_i(31 downto 28) >= 4x"a" and addr_i(31 downto 28) < 4x"c") then
-                -- kseg1 (unmapped)
+                -- kseg1 (unmapped, uncached)
                 addr_o <= addr_i - 32x"a0000000";
                 tlbExcept := false;
+                caching_o <= NO;
             else
                 -- kuseg, kseg2 (mapped)
                 for i in 0 to TLB_ENTRY_NUM - 1 loop
@@ -122,6 +126,7 @@ begin
             addr_i => addr1_i,
             addr_o => addr1_o,
             enable_o => enable1_o,
+            caching_o => caching1_o,
             exceptCause_o => exceptCause1_o
         );
     end process;
@@ -132,6 +137,7 @@ begin
             addr_i => addr2_i,
             addr_o => addr2_o,
             enable_o => enable2_o,
+            caching_o => caching2_o,
             exceptCause_o => exceptCause2_o
         );
     end process;

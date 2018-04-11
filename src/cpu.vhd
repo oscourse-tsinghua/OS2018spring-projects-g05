@@ -34,6 +34,7 @@ architecture bhv of cpu is
     signal instStall, instDevStall: std_logic;
     signal instData, instDevData: std_logic_vector(DataWidth);
     signal instAddr, instPhyAddr: std_logic_vector(AddrWidth);
+    signal instCaching: std_logic;
 
     signal dataEnable, dataPhyEnable, dataDevEnable: std_logic;
     signal dataStall, dataDevStall: std_logic;
@@ -42,6 +43,7 @@ architecture bhv of cpu is
     signal dataDataLoad, dataDevDataLoad: std_logic_vector(DataWidth);
     signal dataAddr, dataPhyAddr: std_logic_vector(AddrWidth);
     signal dataByteSelect: std_logic_vector(3 downto 0);
+    signal dataCaching: std_logic;
 
     signal instExcept, dataExcept: std_logic_vector(ExceptionCauseWidth);
 
@@ -111,12 +113,13 @@ begin
         port map (
             clk => clk,
             rst => rst,
-            enable_i => instEnable,
+            enable_i => instPhyEnable,
             write_i => NO,
+            caching_i => instCaching,
             busy_o => instStall,
             dataSave_i => 32ux"0",
             dataLoad_o => instData,
-            addr_i => instAddr,
+            addr_i => instPhyAddr,
             enable_o => instDevEnable,
             busy_i => instDevStall,
             dataLoad_i => instDevData
@@ -126,12 +129,13 @@ begin
         port map (
             clk => clk,
             rst => rst,
-            enable_i => dataEnable,
+            enable_i => dataPhyEnable,
             write_i => dataWrite,
+            caching_i => dataCaching,
             busy_o => dataStall,
             dataSave_i => dataDataSave,
             dataLoad_o => dataDataLoad,
-            addr_i => dataAddr,
+            addr_i => dataPhyAddr,
             enable_o => dataDevEnable,
             busy_i => dataDevStall,
             dataLoad_i => dataDevDataLoad
@@ -148,6 +152,7 @@ begin
             addr1_i => instAddr,
             addr1_o => instPhyAddr,
             enable1_o => instPhyEnable,
+            caching1_o => instCaching,
             exceptCause1_o => instExcept,
 
             enable2_i => dataEnable,
@@ -155,6 +160,7 @@ begin
             addr2_i => dataAddr,
             addr2_o => dataPhyAddr,
             enable2_o => dataPhyEnable,
+            caching2_o => dataCaching,
             exceptCause2_o => dataExcept,
 
             index_i => entryIndexSave,

@@ -12,7 +12,7 @@ entity cache is
         clk, rst: in std_logic;
 
         -- To CPU
-        enable_i, write_i: in std_logic;
+        enable_i, write_i, caching_i: in std_logic;
         busy_o: out std_logic;
         dataSave_i: in std_logic_vector(DataWidth);
         dataLoad_o: out std_logic_vector(DataWidth);
@@ -65,7 +65,7 @@ begin
             busy_o <= busy_i;
             dataLoad_o <= dataLoad_i;
             if (
-                (addr_i < 32x"A0000000" or addr_i > 32x"C0000000") and -- Cached
+                caching_i = YES and
                 write_i = NO and -- Always write through
                 lidValid = YES -- Cache hit
             ) then
@@ -88,7 +88,10 @@ begin
                 end loop;
                 random <= (others => '0');
             else
-                if (enable_i = ENABLE and (write_i = YES or busy_i = PIPELINE_NONSTOP)) then
+                if (enable_i = ENABLE and (
+                    write_i = YES or -- Writing
+                    (lidValid = NO and busy_i = PIPELINE_NONSTOP) -- Read finished
+                )) then
                     newCached := (others => 'X');
                     if (write_i = YES) then
                         newCached := dataSave_i;
