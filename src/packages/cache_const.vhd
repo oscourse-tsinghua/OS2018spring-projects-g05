@@ -15,9 +15,13 @@ package cache_const is
     subtype CacheGroupWidth is integer range CACHE_OFFSET_BITS + CACHE_GROUP_BITS - 1 downto CACHE_OFFSET_BITS;
     subtype CacheTagWidth is integer range 31 downto CACHE_OFFSET_BITS + CACHE_GROUP_BITS;
 
-    type CacheLineDataType is array(0 to CACHE_LINE_SIZE - 1) of std_logic_vector(DataWidth);
+    type CacheCellType is record
+        valid: std_logic;
+        data: std_logic_vector(DataWidth);
+    end record;
+    type CacheLineDataType is array(0 to CACHE_LINE_SIZE - 1) of CacheCellType;
     type CacheLineType is record
-        valid: std_logic_vector(CACHE_LINE_SIZE - 1 downto 0);
+        valid: std_logic;
         tag: std_logic_vector(CacheTagWidth);
         data: CacheLineDataType;
     end record;

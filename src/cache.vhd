@@ -35,6 +35,8 @@ architecture bhv of cache is
     signal gid, lid, oid: integer;
     signal lidValid: std_logic;
 
+    signal useDev: std_logic;
+
     signal random: std_logic_vector(CACHE_WAY_BITS - 1 downto 0);
 begin
     tagPart <= addr_i(CacheTagWidth);
@@ -48,7 +50,7 @@ begin
         lid <= 0;
         if (enable_i = ENABLE) then -- Otherwise gid/oid may be out of range in simulation
             for i in 0 to CACHE_WAY_NUM - 1 loop
-                if (cacheArr(gid)(i).valid(oid) = YES and cacheArr(gid)(i).tag = tagPart) then
+                if (cacheArr(gid)(i).valid = YES and cacheArr(gid)(i).tag = tagPart) then
                     lid <= i;
                     lidValid <= YES;
                 end if;
@@ -56,22 +58,34 @@ begin
         end if;
     end process;
 
-    process (all) begin
-        enable_o <= DISABLE;
-        busy_o <= 'X';
-        dataLoad_o <= (others => 'X');
+    process (enable_i, caching_i, write_i, lidValid, cacheArr, gid, lid, oid) begin
+        useDev <= NO;
         if (enable_i = ENABLE) then
-            enable_o <= ENABLE;
-            busy_o <= busy_i;
-            dataLoad_o <= dataLoad_i;
+            useDev <= YES;
             if (
                 caching_i = YES and
                 write_i = NO and -- Always write through
-                lidValid = YES -- Cache hit
+                lidValid = YES and -- Cache line hit
+                cacheArr(gid)(lid).data(oid).valid = YES -- Cache cell hit
             ) then
+                useDev <= NO;
+            end if;
+        end if;
+    end process;
+
+    process (enable_i, useDev, busy_i, dataLoad_i, cacheArr, gid, lid, oid) begin
+        enable_o <= DISABLE;
+        busy_o <= PIPELINE_NONSTOP;
+        dataLoad_o <= 32ux"0";
+        if (enable_i = ENABLE) then
+            if (useDev = YES) then
+                enable_o <= ENABLE;
+                busy_o <= busy_i;
+                dataLoad_o <= dataLoad_i;
+            else
                 enable_o <= DISABLE;
                 busy_o <= PIPELINE_NONSTOP;
-                dataLoad_o <= cacheArr(gid)(lid).data(oid);
+                dataLoad_o <= cacheArr(gid)(lid).data(oid).data;
             end if;
         end if;
     end process;
@@ -83,14 +97,19 @@ begin
             if (rst = RST_ENABLE) then
                 for i in 0 to CACHE_GROUP_NUM - 1 loop
                     for j in 0 to CACHE_WAY_NUM - 1 loop
-                        cacheArr(i)(j).valid <= (others => NO);
+                        cacheArr(i)(j).valid <= NO;
+                        cacheArr(i)(j).tag <= (others => '0');
+                        for k in 0 to CACHE_LINE_SIZE - 1 loop
+                            cacheArr(i)(j).data(k).valid <= NO;
+                            cacheArr(i)(j).data(k).data <= 32ux"0";
+                        end loop;
                     end loop;
                 end loop;
                 random <= (others => '0');
             else
                 if (enable_i = ENABLE and (
                     write_i = YES or -- Writing
-                    (lidValid = NO and busy_i = PIPELINE_NONSTOP) -- Read finished
+                    (useDev = YES and busy_i = PIPELINE_NONSTOP) -- Read finished
                 )) then
                     newCached := (others => 'X');
                     if (write_i = YES) then
@@ -100,12 +119,16 @@ begin
                     end if;
 
                     if (lidValid = YES) then
-                        cacheArr(gid)(lid).data(oid) <= newCached;
+                        cacheArr(gid)(lid).data(oid).valid <= YES;
+                        cacheArr(gid)(lid).data(oid).data <= newCached;
                     else
-                        cacheArr(gid)(conv_integer(random)).valid <= (others => NO);
-                        cacheArr(gid)(conv_integer(random)).valid(oid) <= YES;
+                        cacheArr(gid)(conv_integer(random)).valid <= YES;
                         cacheArr(gid)(conv_integer(random)).tag <= tagPart;
-                        cacheArr(gid)(conv_integer(random)).data(oid) <= newCached;
+                        for k in 0 to CACHE_LINE_SIZE - 1 loop
+                            cacheArr(gid)(conv_integer(random)).data(k).valid <= NO;
+                        end loop;
+                        cacheArr(gid)(conv_integer(random)).data(oid).valid <= YES;
+                        cacheArr(gid)(conv_integer(random)).data(oid).data <= newCached;
                     end if;
                 end if;
                 random <= random + 1;
