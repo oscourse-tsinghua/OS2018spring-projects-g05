@@ -82,7 +82,7 @@ ncvlog -work worklib -messages -sv ../mig_ddr3_ex.srcs/sources_1/ip/mig_ddr3/mig
 ncvlog -work worklib -messages -sv ../mig_ddr3_ex.srcs/sources_1/ip/mig_ddr3/mig_ddr3/user_design/rtl/ip_top/*.v >> ies_sim.log
 ncvlog -work worklib -messages -sv ../mig_ddr3_ex.srcs/sources_1/ip/mig_ddr3/mig_ddr3/user_design/rtl/phy/*.v >> ies_sim.log
 ncvlog -work worklib -messages -sv ../mig_ddr3_ex.srcs/sources_1/ip/mig_ddr3/mig_ddr3/user_design/rtl/ui/*.v >> ies_sim.log
-
+ncvlog -sv -work worklib -messages ../mig_ddr3_ex.srcs/sources_1/ip/mig_ddr3/mig_ddr3/user_design/rtl/axi/*.v >> ies_sim.log 
 
 
 ncvlog -sv -work worklib -messages example_top.v >> ies_sim.log

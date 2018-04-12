@@ -89,26 +89,58 @@
     .ddr3_dm                        (ddr3_dm),  // output [1:0]		ddr3_dm
     .ddr3_odt                       (ddr3_odt),  // output [0:0]		ddr3_odt
     // Application interface ports
-    .app_addr                       (app_addr),  // input [26:0]		app_addr
-    .app_cmd                        (app_cmd),  // input [2:0]		app_cmd
-    .app_en                         (app_en),  // input				app_en
-    .app_wdf_data                   (app_wdf_data),  // input [127:0]		app_wdf_data
-    .app_wdf_end                    (app_wdf_end),  // input				app_wdf_end
-    .app_wdf_wren                   (app_wdf_wren),  // input				app_wdf_wren
-    .app_rd_data                    (app_rd_data),  // output [127:0]		app_rd_data
-    .app_rd_data_end                (app_rd_data_end),  // output			app_rd_data_end
-    .app_rd_data_valid              (app_rd_data_valid),  // output			app_rd_data_valid
-    .app_rdy                        (app_rdy),  // output			app_rdy
-    .app_wdf_rdy                    (app_wdf_rdy),  // output			app_wdf_rdy
+    .ui_clk                         (ui_clk),  // output			ui_clk
+    .ui_clk_sync_rst                (ui_clk_sync_rst),  // output			ui_clk_sync_rst
+    .mmcm_locked                    (mmcm_locked),  // output			mmcm_locked
+    .aresetn                        (aresetn),  // input			aresetn
     .app_sr_req                     (app_sr_req),  // input			app_sr_req
     .app_ref_req                    (app_ref_req),  // input			app_ref_req
     .app_zq_req                     (app_zq_req),  // input			app_zq_req
     .app_sr_active                  (app_sr_active),  // output			app_sr_active
     .app_ref_ack                    (app_ref_ack),  // output			app_ref_ack
     .app_zq_ack                     (app_zq_ack),  // output			app_zq_ack
-    .ui_clk                         (ui_clk),  // output			ui_clk
-    .ui_clk_sync_rst                (ui_clk_sync_rst),  // output			ui_clk_sync_rst
-    .app_wdf_mask                   (app_wdf_mask),  // input [15:0]		app_wdf_mask
+    // Slave Interface Write Address Ports
+    .s_axi_awid                     (s_axi_awid),  // input [7:0]			s_axi_awid
+    .s_axi_awaddr                   (s_axi_awaddr),  // input [26:0]			s_axi_awaddr
+    .s_axi_awlen                    (s_axi_awlen),  // input [7:0]			s_axi_awlen
+    .s_axi_awsize                   (s_axi_awsize),  // input [2:0]			s_axi_awsize
+    .s_axi_awburst                  (s_axi_awburst),  // input [1:0]			s_axi_awburst
+    .s_axi_awlock                   (s_axi_awlock),  // input [0:0]			s_axi_awlock
+    .s_axi_awcache                  (s_axi_awcache),  // input [3:0]			s_axi_awcache
+    .s_axi_awprot                   (s_axi_awprot),  // input [2:0]			s_axi_awprot
+    .s_axi_awqos                    (s_axi_awqos),  // input [3:0]			s_axi_awqos
+    .s_axi_awvalid                  (s_axi_awvalid),  // input			s_axi_awvalid
+    .s_axi_awready                  (s_axi_awready),  // output			s_axi_awready
+    // Slave Interface Write Data Ports
+    .s_axi_wdata                    (s_axi_wdata),  // input [31:0]			s_axi_wdata
+    .s_axi_wstrb                    (s_axi_wstrb),  // input [3:0]			s_axi_wstrb
+    .s_axi_wlast                    (s_axi_wlast),  // input			s_axi_wlast
+    .s_axi_wvalid                   (s_axi_wvalid),  // input			s_axi_wvalid
+    .s_axi_wready                   (s_axi_wready),  // output			s_axi_wready
+    // Slave Interface Write Response Ports
+    .s_axi_bid                      (s_axi_bid),  // output [7:0]			s_axi_bid
+    .s_axi_bresp                    (s_axi_bresp),  // output [1:0]			s_axi_bresp
+    .s_axi_bvalid                   (s_axi_bvalid),  // output			s_axi_bvalid
+    .s_axi_bready                   (s_axi_bready),  // input			s_axi_bready
+    // Slave Interface Read Address Ports
+    .s_axi_arid                     (s_axi_arid),  // input [7:0]			s_axi_arid
+    .s_axi_araddr                   (s_axi_araddr),  // input [26:0]			s_axi_araddr
+    .s_axi_arlen                    (s_axi_arlen),  // input [7:0]			s_axi_arlen
+    .s_axi_arsize                   (s_axi_arsize),  // input [2:0]			s_axi_arsize
+    .s_axi_arburst                  (s_axi_arburst),  // input [1:0]			s_axi_arburst
+    .s_axi_arlock                   (s_axi_arlock),  // input [0:0]			s_axi_arlock
+    .s_axi_arcache                  (s_axi_arcache),  // input [3:0]			s_axi_arcache
+    .s_axi_arprot                   (s_axi_arprot),  // input [2:0]			s_axi_arprot
+    .s_axi_arqos                    (s_axi_arqos),  // input [3:0]			s_axi_arqos
+    .s_axi_arvalid                  (s_axi_arvalid),  // input			s_axi_arvalid
+    .s_axi_arready                  (s_axi_arready),  // output			s_axi_arready
+    // Slave Interface Read Data Ports
+    .s_axi_rid                      (s_axi_rid),  // output [7:0]			s_axi_rid
+    .s_axi_rdata                    (s_axi_rdata),  // output [31:0]			s_axi_rdata
+    .s_axi_rresp                    (s_axi_rresp),  // output [1:0]			s_axi_rresp
+    .s_axi_rlast                    (s_axi_rlast),  // output			s_axi_rlast
+    .s_axi_rvalid                   (s_axi_rvalid),  // output			s_axi_rvalid
+    .s_axi_rready                   (s_axi_rready),  // input			s_axi_rready
     // System Clock Ports
     .sys_clk_i                       (sys_clk_i),
     // Reference Clock Ports

@@ -28,8 +28,8 @@ Extended FPGA Options:
 /*******************************************************/
 Controller Options :
    Memory                        : DDR3_SDRAM
-   Interface                     : NATIVE
-   Design Clock Frequency        : 2500 ps (400.00 MHz)
+   Interface                     : AXI
+   Design Clock Frequency        : 2500 ps (  0.00 MHz)
    Phy to Controller Clock Ratio : 4:1
    Input Clock Period            : 10000 ps
    CLKFBOUT_MULT (PLL)           : 8
@@ -37,13 +37,17 @@ Controller Options :
    VCC_AUX IO                    : 1.8V
    Memory Type                   : Components
    Memory Part                   : MT41J64M16XX-125
-   Equivalent Part(s)            : --
+   Equivalent Part(s)            : MT41J64M16JT-125
    Data Width                    : 16
    ECC                           : Disabled
    Data Mask                     : enabled
    ORDERING                      : Strict
 
 AXI Parameters :
+   Data Width                    : 32
+   Arbitration Scheme            : RD_PRI_REG
+   Narrow Burst Support          : 0
+   ID Width                      : 8
 
 Memory Options:
    Burst Length (MR0[1:0])          : 8 - Fixed

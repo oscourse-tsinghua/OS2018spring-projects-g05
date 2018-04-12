@@ -78,30 +78,14 @@ module example_top #
    //***************************************************************************
    // Traffic Gen related parameters
    //***************************************************************************
-   parameter PORT_MODE             = "BI_MODE",
-   parameter DATA_MODE             = 4'b0010,
-   parameter TST_MEM_INSTR_MODE    = "R_W_INSTR_MODE",
-   parameter EYE_TEST              = "FALSE",
-                                     // set EYE_TEST = "TRUE" to probe memory
-                                     // signals. Traffic Generator will only
-                                     // write to one single location and no
-                                     // read transactions will be generated.
-   parameter DATA_PATTERN          = "DGEN_ALL",
-                                      // For small devices, choose one only.
-                                      // For large device, choose "DGEN_ALL"
-                                      // "DGEN_HAMMER", "DGEN_WALKING1",
-                                      // "DGEN_WALKING0","DGEN_ADDR","
-                                      // "DGEN_NEIGHBOR","DGEN_PRBS","DGEN_ALL"
-   parameter CMD_PATTERN           = "CGEN_ALL",
-                                      // "CGEN_PRBS","CGEN_FIXED","CGEN_BRAM",
-                                      // "CGEN_SEQUENTIAL", "CGEN_ALL"
-   parameter CMD_WDT               = 'h3FF,
-   parameter WR_WDT                = 'h1FFF,
-   parameter RD_WDT                = 'h3FF,
-   parameter SEL_VICTIM_LINE       = 0,
    parameter BEGIN_ADDRESS         = 32'h00000000,
    parameter END_ADDRESS           = 32'h00ffffff,
    parameter PRBS_EADDR_MASK_POS   = 32'hff000000,
+   parameter ENFORCE_RD_WR         = 0,
+   parameter ENFORCE_RD_WR_CMD     = 8'h11,
+   parameter ENFORCE_RD_WR_PATTERN = 3'b000,
+   parameter C_EN_WRAP_TRANS       = 0,
+   parameter C_AXI_NBURST_TEST     = 0,
 
    //***************************************************************************
    // The following parameters refer to width of various ports
@@ -204,6 +188,24 @@ module example_top #
                                      // # of memory CKs per fabric CLK
 
    
+   //***************************************************************************
+   // AXI4 Shim parameters
+   //***************************************************************************
+   parameter C_S_AXI_ID_WIDTH              = 8,
+                                             // Width of all master and slave ID signals.
+                                             // # = >= 1.
+   parameter C_S_AXI_ADDR_WIDTH            = 27,
+                                             // Width of S_AXI_AWADDR, S_AXI_ARADDR, M_AXI_AWADDR and
+                                             // M_AXI_ARADDR for all SI/MI slots.
+                                             // # = 32.
+   parameter C_S_AXI_DATA_WIDTH            = 32,
+                                             // Width of WDATA and RDATA on SI slot.
+                                             // Must be <= APP_DATA_WIDTH.
+                                             // # = 32, 64, 128, 256.
+   parameter C_S_AXI_SUPPORTS_NARROW_BURST = 0,
+                                             // Indicates whether to instatiate upsizer
+                                             // Range: 0, 1
+      
 
    //***************************************************************************
    // Debug parameters
@@ -293,72 +295,82 @@ function integer clogb2 (input integer size);
   localparam  TG_ADDR_WIDTH = ((CS_WIDTH == 1) ? 0 : RANK_WIDTH)
                                  + BANK_WIDTH + ROW_WIDTH + COL_WIDTH;
   localparam MASK_SIZE             = DATA_WIDTH/8;
+  localparam DBG_WR_STS_WIDTH      = 40;
+  localparam DBG_RD_STS_WIDTH      = 40;
       
 
   // Wire declarations
       
-  wire [(2*nCK_PER_CLK)-1:0]              app_ecc_multiple_err;
-  wire [(2*nCK_PER_CLK)-1:0]              app_ecc_single_err;
-  wire [ADDR_WIDTH-1:0]                 app_addr;
-  wire [2:0]                            app_cmd;
-  wire                                  app_en;
-  wire                                  app_rdy;
-  wire [APP_DATA_WIDTH-1:0]             app_rd_data;
-  wire                                  app_rd_data_end;
-  wire                                  app_rd_data_valid;
-  wire [APP_DATA_WIDTH-1:0]             app_wdf_data;
-  wire                                  app_wdf_end;
-  wire [APP_MASK_WIDTH-1:0]             app_wdf_mask;
-  wire                                  app_wdf_rdy;
-  wire                                  app_sr_active;
-  wire                                  app_ref_ack;
-  wire                                  app_zq_ack;
-  wire                                  app_wdf_wren;
-  wire [(64+(2*APP_DATA_WIDTH))-1:0]      error_status;
-  wire [(PAYLOAD_WIDTH/8)-1:0] cumlative_dq_lane_error;
-  wire                                  mem_pattern_init_done;
-  wire [47:0]                           tg_wr_data_counts;
-  wire [47:0]                           tg_rd_data_counts;
-  wire                                  modify_enable_sel;
-  wire [2:0]                            data_mode_manual_sel;
-  wire [2:0]                            addr_mode_manual_sel;
-  wire [APP_DATA_WIDTH-1:0]             cmp_data;
-  reg [63:0]                            cmp_data_r;
-  wire                                  cmp_data_valid;
-  reg                                   cmp_data_valid_r;
-  wire                                  cmp_error;
-  wire [(PAYLOAD_WIDTH/8)-1:0]            dq_error_bytelane_cmp;
+  wire                              clk;
+  wire                              rst;
+  wire                              mmcm_locked;
+  reg                               aresetn;
+  wire                              app_sr_active;
+  wire                              app_ref_ack;
+  wire                              app_zq_ack;
+  wire                              app_rd_data_valid;
+  wire [APP_DATA_WIDTH-1:0]         app_rd_data;
 
-  wire                                  clk;
-  wire                                  rst;
+  wire                              mem_pattern_init_done;
 
-  wire                                  dbg_sel_pi_incdec;
-  wire                                  dbg_pi_f_inc;
-  wire                                  dbg_pi_f_dec;
-  wire                                  dbg_sel_po_incdec;
-  wire                                  dbg_po_f_inc;
-  wire                                  dbg_po_f_stg23_sel;
-  wire                                  dbg_po_f_dec;
-  
-  
-  wire                                  vio_modify_enable;
-  wire [3:0]                            vio_data_mode_value;
-  wire                                  vio_pause_traffic;
-  wire [2:0]                            vio_addr_mode_value;
-  wire [3:0]                            vio_instr_mode_value;
-  wire [1:0]                            vio_bl_mode_value;
-  wire [9:0]                            vio_fixed_bl_value;
-  wire [2:0]                            vio_fixed_instr_value;
-  wire                                  vio_data_mask_gen;
-  wire                                  vio_tg_rst;
-  wire                                  vio_dbg_sel_pi_incdec;
-  wire                                  vio_dbg_pi_f_inc;
-  wire                                  vio_dbg_pi_f_dec;
-  wire                                  vio_dbg_sel_po_incdec;
-  wire                                  vio_dbg_po_f_inc;
-  wire                                  vio_dbg_po_f_stg23_sel;
-  wire                                  vio_dbg_po_f_dec;
-     
+  wire                              cmd_err;
+  wire                              data_msmatch_err;
+  wire                              write_err;
+  wire                              read_err;
+  wire                              test_cmptd;
+  wire                              write_cmptd;
+  wire                              read_cmptd;
+  wire                              cmptd_one_wr_rd;
+
+  // Slave Interface Write Address Ports
+  wire [C_S_AXI_ID_WIDTH-1:0]       s_axi_awid;
+  wire [C_S_AXI_ADDR_WIDTH-1:0]     s_axi_awaddr;
+  wire [7:0]                        s_axi_awlen;
+  wire [2:0]                        s_axi_awsize;
+  wire [1:0]                        s_axi_awburst;
+  wire [0:0]                        s_axi_awlock;
+  wire [3:0]                        s_axi_awcache;
+  wire [2:0]                        s_axi_awprot;
+  wire                              s_axi_awvalid;
+  wire                              s_axi_awready;
+   // Slave Interface Write Data Ports
+  wire [C_S_AXI_DATA_WIDTH-1:0]     s_axi_wdata;
+  wire [(C_S_AXI_DATA_WIDTH/8)-1:0]   s_axi_wstrb;
+  wire                              s_axi_wlast;
+  wire                              s_axi_wvalid;
+  wire                              s_axi_wready;
+   // Slave Interface Write Response Ports
+  wire                              s_axi_bready;
+  wire [C_S_AXI_ID_WIDTH-1:0]       s_axi_bid;
+  wire [1:0]                        s_axi_bresp;
+  wire                              s_axi_bvalid;
+   // Slave Interface Read Address Ports
+  wire [C_S_AXI_ID_WIDTH-1:0]       s_axi_arid;
+  wire [C_S_AXI_ADDR_WIDTH-1:0]     s_axi_araddr;
+  wire [7:0]                        s_axi_arlen;
+  wire [2:0]                        s_axi_arsize;
+  wire [1:0]                        s_axi_arburst;
+  wire [0:0]                        s_axi_arlock;
+  wire [3:0]                        s_axi_arcache;
+  wire [2:0]                        s_axi_arprot;
+  wire                              s_axi_arvalid;
+  wire                              s_axi_arready;
+   // Slave Interface Read Data Ports
+  wire                              s_axi_rready;
+  wire [C_S_AXI_ID_WIDTH-1:0]       s_axi_rid;
+  wire [C_S_AXI_DATA_WIDTH-1:0]     s_axi_rdata;
+  wire [1:0]                        s_axi_rresp;
+  wire                              s_axi_rlast;
+  wire                              s_axi_rvalid;
+
+  wire                              cmp_data_valid;
+  wire [C_S_AXI_DATA_WIDTH-1:0]      cmp_data;     // Compare data
+  wire [C_S_AXI_DATA_WIDTH-1:0]      rdata_cmp;      // Read data
+
+  wire                              dbg_wr_sts_vld;
+  wire [DBG_WR_STS_WIDTH-1:0]       dbg_wr_sts;
+  wire                              dbg_rd_sts_vld;
+  wire [DBG_RD_STS_WIDTH-1:0]       dbg_rd_sts;
   wire [11:0]                           device_temp;
   
 `ifdef SKIP_CALIB
@@ -376,7 +388,9 @@ function integer clogb2 (input integer size);
 
 
 
-
+  assign tg_compare_error = cmd_err | data_msmatch_err | write_err | read_err;
+      
+      
 
 
       
@@ -411,27 +425,61 @@ function integer clogb2 (input integer size);
        .ddr3_dm                        (ddr3_dm),
        .ddr3_odt                       (ddr3_odt),
 // Application interface ports
-       .app_addr                       (app_addr),
-       .app_cmd                        (app_cmd),
-       .app_en                         (app_en),
-       .app_wdf_data                   (app_wdf_data),
-       .app_wdf_end                    (app_wdf_end),
-       .app_wdf_wren                   (app_wdf_wren),
-       .app_rd_data                    (app_rd_data),
-       .app_rd_data_end                (app_rd_data_end),
-       .app_rd_data_valid              (app_rd_data_valid),
-       .app_rdy                        (app_rdy),
-       .app_wdf_rdy                    (app_wdf_rdy),
+       .ui_clk                         (clk),
+       .ui_clk_sync_rst                (rst),
+
+       .mmcm_locked                    (mmcm_locked),
+       .aresetn                        (aresetn),
        .app_sr_req                     (1'b0),
        .app_ref_req                    (1'b0),
        .app_zq_req                     (1'b0),
        .app_sr_active                  (app_sr_active),
        .app_ref_ack                    (app_ref_ack),
        .app_zq_ack                     (app_zq_ack),
-       .ui_clk                         (clk),
-       .ui_clk_sync_rst                (rst),
-      
-       .app_wdf_mask                   (app_wdf_mask),
+
+// Slave Interface Write Address Ports
+       .s_axi_awid                     (s_axi_awid),
+       .s_axi_awaddr                   (s_axi_awaddr),
+       .s_axi_awlen                    (s_axi_awlen),
+       .s_axi_awsize                   (s_axi_awsize),
+       .s_axi_awburst                  (s_axi_awburst),
+       .s_axi_awlock                   (s_axi_awlock),
+       .s_axi_awcache                  (s_axi_awcache),
+       .s_axi_awprot                   (s_axi_awprot),
+       .s_axi_awqos                    (4'h0),
+       .s_axi_awvalid                  (s_axi_awvalid),
+       .s_axi_awready                  (s_axi_awready),
+// Slave Interface Write Data Ports
+       .s_axi_wdata                    (s_axi_wdata),
+       .s_axi_wstrb                    (s_axi_wstrb),
+       .s_axi_wlast                    (s_axi_wlast),
+       .s_axi_wvalid                   (s_axi_wvalid),
+       .s_axi_wready                   (s_axi_wready),
+// Slave Interface Write Response Ports
+       .s_axi_bid                      (s_axi_bid),
+       .s_axi_bresp                    (s_axi_bresp),
+       .s_axi_bvalid                   (s_axi_bvalid),
+       .s_axi_bready                   (s_axi_bready),
+// Slave Interface Read Address Ports
+       .s_axi_arid                     (s_axi_arid),
+       .s_axi_araddr                   (s_axi_araddr),
+       .s_axi_arlen                    (s_axi_arlen),
+       .s_axi_arsize                   (s_axi_arsize),
+       .s_axi_arburst                  (s_axi_arburst),
+       .s_axi_arlock                   (s_axi_arlock),
+       .s_axi_arcache                  (s_axi_arcache),
+       .s_axi_arprot                   (s_axi_arprot),
+       .s_axi_arqos                    (4'h0),
+       .s_axi_arvalid                  (s_axi_arvalid),
+       .s_axi_arready                  (s_axi_arready),
+// Slave Interface Read Data Ports
+       .s_axi_rid                      (s_axi_rid),
+       .s_axi_rdata                    (s_axi_rdata),
+       .s_axi_rresp                    (s_axi_rresp),
+       .s_axi_rlast                    (s_axi_rlast),
+       .s_axi_rvalid                   (s_axi_rvalid),
+       .s_axi_rready                   (s_axi_rready),
+
       
        
 // System Clock Ports
@@ -457,113 +505,110 @@ function integer clogb2 (input integer size);
 // on the application interface of the memory controller
 //***************************************************************************
 
-  mig_7series_v4_0_traffic_gen_top #
-    (
-     .TCQ                 (TCQ),
-     .SIMULATION          (SIMULATION),
-     .FAMILY              ("VIRTEX7"),
-     .MEM_TYPE            (DRAM_TYPE),
-     .TST_MEM_INSTR_MODE  (TST_MEM_INSTR_MODE),
-     //.BL_WIDTH            (BL_WIDTH),
-     .nCK_PER_CLK         (nCK_PER_CLK),
-     .NUM_DQ_PINS         (PAYLOAD_WIDTH),
-     .MEM_BURST_LEN       (BURST_LENGTH),
-     .MEM_COL_WIDTH       (COL_WIDTH),
-     .PORT_MODE           (PORT_MODE),
-     .DATA_PATTERN        (DATA_PATTERN),
-     .CMD_PATTERN         (CMD_PATTERN),
-     .DATA_WIDTH          (APP_DATA_WIDTH),
-     .ADDR_WIDTH          (TG_ADDR_WIDTH),
-     .MASK_SIZE           (MASK_SIZE),
-     .BEGIN_ADDRESS       (BEGIN_ADDRESS),
-     .DATA_MODE           (DATA_MODE),
-     .END_ADDRESS         (END_ADDRESS),
-     .PRBS_EADDR_MASK_POS (PRBS_EADDR_MASK_POS),
-     .SEL_VICTIM_LINE     (SEL_VICTIM_LINE),
-     .CMD_WDT             (CMD_WDT),
-     .RD_WDT              (RD_WDT),
-     .WR_WDT              (WR_WDT),
-     .EYE_TEST            (EYE_TEST)
-     )
-    u_traffic_gen_top
-      (
-       .clk                  (clk),
-       .rst                  (rst),
-       .tg_only_rst          (po_win_tg_rst | vio_tg_rst),
-       .manual_clear_error   (manual_clear_error),
-       .memc_init_done       (init_calib_complete),
-       .memc_cmd_full        (~app_rdy),
-       .memc_cmd_en          (app_en),
-       .memc_cmd_instr       (app_cmd),
-       .memc_cmd_bl          (),
-       .memc_cmd_addr        (app_addr),
-       .memc_wr_en           (app_wdf_wren),
-       .memc_wr_end          (app_wdf_end),
-       .memc_wr_mask         (app_wdf_mask),
-       .memc_wr_data         (app_wdf_data),
-       .memc_wr_full         (~app_wdf_rdy),
-       .memc_rd_en           (),
-       .memc_rd_data         (app_rd_data),
-       .memc_rd_empty        (~app_rd_data_valid),
-       .qdr_wr_cmd_o         (),
-       .qdr_rd_cmd_o         (),
-       .vio_pause_traffic    (vio_pause_traffic),
-       .vio_modify_enable    (vio_modify_enable),
-       .vio_data_mode_value  (vio_data_mode_value),
-       .vio_addr_mode_value  (vio_addr_mode_value),
-       .vio_instr_mode_value (vio_instr_mode_value),
-       .vio_bl_mode_value    (vio_bl_mode_value),
-       .vio_fixed_bl_value   (vio_fixed_bl_value),
-       .vio_fixed_instr_value(vio_fixed_instr_value),
-       .vio_data_mask_gen    (vio_data_mask_gen),
-       .fixed_addr_i         (32'b0),
-       .fixed_data_i         (32'b0),
-       .simple_data0         (32'b0),
-       .simple_data1         (32'b0),
-       .simple_data2         (32'b0),
-       .simple_data3         (32'b0),
-       .simple_data4         (32'b0),
-       .simple_data5         (32'b0),
-       .simple_data6         (32'b0),
-       .simple_data7         (32'b0),
-       .wdt_en_i             (wdt_en_w),
-       .bram_cmd_i           (39'b0),
-       .bram_valid_i         (1'b0),
-       .bram_rdy_o           (),
-       .cmp_data             (cmp_data),
-       .cmp_data_valid       (cmp_data_valid),
-       .cmp_error            (cmp_error),
-       .wr_data_counts       (tg_wr_data_counts),
-       .rd_data_counts       (tg_rd_data_counts),
-       .dq_error_bytelane_cmp (dq_error_bytelane_cmp),
-       .error                (tg_compare_error),
-       .error_status         (error_status),
-       .cumlative_dq_lane_error (cumlative_dq_lane_error),
-       .cmd_wdt_err_o         (cmd_wdt_err_w),
-       .wr_wdt_err_o          (wr_wdt_err_w),
-       .rd_wdt_err_o          (rd_wdt_err_w),
-       .mem_pattern_init_done   (mem_pattern_init_done)
-       );
+   always @(posedge clk) begin
+     aresetn <= ~rst;
+   end
+
+   mig_7series_v4_0_axi4_tg #(
+
+     .C_AXI_ID_WIDTH                   (C_S_AXI_ID_WIDTH),
+     .C_AXI_ADDR_WIDTH                 (C_S_AXI_ADDR_WIDTH),
+     .C_AXI_DATA_WIDTH                 (C_S_AXI_DATA_WIDTH),
+     .C_AXI_NBURST_SUPPORT             (C_AXI_NBURST_TEST),
+     .C_EN_WRAP_TRANS                  (C_EN_WRAP_TRANS),
+     .C_BEGIN_ADDRESS                  (BEGIN_ADDRESS),
+     .C_END_ADDRESS                    (END_ADDRESS),
+     .PRBS_EADDR_MASK_POS              (PRBS_EADDR_MASK_POS),
+     .DBG_WR_STS_WIDTH                 (DBG_WR_STS_WIDTH),
+     .DBG_RD_STS_WIDTH                 (DBG_RD_STS_WIDTH),
+     .ENFORCE_RD_WR                    (ENFORCE_RD_WR),
+     .ENFORCE_RD_WR_CMD                (ENFORCE_RD_WR_CMD),
+     .EN_UPSIZER                       (C_S_AXI_SUPPORTS_NARROW_BURST),
+     .ENFORCE_RD_WR_PATTERN            (ENFORCE_RD_WR_PATTERN)
+
+   ) u_axi4_tg_inst
+   (
+     .aclk                             (clk),
+     .aresetn                          (aresetn),
+
+// Input control signals
+     .init_cmptd                       (init_calib_complete),
+     .init_test                        (1'b0),
+     .wdog_mask                        (~init_calib_complete),
+     .wrap_en                          (1'b0),
+
+// AXI write address channel signals
+     .axi_wready                       (s_axi_awready),
+     .axi_wid                          (s_axi_awid),
+     .axi_waddr                        (s_axi_awaddr),
+     .axi_wlen                         (s_axi_awlen),
+     .axi_wsize                        (s_axi_awsize),
+     .axi_wburst                       (s_axi_awburst),
+     .axi_wlock                        (s_axi_awlock),
+     .axi_wcache                       (s_axi_awcache),
+     .axi_wprot                        (s_axi_awprot),
+     .axi_wvalid                       (s_axi_awvalid),
+
+// AXI write data channel signals
+     .axi_wd_wready                    (s_axi_wready),
+     .axi_wd_wid                       (s_axi_wid),
+     .axi_wd_data                      (s_axi_wdata),
+     .axi_wd_strb                      (s_axi_wstrb),
+     .axi_wd_last                      (s_axi_wlast),
+     .axi_wd_valid                     (s_axi_wvalid),
+
+// AXI write response channel signals
+     .axi_wd_bid                       (s_axi_bid),
+     .axi_wd_bresp                     (s_axi_bresp),
+     .axi_wd_bvalid                    (s_axi_bvalid),
+     .axi_wd_bready                    (s_axi_bready),
+
+// AXI read address channel signals
+     .axi_rready                       (s_axi_arready),
+     .axi_rid                          (s_axi_arid),
+     .axi_raddr                        (s_axi_araddr),
+     .axi_rlen                         (s_axi_arlen),
+     .axi_rsize                        (s_axi_arsize),
+     .axi_rburst                       (s_axi_arburst),
+     .axi_rlock                        (s_axi_arlock),
+     .axi_rcache                       (s_axi_arcache),
+     .axi_rprot                        (s_axi_arprot),
+     .axi_rvalid                       (s_axi_arvalid),
+
+// AXI read data channel signals
+     .axi_rd_bid                       (s_axi_rid),
+     .axi_rd_rresp                     (s_axi_rresp),
+     .axi_rd_rvalid                    (s_axi_rvalid),
+     .axi_rd_data                      (s_axi_rdata),
+     .axi_rd_last                      (s_axi_rlast),
+     .axi_rd_rready                    (s_axi_rready),
+
+// Error status signals
+     .cmd_err                          (cmd_err),
+     .data_msmatch_err                 (data_msmatch_err),
+     .write_err                        (write_err),
+     .read_err                         (read_err),
+     .test_cmptd                       (test_cmptd),
+     .write_cmptd                      (write_cmptd),
+     .read_cmptd                       (read_cmptd),
+     .cmptd_one_wr_rd                  (cmptd_one_wr_rd),
+
+// Debug status signals
+     .cmp_data_en                      (cmp_data_valid),
+     .cmp_data_o                       (cmp_data),
+     .rdata_cmp                        (rdata_cmp),
+     .dbg_wr_sts_vld                   (dbg_wr_sts_vld),
+     .dbg_wr_sts                       (dbg_wr_sts),
+     .dbg_rd_sts_vld                   (dbg_rd_sts_vld),
+     .dbg_rd_sts                       (dbg_rd_sts)
+);
+
+      
 
 
    //*****************************************************************
-   // Default values are assigned to the debug inputs of the traffic
-   // generator
+   // Default values are assigned to the debug inputs
    //*****************************************************************
-   assign vio_modify_enable     = 1'b0;
-   assign vio_data_mode_value   = 4'b0010;
-   assign vio_addr_mode_value   = 3'b011;
-   assign vio_instr_mode_value  = 4'b0010;
-   assign vio_bl_mode_value     = 2'b10;
-   assign vio_fixed_bl_value    = 8'd16;
-   assign vio_data_mask_gen     = 1'b0;
-   assign vio_pause_traffic     = 1'b0;
-   assign vio_fixed_instr_value = 3'b001;
-   assign dbg_clear_error       = 1'b0;
-   assign po_win_tg_rst         = 1'b0;
-   assign vio_tg_rst            = 1'b0;
-   assign wdt_en_w              = 1'b1;
-
    assign dbg_sel_pi_incdec       = 'b0;
    assign dbg_sel_po_incdec       = 'b0;
    assign dbg_pi_f_inc            = 'b0;
@@ -571,8 +616,8 @@ function integer clogb2 (input integer size);
    assign dbg_po_f_inc            = 'b0;
    assign dbg_po_f_dec            = 'b0;
    assign dbg_po_f_stg23_sel      = 'b0;
-
-      
+   assign po_win_tg_rst           = 'b0;
+   assign vio_tg_rst              = 'b0;
 `ifdef SKIP_CALIB
   //***************************************************************************
   // Skip calib test logic

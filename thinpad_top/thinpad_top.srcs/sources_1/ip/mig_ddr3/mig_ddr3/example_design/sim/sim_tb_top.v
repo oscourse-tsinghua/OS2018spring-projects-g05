@@ -81,23 +81,6 @@ module sim_tb_top;
    // Traffic Gen related parameters
    //***************************************************************************
    parameter SIMULATION            = "TRUE";
-   parameter PORT_MODE             = "BI_MODE";
-   parameter DATA_MODE             = 4'b0010;
-   parameter TST_MEM_INSTR_MODE    = "R_W_INSTR_MODE";
-   parameter EYE_TEST              = "FALSE";
-                                     // set EYE_TEST = "TRUE" to probe memory
-                                     // signals. Traffic Generator will only
-                                     // write to one single location and no
-                                     // read transactions will be generated.
-   parameter DATA_PATTERN          = "DGEN_ALL";
-                                      // For small devices, choose one only.
-                                      // For large device, choose "DGEN_ALL"
-                                      // "DGEN_HAMMER", "DGEN_WALKING1",
-                                      // "DGEN_WALKING0","DGEN_ADDR","
-                                      // "DGEN_NEIGHBOR","DGEN_PRBS","DGEN_ALL"
-   parameter CMD_PATTERN           = "CGEN_ALL";
-                                      // "CGEN_PRBS","CGEN_FIXED","CGEN_BRAM",
-                                      // "CGEN_SEQUENTIAL", "CGEN_ALL"
    parameter BEGIN_ADDRESS         = 32'h00000000;
    parameter END_ADDRESS           = 32'h00000fff;
    parameter PRBS_EADDR_MASK_POS   = 32'hff000000;
@@ -188,6 +171,24 @@ module sim_tb_top;
                                      // # of memory CKs per fabric CLK
 
    
+   //***************************************************************************
+   // AXI4 Shim parameters
+   //***************************************************************************
+   parameter C_S_AXI_ID_WIDTH              = 8;
+                                             // Width of all master and slave ID signals.
+                                             // # = >= 1.
+   parameter C_S_AXI_ADDR_WIDTH            = 27;
+                                             // Width of S_AXI_AWADDR, S_AXI_ARADDR, M_AXI_AWADDR and
+                                             // M_AXI_ARADDR for all SI/MI slots.
+                                             // # = 32.
+   parameter C_S_AXI_DATA_WIDTH            = 32;
+                                             // Width of WDATA and RDATA on SI slot.
+                                             // Must be <= APP_DATA_WIDTH.
+                                             // # = 32, 64, 128, 256.
+   parameter C_S_AXI_SUPPORTS_NARROW_BURST = 0;
+                                             // Indicates whether to instatiate upsizer
+                                             // Range: 0, 1
+
 
    //***************************************************************************
    // Debug and Internal parameters
@@ -433,12 +434,6 @@ module sim_tb_top;
     (
 
      .SIMULATION                (SIMULATION),
-     .PORT_MODE                 (PORT_MODE),
-     .DATA_MODE                 (DATA_MODE),
-     .TST_MEM_INSTR_MODE        (TST_MEM_INSTR_MODE),
-     .EYE_TEST                  (EYE_TEST),
-     .DATA_PATTERN              (DATA_PATTERN),
-     .CMD_PATTERN               (CMD_PATTERN),
      .BEGIN_ADDRESS             (BEGIN_ADDRESS),
      .END_ADDRESS               (END_ADDRESS),
      .PRBS_EADDR_MASK_POS       (PRBS_EADDR_MASK_POS),
@@ -464,6 +459,11 @@ module sim_tb_top;
     .nCK_PER_CLK               (nCK_PER_CLK),
     
      
+     .C_S_AXI_ID_WIDTH          (C_S_AXI_ID_WIDTH),
+     .C_S_AXI_ADDR_WIDTH        (C_S_AXI_ADDR_WIDTH),
+     .C_S_AXI_DATA_WIDTH        (C_S_AXI_DATA_WIDTH),
+     .C_S_AXI_SUPPORTS_NARROW_BURST (C_S_AXI_SUPPORTS_NARROW_BURST),
+    
      .DEBUG_PORT                (DEBUG_PORT),
     
      .RST_ACT_LOW               (RST_ACT_LOW)

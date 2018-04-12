@@ -83,7 +83,7 @@ vlogan -sverilog ../mig_ddr3_ex.srcs/sources_1/ip/mig_ddr3/mig_ddr3/user_design/
 vlogan -sverilog ../mig_ddr3_ex.srcs/sources_1/ip/mig_ddr3/mig_ddr3/user_design/rtl/phy/*.v >> vcs_sim.log
 vlogan -sverilog ../mig_ddr3_ex.srcs/sources_1/ip/mig_ddr3/mig_ddr3/user_design/rtl/ui/*.v >> vcs_sim.log
 
-
+vlogan -sverilog ../mig_ddr3_ex.srcs/sources_1/ip/mig_ddr3/mig_ddr3/user_design/rtl/axi/*.v >> vcs_sim.log
 
 
 vlogan -sverilog example_top.v >> vcs_sim.log

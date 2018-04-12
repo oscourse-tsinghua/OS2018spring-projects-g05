@@ -36,6 +36,142 @@ set fcount 0
 	utilities_xmdf::xmdfSetData $instance FileSet $fcount logical_library unisim
 	incr fcount
 
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_ctrl_addr_decode.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_ctrl_read.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_ctrl_reg.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_ctrl_reg_bank.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_ctrl_top.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_ctrl_write.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_mc.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_mc_ar_channel.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_mc_aw_channel.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_mc_b_channel.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_mc_cmd_arbiter.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_mc_cmd_fsm.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_mc_cmd_translator.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_mc_fifo.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_mc_incr_cmd.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_mc_r_channel.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_mc_simple_fifo.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_mc_w_channel.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_mc_wr_cmd_fsm.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_axi_mc_wrap_cmd.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_ddr_a_upsizer.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_ddr_axi_register_slice.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_ddr_axi_upsizer.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_ddr_axic_register_slice.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_ddr_carry_and.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_ddr_carry_latch_and.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_ddr_carry_latch_or.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_ddr_carry_or.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_ddr_command_fifo.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_ddr_comparator.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_ddr_comparator_sel.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_ddr_comparator_sel_static.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_ddr_r_upsizer.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/axi/mig_7series_v4_0_ddr_w_upsizer.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
+incr fcount
+
 utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/clocking/mig_7series_v4_0_clk_ibuf.v
 utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
 incr fcount
@@ -136,7 +272,7 @@ utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/use
 utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
 incr fcount
 
-utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/ip_top/mig_7series_v4_0_memc_ui_top_std.v
+utilities_xmdf::xmdfSetData $instance FileSet $fcount relative_path mig_ddr3/user_design/rtl/ip_top/mig_7series_v4_0_memc_ui_top_axi.v
 utilities_xmdf::xmdfSetData $instance FileSet $fcount type verilog
 incr fcount
 

@@ -467,6 +467,83 @@ module mig_ddr3_mig #
       
 
    
+   //***************************************************************************
+   // AXI4 Shim parameters
+   //***************************************************************************
+   
+   parameter UI_EXTRA_CLOCKS = "FALSE",
+                                     // Generates extra clocks as
+                                     // 1/2, 1/4 and 1/8 of fabrick clock.
+                                     // Valid for DDR2/DDR3 AXI interfaces
+                                     // based on GUI selection
+   parameter C_S_AXI_ID_WIDTH              = 8,
+                                             // Width of all master and slave ID signals.
+                                             // # = >= 1.
+   parameter C_S_AXI_MEM_SIZE              = "134217728",
+                                     // Address Space required for this component
+   parameter C_S_AXI_ADDR_WIDTH            = 27,
+                                             // Width of S_AXI_AWADDR, S_AXI_ARADDR, M_AXI_AWADDR and
+                                             // M_AXI_ARADDR for all SI/MI slots.
+                                             // # = 32.
+   parameter C_S_AXI_DATA_WIDTH            = 32,
+                                             // Width of WDATA and RDATA on SI slot.
+                                             // Must be <= APP_DATA_WIDTH.
+                                             // # = 32, 64, 128, 256.
+   parameter C_MC_nCK_PER_CLK              = 4,
+                                             // Indicates whether to instatiate upsizer
+                                             // Range: 0, 1
+   parameter C_S_AXI_SUPPORTS_NARROW_BURST = 0,
+                                             // Indicates whether to instatiate upsizer
+                                             // Range: 0, 1
+   parameter C_RD_WR_ARB_ALGORITHM          = "RD_PRI_REG",
+                                             // Indicates the Arbitration
+                                             // Allowed values - "TDM", "ROUND_ROBIN",
+                                             // "RD_PRI_REG", "RD_PRI_REG_STARVE_LIMIT"
+                                             // "WRITE_PRIORITY", "WRITE_PRIORITY_REG"
+   parameter C_S_AXI_REG_EN0               = 20'h00000,
+                                             // C_S_AXI_REG_EN0[00] = Reserved
+                                             // C_S_AXI_REG_EN0[04] = AW CHANNEL REGISTER SLICE
+                                             // C_S_AXI_REG_EN0[05] =  W CHANNEL REGISTER SLICE
+                                             // C_S_AXI_REG_EN0[06] =  B CHANNEL REGISTER SLICE
+                                             // C_S_AXI_REG_EN0[07] =  R CHANNEL REGISTER SLICE
+                                             // C_S_AXI_REG_EN0[08] = AW CHANNEL UPSIZER REGISTER SLICE
+                                             // C_S_AXI_REG_EN0[09] =  W CHANNEL UPSIZER REGISTER SLICE
+                                             // C_S_AXI_REG_EN0[10] = AR CHANNEL UPSIZER REGISTER SLICE
+                                             // C_S_AXI_REG_EN0[11] =  R CHANNEL UPSIZER REGISTER SLICE
+   parameter C_S_AXI_REG_EN1               = 20'h00000,
+                                             // Instatiates register slices after the upsizer.
+                                             // The type of register is specified for each channel
+                                             // in a vector. 4 bits per channel are used.
+                                             // C_S_AXI_REG_EN1[03:00] = AW CHANNEL REGISTER SLICE
+                                             // C_S_AXI_REG_EN1[07:04] =  W CHANNEL REGISTER SLICE
+                                             // C_S_AXI_REG_EN1[11:08] =  B CHANNEL REGISTER SLICE
+                                             // C_S_AXI_REG_EN1[15:12] = AR CHANNEL REGISTER SLICE
+                                             // C_S_AXI_REG_EN1[20:16] =  R CHANNEL REGISTER SLICE
+                                             // Possible values for each channel are:
+                                             //
+                                             //   0 => BYPASS    = The channel is just wired through the
+                                             //                    module.
+                                             //   1 => FWD       = The master VALID and payload signals
+                                             //                    are registrated.
+                                             //   2 => REV       = The slave ready signal is registrated
+                                             //   3 => FWD_REV   = Both FWD and REV
+                                             //   4 => SLAVE_FWD = All slave side signals and master
+                                             //                    VALID and payload are registrated.
+                                             //   5 => SLAVE_RDY = All slave side signals and master
+                                             //                    READY are registrated.
+                                             //   6 => INPUTS    = Slave and Master side inputs are
+                                             //                    registrated.
+                                             //   7 => ADDRESS   = Optimized for address channel
+   parameter C_S_AXI_CTRL_ADDR_WIDTH       = 32,
+                                             // Width of AXI-4-Lite address bus
+   parameter C_S_AXI_CTRL_DATA_WIDTH       = 32,
+                                             // Width of AXI-4-Lite data buses
+   parameter C_S_AXI_BASEADDR              = 32'h0000_0000,
+                                             // Base address of AXI4 Memory Mapped bus.
+   parameter C_ECC_ONOFF_RESET_VALUE       = 1,
+                                             // Controls ECC on/off value at startup/reset
+   parameter C_ECC_CE_COUNTER_WIDTH        = 8,
+                                             // The external memory to controller clock ratio.
 
    //***************************************************************************
    // Debug parameters
@@ -524,26 +601,62 @@ module mig_ddr3_mig #
    input                                        clk_ref_i,
    
    // user interface signals
-   input [ADDR_WIDTH-1:0]                       app_addr,
-   input [2:0]                                  app_cmd,
-   input                                        app_en,
-   input [(nCK_PER_CLK*2*PAYLOAD_WIDTH)-1:0]    app_wdf_data,
-   input                                        app_wdf_end,
-   input [((nCK_PER_CLK*2*PAYLOAD_WIDTH)/8)-1:0]  app_wdf_mask,
-   input                                        app_wdf_wren,
-   output [(nCK_PER_CLK*2*PAYLOAD_WIDTH)-1:0]   app_rd_data,
-   output                                       app_rd_data_end,
-   output                                       app_rd_data_valid,
-   output                                       app_rdy,
-   output                                       app_wdf_rdy,
+   output                                       ui_clk,
+   output                                       ui_clk_sync_rst,
+   
+   output                                       mmcm_locked,
+   
+   input                                        aresetn,
    input                                        app_sr_req,
    input                                        app_ref_req,
    input                                        app_zq_req,
    output                                       app_sr_active,
    output                                       app_ref_ack,
    output                                       app_zq_ack,
-   output                                       ui_clk,
-   output                                       ui_clk_sync_rst,
+
+   // Slave Interface Write Address Ports
+   input  [C_S_AXI_ID_WIDTH-1:0]                s_axi_awid,
+   input  [C_S_AXI_ADDR_WIDTH-1:0]              s_axi_awaddr,
+   input  [7:0]                                 s_axi_awlen,
+   input  [2:0]                                 s_axi_awsize,
+   input  [1:0]                                 s_axi_awburst,
+   input  [0:0]                                 s_axi_awlock,
+   input  [3:0]                                 s_axi_awcache,
+   input  [2:0]                                 s_axi_awprot,
+   input  [3:0]                                 s_axi_awqos,
+   input                                        s_axi_awvalid,
+   output                                       s_axi_awready,
+   // Slave Interface Write Data Ports
+   input  [C_S_AXI_DATA_WIDTH-1:0]              s_axi_wdata,
+   input  [(C_S_AXI_DATA_WIDTH/8)-1:0]            s_axi_wstrb,
+   input                                        s_axi_wlast,
+   input                                        s_axi_wvalid,
+   output                                       s_axi_wready,
+   // Slave Interface Write Response Ports
+   input                                        s_axi_bready,
+   output [C_S_AXI_ID_WIDTH-1:0]                s_axi_bid,
+   output [1:0]                                 s_axi_bresp,
+   output                                       s_axi_bvalid,
+   // Slave Interface Read Address Ports
+   input  [C_S_AXI_ID_WIDTH-1:0]                s_axi_arid,
+   input  [C_S_AXI_ADDR_WIDTH-1:0]              s_axi_araddr,
+   input  [7:0]                                 s_axi_arlen,
+   input  [2:0]                                 s_axi_arsize,
+   input  [1:0]                                 s_axi_arburst,
+   input  [0:0]                                 s_axi_arlock,
+   input  [3:0]                                 s_axi_arcache,
+   input  [2:0]                                 s_axi_arprot,
+   input  [3:0]                                 s_axi_arqos,
+   input                                        s_axi_arvalid,
+   output                                       s_axi_arready,
+   // Slave Interface Read Data Ports
+   input                                        s_axi_rready,
+   output [C_S_AXI_ID_WIDTH-1:0]                s_axi_rid,
+   output [C_S_AXI_DATA_WIDTH-1:0]              s_axi_rdata,
+   output [1:0]                                 s_axi_rresp,
+   output                                       s_axi_rlast,
+   output                                       s_axi_rvalid,
+
    
    
       
@@ -636,7 +749,30 @@ module mig_ddr3_mig #
   wire [(2*nCK_PER_CLK)-1:0]            app_ecc_multiple_err;
   wire [(2*nCK_PER_CLK)-1:0]            app_ecc_single_err;
   wire                                ddr3_parity;
-      
+      // AXI CTRL port
+  wire                              s_axi_ctrl_awvalid;
+  wire                              s_axi_ctrl_awready;
+  wire  [C_S_AXI_CTRL_ADDR_WIDTH-1:0] s_axi_ctrl_awaddr;
+  // Slave Interface Write Data Ports
+  wire                              s_axi_ctrl_wvalid;
+  wire                              s_axi_ctrl_wready;
+  wire  [C_S_AXI_CTRL_DATA_WIDTH-1:0] s_axi_ctrl_wdata;
+  // Slave Interface Write Response Ports
+  wire                              s_axi_ctrl_bvalid;
+  wire                              s_axi_ctrl_bready;
+  wire [1:0]                        s_axi_ctrl_bresp;
+  // Slave Interface Read Address Ports
+  wire                              s_axi_ctrl_arvalid;
+  wire                              s_axi_ctrl_arready;
+  wire  [C_S_AXI_CTRL_ADDR_WIDTH-1:0]  s_axi_ctrl_araddr;
+  // Slave Interface Read Data Ports
+  wire                              s_axi_ctrl_rvalid;
+  wire                              s_axi_ctrl_rready;
+  wire [C_S_AXI_CTRL_DATA_WIDTH-1:0]   s_axi_ctrl_rdata;
+  wire [1:0]                        s_axi_ctrl_rresp;
+
+  // Interrupt output
+  wire                              interrupt;
 
   wire                              sys_clk_p;
   wire                              sys_clk_n;
@@ -848,7 +984,7 @@ module mig_ddr3_mig #
        .ui_addn_clk_3    (),
        .ui_addn_clk_4    (),
        .pll_locked       (pll_locked),
-       .mmcm_locked      (),
+       .mmcm_locked      (mmcm_locked),
        .rst_phaser_ref   (rst_phaser_ref),
        // Inputs
        .psen             (psen),
@@ -860,7 +996,7 @@ module mig_ddr3_mig #
        );
       
 
-  mig_7series_v4_0_memc_ui_top_std #
+  mig_7series_v4_0_memc_ui_top_axi #
     (
      .TCQ                              (TCQ),
      .ADDR_CMD_MODE                    (ADDR_CMD_MODE),
@@ -993,6 +1129,18 @@ module mig_ddr3_mig #
      .SLOT_1_CONFIG                    (SLOT_1_CONFIG),
      .MEM_ADDR_ORDER                   (MEM_ADDR_ORDER),
      .STARVE_LIMIT                     (STARVE_LIMIT),
+     .C_S_AXI_ID_WIDTH                 (C_S_AXI_ID_WIDTH),
+     .C_S_AXI_ADDR_WIDTH               (C_S_AXI_ADDR_WIDTH),
+     .C_S_AXI_DATA_WIDTH               (C_S_AXI_DATA_WIDTH),
+     .C_S_AXI_SUPPORTS_NARROW_BURST    (C_S_AXI_SUPPORTS_NARROW_BURST),
+     .C_RD_WR_ARB_ALGORITHM            (C_RD_WR_ARB_ALGORITHM),
+     .C_S_AXI_REG_EN0                  (C_S_AXI_REG_EN0),
+     .C_S_AXI_REG_EN1                  (C_S_AXI_REG_EN1),
+     .C_S_AXI_CTRL_ADDR_WIDTH          (C_S_AXI_CTRL_ADDR_WIDTH),
+     .C_S_AXI_CTRL_DATA_WIDTH          (C_S_AXI_CTRL_DATA_WIDTH),
+     .C_S_AXI_BASEADDR                 (C_S_AXI_BASEADDR),
+     .C_ECC_ONOFF_RESET_VALUE          (C_ECC_ONOFF_RESET_VALUE),
+     .C_ECC_CE_COUNTER_WIDTH           (C_ECC_CE_COUNTER_WIDTH),
      .USE_CS_PORT                      (USE_CS_PORT),
      .USE_DM_PORT                      (USE_DM_PORT),
      .USE_ODT_PORT                     (USE_ODT_PORT),
@@ -1001,7 +1149,7 @@ module mig_ddr3_mig #
      .SKIP_CALIB                       (SKIP_CALIB),
      .FPGA_VOLT_TYPE                   (FPGA_VOLT_TYPE)
      )
-    u_memc_ui_top_std
+    u_memc_ui_top_axi
       (
        .clk                              (clk),
        .clk_div2                         (clk_div2),
@@ -1041,29 +1189,8 @@ module mig_ddr3_mig #
        .bank_mach_next                   (bank_mach_next),
 
 // Application interface ports
-       .app_addr                         (app_addr),
-       .app_cmd                          (app_cmd),
-       .app_en                           (app_en),
-       .app_hi_pri                       (1'b0),
-       .app_wdf_data                     (app_wdf_data),
-       .app_wdf_end                      (app_wdf_end),
-       .app_wdf_mask                     (app_wdf_mask),
-       .app_wdf_wren                     (app_wdf_wren),
-       .app_ecc_multiple_err             (app_ecc_multiple_err),
-       .app_ecc_single_err               (app_ecc_single_err),
-       .app_rd_data                      (app_rd_data),
-       .app_rd_data_end                  (app_rd_data_end),
-       .app_rd_data_valid                (app_rd_data_valid),
-       .app_rdy                          (app_rdy),
-       .app_wdf_rdy                      (app_wdf_rdy),
-       .app_sr_req                       (app_sr_req),
-       .app_sr_active                    (app_sr_active),
-       .app_ref_req                      (app_ref_req),
-       .app_ref_ack                      (app_ref_ack),
-       .app_zq_req                       (app_zq_req),
-       .app_zq_ack                       (app_zq_ack),
-       .app_raw_not_ecc                  ({2*nCK_PER_CLK{1'b0}}),
-       .app_correct_en_i                 (1'b1),
+       .app_ecc_multiple_err_o           (),
+       .app_ecc_single_err               (),
 
        .device_temp                      (device_temp),
 
@@ -1149,6 +1276,79 @@ module mig_ddr3_mig #
        .dbg_oclkdelay_calib_start        (dbg_oclkdelay_calib_start),
        .dbg_oclkdelay_calib_done         (dbg_oclkdelay_calib_done),
        .dbg_dqs_found_cal                (dbg_dqs_found_cal),  
+       .aresetn                          (aresetn),
+       .app_sr_req                       (app_sr_req),
+       .app_sr_active                    (app_sr_active),
+       .app_ref_req                      (app_ref_req),
+       .app_ref_ack                      (app_ref_ack),
+       .app_zq_req                       (app_zq_req),
+       .app_zq_ack                       (app_zq_ack),
+
+       // Slave Interface Write Address Ports
+       .s_axi_awid                       (s_axi_awid),
+       .s_axi_awaddr                     (s_axi_awaddr),
+       .s_axi_awlen                      (s_axi_awlen),
+       .s_axi_awsize                     (s_axi_awsize),
+       .s_axi_awburst                    (s_axi_awburst),
+       .s_axi_awlock                     (s_axi_awlock),
+       .s_axi_awcache                    (s_axi_awcache),
+       .s_axi_awprot                     (s_axi_awprot),
+       .s_axi_awqos                      (s_axi_awqos),
+       .s_axi_awvalid                    (s_axi_awvalid),
+       .s_axi_awready                    (s_axi_awready),
+       // Slave Interface Write Data Ports
+       .s_axi_wdata                      (s_axi_wdata),
+       .s_axi_wstrb                      (s_axi_wstrb),
+       .s_axi_wlast                      (s_axi_wlast),
+       .s_axi_wvalid                     (s_axi_wvalid),
+       .s_axi_wready                     (s_axi_wready),
+       // Slave Interface Write Response Ports
+       .s_axi_bid                        (s_axi_bid),
+       .s_axi_bresp                      (s_axi_bresp),
+       .s_axi_bvalid                     (s_axi_bvalid),
+       .s_axi_bready                     (s_axi_bready),
+       // Slave Interface Read Address Ports
+       .s_axi_arid                       (s_axi_arid),
+       .s_axi_araddr                     (s_axi_araddr),
+       .s_axi_arlen                      (s_axi_arlen),
+       .s_axi_arsize                     (s_axi_arsize),
+       .s_axi_arburst                    (s_axi_arburst),
+       .s_axi_arlock                     (s_axi_arlock),
+       .s_axi_arcache                    (s_axi_arcache),
+       .s_axi_arprot                     (s_axi_arprot),
+       .s_axi_arqos                      (s_axi_arqos),
+       .s_axi_arvalid                    (s_axi_arvalid),
+       .s_axi_arready                    (s_axi_arready),
+       // Slave Interface Read Data Ports
+       .s_axi_rid                        (s_axi_rid),
+       .s_axi_rdata                      (s_axi_rdata),
+       .s_axi_rresp                      (s_axi_rresp),
+       .s_axi_rlast                      (s_axi_rlast),
+       .s_axi_rvalid                     (s_axi_rvalid),
+       .s_axi_rready                     (s_axi_rready),
+       // AXI CTRL port
+       .s_axi_ctrl_awvalid               (s_axi_ctrl_awvalid),
+       .s_axi_ctrl_awready               (s_axi_ctrl_awready),
+       .s_axi_ctrl_awaddr                (s_axi_ctrl_awaddr),
+       // Slave Interface Write Data Ports
+       .s_axi_ctrl_wvalid                (s_axi_ctrl_wvalid),
+       .s_axi_ctrl_wready                (s_axi_ctrl_wready),
+       .s_axi_ctrl_wdata                 (s_axi_ctrl_wdata),
+       // Slave Interface Write Response Ports
+       .s_axi_ctrl_bvalid                (s_axi_ctrl_bvalid),
+       .s_axi_ctrl_bready                (s_axi_ctrl_bready),
+       .s_axi_ctrl_bresp                 (s_axi_ctrl_bresp),
+       // Slave Interface Read Address Ports
+       .s_axi_ctrl_arvalid               (s_axi_ctrl_arvalid),
+       .s_axi_ctrl_arready               (s_axi_ctrl_arready),
+       .s_axi_ctrl_araddr                (s_axi_ctrl_araddr),
+       // Slave Interface Read Data Ports
+       .s_axi_ctrl_rvalid                (s_axi_ctrl_rvalid),
+       .s_axi_ctrl_rready                (s_axi_ctrl_rready),
+       .s_axi_ctrl_rdata                 (s_axi_ctrl_rdata),
+       .s_axi_ctrl_rresp                 (s_axi_ctrl_rresp),
+       // Interrupt output
+       .interrupt                        (interrupt),
        .init_calib_complete              (init_calib_complete),
        .dbg_poc                          ()
        );

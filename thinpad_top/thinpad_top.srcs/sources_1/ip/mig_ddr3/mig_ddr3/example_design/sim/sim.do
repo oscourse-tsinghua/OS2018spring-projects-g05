@@ -84,7 +84,7 @@ vlog  -incr ../mig_ddr3_ex.srcs/sources_1/ip/mig_ddr3/mig_ddr3/user_design/rtl/e
 vlog  -incr ../mig_ddr3_ex.srcs/sources_1/ip/mig_ddr3/mig_ddr3/user_design/rtl/ip_top/*.v
 vlog  -incr ../mig_ddr3_ex.srcs/sources_1/ip/mig_ddr3/mig_ddr3/user_design/rtl/phy/*.v
 vlog  -incr ../mig_ddr3_ex.srcs/sources_1/ip/mig_ddr3/mig_ddr3/user_design/rtl/ui/*.v
-
+vlog -incr ../mig_ddr3_ex.srcs/sources_1/ip/mig_ddr3/mig_ddr3/user_design/rtl/axi/*
 
 
 vlog  example_top.v
