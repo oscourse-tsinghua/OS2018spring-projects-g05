@@ -1,0 +1,42 @@
+# Import a package
+# Grammar: "IMPORT <packageName>"
+# "IMPORT" should be in UPPER CASE, same below
+
+# Define a signal to be checked
+# Grammar: "DEFINE <signalName> <sub_instace_name.sub_sub_instance_name.(...).signal_name>: <type>"
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+# Execute an assembly instruction
+# Grammar: "RUN <assembly>"
+
+# 0x4
+RUN lui $10, 0x8000
+
+# 0x8
+# Read the sibling address to active cache line
+RUN lw $4, 0x20($10)
+
+# 0xc
+RUN lhu $2, 0x24($10)
+
+# 0x10
+RUN lhu $3, 0x26($10)
+
+# 0x14
+RUN nop
+
+# 0x18
+RUN nop
+
+# 0x1c
+RUN nop
+
+# 0x20
+RUN nop
+
+# 0x24
+# instruction = 0x3c03ffe8
+RUN lui $3, 0xffe8
+
+ASSERT 8 reg(2) 32x"0000ffe8"
+ASSERT 9 reg(3) 32x"00003c03"

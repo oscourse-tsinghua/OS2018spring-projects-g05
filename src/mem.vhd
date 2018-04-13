@@ -76,11 +76,12 @@ begin
         variable loadedByte: std_logic_vector(7 downto 0);
         variable loadedShort: std_logic_vector(15 downto 0);
         variable loadedMask: std_logic_vector(31 downto 0);
+        variable dataByteSelect: std_logic_vector(3 downto 0);
     begin
         savingData_o <= (others => '0');
         dataEnable_o <= DISABLE;
         dataWrite <= NO;
-        dataByteSelect_o <= "0000";
+        dataByteSelect_o <= "1111";
         loadedByte := (others => '0');
         loadedShort := (others => '0');
         loadedMask := (others => '0');
@@ -113,26 +114,27 @@ begin
             cp0RegData_o <= cp0RegData_i;
 
             if (exceptCause_i = NO_CAUSE) then
+                dataByteSelect := "XXXX";
                 -- Byte selection --
                 case memt_i is
                     when MEM_LW|MEM_SW =>
                         savingData_o <= memData_i;
-                        dataByteSelect_o <= "1111";
+                        dataByteSelect := "1111";
                     when MEM_LWL|MEM_SWL =>
                         savingData_o <= memData_i;
                         case memAddr_i(1 downto 0) is
                             when "00" =>
                                 loadedMask := 32ux"00_00_00_ff";
-                                dataByteSelect_o <= "0001"; -- Read this from right(low) to left(high)!!
+                                dataByteSelect := "0001"; -- Read this from right(low) to left(high)!!
                             when "01" =>
                                 loadedMask := 32ux"00_00_ff_ff";
-                                dataByteSelect_o <= "0011";
+                                dataByteSelect := "0011";
                             when "10" =>
                                 loadedMask := 32ux"00_ff_ff_ff";
-                                dataByteSelect_o <= "0111";
+                                dataByteSelect := "0111";
                             when "11" =>
                                 loadedMask := 32ux"ff_ff_ff_ff";
-                                dataByteSelect_o <= "1111";
+                                dataByteSelect := "1111";
                             when others =>
                                 -- Although there is actually no other cases
                                 -- But the simulator thinks something like 'Z' should be considered
@@ -143,16 +145,16 @@ begin
                         case memAddr_i(1 downto 0) is
                             when "00" =>
                                 loadedMask := 32ux"ff_ff_ff_ff";
-                                dataByteSelect_o <= "1111";
+                                dataByteSelect := "1111";
                             when "01" =>
                                 loadedMask := 32ux"ff_ff_ff_00";
-                                dataByteSelect_o <= "1110";
+                                dataByteSelect := "1110";
                             when "10" =>
                                 loadedMask := 32ux"ff_ff_00_00";
-                                dataByteSelect_o <= "1100";
+                                dataByteSelect := "1100";
                             when "11" =>
                                 loadedMask := 32ux"ff_00_00_00";
-                                dataByteSelect_o <= "1000";
+                                dataByteSelect := "1000";
                             when others =>
                                 null;
                         end case;
@@ -161,19 +163,19 @@ begin
                             when "00" =>
                                 savingData_o <= 24b"0" & memData_i(7 downto 0);
                                 loadedByte := loadedData_i(7 downto 0);
-                                dataByteSelect_o <= "0001";
+                                dataByteSelect := "0001";
                             when "01" =>
                                 savingData_o <= 16b"0" & memData_i(7 downto 0) & 8b"0";
                                 loadedByte := loadedData_i(15 downto 8);
-                                dataByteSelect_o <= "0010";
+                                dataByteSelect := "0010";
                             when "10" =>
                                 savingData_o <= 8b"0" & memData_i(7 downto 0) & 16b"0";
                                 loadedByte := loadedData_i(23 downto 16);
-                                dataByteSelect_o <= "0100";
+                                dataByteSelect := "0100";
                             when "11" =>
                                 savingData_o <= memData_i(7 downto 0) & 24b"0";
                                 loadedByte := loadedData_i(31 downto 24);
-                                dataByteSelect_o <= "1000";
+                                dataByteSelect := "1000";
                             when others =>
                                 null;
                         end case;
@@ -181,40 +183,37 @@ begin
                         if (memAddr_i(1) = '0') then
                             savingData_o <= 16b"0" & memData_i(15 downto 0);
                             loadedShort := loadedData_i(15 downto 0);
-                            dataByteSelect_o <= "0011";
+                            dataByteSelect := "0011";
                         else
                             savingData_o <= memData_i(15 downto 0) & 16b"0";
                             loadedShort := loadedData_i(31 downto 16);
-                            dataByteSelect_o <= "1100";
+                            dataByteSelect := "1100";
                         end if;
                     when others =>
                         null;
                 end case;
 
+                -- CAUTIOUS: In order to load the cache with a full word,
+                -- `dataByteSelect_o` must be set to "1111" when reading
+                dataEnable_o <= ENABLE;
                 case memt_i is
                     when MEM_LB => -- toWriteReg_o is already YES
                         writeRegData_o <= std_logic_vector(resize(signed(loadedByte), 32));
-                        dataEnable_o <= ENABLE;
                     when MEM_LBU =>
                         writeRegData_o <= std_logic_vector(resize(unsigned(loadedByte), 32));
-                        dataEnable_o <= ENABLE;
                     when MEM_LH =>
                         writeRegData_o <= std_logic_vector(resize(signed(loadedShort), 32));
-                        dataEnable_o <= ENABLE;
                     when MEM_LHU =>
                         writeRegData_o <= std_logic_vector(resize(unsigned(loadedShort), 32));
-                        dataEnable_o <= ENABLE;
                     when MEM_LW =>
                         writeRegData_o <= loadedData_i;
-                        dataEnable_o <= ENABLE;
                     when MEM_LWL|MEM_LWR =>
                         writeRegData_o <= (loadedData_i and loadedMask) or (memData_i and not loadedMask);
-                        dataEnable_o <= ENABLE;
                     when MEM_SB|MEM_SH|MEM_SW|MEM_SWL|MEM_SWR =>
                         dataWrite <= YES;
-                        dataEnable_o <= ENABLE;
+                        dataByteSelect_o <= dataByteSelect;
                     when others =>
-                        null;
+                        dataEnable_o <= DISABLE;
                 end case;
             end if;
         end if;
