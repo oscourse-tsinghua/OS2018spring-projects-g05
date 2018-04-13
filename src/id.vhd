@@ -106,7 +106,7 @@ architecture bhv of id is
 
             when OP_LUI =>
                 rsShouleBeZero := true;
-            when JMP_BGTZ | JMP_BLEZ =>
+            when JMP_BGTZ | JMP_BLEZ | JMP_BLEZL | JMP_BGTZL =>
                 rtShouleBeZero := true;
 
             when others =>
