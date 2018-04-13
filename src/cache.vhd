@@ -8,6 +8,9 @@ use work.global_const.all;
 use work.cache_const.all;
 
 entity cache is
+    generic (
+        isInst: std_logic
+    );
     port (
         clk, rst: in std_logic;
 
@@ -26,7 +29,8 @@ entity cache is
         updEnable_i, updWrite_i, updBusy_i: in std_logic;
         updDataSave_i, updDataLoad_i: in std_logic_vector(DataWidth);
         updAddr_i: in std_logic_vector(AddrWidth);
-        updByteSelect_i: in std_logic_vector(3 downto 0)
+        updByteSelect_i: in std_logic_vector(3 downto 0);
+        updIsFromInst_i: in std_logic
     );
 end cache;
 
@@ -149,7 +153,7 @@ begin
                         cacheArr(gid)(lid).data(oid).data <=
                             (cacheArr(gid)(lid).data(oid).data and not updBitSelect) or
                             (newCached and updBitSelect);
-                    else
+                    elsif (updIsFromInst_i = isInst) then
                         cacheArr(gid)(conv_integer(random)).valid <= YES;
                         cacheArr(gid)(conv_integer(random)).tag <= updAddr_i(CacheTagWidth);
                         for k in 0 to CACHE_LINE_SIZE - 1 loop

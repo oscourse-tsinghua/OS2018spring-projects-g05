@@ -45,6 +45,8 @@ architecture bhv of cpu is
     signal dataByteSelect: std_logic_vector(3 downto 0);
     signal dataCaching: std_logic;
 
+    signal isFromInst: std_logic;
+
     signal instExcept, dataExcept: std_logic_vector(ExceptionCauseWidth);
 
     signal isKernelMode: std_logic;
@@ -112,10 +114,14 @@ begin
             devData_o => dataSaveConv,
             devAddr_o => devAddr,
             devByteSelect_o => byteSelectConv,
-            devBusy_i => devBusy
+            devBusy_i => devBusy,
+            isFromInst_o => isFromInst
         );
 
     inst_cache: entity work.cache
+        generic map(
+            isInst => YES
+        )
         port map (
             clk => clk,
             rst => rst,
@@ -134,10 +140,14 @@ begin
             updDataSave_i => dataSaveConv,
             updDataLoad_i => dataLoadConv,
             updAddr_i => devAddr,
-            updByteSelect_i => byteSelectConv
+            updByteSelect_i => byteSelectConv,
+            updIsFromInst_i => isFromInst
         );
 
     data_cache: entity work.cache
+        generic map(
+            isInst => NO
+        )
         port map (
             clk => clk,
             rst => rst,
@@ -156,7 +166,8 @@ begin
             updDataSave_i => dataSaveConv,
             updDataLoad_i => dataLoadConv,
             updAddr_i => devAddr,
-            updByteSelect_i => byteSelectConv
+            updByteSelect_i => byteSelectConv,
+            updIsFromInst_i => isFromInst
         );
 
     mmu_ist: entity work.mmu

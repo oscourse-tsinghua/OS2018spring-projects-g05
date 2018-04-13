@@ -27,7 +27,8 @@ entity memctrl is
         devData_o: out std_logic_vector(DataWidth);
         devAddr_o: out std_logic_vector(AddrWidth);
         devByteSelect_o: out std_logic_vector(3 downto 0);
-        devBusy_i: in std_logic
+        devBusy_i: in std_logic;
+        isFromInst_o: out std_logic
     );
 end memctrl;
 
@@ -42,6 +43,7 @@ architecture bhv of memctrl is begin
         dataData_o <= (others => '0');
         instStall_o <= PIPELINE_NONSTOP;
         dataStall_o <= PIPELINE_NONSTOP;
+        isFromInst_o <= NO;
         if (dataEnable_i = ENABLE) then
             devEnable_o <= ENABLE;
             devWrite_o <= dataWrite_i;
@@ -58,6 +60,7 @@ architecture bhv of memctrl is begin
             devByteSelect_o <= "1111";
             instData_o <= devData_i;
             instStall_o <= devBusy_i;
+            isFromInst_o <= YES;
         end if;
     end process;
 end bhv;
