@@ -149,18 +149,25 @@ begin
                         oid_o => oid
                     );
                     if (lidValid = YES) then
-                        cacheArr(gid)(lid).data(oid).valid <= YES;
-                        cacheArr(gid)(lid).data(oid).data <=
-                            (cacheArr(gid)(lid).data(oid).data and not updBitSelect) or
-                            (newCached and updBitSelect);
+                        if (updByteSelect_i = "1111" or cacheArr(gid)(lid).data(oid).valid = YES) then
+                            -- Currently we don't cache data from `sb`, `sh`, etc,
+                            -- when first meeting an address, because otherwise we
+                            -- have to load the remaining part from the device
+                            cacheArr(gid)(lid).data(oid).valid <= YES;
+                            cacheArr(gid)(lid).data(oid).data <=
+                                (cacheArr(gid)(lid).data(oid).data and not updBitSelect) or
+                                (newCached and updBitSelect);
+                        end if;
                     elsif (updIsFromInst_i = isInst) then
-                        cacheArr(gid)(conv_integer(random)).valid <= YES;
-                        cacheArr(gid)(conv_integer(random)).tag <= updAddr_i(CacheTagWidth);
-                        for k in 0 to CACHE_LINE_SIZE - 1 loop
-                            cacheArr(gid)(conv_integer(random)).data(k).valid <= NO;
-                        end loop;
-                        cacheArr(gid)(conv_integer(random)).data(oid).valid <= YES;
-                        cacheArr(gid)(conv_integer(random)).data(oid).data <= newCached;
+                        if (updByteSelect_i = "1111") then
+                            cacheArr(gid)(conv_integer(random)).valid <= YES;
+                            cacheArr(gid)(conv_integer(random)).tag <= updAddr_i(CacheTagWidth);
+                            for k in 0 to CACHE_LINE_SIZE - 1 loop
+                                cacheArr(gid)(conv_integer(random)).data(k).valid <= NO;
+                            end loop;
+                            cacheArr(gid)(conv_integer(random)).data(oid).valid <= YES;
+                            cacheArr(gid)(conv_integer(random)).data(oid).data <= newCached;
+                        end if;
                     end if;
                 end if;
                 random <= random + 1;
