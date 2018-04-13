@@ -133,7 +133,8 @@ begin
             updBusy_i => devBusy,
             updDataSave_i => dataSaveConv,
             updDataLoad_i => dataLoadConv,
-            updAddr_i => devAddr
+            updAddr_i => devAddr,
+            updByteSelect_i => byteSelectConv
         );
 
     data_cache: entity work.cache
@@ -154,7 +155,8 @@ begin
             updBusy_i => devBusy,
             updDataSave_i => dataSaveConv,
             updDataLoad_i => dataLoadConv,
-            updAddr_i => devAddr
+            updAddr_i => devAddr,
+            updByteSelect_i => byteSelectConv
         );
 
     mmu_ist: entity work.mmu

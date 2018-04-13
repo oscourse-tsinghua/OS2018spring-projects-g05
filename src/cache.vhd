@@ -25,7 +25,8 @@ entity cache is
         -- Update (From devctrl, because there are 2 caches)
         updEnable_i, updWrite_i, updBusy_i: in std_logic;
         updDataSave_i, updDataLoad_i: in std_logic_vector(DataWidth);
-        updAddr_i: in std_logic_vector(AddrWidth)
+        updAddr_i: in std_logic_vector(AddrWidth);
+        updByteSelect_i: in std_logic_vector(3 downto 0)
     );
 end cache;
 
@@ -64,6 +65,7 @@ architecture bhv of cache is
         oid_o := oid;
     end locate;
 
+    signal updBitSelect: std_logic_vector(DataWidth);
     signal random: std_logic_vector(CACHE_WAY_BITS - 1 downto 0);
 
 begin
@@ -101,6 +103,13 @@ begin
         end if;
     end process;
 
+    updBitSelect <= (
+        31 downto 24 => updByteSelect_i(3),
+        23 downto 16 => updByteSelect_i(2),
+        15 downto 8 => updByteSelect_i(1),
+        7 downto 0 => updByteSelect_i(0)
+    );
+
     process (clk)
         variable newCached: std_logic_vector(DataWidth);
         variable lidValid: std_logic;
@@ -137,7 +146,9 @@ begin
                     );
                     if (lidValid = YES) then
                         cacheArr(gid)(lid).data(oid).valid <= YES;
-                        cacheArr(gid)(lid).data(oid).data <= newCached;
+                        cacheArr(gid)(lid).data(oid).data <=
+                            (cacheArr(gid)(lid).data(oid).data and not updBitSelect) or
+                            (newCached and updBitSelect);
                     else
                         cacheArr(gid)(conv_integer(random)).valid <= YES;
                         cacheArr(gid)(conv_integer(random)).tag <= updAddr_i(CacheTagWidth);
