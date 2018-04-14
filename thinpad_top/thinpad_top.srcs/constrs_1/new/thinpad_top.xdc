@@ -14,6 +14,11 @@ create_generated_clock -name clk25 [get_pins -hierarchical *mmcm_adv_inst/CLKOUT
     -source [get_pins -hierarchical *mmcm_adv_inst/CLKIN1]\
     -master_clock clk_in
 
+# Set slack to 40% period as described in contest doc
+set period 40.000
+set_input_delay -clock clk25 [expr 0.4*$period] [all_inputs]
+set_output_delay -clock clk25 [expr 0.4*$period] [all_outputs]
+
 #Touch Button
 set_property IOSTANDARD LVCMOS33 [get_ports touch_btn[*]]
 set_property PACKAGE_PIN J19 [get_ports touch_btn[0]] ;#BTN1
@@ -26,7 +31,10 @@ set_property PACKAGE_PIN F22 [get_ports touch_btn[5]] ;#BTN6
 #required if touch_btn[4] used as manual clock source
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets touch_btn_IBUF[4]]
 
+# Reset button
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets touch_btn_IBUF[5]]
+# Reset button can work for multiple period, so it doesn't need slack
+set_input_delay -clock clk25 0.000 [get_ports touch_btn[5]]
 
 #CPLD
 set_property -dict {PACKAGE_PIN P20 IOSTANDARD LVCMOS33} [get_ports {uart_wrn}]

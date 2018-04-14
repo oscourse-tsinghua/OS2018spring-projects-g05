@@ -4,8 +4,8 @@ use work.global_const.all;
 
 package cache_const is
     constant CACHE_OFFSET_BITS: integer := 4; -- DDR3 burst = 16 * 8 = 128 bits = 16 bytes
-    constant CACHE_GROUP_BITS: integer := 3;
-    constant CACHE_WAY_BITS: integer := 2;
+    constant CACHE_GROUP_BITS: integer := 5;
+    constant CACHE_WAY_BITS: integer := 0;
 
     constant CACHE_WAY_NUM: integer := 2 ** CACHE_WAY_BITS;
     constant CACHE_GROUP_NUM: integer := 2 ** CACHE_GROUP_BITS;
