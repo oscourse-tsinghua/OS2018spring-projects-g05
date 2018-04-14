@@ -69,12 +69,11 @@ architecture bhv of cache is
         oid_o := oid;
     end locate;
 
-    signal updBitSelect: std_logic_vector(DataWidth);
     signal random: std_logic_vector(CACHE_WAY_BITS - 1 downto 0);
 
 begin
 
-    process (cacheArr, caching_i, qryEnable_i, qryWrite_i, qryAddr_i, devBusy_i, devDataLoad_i) -- Issue #6 agian
+    process (cacheArr, caching_i, qryEnable_i, qryWrite_i, qryAddr_i, devBusy_i, devDataLoad_i) -- Issue #6 again
         variable lidValid: std_logic;
         variable gid, lid, oid: integer;
     begin
@@ -107,17 +106,11 @@ begin
         end if;
     end process;
 
-    updBitSelect <= (
-        31 downto 24 => updByteSelect_i(3),
-        23 downto 16 => updByteSelect_i(2),
-        15 downto 8 => updByteSelect_i(1),
-        7 downto 0 => updByteSelect_i(0)
-    );
-
     process (clk)
         variable newCached: std_logic_vector(DataWidth);
         variable lidValid: std_logic;
         variable gid, lid, oid: integer;
+        variable updBitSelect: std_logic_vector(DataWidth);
     begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then
@@ -153,6 +146,12 @@ begin
                             -- Currently we don't cache data from `sb`, `sh`, etc,
                             -- when first meeting an address, because otherwise we
                             -- have to load the remaining part from the device
+                            updBitSelect := (
+                                31 downto 24 => updByteSelect_i(3),
+                                23 downto 16 => updByteSelect_i(2),
+                                15 downto 8 => updByteSelect_i(1),
+                                7 downto 0 => updByteSelect_i(0)
+                            );
                             cacheArr(gid)(lid).data(oid).valid <= YES;
                             cacheArr(gid)(lid).data(oid).data <=
                                 (cacheArr(gid)(lid).data(oid).data and not updBitSelect) or
