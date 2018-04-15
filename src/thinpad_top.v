@@ -138,10 +138,10 @@ output wire video_de;
 wire rst;
 assign rst = touch_btn[5];
 
-wire clk25; // 25MHz clock
+wire clkMain; // Main clock
 clk_ctrl clk_ctrl_ist(
     .clk_in1(clk_in),
-    .clk_out1(clk25)
+    .clk_out1(clkMain)
 );
 
 // 7-Segment display decoder
@@ -157,11 +157,11 @@ assign leds[15:0] = ledHold;
 wire rxdReady, txdBusy, txdStart;
 wire[7:0] rxdData, txdData;
 async_receiver
-    #(.ClkFrequency(25000000), .Baud(9600))
-    uart_r(.clk(clk25), .RxD(rxd), .RxD_data_ready(rxdReady), .RxD_data(rxdData));
+    #(.ClkFrequency(10000000), .Baud(9600))
+    uart_r(.clk(clkMain), .RxD(rxd), .RxD_data_ready(rxdReady), .RxD_data(rxdData));
 async_transmitter
-    #(.ClkFrequency(25000000),.Baud(9600))
-    uart_t(.clk(clk25), .TxD(txd), .TxD_busy(txdBusy), .TxD_start(txdStart), .TxD_data(txdData));
+    #(.ClkFrequency(10000000),.Baud(9600))
+    uart_t(.clk(clkMain), .TxD(txd), .TxD_busy(txdBusy), .TxD_start(txdStart), .TxD_data(txdData));
 
 wire devEnable, devWrite, devBusy;
 wire[31:0] dataSave, dataLoad, addr;
@@ -188,7 +188,7 @@ cpu #(
     .instEntranceAddr(32'h80000000)
 `endif
 ) cpu_ist (
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .devEnable_o(devEnable),
     .devWrite_o(devWrite),
@@ -211,7 +211,7 @@ wire[31:0] flashDataLoad;
 
 wire vgaEnable, vgaWriteEnable;
 wire[31:0] vgaWriteData;
-assign video_clk = clk25;
+assign video_clk = clkMain;
 
 wire ltcEnable, ltcReadEnable, ltcBusy;
 wire[31:0] ltcDataLoad;
@@ -293,7 +293,7 @@ devctrl devctrl_ist(
 // Please don't pass inout port into a sub-module
 wire ram0TriStateWrite;
 sram_ctrl base_sram_ctrl(
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .enable_i(ram0Enable),
     .readEnable_i(ram0ReadEnable),
@@ -312,7 +312,7 @@ assign ram0DataLoad = base_ram_data;
 
 wire ram1TriStateWrite;
 sram_ctrl ext_sram_ctrl(
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .enable_i(ram1Enable),
     .readEnable_i(ram1ReadEnable),
@@ -330,7 +330,7 @@ assign ext_ram_data = ram1TriStateWrite ? ram1DataSave : 32'hzzzzzzzz;
 assign ram1DataLoad = ext_ram_data;
 
 flash_ctrl flash_ctrl_ist(
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .devEnable_i(flashEnable),
     .addr_i(addr),
@@ -348,7 +348,7 @@ flash_ctrl flash_ctrl_ist(
 );
 
 vga_ctrl vga_ctrl_ist(
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .devEnable_i(vgaEnable),
     .addr_i(addr),
@@ -362,7 +362,7 @@ vga_ctrl vga_ctrl_ist(
 );
 
 serial_ctrl serial_ctrl_ist(
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .enable_i(comEnable),
     .readEnable_i(comReadEnable),
@@ -379,7 +379,7 @@ serial_ctrl serial_ctrl_ist(
 
 wire usbTriStateWrite;
 usb_ctrl usb_ctrl_ist(
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .devEnable_i(usbEnable),
     .addr_i(addr),
@@ -405,7 +405,7 @@ boot_ctrl boot_ctrl_ist(
 );
 
 lattice_ram_ctrl lattice_ram_ctrl_ist(
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .devEnable_i(ltcEnable),
     .readEnable_i(ltcReadEnable),
@@ -416,7 +416,7 @@ lattice_ram_ctrl lattice_ram_ctrl_ist(
 
 wire ethTriStateWrite;
 eth_ctrl eth_ctrl_ist(
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .enable_i(ethEnable),
     .readEnable_i(ethReadEnable),
@@ -435,7 +435,7 @@ eth_ctrl eth_ctrl_ist(
 assign dm9k_data = ethTriStateWrite ? ethDataSave[15:0] : 16'hzzzz;
 assign ethDataLoad = {16'b0, dm9k_data};
 
-always@(posedge clk25) begin
+always@(posedge clkMain) begin
     if (rst == 1) begin
         ledHold <= 0;
         numberHold <= 0;
@@ -460,7 +460,7 @@ assign ramReadEnable = reading;
 assign byteSelect = 4'hf;
 assign leds[15:0] = correct;
 assign ramDataSave = {16'h0, testDataSave};
-always@(posedge clk25) begin
+always@(posedge clkMain) begin
     if (rst) begin
         count <= 0;
         correct <= 0;
