@@ -109,7 +109,7 @@ begin
     process (clk)
         variable newCached: std_logic_vector(DataWidth);
         variable lidValid: std_logic;
-        variable gid, lid, oid: integer;
+        variable gid, lid, oid, randomLid: integer;
         variable updBitSelect: std_logic_vector(DataWidth);
     begin
         if (rising_edge(clk)) then
@@ -159,13 +159,17 @@ begin
                         end if;
                     elsif (updIsFromInst_i = isInst) then
                         if (updByteSelect_i = "1111") then
-                            cacheArr(gid)(conv_integer(random)).valid <= YES;
-                            cacheArr(gid)(conv_integer(random)).tag <= updAddr_i(CacheTagWidth);
+                            randomLid := 0;
+                            if (CACHE_WAY_BITS > 0) then
+                                randomLid := conv_integer(random);
+                            end if;
+                            cacheArr(gid)(randomLid).valid <= YES;
+                            cacheArr(gid)(randomLid).tag <= updAddr_i(CacheTagWidth);
                             for k in 0 to CACHE_LINE_SIZE - 1 loop
-                                cacheArr(gid)(conv_integer(random)).data(k).valid <= NO;
+                                cacheArr(gid)(randomLid).data(k).valid <= NO;
                             end loop;
-                            cacheArr(gid)(conv_integer(random)).data(oid).valid <= YES;
-                            cacheArr(gid)(conv_integer(random)).data(oid).data <= newCached;
+                            cacheArr(gid)(randomLid).data(oid).valid <= YES;
+                            cacheArr(gid)(randomLid).data(oid).data <= newCached;
                         end if;
                     end if;
                 end if;
