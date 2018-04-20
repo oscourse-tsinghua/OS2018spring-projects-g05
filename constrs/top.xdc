@@ -142,7 +142,7 @@ set_property IOSTANDARD LVCMOS33 [get_ports uart_tx]
 
 set_property IOSTANDARD LVCMOS33 [get_ports clk_in]
 set_property IOSTANDARD LVCMOS33 [get_ports rst_n]
-set_property IOSTANDARD LVCMOS33 [get_ports {led[*]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {led_n[*]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {led_rg0[*]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {led_rg1[*]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {num_a_g[*]}]
