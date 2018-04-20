@@ -61,7 +61,9 @@ begin
                 data <= (others => '0');
                 cs <= "00000001";
             else
-                data <= data_i;
+                if (we_i = ENABLE) then
+                    data <= data_i;
+                end if;
                 case (cs) is
                     when "00000001" => cs <= "00000010";
                     when "00000010" => cs <= "00000100";
