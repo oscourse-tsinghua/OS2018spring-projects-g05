@@ -3,7 +3,7 @@
 module top(/*autoport*/
     clk_in,
     rst_n,
-    led,
+    led_n,
     led_rg0, led_rg1,
     num_cs_n, num_a_g,
     switch,
@@ -18,7 +18,7 @@ module top(/*autoport*/
 input wire clk_in; //100MHz clock input
 input wire rst_n; // Reset
 
-output wire[15:0] led; // Single color LED
+output wire[15:0] led_n; // Single color LED
 output wire[1:0] led_rg0, led_rg1; // Dual color LED
 
 output wire[7:0] num_cs_n; // 7-seg enable
@@ -366,7 +366,7 @@ seg7_ctrl seg7_ctrl_ist(
 );
 
 reg[15:0] ledHold;
-assign led = ledHold;
+assign led_n = ~ledHold;
 always@(posedge clkMain) begin
     if (rst == 1) begin
         ledHold <= 0;

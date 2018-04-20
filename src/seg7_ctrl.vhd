@@ -33,22 +33,22 @@ begin
 
     process (all) begin
         case (part) is
-            when x"0" => lights_o <= "0111111";
-            when x"1" => lights_o <= "0000110";
-            when x"2" => lights_o <= "1011011";
-            when x"3" => lights_o <= "1001111";
-            when x"4" => lights_o <= "1100110";
-            when x"5" => lights_o <= "1101101";
-            when x"6" => lights_o <= "1111101";
-            when x"7" => lights_o <= "0000111";
+            when x"0" => lights_o <= "1111110";
+            when x"1" => lights_o <= "0110000";
+            when x"2" => lights_o <= "1101101";
+            when x"3" => lights_o <= "1111001";
+            when x"4" => lights_o <= "0110011";
+            when x"5" => lights_o <= "1011011";
+            when x"6" => lights_o <= "1011111";
+            when x"7" => lights_o <= "1110000";
             when x"8" => lights_o <= "1111111";
-            when x"9" => lights_o <= "1101111";
+            when x"9" => lights_o <= "1111011";
             when x"A" => lights_o <= "1110111";
-            when x"B" => lights_o <= "1111100";
-            when x"C" => lights_o <= "0111001";
-            when x"D" => lights_o <= "1011110";
-            when x"E" => lights_o <= "1111001";
-            when x"F" => lights_o <= "1110001";
+            when x"B" => lights_o <= "0011111";
+            when x"C" => lights_o <= "1001110";
+            when x"D" => lights_o <= "0111101";
+            when x"E" => lights_o <= "1001111";
+            when x"F" => lights_o <= "1000111";
             when others => null;
         end case;
     end process;

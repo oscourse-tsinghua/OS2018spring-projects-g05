@@ -6,7 +6,7 @@ set_property BITSTREAM.CONFIG.UNUSEDPIN Pullnone [current_design]
 #clock
 set_property PACKAGE_PIN AC19 [get_ports clk_in]
 set_property CLOCK_DEDICATED_ROUTE BACKBONE [get_nets clk_in]
-create_clock -period 10.000 -name clk -waveform {0.000 5.000} [get_ports clk_in]
+create_clock -period 10.000 -name clk_in -waveform {0.000 5.000} [get_ports clk_in]
 
 #derived clock
 create_generated_clock -name clkMain [get_pins -hierarchical *mmcm_adv_inst/CLKOUT0]\
@@ -17,22 +17,22 @@ create_generated_clock -name clkMain [get_pins -hierarchical *mmcm_adv_inst/CLKO
 set_property PACKAGE_PIN Y3 [get_ports rst_n]
 
 #LED
-set_property PACKAGE_PIN K23 [get_ports {led[0]}]
-set_property PACKAGE_PIN J21 [get_ports {led[1]}]
-set_property PACKAGE_PIN H23 [get_ports {led[2]}]
-set_property PACKAGE_PIN J19 [get_ports {led[3]}]
-set_property PACKAGE_PIN G9 [get_ports {led[4]}]
-set_property PACKAGE_PIN J26 [get_ports {led[5]}]
-set_property PACKAGE_PIN J23 [get_ports {led[6]}]
-set_property PACKAGE_PIN J8 [get_ports {led[7]}]
-set_property PACKAGE_PIN H8 [get_ports {led[8]}]
-set_property PACKAGE_PIN G8 [get_ports {led[9]}]
-set_property PACKAGE_PIN F7 [get_ports {led[10]}]
-set_property PACKAGE_PIN A4 [get_ports {led[11]}]
-set_property PACKAGE_PIN A5 [get_ports {led[12]}]
-set_property PACKAGE_PIN A3 [get_ports {led[13]}]
-set_property PACKAGE_PIN D5 [get_ports {led[14]}]
-set_property PACKAGE_PIN H7 [get_ports {led[15]}]
+set_property PACKAGE_PIN K23 [get_ports {led_n[0]}]
+set_property PACKAGE_PIN J21 [get_ports {led_n[1]}]
+set_property PACKAGE_PIN H23 [get_ports {led_n[2]}]
+set_property PACKAGE_PIN J19 [get_ports {led_n[3]}]
+set_property PACKAGE_PIN G9 [get_ports {led_n[4]}]
+set_property PACKAGE_PIN J26 [get_ports {led_n[5]}]
+set_property PACKAGE_PIN J23 [get_ports {led_n[6]}]
+set_property PACKAGE_PIN J8 [get_ports {led_n[7]}]
+set_property PACKAGE_PIN H8 [get_ports {led_n[8]}]
+set_property PACKAGE_PIN G8 [get_ports {led_n[9]}]
+set_property PACKAGE_PIN F7 [get_ports {led_n[10]}]
+set_property PACKAGE_PIN A4 [get_ports {led_n[11]}]
+set_property PACKAGE_PIN A5 [get_ports {led_n[12]}]
+set_property PACKAGE_PIN A3 [get_ports {led_n[13]}]
+set_property PACKAGE_PIN D5 [get_ports {led_n[14]}]
+set_property PACKAGE_PIN H7 [get_ports {led_n[15]}]
 
 #led_rg 0/1
 set_property PACKAGE_PIN G7 [get_ports {led_rg0[0]}]
@@ -198,6 +198,6 @@ create_clock -period 40.000 -name eth_txclk -waveform {0.000 20.000} [get_ports 
 
 set_false_path -from [get_clocks clk_in] -to [get_clocks clkMain]
 set_false_path -from [get_clocks eth_rxclk] -to [get_clocks clkMain]
-set_false_path -from [get_clocks eth_txclk] -to [get_clocks clkmain]
+set_false_path -from [get_clocks eth_txclk] -to [get_clocks clkMain]
 set_false_path -from [get_clocks clkMain] -to [get_clocks eth_rxclk]
 set_false_path -from [get_clocks clkMain] -to [get_clocks eth_txclk]
