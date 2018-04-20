@@ -22,25 +22,29 @@ architecture bhv of flash_ctrl is
     signal state: std_logic_vector(5 downto 0);
     signal cmdAndAddr: std_logic_vector(0 to 31); -- Output from high to low
     signal data: std_logic_vector(0 to 31); -- Input from high to low
+    signal dataReady: std_logic;
 begin
 
     clk_o <= clk;
-    cs_n_o <= not devEnable_i;
-    busy_o <= '0' when state = "111111" else '1';
+    busy_o <= not dataReady;
     readData_o <= data;
     cmdAndAddr <= CMD_READ & addr_i(23 downto 0);
 
     process (clk) begin
         if (rising_edge(clk)) then
-            if (rst = RST_ENABLE or devEnable_i = DISABLE) then
+            if (rst = RST_ENABLE or devEnable_i = DISABLE or dataReady = YES) then
+                cs_n_o <= not NO; -- We have to disable flash for at least 1 period after data ready
                 state <= (others => '0');
                 data <= (others => '0');
+                dataReady <= NO;
             else
+                cs_n_o <= not YES;
                 if (state(5) = '0') then
                     di_o <= cmdAndAddr(conv_integer(state));
                 else
                     data(conv_integer(state)) <= do_i;
                 end if;
+                dataReady <= YES when state = "111111" else NO;
                 state <= state + 1;
             end if;
         end if;

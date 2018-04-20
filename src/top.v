@@ -24,7 +24,7 @@ output wire[1:0] led_rg0, led_rg1; // Dual color LED
 output wire[7:0] num_cs_n; // 7-seg enable
 output wire[6:0] num_a_g; // 7-seg data
 
-input wire[7:0] switch; // Switches
+input wire[7:0] switch; // Switches. Push up for 0 and pull down for 1
 input wire[3:0] btn_key_col, btn_key_row; // Keypad
 input wire[1:0] btn_step; // Pulse button
 
