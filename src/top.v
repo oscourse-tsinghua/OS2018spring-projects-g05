@@ -12,6 +12,7 @@ module top(/*autoport*/
     spi_clk, spi_cs_n, spi_di, spi_do,
     eth_txclk, eth_rxclk, eth_txen, eth_txd, eth_txerr, eth_rxdv, eth_rxd,
     eth_rxerr, eth_coll, eth_crs, eth_mdc, eth_mdio, eth_rst_n,
+    uart_rx, uart_tx
 );
 
 input wire clk_in; //100MHz clock input
@@ -68,10 +69,10 @@ wire rxdReady, txdBusy, txdStart;
 wire[7:0] rxdData, txdData;
 async_receiver
     #(.ClkFrequency(25000000), .Baud(9600))
-    uart_r(.clk(clkMain), .RxD(rxd), .RxD_data_ready(rxdReady), .RxD_data(rxdData));
+    uart_r(.clk(clkMain), .RxD(uart_rx), .RxD_data_ready(rxdReady), .RxD_data(rxdData));
 async_transmitter
     #(.ClkFrequency(25000000),.Baud(9600))
-    uart_t(.clk(clkMain), .TxD(txd), .TxD_busy(txdBusy), .TxD_start(txdStart), .TxD_data(txdData));
+    uart_t(.clk(clkMain), .TxD(uart_tx), .TxD_busy(txdBusy), .TxD_start(txdStart), .TxD_data(txdData));
 
 wire devEnable, devWrite, devBusy;
 wire[31:0] dataSave, dataLoad, addr;
@@ -121,7 +122,7 @@ wire[31:0] flashDataLoad;
 
 wire vgaEnable, vgaWriteEnable;
 wire[31:0] vgaWriteData;
-assign video_clk = clkMain;
+//assign video_clk = clkMain;
 
 wire ltcEnable, ltcReadEnable, ltcBusy;
 wire[31:0] ltcDataLoad;
@@ -360,7 +361,7 @@ seg7_ctrl seg7_ctrl_ist(
     .rst(rst),
     .we_i(numEnable),
     .data_i(numData),
-    .cs_o(num_cs_n),
+    .cs_n_o(num_cs_n),
     .lights_o(num_a_g)
 );
 
