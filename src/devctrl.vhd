@@ -70,7 +70,7 @@ entity devctrl is
         ledEnable_o: out std_logic;
         ledData_o: out std_logic_vector(15 downto 0);
         numEnable_o: out std_logic;
-        numData_o: out std_logic_vector(7 downto 0)
+        numData_o: out std_logic_vector(DataWidth)
     );
 end devctrl;
 
@@ -144,7 +144,7 @@ begin
             elsif (devPhysicalAddr_i = 32ux"1fd0f010") then
                 -- 7-seg display. Required by functional test --
                 numEnable_o <= ENABLE;
-                numData_o <= devDataSave_i(7 downto 0);
+                numData_o <= devDataSave_i;
             elsif (devPhysicalAddr_i >= 32ux"1fe00000" and devPhysicalAddr_i <= 32ux"1fe4afff") then
                 -- VGA --
                 -- designated by myself, software needed to support --

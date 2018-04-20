@@ -140,7 +140,7 @@ wire[31:0] bootDataLoad;
 
 wire ledEnable, numEnable;
 wire[15:0] ledData;
-wire[7:0] numData;
+wire[31:0] numData;
 
 devctrl devctrl_ist(
     .devEnable_i(devEnable),
