@@ -19,33 +19,56 @@ end flash_ctrl;
 
 architecture bhv of flash_ctrl is
     constant CMD_READ: std_logic_vector(7 downto 0) := x"03";
-    signal state: std_logic_vector(5 downto 0);
-    signal cmdAndAddr: std_logic_vector(0 to 31); -- Output from high to low
-    signal data: std_logic_vector(0 to 31); -- Input from high to low
-    signal dataReady: std_logic;
+    signal chipEnable: std_logic;
+    signal txd, txdHold, rxd: std_logic_vector(DataWidth);
+    signal txdStart: std_logic;
+    signal state: std_logic_vector(6 downto 0);
 begin
 
-    clk_o <= clk;
-    busy_o <= not dataReady;
-    readData_o <= data;
-    cmdAndAddr <= CMD_READ & addr_i(23 downto 0);
+    chipEnable <= DISABLE when
+        rst = RST_ENABLE or
+        devEnable_i = DISABLE or
+        state = "0000000" or -- Not started yet
+        state = "1000001" -- Done
+        else ENABLE;
+    cs_n_o <= not chipEnable;
+    clk_o <= clk or not chipEnable; -- Pull up clock when disable, which guarentees
+                                    -- the first rising edge comes after enabling
+    busy_o <= PIPELINE_NONSTOP when state = "1000001" else PIPELINE_STOP;
 
-    process (clk) begin
-        if (rising_edge(clk)) then
-            if (rst = RST_ENABLE or devEnable_i = DISABLE or dataReady = YES) then
-                cs_n_o <= not NO; -- We have to disable flash for at least 1 period after data ready
-                state <= (others => '0');
-                data <= (others => '0');
-                dataReady <= NO;
+    process (clk) begin -- Transmitter
+        if (falling_edge(clk)) then
+            if (txdStart = YES) then
+                txd <= txdHold;
             else
-                cs_n_o <= not YES;
-                if (state(5) = '0') then
-                    di_o <= cmdAndAddr(conv_integer(state));
-                else
-                    data(conv_integer(state)) <= do_i;
+                txd <= txd(30 downto 0) & '0';
+            end if;
+        end if;
+    end process;
+    di_o <= txd(31);
+
+    process (clk) begin -- Receiver
+        if (rising_edge(clk)) then
+            rxd <= rxd(30 downto 0) & do_i;
+        end if;
+    end process;
+    readData_o <= rxd;
+
+    process (clk) begin -- Controller
+        if (rising_edge(clk)) then
+            txdHold <= (others => '0');
+            txdStart <= NO;
+            state <= "0000000";
+            if (rst = RST_DISABLE and devEnable_i = ENABLE) then
+                if (state = "0000000") then
+                    txdHold <= CMD_READ & addr_i(23 downto 0);
+                    txdStart <= YES;
                 end if;
-                dataReady <= YES when state = "111111" else NO;
-                state <= state + 1;
+                if (state = "1000001") then
+                    state <= "0000000";
+                else
+                    state <= state + 1;
+                end if;
             end if;
         end if;
     end process;
