@@ -201,3 +201,6 @@ set_false_path -from [get_clocks eth_rxclk] -to [get_clocks clkMain]
 set_false_path -from [get_clocks eth_txclk] -to [get_clocks clkMain]
 set_false_path -from [get_clocks clkMain] -to [get_clocks eth_rxclk]
 set_false_path -from [get_clocks clkMain] -to [get_clocks eth_txclk]
+
+set_property CFGBVS VCCO [current_design]
+set_property CONFIG_VOLTAGE 3.3 [current_design]
