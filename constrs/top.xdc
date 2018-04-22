@@ -86,8 +86,10 @@ set_property PACKAGE_PIN V6 [get_ports btn_step[1]]
 #SPI flash
 set_property PACKAGE_PIN P20 [get_ports spi_clk]
 set_property PACKAGE_PIN R20 [get_ports spi_cs_n]
-set_property PACKAGE_PIN P19 [get_ports spi_di]
-set_property PACKAGE_PIN N18 [get_ports spi_do]
+set_property PACKAGE_PIN P19 [get_ports spi_do]
+set_property PACKAGE_PIN N18 [get_ports spi_di]
+# CAUTIOUS: DO menas MISO, DI means MOSI
+# Please refer to the circuit diagram and double check
 
 #Ethernet
 set_property PACKAGE_PIN AB21 [get_ports eth_txclk]
