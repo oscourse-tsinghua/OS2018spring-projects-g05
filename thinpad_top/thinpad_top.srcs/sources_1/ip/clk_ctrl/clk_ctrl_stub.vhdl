@@ -1,7 +1,7 @@
 -- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2017.2 (win64) Build 1909853 Thu Jun 15 18:39:09 MDT 2017
--- Date        : Thu Nov 23 18:23:34 2017
+-- Date        : Fri Apr 20 17:04:57 2018
 -- Host        : LAPTOP-FKIVSI39 running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode synth_stub -rename_top clk_ctrl -prefix
 --               clk_ctrl_ clk_ctrl_stub.vhdl

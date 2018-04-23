@@ -1,7 +1,7 @@
 -- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2017.2 (win64) Build 1909853 Thu Jun 15 18:39:09 MDT 2017
--- Date        : Thu Nov 23 18:23:34 2017
+-- Date        : Fri Apr 20 17:04:57 2018
 -- Host        : LAPTOP-FKIVSI39 running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim -rename_top clk_ctrl -prefix
 --               clk_ctrl_ clk_ctrl_sim_netlist.vhdl
@@ -76,10 +76,10 @@ clkout1_buf: unisim.vcomponents.BUFG
 mmcm_adv_inst: unisim.vcomponents.MMCME2_ADV
     generic map(
       BANDWIDTH => "OPTIMIZED",
-      CLKFBOUT_MULT_F => 18.250000,
+      CLKFBOUT_MULT_F => 9.125000,
       CLKFBOUT_PHASE => 0.000000,
       CLKFBOUT_USE_FINE_PS => false,
-      CLKIN1_PERIOD => 20.000000,
+      CLKIN1_PERIOD => 10.000000,
       CLKIN2_PERIOD => 0.000000,
       CLKOUT0_DIVIDE_F => 36.500000,
       CLKOUT0_DUTY_CYCLE => 0.500000,

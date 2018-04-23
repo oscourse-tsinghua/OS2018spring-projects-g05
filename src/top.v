@@ -1,167 +1,78 @@
 `default_nettype none
 
-module thinpad_top(/*autoport*/
-//inout
-         base_ram_data,
-         ext_ram_data,
-         flash_data,
-         sl811_data,
-         dm9k_data,
-//output
-         uart_rdn,
-         uart_wrn,
-         base_ram_addr,
-         base_ram_be_n,
-         base_ram_ce_n,
-         base_ram_oe_n,
-         base_ram_we_n,
-         ext_ram_addr,
-         ext_ram_be_n,
-         ext_ram_ce_n,
-         ext_ram_oe_n,
-         ext_ram_we_n,
-         txd,
-         flash_a,
-         flash_rp_n,
-         flash_vpen,
-         flash_oe_n,
-         flash_ce_n,
-         flash_byte_n,
-         flash_we_n,
-         sl811_a0,
-         sl811_we_n,
-         sl811_rd_n,
-         sl811_cs_n,
-         sl811_rst_n,
-         sl811_dack,
-         dm9k_cmd,
-         dm9k_we_n,
-         dm9k_rd_n,
-         dm9k_cs_n,
-         dm9k_rst_n,
-         leds,
-         video_pixel,
-         video_hsync,
-         video_vsync,
-         video_clk,
-         video_de,
-//input
-         clk_in,
-         clk_uart_in,
-         uart_dataready,
-         uart_tbre,
-         uart_tsre,
-         rxd,
-         sl811_int,
-         sl811_drq,
-         dm9k_int,
-         dip_sw,
-         touch_btn);
+module top(/*autoport*/
+    clk_in,
+    rst_n,
+    led_n,
+    led_rg0, led_rg1,
+    num_cs_n, num_a_g,
+    switch,
+    btn_key_col, btn_key_row,
+    btn_step,
+    spi_clk, spi_cs_n, spi_di, spi_do,
+    eth_txclk, eth_rxclk, eth_txen, eth_txd, eth_txerr, eth_rxdv, eth_rxd,
+    eth_rxerr, eth_coll, eth_crs, eth_mdc, eth_mdio, eth_rst_n,
+    uart_rx, uart_tx
+);
 
+input wire clk_in; //100MHz clock input
+input wire rst_n; // Reset
 
-input wire clk_in; //50MHz main clock input
-input wire clk_uart_in; //11.0592MHz clock for UART
+output wire[15:0] led_n; // Single color LED
+output wire[1:0] led_rg0, led_rg1; // Dual color LED
 
-//UART controller signals
-output wire uart_rdn;
-output wire uart_wrn;
-input wire uart_dataready;
-input wire uart_tbre;
-input wire uart_tsre;
+output wire[7:0] num_cs_n; // 7-seg enable
+output wire[6:0] num_a_g; // 7-seg data
 
-//Base memory signals, a.k.a. RAM1
-inout wire[31:0] base_ram_data; // [7:0] also connected to CPLD
-output wire[19:0] base_ram_addr;
-output wire[3:0] base_ram_be_n;
-output wire base_ram_ce_n;
-output wire base_ram_oe_n;
-output wire base_ram_we_n;
-//assign base_ram_be_n=4'b0; // keep ByteEnable zero if you don't know what it is
+input wire[7:0] switch; // Switches
+input wire[3:0] btn_key_col, btn_key_row; // Keypad
+input wire[1:0] btn_step; // Pulse button
 
-//Extension memory signals
-inout wire[31:0] ext_ram_data;
-output wire[19:0] ext_ram_addr;
-output wire[3:0] ext_ram_be_n;
-output wire ext_ram_ce_n;
-output wire ext_ram_oe_n;
-output wire ext_ram_we_n;
-//assign ext_ram_be_n=4'b0; // keep ByteEnable zero if you don't know what it is
+// SPI flash EN25F80
+output wire spi_clk; // clock
+output wire spi_cs_n; // enable
+output wire spi_di; // data CPU -> flash
+input wire spi_do; // data flash -> CPU
 
-//Ext serial port signals
-output wire txd;
-input wire rxd;
+// Ethernet DM9161AEP
+input wire eth_txclk; // Transmit reference clock
+input wire eth_rxclk; // Receive reference clock
+output wire eth_txen; // Transmit enable
+output wire[3:0] eth_txd; // Transmit data
+output wire eth_txerr; // Transmit error
+input wire eth_rxdv; // Receive valid
+input wire[3:0] eth_rxd; // Receive data
+input wire eth_rxerr; // Receive error
+input wire eth_coll; // Collision
+input wire eth_crs; // Carrier sence detect
+output wire eth_mdc; // Management data clock
+inout wire eth_mdio; // Management data I/O
+output wire eth_rst_n; // Reset
 
-//Flash memory, JS28F640
-output wire [22:0]flash_a;
-output wire flash_rp_n;
-output wire flash_vpen;
-output wire flash_oe_n;
-inout wire [15:0]flash_data;
-output wire flash_ce_n;
-output wire flash_byte_n;
-output wire flash_we_n;
-
-//SL811 USB controller signals
-output wire sl811_a0;
-inout wire[7:0] sl811_data;
-output wire sl811_we_n;
-output wire sl811_rd_n;
-output wire sl811_cs_n;
-output wire sl811_rst_n;
-output wire sl811_dack;
-input wire sl811_int;
-input wire sl811_drq;
-
-//DM9000 Ethernet controller signals
-output wire dm9k_cmd;
-inout wire[15:0] dm9k_data;
-output wire dm9k_we_n;
-output wire dm9k_rd_n;
-output wire dm9k_cs_n;
-output wire dm9k_rst_n;
-input wire dm9k_int;
-
-//LED, SegDisp, DIP SW, and BTN1~6
-output wire[31:0] leds; // leds[31:16] is SegDisp, leds[15:0] is LEDs
-input wire[31:0] dip_sw;
-input wire[5:0] touch_btn;
-
-//Video output
-output wire[7:0] video_pixel;
-output wire video_hsync;
-output wire video_vsync;
-output wire video_clk;
-output wire video_de;
+//UART
+input wire uart_rx; // Receive
+output wire uart_tx; // Transmit
 
 /* =========== END OF PORT DECLARATION ============= */
 
 wire rst;
-assign rst = touch_btn[5];
+assign rst = ~rst_n;
 
-wire clk25; // 25MHz clock
+wire clkMain; // 25MHz clock
 clk_ctrl clk_ctrl_ist(
     .clk_in1(clk_in),
-    .clk_out1(clk25)
+    .clk_out1(clkMain)
 );
-
-// 7-Segment display decoder
-reg[7:0] numberHold;
-SEG7_LUT segL(.oSEG1({leds[23:22],leds[19:17],leds[20],leds[21],leds[16]}), .iDIG(numberHold[3:0]));
-SEG7_LUT segH(.oSEG1({leds[31:30],leds[27:25],leds[28],leds[29],leds[24]}), .iDIG(numberHold[7:4]));
-
-// LED
-reg[15:0] ledHold;
-assign leds[15:0] = ledHold;
 
 // Serial COM
 wire rxdReady, txdBusy, txdStart;
 wire[7:0] rxdData, txdData;
 async_receiver
     #(.ClkFrequency(25000000), .Baud(9600))
-    uart_r(.clk(clk25), .RxD(rxd), .RxD_data_ready(rxdReady), .RxD_data(rxdData));
+    uart_r(.clk(clkMain), .RxD(uart_rx), .RxD_data_ready(rxdReady), .RxD_data(rxdData));
 async_transmitter
     #(.ClkFrequency(25000000),.Baud(9600))
-    uart_t(.clk(clk25), .TxD(txd), .TxD_busy(txdBusy), .TxD_start(txdStart), .TxD_data(txdData));
+    uart_t(.clk(clkMain), .TxD(uart_tx), .TxD_busy(txdBusy), .TxD_start(txdStart), .TxD_data(txdData));
 
 wire devEnable, devWrite, devBusy;
 wire[31:0] dataSave, dataLoad, addr;
@@ -188,7 +99,7 @@ cpu #(
     .instEntranceAddr(32'h80000000)
 `endif
 ) cpu_ist (
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .devEnable_o(devEnable),
     .devWrite_o(devWrite),
@@ -211,7 +122,7 @@ wire[31:0] flashDataLoad;
 
 wire vgaEnable, vgaWriteEnable;
 wire[31:0] vgaWriteData;
-assign video_clk = clk25;
+//assign video_clk = clkMain;
 
 wire ltcEnable, ltcReadEnable, ltcBusy;
 wire[31:0] ltcDataLoad;
@@ -229,7 +140,7 @@ wire[31:0] bootDataLoad;
 
 wire ledEnable, numEnable;
 wire[15:0] ledData;
-wire[7:0] numData;
+wire[31:0] numData;
 
 devctrl devctrl_ist(
     .devEnable_i(devEnable),
@@ -291,9 +202,10 @@ devctrl devctrl_ist(
 );
 
 // Please don't pass inout port into a sub-module
+/*
 wire ram0TriStateWrite;
 sram_ctrl base_sram_ctrl(
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .enable_i(ram0Enable),
     .readEnable_i(ram0ReadEnable),
@@ -312,7 +224,7 @@ assign ram0DataLoad = base_ram_data;
 
 wire ram1TriStateWrite;
 sram_ctrl ext_sram_ctrl(
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .enable_i(ram1Enable),
     .readEnable_i(ram1ReadEnable),
@@ -328,9 +240,11 @@ sram_ctrl ext_sram_ctrl(
 );
 assign ext_ram_data = ram1TriStateWrite ? ram1DataSave : 32'hzzzzzzzz;
 assign ram1DataLoad = ext_ram_data;
+*/
 
+/*
 flash_ctrl flash_ctrl_ist(
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .devEnable_i(flashEnable),
     .addr_i(addr),
@@ -346,9 +260,11 @@ flash_ctrl flash_ctrl_ist(
     .flByte_o(flash_byte_n),
     .flVpen_o(flash_vpen)
 );
+*/
 
+/*
 vga_ctrl vga_ctrl_ist(
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .devEnable_i(vgaEnable),
     .addr_i(addr),
@@ -360,9 +276,10 @@ vga_ctrl vga_ctrl_ist(
     .hs_o(video_hsync),
     .vs_o(video_vsync)
 );
+*/
 
 serial_ctrl serial_ctrl_ist(
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .enable_i(comEnable),
     .readEnable_i(comReadEnable),
@@ -377,9 +294,10 @@ serial_ctrl serial_ctrl_ist(
     .txdData_o(txdData)
 );
 
+/*
 wire usbTriStateWrite;
 usb_ctrl usb_ctrl_ist(
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .devEnable_i(usbEnable),
     .addr_i(addr),
@@ -398,6 +316,7 @@ usb_ctrl usb_ctrl_ist(
 );
 assign sl811_data = usbTriStateWrite ? usbWriteData[7:0] : 8'hzz;
 assign usbReadData = {24'b0, sl811_data};
+*/
 
 boot_ctrl boot_ctrl_ist(
     .addr_i(addr),
@@ -405,7 +324,7 @@ boot_ctrl boot_ctrl_ist(
 );
 
 lattice_ram_ctrl lattice_ram_ctrl_ist(
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .devEnable_i(ltcEnable),
     .readEnable_i(ltcReadEnable),
@@ -414,9 +333,10 @@ lattice_ram_ctrl lattice_ram_ctrl_ist(
     .busy_o(ltcBusy)
 );
 
+/*
 wire ethTriStateWrite;
 eth_ctrl eth_ctrl_ist(
-    .clk(clk25),
+    .clk(clkMain),
     .rst(rst),
     .enable_i(ethEnable),
     .readEnable_i(ethReadEnable),
@@ -434,63 +354,26 @@ eth_ctrl eth_ctrl_ist(
 );
 assign dm9k_data = ethTriStateWrite ? ethDataSave[15:0] : 16'hzzzz;
 assign ethDataLoad = {16'b0, dm9k_data};
+*/
 
-always@(posedge clk25) begin
+seg7_ctrl seg7_ctrl_ist(
+    .clk(clkMain),
+    .rst(rst),
+    .we_i(numEnable),
+    .data_i(numData),
+    .cs_n_o(num_cs_n),
+    .lights_o(num_a_g)
+);
+
+reg[15:0] ledHold;
+assign led_n = ~ledHold;
+always@(posedge clkMain) begin
     if (rst == 1) begin
         ledHold <= 0;
-        numberHold <= 0;
     end else begin
         if (ledEnable)
             ledHold <= ledData;
-        if (numEnable)
-            numberHold <= numData;
     end
 end
-
-/* sram_ctrl Test 1: Alternatively write and read
- * 1. Press and release rst
- * 2. LED should show 0xAAAA pattern
- */
-/*
-reg[15:0] count, correct, testDataSave;
-reg reading;
-assign addr = count;
-assign ramEnable = 1;
-assign ramReadEnable = reading;
-assign byteSelect = 4'hf;
-assign leds[15:0] = correct;
-assign ramDataSave = {16'h0, testDataSave};
-always@(posedge clk25) begin
-    if (rst) begin
-        count <= 0;
-        correct <= 0;
-        reading <= 0;
-    end else begin
-        if (count < 16'haaaa || reading == 0) begin
-            if (reading == 0) begin
-                testDataSave <= count;
-            end else begin
-                if (ramDataLoad[15:0] == count)
-                    correct <= correct + 1;
-                count <= count + 1;
-            end
-            reading <= ~reading;
-        end
-    end
-end
-*/
-
-/* sram_ctrl Test 2: Load arbitary data
- * 1. Upload RAM initializing file
- * 2. Press and release reset
- * 3. Set the switches and watch the LEDs
- */
-/*
-assign ramEnable = 1;
-assign ramReadEnable = 1;
-assign byteSelect = 4'hf;
-assign addr = dip_sw;
-assign leds[15:0] = ramDataLoad[15:0];
-*/
 
 endmodule
