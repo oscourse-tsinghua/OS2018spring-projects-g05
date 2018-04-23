@@ -52,7 +52,7 @@ begin
             rxd <= rxd(30 downto 0) & do_i;
         end if;
     end process;
-    readData_o <= rxd;
+    readData_o <= rxd(7 downto 0) & rxd(15 downto 8) & rxd(23 downto 16) & rxd(31 downto 24);
 
     process (clk) begin -- Controller
         if (rising_edge(clk)) then
