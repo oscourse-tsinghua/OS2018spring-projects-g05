@@ -1,14 +1,14 @@
 // Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2017.2 (win64) Build 1909853 Thu Jun 15 18:39:09 MDT 2017
-// Date        : Fri Apr 20 17:04:57 2018
-// Host        : LAPTOP-FKIVSI39 running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode funcsim -rename_top clk_ctrl -prefix
-//               clk_ctrl_ clk_ctrl_sim_netlist.v
+// Date        : Wed May  2 21:08:02 2018
+// Host        : DESKTOP-RJNJ8R0 running 64-bit major release  (build 9200)
+// Command     : write_verilog -force -mode funcsim
+//               E:/Development/OS2018spring-projects-g05/thinpad_top/thinpad_top.srcs/sources_1/ip/clk_ctrl/clk_ctrl_sim_netlist.v
 // Design      : clk_ctrl
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
-// Device      : xc7a100tfgg676-2L
+// Device      : xc7a200tfbg676-2
 // --------------------------------------------------------------------------------
 `timescale 1 ps / 1 ps
 
@@ -27,6 +27,7 @@ module clk_ctrl
         .clk_out1(clk_out1));
 endmodule
 
+(* ORIG_REF_NAME = "clk_ctrl_clk_wiz" *) 
 module clk_ctrl_clk_ctrl_clk_wiz
    (clk_out1,
     clk_in1);

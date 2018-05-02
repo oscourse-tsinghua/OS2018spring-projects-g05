@@ -1,13 +1,13 @@
 -- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2017.2 (win64) Build 1909853 Thu Jun 15 18:39:09 MDT 2017
--- Date        : Wed Apr 11 21:21:43 2018
--- Host        : LAPTOP-FKIVSI39 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode synth_stub -rename_top lattice_ram -prefix
---               lattice_ram_ lattice_ram_stub.vhdl
+-- Date        : Wed May  2 21:09:04 2018
+-- Host        : DESKTOP-RJNJ8R0 running 64-bit major release  (build 9200)
+-- Command     : write_vhdl -force -mode synth_stub
+--               E:/Development/OS2018spring-projects-g05/thinpad_top/thinpad_top.srcs/sources_1/ip/lattice_ram/lattice_ram_stub.vhdl
 -- Design      : lattice_ram
 -- Purpose     : Stub declaration of top-level module interface
--- Device      : xc7a100tfgg676-2L
+-- Device      : xc7a200tfbg676-2
 -- --------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;

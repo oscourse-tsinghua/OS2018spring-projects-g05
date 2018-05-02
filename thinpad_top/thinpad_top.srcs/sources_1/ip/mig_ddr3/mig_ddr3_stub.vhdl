@@ -1,10 +1,10 @@
 -- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2017.2 (win64) Build 1909853 Thu Jun 15 18:39:09 MDT 2017
--- Date        : Thu Apr 12 16:45:05 2018
+-- Date        : Thu Apr 12 16:44:58 2018
 -- Host        : DESKTOP-RJNJ8R0 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode synth_stub
---               E:/Development/OS2018spring-projects-g05/thinpad_top/thinpad_top.srcs/sources_1/ip/mig_ddr3/mig_ddr3_stub.vhdl
+-- Command     : write_vhdl -force -mode synth_stub -rename_top mig_ddr3 -prefix
+--               mig_ddr3_ mig_ddr3_stub.vhdl
 -- Design      : mig_ddr3
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7a200tfbg676-2
