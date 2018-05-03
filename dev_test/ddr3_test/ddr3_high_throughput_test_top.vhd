@@ -320,6 +320,7 @@ begin
     ---------------------------------------------------------------
 
 
+    addr_i(26 downto 0) <= curAddr;
     byteSelect_i <= "1111";
     writeData_i <= addr2Data1(curAddr) when phase = 0 else addr2Data2(curAddr);
     --led_n <= curAddr(22 downto 7);
@@ -403,7 +404,7 @@ begin
                         end if;
                     end if;
 
-                elsif (phase = 1) then
+                elsif (phase = 3) then
 
                     if (stat = INIT) then
                         enable_i <= '1';
