@@ -29,7 +29,7 @@ entity ddr3_high_throughput_test_top is
 end ddr3_high_throughput_test_top;
 
 architecture bhv of ddr3_high_throughput_test_top is
-    
+
     component clk_wiz
         port (
             clk_in1: in std_logic;
@@ -84,25 +84,25 @@ architecture bhv of ddr3_high_throughput_test_top is
         );
     end component;
 
-    --function addr2Data1(addr: std_logic_vector(26 downto 0)) return std_logic_vector is
-    --begin
-        --return addr(26 downto 2) & addr(10 downto 4);
-    --end addr2Data1;
-
-    --function addr2Data2(addr: std_logic_vector(26 downto 0)) return std_logic_vector is
-    --begin
-        --return addr(20 downto 11) & addr(18 downto 3) & addr(26 downto 21);
-    --end addr2Data2;
-
     function addr2Data1(addr: std_logic_vector(26 downto 0)) return std_logic_vector is
     begin
-        return 7ub"0" & addr(26 downto 2);
+        return addr(26 downto 2) & addr(10 downto 4);
     end addr2Data1;
 
     function addr2Data2(addr: std_logic_vector(26 downto 0)) return std_logic_vector is
     begin
-        return 7ub"0" & addr(26 downto 3) & (not addr(2));
+        return addr(20 downto 11) & addr(18 downto 3) & addr(26 downto 21);
     end addr2Data2;
+
+    --function addr2Data1(addr: std_logic_vector(26 downto 0)) return std_logic_vector is
+    --begin
+        --return 7ub"0" & addr(26 downto 2);
+    --end addr2Data1;
+
+    --function addr2Data2(addr: std_logic_vector(26 downto 0)) return std_logic_vector is
+    --begin
+        --return 7ub"0" & addr(26 downto 3) & (not addr(2));
+    --end addr2Data2;
 
     signal enable_i, readEnable_i: std_logic;
     signal addr_i: std_logic_vector(31 downto 0);
@@ -130,7 +130,7 @@ architecture bhv of ddr3_high_throughput_test_top is
     signal axi_arcache: std_logic_vector(3 downto 0);
     signal axi_arprot: std_logic_vector(2 downto 0);
     signal axi_arqos: std_logic_vector(3 downto 0);
-    
+
     signal clk_ref, clk_in_25, ui_clk, ui_clk_sync_rst, aresetn: std_logic;
 
     signal enable_100_i, readEnable_100_i: std_logic;
@@ -245,7 +245,8 @@ begin
         port map (
             clk_100 => ui_clk,
             clk_25 => clk_in_25,
-            rst => not ui_clk_sync_rst,
+            rst_100 => not ui_clk_sync_rst,
+            rst_25 => rst_n,
 
             enable_i => enable_i,
             readEnable_i => readEnable_i,
@@ -323,8 +324,8 @@ begin
     addr_i(26 downto 0) <= curAddr;
     byteSelect_i <= "1111";
     writeData_i <= addr2Data1(curAddr) when phase = 0 else addr2Data2(curAddr);
-    --led_n <= curAddr(22 downto 7);
-    led_n <= readData_o(15 downto 0);
+    led_n <= curAddr(22 downto 7);
+    --led_n <= readData_o(15 downto 0);
     led_rg0 <= "10" when stat = FINISHED else "01" when stat = DEAD else "00";
     num_cs_n <= "11111110";
     num_a_g <= "1111110" when phase = 0 else
@@ -334,7 +335,7 @@ begin
 
     process (clk_in_25) begin
         if (rising_edge(clk_in_25)) then
-            if (ui_clk_sync_rst = '1') then
+            if (rst_n = '0') then
                 curAddr <= 27ub"0";
                 stat <= INIT;
                 enable_i <= '0';
