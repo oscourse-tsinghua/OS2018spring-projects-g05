@@ -12,7 +12,9 @@ module top(/*autoport*/
     spi_clk, spi_cs_n, spi_di, spi_do,
     eth_txclk, eth_rxclk, eth_txen, eth_txd, eth_txerr, eth_rxdv, eth_rxd,
     eth_rxerr, eth_coll, eth_crs, eth_mdc, eth_mdio, eth_rst_n,
-    uart_rx, uart_tx
+    uart_rx, uart_tx,
+    ddr3_dq, ddr3_addr, ddr3_ba, ddr3_ras_n, ddr3_cas_n, ddr3_we_n, ddr3_odt,
+    ddr3_reset_n, ddr3_cke, ddr3_dm, ddr3_dqs_p, ddr3_dqs_n, ddr3_ck_p, ddr3_ck_n
 );
 
 input wire clk_in; //100MHz clock input
@@ -49,9 +51,26 @@ output wire eth_mdc; // Management data clock
 inout wire eth_mdio; // Management data I/O
 output wire eth_rst_n; // Reset
 
-//UART
+// UART
 input wire uart_rx; // Receive
 output wire uart_tx; // Transmit
+
+// DDR3
+inout wire[15:0] ddr3_dq;
+output wire[12:0] ddr3_addr;
+output wire[2:0] ddr3_ba;
+output wire ddr3_ras_n;
+output wire ddr3_cas_n;
+output wire ddr3_we_n;
+output wire ddr3_odt;
+output wire ddr3_reset_n;
+output wire ddr3_cke;
+output wire[1:0] ddr3_dm;
+inout wire[1:0] ddr3_dqs_p;
+inout wire[1:0] ddr3_dqs_n;
+output wire ddr3_ck_p;
+output wire ddr3_ck_n;
+
 
 /* =========== END OF PORT DECLARATION ============= */
 
@@ -59,9 +78,17 @@ wire rst;
 assign rst = ~rst_n;
 
 wire clkMain; // 25MHz clock
+/*
 clk_ctrl clk_ctrl_ist(
     .clk_in1(clk_in),
     .clk_out1(clkMain)
+);
+*/
+wire clk200;
+clk_wiz clk_wiz_ist(
+    .clk_in1(clk_in),
+    .clk_out1(clk200),
+    .clk_out2(clkMain)
 );
 
 // Serial COM
@@ -127,6 +154,9 @@ wire[31:0] vgaWriteData;
 wire ltcEnable, ltcReadEnable, ltcBusy;
 wire[31:0] ltcDataLoad;
 
+wire ddr3Enable, ddr3ReadEnable, ddr3Busy;
+wire[31:0] ddr3WriteData, ddr3ReadData;
+
 wire comEnable, comReadEnable;
 wire[31:0] comDataSave, comDataLoad;
 
@@ -150,17 +180,6 @@ devctrl devctrl_ist(
     .devDataLoad_o(dataLoad),
     .devPhysicalAddr_i(addr),
 
-    .ram0Enable_o(ram0Enable),
-    .ram0ReadEnable_o(ram0ReadEnable),
-    .ram0DataSave_o(ram0DataSave),
-    .ram0DataLoad_i(ram0DataLoad),
-    .ram0WriteBusy_i(ram0WriteBusy),
-    .ram1Enable_o(ram1Enable),
-    .ram1ReadEnable_o(ram1ReadEnable),
-    .ram1DataSave_o(ram1DataSave),
-    .ram1DataLoad_i(ram1DataLoad),
-    .ram1WriteBusy_i(ram1WriteBusy),
-
     .flashEnable_o(flashEnable),
     .flashReadEnable_o(flashReadEnable),
     .flashDataLoad_i(flashDataLoad),
@@ -169,6 +188,12 @@ devctrl devctrl_ist(
     .vgaEnable_o(vgaEnable),
     .vgaWriteEnable_o(vgaWriteEnable),
     .vgaWriteData_o(vgaWriteData),
+
+    .ddr3Enable_o(ddr3Enable),
+    .ddr3ReadEnable_o(ddr3ReadEnable),
+    .ddr3DataSave_o(ddr3WriteData),
+    .ddr3DataLoad_i(ddr3ReadData),
+    .ddr3Busy_i(ddr3Busy),
 
     .comEnable_o(comEnable),
     .comReadEnable_o(comReadEnable),
@@ -277,6 +302,35 @@ vga_ctrl vga_ctrl_ist(
     .vs_o(video_vsync)
 );
 */
+
+ddr3_ctrl_encap ddr3_ctrl_encap_ist(
+    .clk_100(clk_in),
+    .clk_200(clk200),
+    .clk_25(clkMain),
+    .rst(rst),
+    .enable_i(ddr3Enable),
+    .readEnable_i(ddr3ReadEnable),
+    .addr_i(addr),
+    .writeData_i(ddr3WriteData),
+    .readData_o(ddr3ReadData),
+    .byteSelect_i(byteSelect),
+    .busy_o(ddr3Busy),
+
+    .ddr3_dq(ddr3_dq),
+    .ddr3_addr(ddr3_addr),
+    .ddr3_ba(ddr3_ba),
+    .ddr3_ras_n(ddr3_ras_n),
+    .ddr3_cas_n(ddr3_cas_n),
+    .ddr3_we_n(ddr3_we_n),
+    .ddr3_odt(ddr3_odt),
+    .ddr3_reset_n(ddr3_reset_n),
+    .ddr3_cke(ddr3_cke),
+    .ddr3_dm(ddr3_dm),
+    .ddr3_dqs_p(ddr3_dqs_p),
+    .ddr3_dqs_n(ddr3_dqs_n),
+    .ddr3_ck_p(ddr3_ck_p),
+    .ddr3_ck_n(ddr3_ck_n)
+);
 
 serial_ctrl serial_ctrl_ist(
     .clk(clkMain),
