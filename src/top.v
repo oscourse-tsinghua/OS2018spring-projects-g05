@@ -26,7 +26,7 @@ output wire[1:0] led_rg0, led_rg1; // Dual color LED
 output wire[7:0] num_cs_n; // 7-seg enable
 output wire[6:0] num_a_g; // 7-seg data
 
-input wire[7:0] switch; // Switches
+input wire[7:0] switch; // Switches. Push up for 0 and pull down for 1
 input wire[3:0] btn_key_col, btn_key_row; // Keypad
 input wire[1:0] btn_step; // Pulse button
 
@@ -144,7 +144,7 @@ wire[31:0] ram0DataSave, ram0DataLoad;
 wire ram1Enable, ram1ReadEnable, ram1WriteBusy;
 wire[31:0] ram1DataSave, ram1DataLoad;
 
-wire flashEnable, flashReadEnable, flashBusy;
+wire flashEnable, flashBusy;
 wire[31:0] flashDataLoad;
 
 wire vgaEnable, vgaWriteEnable;
@@ -181,7 +181,6 @@ devctrl devctrl_ist(
     .devPhysicalAddr_i(addr),
 
     .flashEnable_o(flashEnable),
-    .flashReadEnable_o(flashReadEnable),
     .flashDataLoad_i(flashDataLoad),
     .flashBusy_i(flashBusy),
 
@@ -267,25 +266,18 @@ assign ext_ram_data = ram1TriStateWrite ? ram1DataSave : 32'hzzzzzzzz;
 assign ram1DataLoad = ext_ram_data;
 */
 
-/*
 flash_ctrl flash_ctrl_ist(
     .clk(clkMain),
     .rst(rst),
     .devEnable_i(flashEnable),
     .addr_i(addr),
-    .readEnable_i(flashReadEnable),
     .readData_o(flashDataLoad),
     .busy_o(flashBusy),
-    .flRst_o(flash_rp_n),
-    .flOE_o(flash_oe_n),
-    .flCE_o(flash_ce_n),
-    .flWE_o(flash_we_n),
-    .flAddr_o(flash_a),
-    .flData_i(flash_data),
-    .flByte_o(flash_byte_n),
-    .flVpen_o(flash_vpen)
+    .clk_o(spi_clk),
+    .cs_n_o(spi_cs_n),
+    .di_o(spi_di),
+    .do_i(spi_do)
 );
-*/
 
 /*
 vga_ctrl vga_ctrl_ist(

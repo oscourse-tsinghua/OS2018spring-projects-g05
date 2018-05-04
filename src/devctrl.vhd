@@ -21,7 +21,6 @@ entity devctrl is
 
         -- Signals connecting to flash_ctrl --
         flashEnable_o: out std_logic;
-        flashReadEnable_o: out std_logic;
         flashDataLoad_i: in std_logic_vector(DataWidth);
         flashBusy_i: in std_logic;
 
@@ -76,7 +75,6 @@ begin
         ddr3ReadEnable_o <= ENABLE;
         ddr3DataSave_o <= (others => '0');
         flashEnable_o <= DISABLE;
-        flashReadEnable_o <= ENABLE;
         comEnable_o <= DISABLE;
         comReadEnable_o <= ENABLE;
         comDataSave_o <= (others => '0');
@@ -98,7 +96,7 @@ begin
         usbWriteData_o <= (others => '0');
 
         if (devEnable_i = ENABLE) then
-            if (devPhysicalAddr_i <= 32ux"7fffff") then
+            if (devPhysicalAddr_i <= 32ux"7ffffff") then
                 -- ddr3 --
                 ddr3Enable_o <= ENABLE;
                 ddr3ReadEnable_o <= not devWrite_i;
@@ -108,7 +106,6 @@ begin
             elsif (devPhysicalAddr_i >= 32ux"1e000000" and devPhysicalAddr_i <= 32ux"1effffff") then
                 -- flash --
                 flashEnable_o <= ENABLE;
-                flashReadEnable_o <= not devWrite_i;
                 devDataLoad_o <= flashDataLoad_i;
                 devBusy_o <= flashBusy_i;
             elsif (devPhysicalAddr_i >= 32ux"1fc00000" and devPhysicalAddr_i <= 32ux"1fc00fff") then
