@@ -95,7 +95,7 @@ begin
 
     process(clk) begin
         if (rising_edge(clk)) then
-            if (rst = '0') then
+            if (rst = '1') then
                 rstate <= INIT;
                 wstate <= INIT;
             else

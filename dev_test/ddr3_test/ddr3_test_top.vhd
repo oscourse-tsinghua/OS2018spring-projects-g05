@@ -224,7 +224,8 @@ begin
         port map (
             clk_100 => ui_clk,
             clk_25 => clk_in_25,
-            rst => not ui_clk_sync_rst,
+            rst_100 => ui_clk_sync_rst,
+            rst_25 => not rst_n,
 
             enable_i => enable_i,
             readEnable_i => readEnable_i,
@@ -246,7 +247,7 @@ begin
     ddr3_ctrl_100_ist: entity work.ddr3_ctrl_100
         port map (
             clk => ui_clk,
-            rst => not ui_clk_sync_rst,
+            rst => ui_clk_sync_rst,
 
             enable_i => enable_100_i,
             readEnable_i => readEnable_100_i,

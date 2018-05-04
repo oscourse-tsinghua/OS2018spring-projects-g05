@@ -1,22 +1,23 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
+use work.global_const.all;
 
 entity ddr3_ctrl is
     port (
         clk_100, clk_25, rst_100, rst_25: in std_logic;
 
         enable_i, readEnable_i: in std_logic;
-        addr_i: in std_logic_vector(31 downto 0);
-        writeData_i: in std_logic_vector(31 downto 0);
-        readData_o: out std_logic_vector(31 downto 0);
+        addr_i: in std_logic_vector(AddrWidth);
+        writeData_i: in std_logic_vector(DataWidth);
+        readData_o: out std_logic_vector(DataWidth);
         byteSelect_i: in std_logic_vector(3 downto 0);
         busy_o: out std_logic;
 
         enable_o, readEnable_o: out std_logic;
-        addr_o: out std_logic_vector(31 downto 0);
-        writeData_o: out std_logic_vector(31 downto 0);
-        readData_i: in std_logic_vector(31 downto 0);
+        addr_o: out std_logic_vector(AddrWidth);
+        writeData_o: out std_logic_vector(DataWidth);
+        readData_i: in std_logic_vector(DataWidth);
         byteSelect_o: out std_logic_vector(3 downto 0);
         busy_i: in std_logic
     );
@@ -25,7 +26,8 @@ end ddr3_ctrl;
 architecture bhv of ddr3_ctrl is
 
     signal enable_req, readEnable_req, busy_res: std_logic;
-    signal addr_req, writeData_req, readData_res: std_logic_vector(31 downto 0);
+    signal addr_req: std_logic_vector(AddrWidth);
+    signal writeData_req, readData_res: std_logic_vector(DataWidth);
     signal byteSelect_req: std_logic_vector(3 downto 0);
     type State is (INIT, PROC, WAIT1, WAIT2);
     signal stat100, stat25: State;
@@ -34,30 +36,30 @@ begin
 
     process (clk_100) begin
         if (rising_edge(clk_100)) then
-            if (rst_100 = '0') then
-                enable_o <= '0';
-                readEnable_o <= '1';
+            if (rst_100 = RST_ENABLE) then
+                enable_o <= DISABLE;
+                readEnable_o <= ENABLE;
                 addr_o <= (others => '0');
                 writeData_o <= (others => '0');
                 byteSelect_o <= (others => '0');
-                busy_res <= '1';
+                busy_res <= PIPELINE_STOP;
                 readData_res <= (others => '0');
                 stat100 <= INIT;
             else
-                if (stat100 = INIT and enable_req = '1') then
-                    enable_o <= '1';
+                if (stat100 = INIT and enable_req = ENABLE) then
+                    enable_o <= ENABLE;
                     readEnable_o <= readEnable_req;
                     addr_o <= addr_req;
                     writeData_o <= writeData_req;
                     byteSelect_o <= byteSelect_req;
                     stat100 <= PROC;
-                elsif (stat100 = PROC and busy_i = '0') then
-                    enable_o <= '0';
+                elsif (stat100 = PROC and busy_i = PIPELINE_NONSTOP) then
+                    enable_o <= DISABLE;
                     readData_res <= readData_i;
-                    busy_res <= '0';
+                    busy_res <= DISABLE;
                     stat100 <= WAIT1;
-                elsif (stat100 = WAIT1 and enable_req = '0') then
-                    busy_res <= '1';
+                elsif (stat100 = WAIT1 and enable_req = DISABLE) then
+                    busy_res <= PIPELINE_STOP;
                     readData_res <= (others => '0');
                     stat100 <= INIT;
                 end if;
@@ -67,32 +69,32 @@ begin
 
     process(clk_25) begin
         if (rising_edge(clk_25)) then
-            if (rst_25 = '0') then
-                busy_o <= '1';
+            if (rst_25 = RST_ENABLE) then
+                busy_o <= PIPELINE_STOP;
                 readData_o <= (others => '0');
-                enable_req <= '0';
-                readEnable_req <= '1';
+                enable_req <= DISABLE;
+                readEnable_req <= ENABLE;
                 addr_req <= (others => '0');
                 writeData_req <= (others => '0');
                 byteSelect_req <= (others => '0');
                 stat25 <= INIT;
             else
-                if (stat25 = INIT and enable_i = '1') then
-                    enable_req <= '1';
+                if (stat25 = INIT and enable_i = ENABLE) then
+                    enable_req <= ENABLE;
                     readEnable_req <= readEnable_i;
                     addr_req <= addr_i;
                     writeData_req <= writeData_i;
                     byteSelect_req <= byteSelect_i;
                     stat25 <= PROC;
-                elsif (stat25 = PROC and busy_res = '0') then
+                elsif (stat25 = PROC and busy_res = PIPELINE_NONSTOP) then
                     stat25 <= WAIT1; -- We use 2 period WAIT to meet the timing requirement
                 elsif (stat25 = WAIT1) then
                     readData_o <= readData_res;
-                    enable_req <= '0';
-                    busy_o <= '0';
+                    enable_req <= DISABLE;
+                    busy_o <= DISABLE;
                     stat25 <= WAIT2;
                 elsif (stat25 = WAIT2) then
-                    busy_o <= '1';
+                    busy_o <= PIPELINE_STOP;
                     readData_o <= (others => '0');
                     stat25 <= INIT;
                 end if;
