@@ -56,7 +56,7 @@ begin
                 elsif (stat100 = PROC and busy_i = PIPELINE_NONSTOP) then
                     enable_o <= DISABLE;
                     readData_res <= readData_i;
-                    busy_res <= DISABLE;
+                    busy_res <= PIPELINE_NONSTOP;
                     stat100 <= WAIT1;
                 elsif (stat100 = WAIT1 and enable_req = DISABLE) then
                     busy_res <= PIPELINE_STOP;
@@ -89,10 +89,14 @@ begin
                 elsif (stat25 = PROC and busy_res = PIPELINE_NONSTOP) then
                     stat25 <= WAIT1; -- We use 2 period WAIT to meet the timing requirement
                 elsif (stat25 = WAIT1) then
-                    readData_o <= readData_res;
                     enable_req <= DISABLE;
-                    busy_o <= DISABLE;
-                    stat25 <= WAIT2;
+                    if (enable_i = enable_req and readEnable_i = readEnable_req and addr_i = addr_req and (readEnable_i = ENABLE or writeData_i = writeData_req)) then
+                        readData_o <= readData_res;
+                        busy_o <= DISABLE;
+                        stat25 <= WAIT2;
+                    else
+                        stat25 <= INIT;
+                    end if;
                 elsif (stat25 = WAIT2) then
                     busy_o <= PIPELINE_STOP;
                     readData_o <= (others => '0');

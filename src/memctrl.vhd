@@ -5,6 +5,7 @@ use work.except_const.all;
 
 entity memctrl is
     port (
+        clk: in std_logic;
         -- Connect to instruction interface of CPU
         instData_o: out std_logic_vector(InstWidth);
         instAddr_i: in std_logic_vector(AddrWidth);
@@ -34,7 +35,9 @@ entity memctrl is
     );
 end memctrl;
 
-architecture bhv of memctrl is begin
+architecture bhv of memctrl is
+    signal instLoading, lastInstLoading: std_logic;
+begin
     process (all) begin
         devEnable_o <= DISABLE;
         devWrite_o <= NO;
@@ -47,7 +50,8 @@ architecture bhv of memctrl is begin
         dataStall_o <= PIPELINE_NONSTOP;
         instExcept_o <= NO_CAUSE;
         dataExcept_o <= NO_CAUSE;
-        if (dataEnable_i = ENABLE) then
+        instLoading <= '0';
+        if (dataEnable_i = ENABLE and (instEnable_i = DISABLE or lastInstLoading = '0')) then
             devEnable_o <= ENABLE;
             devWrite_o <= dataWrite_i;
             devData_o <= dataData_i;
@@ -63,8 +67,21 @@ architecture bhv of memctrl is begin
             devAddr_o <= instAddr_i;
             devByteSelect_o <= "1111";
             instData_o <= devData_i;
-            instStall_o <= devBusy_i;
+            if (dataEnable_i = ENABLE) then
+                dataStall_o <= PIPELINE_STOP;
+            else
+                instStall_o <= devBusy_i;
+            end if;
             instExcept_o <= devExcept_i;
+            if (devBusy_i = PIPELINE_STOP) then
+                instLoading <= '1';
+            end if;
+        end if;
+    end process;
+
+    process (clk) begin
+        if (rising_edge(clk)) then
+            lastInstLoading <= instLoading;
         end if;
     end process;
 end bhv;

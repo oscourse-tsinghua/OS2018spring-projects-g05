@@ -554,3 +554,29 @@ MIG: 14:57:48 : IGN:         <InputClkFreq>100</InputClkFreq> <==>         <Inpu
 MIG: 14:57:49 : Running implementation.xit
 MIG: 14:57:49 : IGN:     <ModuleName>mig_ddr3</ModuleName> <==>     <ModuleName>mig_ddr3</ModuleName> 
 MIG: 14:57:49 : IGN:         <InputClkFreq>100</InputClkFreq> <==>         <InputClkFreq>100</InputClkFreq> 
+MIG: 18:14:40 : Running synthesis.xit
+MIG: 18:14:41 : ################# RUNNING MIG BATCH ###################
+MIG: 18:14:41 : Writing IN file for 'mig_ddr3'...compDirPath: d:/Xilinx/Vivado/2017.2/data/ip/xilinx/mig_7series_v4_0... instDirPath: e:/Development/OS2018spring-projects-g05/thinpad_top/thinpad_top.srcs/sources_1/ip/mig_ddr3
+MIG: 18:14:41 : synp_flow:  -- synthesis_mode: Other
+MIG: 18:14:41 : outputDirectory: e:/Development/OS2018spring-projects-g05/thinpad_top/thinpad_top.srcs/sources_1/ip/mig_ddr3/_tmp/
+MIG: 18:14:41 : vivado_mode: xpg_pa
+MIG: 18:14:41 :  locked false  
+MIG: 18:14:41 : HDL Language: Verilog
+MIG: 18:14:41 : compInfo: false
+MIG: 18:14:41 : Vivado Options xc7a200t fbg676 -2
+MIG: 18:14:41 : 1: xc7a200t 2: fbg676 3: -2
+MIG: 18:14:41 : relative mig path: coregen/ip/xilinx/other/com/xilinx/ip/mig_7series_v4_0/bin/nt64/mig.exe
+MIG: 18:14:41 : xilinx_path: D:/Xilinx/Vivado/2017.2/ids_lite/ISE
+MIG: 18:14:41 : I am in catch area
+MIG: 18:14:41 : Running D:/Xilinx/Vivado/2017.2/ids_lite/ISE/coregen/ip/xilinx/other/com/xilinx/ip/mig_7series_v4_0/bin/nt64/mig.exe -cg_exc_inp e:/Development/OS2018spring-projects-g05/thinpad_top/thinpad_top.srcs/sources_1/ip/mig_ddr3/xil_txt.in -cg_exc_out e:/Development/OS2018spring-projects-g05/thinpad_top/thinpad_top.srcs/sources_1/ip/mig_ddr3/xil_txt.out ... 
+MIG: 18:15:07 : XML_INPUT_FILE: e:/Development/OS2018spring-projects-g05/thinpad_top/thinpad_top.srcs/sources_1/ip/mig_ddr3/mig_b.prj
+MIG: 18:15:07 : Component_Name: mig_ddr3
+MIG: 18:15:07 : Moving mig_ddr3 ...
+MIG: 18:15:07 : Moving mig_ddr3.veo ...
+MIG: 18:15:07 : Moving mig_ddr3_xmdf.tcl ...
+MIG: 18:15:08 : Running vlog_synth_rpr.xit
+MIG: 18:15:08 : IGN:     <ModuleName>mig_ddr3</ModuleName> <==>     <ModuleName>mig_ddr3</ModuleName> 
+MIG: 18:15:08 : IGN:         <InputClkFreq>100</InputClkFreq> <==>         <InputClkFreq>100</InputClkFreq> 
+MIG: 18:15:08 : Running implementation.xit
+MIG: 18:15:08 : IGN:     <ModuleName>mig_ddr3</ModuleName> <==>     <ModuleName>mig_ddr3</ModuleName> 
+MIG: 18:15:08 : IGN:         <InputClkFreq>100</InputClkFreq> <==>         <InputClkFreq>100</InputClkFreq> 

@@ -110,6 +110,7 @@ begin
 
     memctrl_ist: entity work.memctrl
         port map (
+            clk => clk,
             -- Connect to instruction interface of CPU
             instData_o => instData,
             instAddr_i => instAddr,

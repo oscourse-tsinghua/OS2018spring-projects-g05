@@ -1,7 +1,7 @@
 -- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2017.2 (win64) Build 1909853 Thu Jun 15 18:39:09 MDT 2017
--- Date        : Wed May  2 20:07:50 2018
+-- Date        : Sat May  5 01:52:18 2018
 -- Host        : DESKTOP-RJNJ8R0 running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
 --               E:/Development/OS2018spring-projects-g05/thinpad_top/thinpad_top.srcs/sources_1/ip/clk_wiz/clk_wiz_sim_netlist.vhdl
@@ -92,7 +92,7 @@ plle2_adv_inst: unisim.vcomponents.PLLE2_ADV
       CLKOUT0_PHASE => 0.000000,
       CLKOUT1_DIVIDE => 40,
       CLKOUT1_DUTY_CYCLE => 0.500000,
-      CLKOUT1_PHASE => 45.000000,
+      CLKOUT1_PHASE => 67.500000,
       CLKOUT2_DIVIDE => 128,
       CLKOUT2_DUTY_CYCLE => 0.500000,
       CLKOUT2_PHASE => 0.000000,
