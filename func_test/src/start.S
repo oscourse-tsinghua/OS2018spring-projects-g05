@@ -38,11 +38,7 @@
 #ifdef SIM
 #define WAIT_COUNT 00000001
 #else
-    #ifndef TEST_DELAY_RAM
-    #define WAIT_COUNT 11000000
-    #else
-    #define WAIT_COUNT 05000000
-    #endif
+#define WAIT_COUNT 700000
 #endif
 
 #include <asm/asm.h>
