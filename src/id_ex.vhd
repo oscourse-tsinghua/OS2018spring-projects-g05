@@ -85,7 +85,9 @@ begin
                 writeRegAddr_o <= writeRegAddr_i;
                 exLinkAddress_o <= idLinkAddress_i;
                 exIsInDelaySlot_o <= idIsInDelaySlot_i;
-                isInDelaySlot_o <= nextInstInDelaySlot_i;
+                if (valid_i = YES) then
+                    isInDelaySlot_o <= nextInstInDelaySlot_i;
+                end if;
                 exExceptCause_o <= idExceptCause_i;
                 exCurrentInstAddr_o <= idCurrentInstAddr_i;
                 valid_o <= valid_i;
