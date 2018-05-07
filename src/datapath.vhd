@@ -347,7 +347,8 @@ begin
             exceptCause_i => exceptCause_24,
             exceptCause_o => exceptCause_45,
             currentInstAddr_o => currentInstAddr_45,
-            isIdEhb_o => isIdEhb_4b
+            isIdEhb_o => isIdEhb_4b,
+            nextWillStall_i => stall(ID_STOP_IDX)
         );
 
     id_ex_ist: entity work.id_ex
