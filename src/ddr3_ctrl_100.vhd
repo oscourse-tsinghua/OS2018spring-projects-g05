@@ -11,7 +11,7 @@ entity ddr3_ctrl_100 is
         enable_i, readEnable_i: in std_logic; -- read enable means write disable
         addr_i: in std_logic_vector(31 downto 0);
         writeData_i: in std_logic_vector(31 downto 0);
-        readData_o: out std_logic_vector(31 downto 0);
+        readDataBurst_o: out BurstDataType;
         byteSelect_i: in std_logic_vector(3 downto 0);
         busy_o: out std_logic;
 
@@ -55,7 +55,6 @@ architecture bhv of ddr3_ctrl_100 is
 
     signal wid, rid: std_logic_vector(7 downto 0);
     signal recv_cnt: std_logic_vector(BurstLenWidth);
-    signal readData: BurstDataType;
     signal readData_reg: BurstDataType;
     signal readData_last: std_logic_vector(31 downto 0);
     signal round_zeros: std_logic_vector((BURST_LEN_WIDTH + 1) downto 0);
@@ -101,9 +100,8 @@ begin
 
     busy_o <= (not (axi_rlast_i and axi_rvalid_i)) when readEnable_i = ENABLE else (not axi_bvalid_i);
     readData_last <= axi_rdata_i;
-    readData(0 to BURST_LEN - 2) <= readData_reg(0 to BURST_LEN - 2);
-    readData(BURST_LEN - 1) <= readData_last;
-    readData_o <= readData(conv_integer(addr_i(BURST_LEN_WIDTH + 1 downto 2)));
+    readDataBurst_o(0 to BURST_LEN - 2) <= readData_reg(0 to BURST_LEN - 2);
+    readDataBurst_o(BURST_LEN - 1) <= readData_last;
 
     process(clk) begin
         if (rising_edge(clk)) then

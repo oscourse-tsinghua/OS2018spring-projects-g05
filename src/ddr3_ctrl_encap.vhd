@@ -1,7 +1,9 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
+use ieee.std_logic_arith.all;
 use work.global_const.all;
+use work.ddr3_const.all;
 
 entity ddr3_ctrl_encap is
     port (
@@ -97,11 +99,15 @@ architecture bhv of ddr3_ctrl_encap is
     signal enable_100_i, readEnable_100_i: std_logic;
     signal addr_100_i: std_logic_vector(31 downto 0);
     signal writeData_100_i: std_logic_vector(31 downto 0);
-    signal readData_100_o: std_logic_vector(31 downto 0);
+    signal readDataBurst_100_o: BurstDataType;
     signal byteSelect_100_i: std_logic_vector(3 downto 0);
     signal busy_100_o: std_logic;
 
+    signal readDataBurst: BurstDataType;
+
 begin
+
+    readData_o <= readDataBurst(conv_integer(addr_i(BURST_LEN_WIDTH + 1 downto 2)));
 
     axi_awlock <= "0";
     axi_awcache <= "0000";
@@ -201,7 +207,7 @@ begin
             readEnable_i => readEnable_i,
             addr_i => addr_i,
             writeData_i => writeData_i,
-            readData_o => readData_o,
+            readDataBurst_o => readDataBurst,
             byteSelect_i => byteSelect_i,
             busy_o => busy_o,
 
@@ -209,7 +215,7 @@ begin
             readEnable_o => readEnable_100_i,
             addr_o => addr_100_i,
             writeData_o => writeData_100_i,
-            readData_i => readData_100_o,
+            readDataBurst_i => readDataBurst_100_o,
             byteSelect_o => byteSelect_100_i,
             busy_i => busy_100_o
         );
@@ -223,7 +229,7 @@ begin
             readEnable_i => readEnable_100_i,
             addr_i => addr_100_i,
             writeData_i => writeData_100_i,
-            readData_o => readData_100_o,
+            readDataBurst_o => readDataBurst_100_o,
             byteSelect_i => byteSelect_100_i,
             busy_o => busy_100_o,
 

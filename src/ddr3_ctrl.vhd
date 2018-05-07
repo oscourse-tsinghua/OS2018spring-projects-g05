@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use work.global_const.all;
+use work.ddr3_const.all;
 
 entity ddr3_ctrl is
     port (
@@ -10,14 +11,14 @@ entity ddr3_ctrl is
         enable_i, readEnable_i: in std_logic;
         addr_i: in std_logic_vector(AddrWidth);
         writeData_i: in std_logic_vector(DataWidth);
-        readData_o: out std_logic_vector(DataWidth);
+        readDataBurst_o: out BurstDataType;
         byteSelect_i: in std_logic_vector(3 downto 0);
         busy_o: out std_logic;
 
         enable_o, readEnable_o: out std_logic;
         addr_o: out std_logic_vector(AddrWidth);
         writeData_o: out std_logic_vector(DataWidth);
-        readData_i: in std_logic_vector(DataWidth);
+        readDataBurst_i: in BurstDataType;
         byteSelect_o: out std_logic_vector(3 downto 0);
         busy_i: in std_logic
     );
@@ -27,7 +28,8 @@ architecture bhv of ddr3_ctrl is
 
     signal enable_req, readEnable_req, busy_res: std_logic;
     signal addr_req: std_logic_vector(AddrWidth);
-    signal writeData_req, readData_res: std_logic_vector(DataWidth);
+    signal writeData_req: std_logic_vector(DataWidth);
+    signal readDataBurst_res: BurstDataType;
     signal byteSelect_req: std_logic_vector(3 downto 0);
     type State is (INIT, PROC, WAIT1, WAIT2);
     signal stat100, stat25: State;
@@ -43,7 +45,7 @@ begin
                 writeData_o <= (others => '0');
                 byteSelect_o <= (others => '0');
                 busy_res <= PIPELINE_STOP;
-                readData_res <= (others => '0');
+                readDataBurst_res <= (others => (others => '0'));
                 stat100 <= INIT;
             else
                 if (stat100 = INIT and enable_req = ENABLE) then
@@ -55,12 +57,12 @@ begin
                     stat100 <= PROC;
                 elsif (stat100 = PROC and busy_i = PIPELINE_NONSTOP) then
                     enable_o <= DISABLE;
-                    readData_res <= readData_i;
+                    readDataBurst_res <= readDataBurst_i;
                     busy_res <= PIPELINE_NONSTOP;
                     stat100 <= WAIT1;
                 elsif (stat100 = WAIT1 and enable_req = DISABLE) then
                     busy_res <= PIPELINE_STOP;
-                    readData_res <= (others => '0');
+                    readDataBurst_res <= (others => (others => '0'));
                     stat100 <= INIT;
                 end if;
             end if;
@@ -71,7 +73,7 @@ begin
         if (rising_edge(clk_25)) then
             if (rst_25 = RST_ENABLE) then
                 busy_o <= PIPELINE_STOP;
-                readData_o <= (others => '0');
+                readDataBurst_o <= (others => (others => '0'));
                 enable_req <= DISABLE;
                 readEnable_req <= ENABLE;
                 addr_req <= (others => '0');
@@ -91,7 +93,7 @@ begin
                 elsif (stat25 = WAIT1) then
                     enable_req <= DISABLE;
                     if (enable_i = enable_req and readEnable_i = readEnable_req and addr_i = addr_req and (readEnable_i = ENABLE or writeData_i = writeData_req)) then
-                        readData_o <= readData_res;
+                        readDataBurst_o <= readDataBurst_res;
                         busy_o <= DISABLE;
                         stat25 <= WAIT2;
                     else
@@ -99,7 +101,7 @@ begin
                     end if;
                 elsif (stat25 = WAIT2) then
                     busy_o <= PIPELINE_STOP;
-                    readData_o <= (others => '0');
+                    readDataBurst_o <= (others => (others => '0'));
                     stat25 <= INIT;
                 end if;
             end if;
