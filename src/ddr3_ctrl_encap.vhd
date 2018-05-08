@@ -1,7 +1,9 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
+use ieee.std_logic_arith.all;
 use work.global_const.all;
+use work.ddr3_const.all;
 
 entity ddr3_ctrl_encap is
     port (
@@ -94,10 +96,14 @@ architecture bhv of ddr3_ctrl_encap is
 
     signal ui_clk, ui_clk_sync_rst, rst_n, aresetn: std_logic;
 
+    signal enable_25_i: std_logic;
+    signal readDataBurst_25_o: BurstDataType;
+    signal busy_25_o: std_logic;
+
     signal enable_100_i, readEnable_100_i: std_logic;
     signal addr_100_i: std_logic_vector(31 downto 0);
     signal writeData_100_i: std_logic_vector(31 downto 0);
-    signal readData_100_o: std_logic_vector(31 downto 0);
+    signal readDataBurst_100_o: BurstDataType;
     signal byteSelect_100_i: std_logic_vector(3 downto 0);
     signal busy_100_o: std_logic;
 
@@ -190,13 +196,9 @@ begin
             -- app_zq_ack =>
         );
 
-    ddr3_ctrl_ist: entity work.ddr3_ctrl
+    ddr3_ctrl_cache_ist: entity work.ddr3_ctrl_cache
         port map (
-            clk_100 => ui_clk,
-            clk_25 => clk_25,
-            rst_100 => ui_clk_sync_rst,
-            rst_25 => rst,
-
+            clk => clk_25, rst => rst,
             enable_i => enable_i,
             readEnable_i => readEnable_i,
             addr_i => addr_i,
@@ -204,12 +206,31 @@ begin
             readData_o => readData_o,
             byteSelect_i => byteSelect_i,
             busy_o => busy_o,
+            enable_o => enable_25_i,
+            readDataBurst_i => readDataBurst_25_o,
+            busy_i => busy_25_o
+        );
+
+    ddr3_ctrl_ist: entity work.ddr3_ctrl
+        port map (
+            clk_100 => ui_clk,
+            clk_25 => clk_25,
+            rst_100 => ui_clk_sync_rst,
+            rst_25 => rst,
+
+            enable_i => enable_25_i,
+            readEnable_i => readEnable_i,
+            addr_i => addr_i,
+            writeData_i => writeData_i,
+            readDataBurst_o => readDataBurst_25_o,
+            byteSelect_i => byteSelect_i,
+            busy_o => busy_25_o,
 
             enable_o => enable_100_i,
             readEnable_o => readEnable_100_i,
             addr_o => addr_100_i,
             writeData_o => writeData_100_i,
-            readData_i => readData_100_o,
+            readDataBurst_i => readDataBurst_100_o,
             byteSelect_o => byteSelect_100_i,
             busy_i => busy_100_o
         );
@@ -223,7 +244,7 @@ begin
             readEnable_i => readEnable_100_i,
             addr_i => addr_100_i,
             writeData_i => writeData_100_i,
-            readData_o => readData_100_o,
+            readDataBurst_o => readDataBurst_100_o,
             byteSelect_i => byteSelect_100_i,
             busy_o => busy_100_o,
 

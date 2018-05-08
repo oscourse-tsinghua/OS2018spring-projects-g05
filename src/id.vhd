@@ -53,7 +53,9 @@ entity id is
         valid_o: out std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-        currentInstAddr_o: out std_logic_vector(AddrWidth)
+        currentInstAddr_o: out std_logic_vector(AddrWidth);
+
+        nextWillStall_i: in std_logic
     );
 end id;
 
@@ -143,6 +145,7 @@ architecture bhv of id is
     signal immInstrAddr: std_logic_vector(AddrWidth);
     signal instImmSign: std_logic_vector(InstOffsetImmWidth);
     signal instOffsetImm: std_logic_vector(InstOffsetImmWidth);
+
 begin
 
     -- Segment the instruction --
@@ -1088,12 +1091,12 @@ begin
             exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
         end if;
 
-        if (toStall = PIPELINE_STOP) then
-            branchFlag := NOT_BRANCH_FLAG; -- See pc_reg.vhd for reason
-        end if;
-
         if (tneFlag = YES and operand1 /= operand2) then
             exceptCause_o <= TRAP_CAUSE;
+        end if;
+
+        if (nextWillStall_i = '1') then
+            branchFlag := NOT_BRANCH_FLAG;
         end if;
 
         operand1_o <= operand1;

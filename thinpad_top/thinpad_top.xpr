@@ -58,8 +58,20 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PPRDIR/../src/packages/ddr3_const.vhd">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PPRDIR/../src/packages/global_const.vhd">
         <FileInfo SFType="VHDL2008">
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../src/ddr3_ctrl_cache.vhd">
+        <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
@@ -1690,11 +1702,11 @@
         <StratHandle Name="Flow_PerfOptimized_high" Flow="Vivado Synthesis 2017"/>
         <Step Id="synth_design">
           <Option Id="ResourceSharing">2</Option>
-          <Option Id="NoCombineLuts">1</Option>
-          <Option Id="MoreOptsStr"><![CDATA[-verilog_define USE_BOOTLOADER -verilog_define FUNC_TEST]]></Option>
-          <Option Id="RepFanoutThreshold">400</Option>
-          <Option Id="ShregMinSize">5</Option>
           <Option Id="FsmExtraction">1</Option>
+          <Option Id="ShregMinSize">5</Option>
+          <Option Id="MoreOptsStr"><![CDATA[-verilog_define USE_BOOTLOADER -verilog_define FUNC_TEST]]></Option>
+          <Option Id="NoCombineLuts">1</Option>
+          <Option Id="RepFanoutThreshold">400</Option>
           <Option Id="KeepEquivalentRegisters">1</Option>
         </Step>
       </Strategy>

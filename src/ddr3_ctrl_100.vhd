@@ -1,5 +1,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+use ieee.std_logic_arith.all;
+use work.ddr3_const.all;
 
 entity ddr3_ctrl_100 is
     port (
@@ -8,7 +11,7 @@ entity ddr3_ctrl_100 is
         enable_i, readEnable_i: in std_logic; -- read enable means write disable
         addr_i: in std_logic_vector(31 downto 0);
         writeData_i: in std_logic_vector(31 downto 0);
-        readData_o: out std_logic_vector(31 downto 0);
+        readDataBurst_o: out BurstDataType;
         byteSelect_i: in std_logic_vector(3 downto 0);
         busy_o: out std_logic;
 
@@ -51,6 +54,10 @@ end ddr3_ctrl_100;
 architecture bhv of ddr3_ctrl_100 is
 
     signal wid, rid: std_logic_vector(7 downto 0);
+    signal recv_cnt: std_logic_vector(BurstLenWidth);
+    signal readData_reg: BurstDataType;
+    signal readData_last: std_logic_vector(31 downto 0);
+    signal round_zeros: std_logic_vector((BURST_LEN_WIDTH + 1) downto 0);
     
     type ReadState is (INIT, READ);
     signal rstate: ReadState;
@@ -65,7 +72,7 @@ begin
     axi_awid_o <= wid;
     axi_awaddr_o <= addr_i(26 downto 0);
     axi_awlen_o <= 8ub"0";
-    axi_awsize_o <= "101";
+    axi_awsize_o <= "010";
     axi_awburst_o <= "01";
     axi_awvalid_o <= '1' when (wstate = INIT or wstate = DOK) and enable_i = ENABLE and readEnable_i = DISABLE else '0';
 
@@ -81,30 +88,40 @@ begin
     rid <= 8ub"0";
 
     axi_arid_o <= rid;
-    axi_araddr_o <= addr_i(26 downto 0);
-    axi_arlen_o <= 8ub"0";
-    axi_arsize_o <= "101";
+    round_zeros <= (others => '0');
+    axi_araddr_o <= addr_i(26 downto (BURST_LEN_WIDTH + 2)) & round_zeros;
+    axi_arlen_o <= conv_std_logic_vector(BURST_LEN - 1, 8);
+    axi_arsize_o <= "010";
     axi_arburst_o <= "01";
     --
     axi_arvalid_o <= '1' when rstate = INIT and enable_i = ENABLE and readEnable_i = ENABLE else '0';
 
-    readData_o <= axi_rdata_i;
     axi_rready_o <= '1' when rstate = READ else '0';
 
     busy_o <= (not (axi_rlast_i and axi_rvalid_i)) when readEnable_i = ENABLE else (not axi_bvalid_i);
+    readData_last <= axi_rdata_i;
+    readDataBurst_o(0 to BURST_LEN - 2) <= readData_reg(0 to BURST_LEN - 2);
+    readDataBurst_o(BURST_LEN - 1) <= readData_last;
 
     process(clk) begin
         if (rising_edge(clk)) then
             if (rst = '1') then
                 rstate <= INIT;
                 wstate <= INIT;
+                recv_cnt <= (others => '0');
             else
 
                 if (enable_i = ENABLE and readEnable_i = ENABLE) then
                     if (rstate = INIT and axi_arready_i = '1') then
                         rstate <= READ;
                     elsif (rstate = READ and axi_rvalid_i = '1') then
-                        rstate <= INIT;
+                        if (recv_cnt = BURST_LEN - 1) then
+                            rstate <= INIT;
+                            recv_cnt <= (others => '0');
+                        else
+                            readData_reg(conv_integer(recv_cnt)) <= axi_rdata_i;
+                            recv_cnt <= recv_cnt + 1;
+                        end if;
                     end if;
                 end if;
 
