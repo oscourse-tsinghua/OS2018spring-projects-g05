@@ -30,23 +30,19 @@ end cpu;
 
 architecture bhv of cpu is
 
-    signal instEnable: std_logic;
+    signal instEnable, instPhyEnable: std_logic;
     signal instData: std_logic_vector(DataWidth);
-    signal instAddr: std_logic_vector(AddrWidth);
+    signal instAddr, instPhyAddr: std_logic_vector(AddrWidth);
 
-    signal dataEnable: std_logic;
+    signal dataEnable, dataPhyEnable: std_logic;
     signal dataWrite: std_logic;
     signal dataDataSave: std_logic_vector(DataWidth);
     signal dataDataLoad: std_logic_vector(DataWidth);
-    signal dataAddr: std_logic_vector(AddrWidth);
+    signal dataAddr, dataPhyAddr: std_logic_vector(AddrWidth);
     signal dataByteSelect: std_logic_vector(3 downto 0);
 
-    signal mmuEnable: std_logic;
-    signal devWrite: std_logic;
-    signal devVirtualAddr: std_logic_vector(AddrWidth);
-
     signal instStall, dataStall: std_logic;
-    signal instExcept, dataExcept, devExcept: std_logic_vector(ExceptionCauseWidth);
+    signal instExcept, dataExcept: std_logic_vector(ExceptionCauseWidth);
 
     signal isKernelMode: std_logic;
     signal entryIndexSave, entryIndexLoad: std_logic_vector(TLBIndexWidth);
@@ -83,20 +79,25 @@ begin
         end if;
     end process;
 
-    devWrite_o <= devWrite;
-
     mmu_ist: entity work.mmu
         port map (
             clk => clk,
             rst => rst,
-
-            enable_i => mmuEnable,
             isKernelMode_i => isKernelMode,
-            isLoad_i => not devWrite,
-            addr_i => devVirtualAddr,
-            addr_o => devPhysicalAddr_o,
-            enable_o => devEnable_o,
-            exceptCause_o => devExcept,
+
+            enable1_i => instEnable,
+            isLoad1_i => '1',
+            addr1_i => instAddr,
+            addr1_o => instPhyAddr,
+            enable1_o => instPhyEnable,
+            exceptCause1_o => instExcept,
+
+            enable2_i => dataEnable,
+            isLoad2_i => not dataWrite,
+            addr2_i => dataAddr,
+            addr2_o => dataPhyAddr,
+            enable2_o => dataPhyEnable,
+            exceptCause2_o => dataExcept,
 
             index_i => entryIndexSave,
             index_o => entryIndexLoad,
@@ -110,32 +111,29 @@ begin
 
     memctrl_ist: entity work.memctrl
         port map (
-            -- Connect to instruction interface of CPU
+            -- Connect to instruction interface(1) of MMU
+            instEnable_i => instPhyEnable,
             instData_o => instData,
-            instAddr_i => instAddr,
-            instEnable_i => instEnable,
+            instAddr_i => instPhyAddr,
             instStall_o => instStall,
-            instExcept_o => instExcept,
 
-            -- Connect to data interface of CPU
-            dataEnable_i => dataEnable,
+            -- Connect to data interface(2) of MMU
+            dataEnable_i => dataPhyEnable,
             dataWrite_i => dataWrite,
             dataData_o => dataDataLoad,
             dataData_i => dataDataSave,
-            dataAddr_i => dataAddr,
+            dataAddr_i => dataPhyAddr,
             dataByteSelect_i => dataByteSelect,
             dataStall_o => dataStall,
-            dataExcept_o => dataExcept,
 
-            -- Connect to external device (MMU)
-            devEnable_o => mmuEnable,
-            devWrite_o => devWrite,
+            -- Connect to external device
+            devEnable_o => devEnable_o,
+            devWrite_o => devWrite_o,
             devData_i => dataLoadConv,
             devData_o => dataSaveConv,
-            devAddr_o => devVirtualAddr,
+            devAddr_o => devPhysicalAddr_o,
             devByteSelect_o => byteSelectConv,
-            devBusy_i => devBusy_i,
-            devExcept_i => devExcept
+            devBusy_i => devBusy_i
         );
 
     datapath_ist: entity work.datapath

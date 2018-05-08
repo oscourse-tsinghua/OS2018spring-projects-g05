@@ -10,7 +10,6 @@ entity memctrl is
         instAddr_i: in std_logic_vector(AddrWidth);
         instEnable_i: in std_logic;
         instStall_o: out std_logic;
-        instExcept_o: out std_logic_vector(ExceptionCauseWidth);
 
         -- Connect to data interface of CPU
         dataEnable_i: in std_logic;
@@ -20,7 +19,6 @@ entity memctrl is
         dataAddr_i: in std_logic_vector(AddrWidth);
         dataByteSelect_i: in std_logic_vector(3 downto 0);
         dataStall_o: out std_logic;
-        dataExcept_o: out std_logic_vector(ExceptionCauseWidth);
 
         -- Connect to external device (MMU)
         devEnable_o: out std_logic;
@@ -29,8 +27,7 @@ entity memctrl is
         devData_o: out std_logic_vector(DataWidth);
         devAddr_o: out std_logic_vector(AddrWidth);
         devByteSelect_o: out std_logic_vector(3 downto 0);
-        devBusy_i: in std_logic;
-        devExcept_i: in std_logic_vector(ExceptionCauseWidth)
+        devBusy_i: in std_logic
     );
 end memctrl;
 
@@ -45,8 +42,6 @@ architecture bhv of memctrl is begin
         dataData_o <= (others => '0');
         instStall_o <= PIPELINE_NONSTOP;
         dataStall_o <= PIPELINE_NONSTOP;
-        instExcept_o <= NO_CAUSE;
-        dataExcept_o <= NO_CAUSE;
         if (dataEnable_i = ENABLE) then
             devEnable_o <= ENABLE;
             devWrite_o <= dataWrite_i;
@@ -55,7 +50,6 @@ architecture bhv of memctrl is begin
             devByteSelect_o <= dataByteSelect_i;
             dataData_o <= devData_i;
             dataStall_o <= devBusy_i;
-            dataExcept_o <= devExcept_i;
             instStall_o <= PIPELINE_STOP;
         elsif (instEnable_i = ENABLE) then
             devEnable_o <= ENABLE;
@@ -64,7 +58,6 @@ architecture bhv of memctrl is begin
             devByteSelect_o <= "1111";
             instData_o <= devData_i;
             instStall_o <= devBusy_i;
-            instExcept_o <= devExcept_i;
         end if;
     end process;
 end bhv;

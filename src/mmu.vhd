@@ -14,13 +14,13 @@ entity mmu is
         rst, clk: in std_logic;
 
         -- Translate the address
-        enable_i: in std_logic;
         isKernelMode_i: in std_logic;
-        isLoad_i: in std_logic; -- This address is used for loading rather than storing
-        addr_i: in std_logic_vector(AddrWidth);
-        addr_o: out std_logic_vector(AddrWidth);
-        enable_o: out std_logic;
-        exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        enable1_i, enable2_i: in std_logic;
+        isLoad1_i, isLoad2_i: in std_logic; -- This address is used for loading rather than storing
+        addr1_i, addr2_i: in std_logic_vector(AddrWidth);
+        addr1_o, addr2_o: out std_logic_vector(AddrWidth);
+        enable1_o, enable2_o: out std_logic;
+        exceptCause1_o, exceptCause2_o: out std_logic_vector(ExceptionCauseWidth);
 
         -- Manage TLB entry
         index_i: in std_logic_vector(TLBIndexWidth);
@@ -36,75 +36,104 @@ end mmu;
 architecture bhv of mmu is
     type EntryArr is array (0 to TLB_ENTRY_NUM - 1) of TLBEntry;
     signal entries: EntryArr;
-begin
-    -- Translation
-    -- We can't use 'Z' inside chip, so here we are using sequential look-up
-    process (all)
+
+    procedure translate(
+        signal enable_i, isLoad_i: in std_logic;
+        signal addr_i: in std_logic_vector(AddrWidth);
+        signal addr_o: out std_logic_vector(AddrWidth);
+        signal enable_o: out std_logic;
+        signal exceptCause_o: out std_logic_vector(ExceptionCauseWidth)
+    ) is
         variable targetLo: std_logic_vector(DataWidth);
         variable addrExcept, tlbExcept: boolean;
     begin
+        -- We can't use 'Z' inside chip, so here we are using sequential look-up
         exceptCause_o <= NO_CAUSE;
         enable_o <= enable_i;
-        addrExcept := false;
-        tlbExcept := true;
         addr_o <= (others => '0');
-        if (isKernelMode_i = NO and addr_i(31 downto 28) >= 4x"8") then
-            -- kseg0, kseg1, kseg2
-            addrExcept := true;
-        end if;
+        if (enable_i = ENABLE) then
+            addrExcept := false;
+            tlbExcept := true;
+            if (isKernelMode_i = NO and addr_i(31 downto 28) >= 4x"8") then
+                -- kseg0, kseg1, kseg2
+                addrExcept := true;
+            end if;
 
-        if (addr_i(31 downto 28) >= 4x"8" and addr_i(31 downto 28) < 4x"a") then
-            -- kseg0 (unmapped)
-            addr_o <= addr_i - 32x"80000000";
-            tlbExcept := false;
-        elsif (addr_i(31 downto 28) >= 4x"a" and addr_i(31 downto 28) < 4x"c") then
-            -- kseg1 (unmapped)
-            addr_o <= addr_i - 32x"a0000000";
-            tlbExcept := false;
-        else
-            -- kuseg, kseg2 (mapped)
-            for i in 0 to TLB_ENTRY_NUM - 1 loop
-                if (entries(i).hi(EntryHiVPN2Bits) = addr_i(EntryHiVPN2Bits)) then
-                    -- VPN match
-                    if (
-                        (entries(i).lo0(ENTRY_LO_G_BIT) and entries(i).lo1(ENTRY_LO_G_BIT)) = '1' or -- global
-                        entries(i).hi(EntryHiASIDBits) = entry_i.hi(EntryHiASIDBits) -- ASID match
-                    ) then
-                        if (addr_i(12) = '0') then
-                            targetLo := entries(i).lo0;
-                        else
-                            targetLo := entries(i).lo1;
-                        end if;
-                        if (targetLo(ENTRY_LO_V_BIT) = '1') then
-                            -- Valid
-                            if (targetLo(ENTRY_LO_D_BIT) = '1' or isLoad_i = '1') then
-                                -- Dirty or being read (Only dirty page can be written)
-                                addr_o <= targetLo(EntryLoPFNBits) & addr_i(11 downto 0);
-                                tlbExcept := false;
+            if (addr_i(31 downto 28) >= 4x"8" and addr_i(31 downto 28) < 4x"a") then
+                -- kseg0 (unmapped)
+                addr_o <= addr_i - 32x"80000000";
+                tlbExcept := false;
+            elsif (addr_i(31 downto 28) >= 4x"a" and addr_i(31 downto 28) < 4x"c") then
+                -- kseg1 (unmapped)
+                addr_o <= addr_i - 32x"a0000000";
+                tlbExcept := false;
+            else
+                -- kuseg, kseg2 (mapped)
+                for i in 0 to TLB_ENTRY_NUM - 1 loop
+                    if (entries(i).hi(EntryHiVPN2Bits) = addr_i(EntryHiVPN2Bits)) then
+                        -- VPN match
+                        if (
+                            (entries(i).lo0(ENTRY_LO_G_BIT) and entries(i).lo1(ENTRY_LO_G_BIT)) = '1' or -- global
+                            entries(i).hi(EntryHiASIDBits) = entry_i.hi(EntryHiASIDBits) -- ASID match
+                        ) then
+                            if (addr_i(12) = '0') then
+                                targetLo := entries(i).lo0;
+                            else
+                                targetLo := entries(i).lo1;
+                            end if;
+                            if (targetLo(ENTRY_LO_V_BIT) = '1') then
+                                -- Valid
+                                if (targetLo(ENTRY_LO_D_BIT) = '1' or isLoad_i = '1') then
+                                    -- Dirty or being read (Only dirty page can be written)
+                                    addr_o <= targetLo(EntryLoPFNBits) & addr_i(11 downto 0);
+                                    tlbExcept := false;
+                                end if;
                             end if;
                         end if;
                     end if;
+                end loop;
+            end if;
+
+            if (addrExcept) then
+                enable_o <= DISABLE;
+                if (isLoad_i = YES) then -- Conditional assignment in sequential code has not been supported in Vivado yet
+                    exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
+                else
+                    exceptCause_o <= ADDR_ERR_STORE_CAUSE;
                 end if;
-            end loop;
-        end if;
+            end if;
 
-        if (addrExcept) then
-            enable_o <= DISABLE;
-            if (isLoad_i = YES) then -- Conditional assignment in sequential code has not been supported in Vivado yet
-                exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
-            else
-                exceptCause_o <= ADDR_ERR_STORE_CAUSE;
+            if (tlbExcept) then
+                enable_o <= DISABLE;
+                if (isLoad_i = YES) then
+                    exceptCause_o <= TLB_LOAD_CAUSE;
+                else
+                    exceptCause_o <= TLB_STORE_CAUSE;
+                end if;
             end if;
         end if;
-
-        if (tlbExcept) then
-            enable_o <= DISABLE;
-            if (isLoad_i = YES) then
-                exceptCause_o <= TLB_LOAD_CAUSE;
-            else
-                exceptCause_o <= TLB_STORE_CAUSE;
-            end if;
-        end if;
+    end translate;
+begin
+    -- Translation
+    process (all) begin
+        translate(
+            enable_i => enable1_i,
+            isLoad_i => isLoad1_i,
+            addr_i => addr1_i,
+            addr_o => addr1_o,
+            enable_o => enable1_o,
+            exceptCause_o => exceptCause1_o
+        );
+    end process;
+    process (all) begin
+        translate(
+            enable_i => enable2_i,
+            isLoad_i => isLoad2_i,
+            addr_i => addr2_i,
+            addr_o => addr2_o,
+            enable_o => enable2_o,
+            exceptCause_o => exceptCause2_o
+        );
     end process;
 
     -- Store entry
