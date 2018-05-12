@@ -700,31 +700,37 @@ begin
         port map(
             rst => rst,
             clk => clk,
-            int_i => int_i,
+            we_i => wbCP0RegWe_9c,
+            waddr_i => wbCP0RegWriteAddr_9c,
             raddr_i => cp0RegReadAddr_6c,
             data_i => wbCP0RegData_9c,
-            waddr_i => wbCP0RegWriteAddr_9c,
-            we_i => wbCP0RegWe_9c,
+            int_i => int_i,
+            cp0Sel_i => cp0Sel_9c,
             data_o => data_c6,
+            timerInt_o => timerInt_o,
+
+            status_o => status_c8,
+            cause_o => cause_c8,
+            epc_o => epc_c8,
+
             exceptCause_i => exceptCause_8c,
             currentInstAddr_i => currentInstAddr_8c,
             currentAccessAddr_i => currentAccessAddr_8c,
             isInDelaySlot_i => isInDelaySlot_8c,
-            ctrlToWriteBadVAddr_i => ctrlToWriteBadVAddr_cb,
-            ctrlBadVAddr_i => ctrlBadVAddr_cb,
-            epc_o => epc_c8,
-            status_o => status_c8,
-            cause_o => cause_c8,
-            timerInt_o => timerInt_o,
             isKernelMode_o => isKernelMode_o,
-            entryFlush_o => entryFlush_o,
+
             cp0Sp_i => cp0Sp_9c,
             entryIndex_i => entryIndex_i,
             entryIndexValid_i => entryIndexValid_i,
+            entry_i => entry_i,
             entryIndex_o => entryIndex_o,
             entryWrite_o => entryWrite_o,
-            entry_i => entry_i,
             entry_o => entry_o,
+            entryFlush_o => entryFlush_o,
+
+            ctrlBadVAddr_i => ctrlBadVAddr_cb,
+            ctrlToWriteBadVAddr_i => ctrlToWriteBadVAddr_cb,
+
             cp0EBaseAddr_o => cp0EBaseAddr_cb
         );
     cp0Status_cb <= status_c8;

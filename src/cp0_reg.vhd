@@ -14,13 +14,14 @@ entity cp0_reg is
     port(
         -- input signals for CP0 processor
         -- refers to page 295 in that book
-        we_i: in std_logic;
         rst, clk: in std_logic;
+
+        we_i: in std_logic;
         waddr_i: in std_logic_vector(CP0RegAddrWidth);
         raddr_i: in std_logic_vector(CP0RegAddrWidth);
         data_i: in std_logic_vector(DataWidth);
         int_i: in std_logic_vector(IntWidth);
-
+        cp0Sel_i: in std_logic_vector(InstSelWidth);
         data_o: out std_logic_vector(DataWidth);
         timerInt_o: out std_logic;
 
@@ -34,11 +35,9 @@ entity cp0_reg is
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         currentInstAddr_i, currentAccessAddr_i: in std_logic_vector(AddrWidth);
         isIndelaySlot_i: in std_logic;
-
         isKernelMode_o: out std_logic;
 
         -- For MMU
-        entryFlush_o: out std_logic;
         cp0Sp_i: in CP0Special;
         entryIndex_i: in std_logic_vector(TLBIndexWidth);
         entryIndexValid_i: in std_logic;
@@ -46,6 +45,7 @@ entity cp0_reg is
         entryWrite_o: out std_logic;
         entry_i: in TLBEntry;
         entry_o: out TLBEntry;
+        entryFlush_o: out std_logic;
 
         -- Connect ctrl, for address error after eret instruction
         ctrlBadVAddr_i: in std_logic_vector(DataWidth);
