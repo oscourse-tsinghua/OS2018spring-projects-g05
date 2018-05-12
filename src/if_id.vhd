@@ -6,15 +6,17 @@ use work.except_const.all;
 entity if_id is
     port (
         rst, clk: in std_logic;
+
         pc_i: in std_logic_vector(AddrWidth);
         instEnable_i: in std_logic; -- Disabled for 1 period when powered up
         inst_i: in std_logic_vector(InstWidth);
-        exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        stall_i: in std_logic_vector(StallWidth);
         pc_o: out std_logic_vector(AddrWidth);
         valid_o: out std_logic; -- There IS an instruction, not pipeline stopping
         inst_o: out std_logic_vector(InstWidth);
+
+        exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-        stall_i: in std_logic_vector(StallWidth);
         flush_i: in std_logic
     );
 end if_id;

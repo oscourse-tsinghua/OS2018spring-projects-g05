@@ -8,6 +8,7 @@ use work.cp0_const.all;
 entity ex_mem is
     port (
         rst, clk: in std_logic;
+
         stall_i: in std_logic_vector(StallWidth);
         toWriteReg_i: in std_logic;
         writeRegAddr_i: in std_logic_vector(RegAddrWidth);
@@ -40,22 +41,24 @@ entity ex_mem is
         cp0RegData_i: in std_logic_vector(DataWidth);
         cp0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_i: in std_logic;
+        cp0Sp_i: in CP0Special;
+        cp0Sel_i: in std_logic_vector(CP0SelWidth);
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_o: out std_logic;
-        cp0Sp_i: in CP0Special;
         cp0Sp_o: out CP0Special;
+        cp0Sel_o: out std_logic_vector(CP0SelWidth);
 
         -- for exception --
         valid_i: in std_logic;
-        valid_o: out std_logic;
+        flush_i: in std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         isInDelaySlot_i: in std_logic;
         currentInstAddr_i: in std_logic_vector(AddrWidth);
+        valid_o: out std_logic;
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         isInDelaySlot_o: out std_logic;
-        currentInstAddr_o: out std_logic_vector(AddrWidth);
-        flush_i: in std_logic
+        currentInstAddr_o: out std_logic_vector(AddrWidth)
     );
 end ex_mem;
 
@@ -91,6 +94,7 @@ begin
                 cp0RegData_o <= (others => '0');
                 cp0RegWriteAddr_o <= (others => '0');
                 cp0Sp_o <= INVALID;
+                cp0Sel_o <= (others => '0');
 
                 valid_o <= NO;
 
@@ -116,6 +120,7 @@ begin
                 cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
                 cp0RegData_o <= cp0RegData_i;
                 cp0Sp_o <= cp0Sp_i;
+                cp0Sel_o <= cp0Sel_i;
 
                 exceptCause_o <= exceptCause_i;
                 isInDelaySlot_o <= isInDelaySlot_i;

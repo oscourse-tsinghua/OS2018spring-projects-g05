@@ -19,6 +19,7 @@ package inst_const is
     subtype InstJmpUnchangeIdx      is integer range 31 downto 28;
     subtype InstImmAddrIdx          is integer range 25 downto  0;
     subtype InstSaFuncIdx           is integer range 10 downto  3;
+    subtype InstSelIndex            is integer range  2 downto  0;
 
     subtype InstOpWidth             is integer range  5 downto  0;
     subtype InstRsWidth             is integer range  4 downto  0;
@@ -33,7 +34,8 @@ package inst_const is
     subtype InstJmpUnchangeWidth    is integer range  3 downto  0;
     subtype InstImmAddrWidth        is integer range 25 downto  0;
     subtype InstOffsetImmWidth      is integer range 17 downto  0;
-    subtype InstSaFuncWidth         is integer range 10 downto  0;
+    subtype InstSaFuncWidth         is integer range  7 downto  0;
+    subtype InstSelWidth            is integer range  2 downto  0;
 
     --
     -- Logic OP/FUNC codes

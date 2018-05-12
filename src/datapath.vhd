@@ -92,6 +92,7 @@ architecture bhv of datapath is
     signal valid_45: std_logic;
     signal exceptCause_45: std_logic_vector(ExceptionCauseWidth);
     signal currentInstAddr_45: std_logic_vector(AddrWidth);
+    signal cp0Sel_45: std_logic_vector(CP0SelWidth);
 
     -- Signals connecting id_ex and ex --
     signal alut_56: AluType;
@@ -106,6 +107,7 @@ architecture bhv of datapath is
     signal exExceptCause_56: std_logic_vector(ExceptionCauseWidth);
     signal exCurrentInstAddr_56: std_logic_vector(AddrWidth);
     signal valid_56: std_logic;
+    signal cp0Sel_56: std_logic_vector(CP0SelWidth);
 
     -- Signals connecting ex and id --
     signal exToWriteReg_64: std_logic;
@@ -125,7 +127,7 @@ architecture bhv of datapath is
     signal cp0RegData_67: std_logic_vector(DataWidth);
     signal cp0RegWriteAddr_67: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWe_67: std_logic;
-
+    signal cp0Sel_67: std_logic_vector(CP0SelWidth);
     signal cp0Sp_67: CP0Special;
     signal tempProduct_67, tempProduct_76: std_logic_vector(DoubleDataWidth);
     signal cnt_67, cnt_76: std_logic_vector(CntWidth);
@@ -160,6 +162,7 @@ architecture bhv of datapath is
     signal currentInstAddr_78: std_logic_vector(AddrWidth);
     signal isInDelaySlot_78: std_logic;
     signal valid_78: std_logic;
+    signal cp0Sel_78: std_logic_vector(CP0SelWidth);
 
     -- Signals connecting mem and id --
     signal memToWriteReg_84: std_logic;
@@ -183,6 +186,7 @@ architecture bhv of datapath is
     signal cp0RegWriteAddr_89: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWe_89: std_logic;
     signal cp0Sp_89: CP0Special;
+    signal cp0Sel_89: std_logic_vector(CP0SelWidth);
 
     -- Signals connecting mem_wb and regfile --
     signal toWriteReg_93: std_logic;
@@ -202,6 +206,7 @@ architecture bhv of datapath is
     signal wbCP0RegWriteAddr_9c: std_logic_vector(CP0RegAddrWidth);
     signal wbCP0RegWe_9c: std_logic;
     signal cp0Sp_9c: CP0Special;
+    signal cp0Sel_9c: std_logic_vector(CP0SelWidth);
 
     -- Signals connecting hi_lo and ex --
     signal hiData_a6, loData_a6: std_logic_vector(DataWidth);
@@ -312,23 +317,26 @@ begin
     id_ist: entity work.id
         port map (
             rst => rst,
+
             pc_i => pc_24,
             inst_i => inst_24,
             regData1_i => regData1_34,
             regData2_i => regData2_34,
+            regReadEnable1_o => regReadEnable1_43,
+            regReadEnable2_o => regReadEnable2_43,
+            regReadAddr1_o => regReadAddr1_43,
+            regReadAddr2_o => regReadAddr2_43,
+
             exToWriteReg_i => exToWriteReg_64,
             exWriteRegAddr_i => exWriteRegAddr_64,
             exWriteRegData_i => exWriteRegData_64,
             memToWriteReg_i => memToWriteReg_84,
             memWriteRegAddr_i => memWriteRegAddr_84,
             memWriteRegData_i => memWriteRegData_84,
-            isInDelaySlot_i => isInDelaySlot_54,
+
+            nextWillStall_i => stall(ID_STOP_IDX),
             toStall_o => idToStall_4b,
-            blNullify_o => blNullify_4b,
-            regReadEnable1_o => regReadEnable1_43,
-            regReadEnable2_o => regReadEnable2_43,
-            regReadAddr1_o => regReadAddr1_43,
-            regReadAddr2_o => regReadAddr2_43,
+
             alut_o => alut_45,
             memt_o => memt_45,
             lastMemt_i => lastMemt_64,
@@ -337,56 +345,69 @@ begin
             operandX_o => operandX_45,
             toWriteReg_o => toWriteReg_45,
             writeRegAddr_o => writeRegAddr_45,
-            isInDelaySlot_o => isInDelaySlot_45,
-            linkAddr_o => linkAddr_45,
+
+            isInDelaySlot_i => isInDelaySlot_54,
             nextInstInDelaySlot_o => nextInstInDelaySlot_45,
-            branchTargetAddress_o => branchTargetAddress_41,
             branchFlag_o => branchFlag_41,
+            branchTargetAddress_o => branchTargetAddress_41,
+            isInDelaySlot_o => isInDelaySlot_45,
+            blNullify_o => blNullify_4b,
+            linkAddr_o => linkAddr_45,
+
             valid_i => valid_24,
             valid_o => valid_45,
             exceptCause_i => exceptCause_24,
             exceptCause_o => exceptCause_45,
             currentInstAddr_o => currentInstAddr_45,
-            isIdEhb_o => isIdEhb_4b,
-            nextWillStall_i => stall(ID_STOP_IDX)
+
+            cp0Sel_o => cp0Sel_45,
+            isIdEhb_o => isIdEhb_4b
         );
 
     id_ex_ist: entity work.id_ex
         port map (
             rst => rst, clk => clk,
-            stall_i => stall,
-            alut_i => alut_45,
-            memt_i => memt_45,
+
             operand1_i => operand1_45,
             operand2_i => operand2_45,
             operandX_i => operandX_45,
             toWriteReg_i => toWriteReg_45,
             writeRegAddr_i => writeRegAddr_45,
-            idIsInDelaySlot_i => isInDelaySlot_45,
-            idLinkAddress_i => linkAddr_45,
-            nextInstInDelaySlot_i => nextInstInDelaySlot_45,
-            flush_i => flush_b5,
-            idExceptCause_i => exceptCause_45,
-            idCurrentInstAddr_i => currentInstAddr_45,
-            valid_i => valid_45,
-            alut_o => alut_56,
-            memt_o => memt_56,
             operand1_o => operand1_56,
             operand2_o => operand2_56,
             operandX_o => operandX_56,
             toWriteReg_o => toWriteReg_56,
             writeRegAddr_o => writeRegAddr_56,
-            isInDelaySlot_o => isInDelaySlot_54,
-            exIsInDelaySlot_o => exIsInDelaySlot_56,
-            exLinkAddress_o => exLinkAddress_56,
+
+            alut_i => alut_45,
+            memt_i => memt_45,
+            alut_o => alut_56,
+            memt_o => memt_56,
+            stall_i => stall,
+
+            idExceptCause_i => exceptCause_45,
             exExceptCause_o => exExceptCause_56,
+            valid_i => valid_45,
+            valid_o => valid_56,
+            flush_i => flush_b5,
+
+            idLinkAddress_i => linkAddr_45,
+            idIsInDelaySlot_i => isInDelaySlot_45,
+            nextInstInDelaySlot_i => nextInstInDelaySlot_45,
+            exLinkAddress_o => exLinkAddress_56,
+            exIsInDelaySlot_o => exIsInDelaySlot_56,
+            isInDelaySlot_o => isInDelaySlot_54,
+            idCurrentInstAddr_i => currentInstAddr_45,
             exCurrentInstAddr_o => exCurrentInstAddr_56,
-            valid_o => valid_56
+
+            cp0Sel_i => cp0Sel_45,
+            cp0Sel_o => cp0Sel_56
         );
 
     ex_ist: entity work.ex
         port map (
             rst => rst,
+
             alut_i => alut_56,
             memt_i => memt_56,
             operand1_i => operand1_56,
@@ -394,8 +415,8 @@ begin
             operandX_i => operandX_56,
             toWriteReg_i => toWriteReg_56,
             writeRegAddr_i => writeRegAddr_56,
-            isInDelaySlot_i => exIsInDelaySlot_56,
             linkAddress_i => exLinkAddress_56,
+            isInDelaySlot_i => exIsInDelaySlot_56,
             toStall_o => exToStall_6b,
             toWriteReg_o => toWriteReg_67,
             writeRegAddr_o => writeRegAddr_67,
@@ -425,22 +446,24 @@ begin
             tempProduct_o => tempProduct_67,
             cnt_o => cnt_67,
 
-            divEnable_o => divEnable_6d,
-            dividend_o => dividend_6d,
-            divider_o => divider_6d,
             divBusy_i => divBusy_d6,
             quotient_i => quotient_d6,
             remainder_i => remainder_d6,
+            divEnable_o => divEnable_6d,
+            dividend_o => dividend_6d,
+            divider_o => divider_6d,
 
             cp0RegData_i => data_c6,
             memCP0RegData_i => cp0RegData_86,
             memCP0RegWriteAddr_i => cp0RegWriteAddr_86,
             memCP0RegWe_i => cp0RegWe_86,
+            cp0Sel_i => cp0Sel_56,
             cp0RegReadAddr_o => cp0RegReadAddr_6c,
             cp0RegData_o => cp0RegData_67,
             cp0RegWriteAddr_o => cp0RegWriteAddr_67,
             cp0RegWe_o => cp0RegWe_67,
             cp0Sp_o => cp0Sp_67,
+            cp0Sel_o => cp0Sel_67,
 
             valid_i => valid_56,
             valid_o => valid_67,
@@ -471,6 +494,7 @@ begin
     ex_mem_ist: entity work.ex_mem
         port map (
             rst => rst, clk => clk,
+
             stall_i => stall,
             toWriteReg_i => toWriteReg_67,
             writeRegAddr_i => writeRegAddr_67,
@@ -503,18 +527,19 @@ begin
             cp0RegData_i => cp0RegData_67,
             cp0RegWriteAddr_i => cp0RegWriteAddr_67,
             cp0RegWe_i => cp0RegWe_67,
+            cp0Sp_i => cp0Sp_67,
+            cp0Sel_i => cp0Sel_67,
             cp0RegData_o => cp0RegData_78,
             cp0RegWriteAddr_o => cp0RegWriteAddr_78,
             cp0RegWe_o => cp0RegWe_78,
-
-            cp0Sp_i => cp0Sp_67,
             cp0Sp_o => cp0Sp_78,
+            cp0Sel_o => cp0Sel_78,
 
-            flush_i => flush_b7,
             valid_i => valid_67,
+            flush_i => flush_b7,
             exceptCause_i => exceptCause_67,
-            currentInstAddr_i => currentInstAddr_67,
             isInDelaySlot_i => isInDelaySlot_67,
+            currentInstAddr_i => currentInstAddr_67,
             valid_o => valid_78,
             exceptCause_o => exceptCause_78,
             currentInstAddr_o => currentInstAddr_78,
@@ -544,34 +569,34 @@ begin
             memAddr_i => memAddr_78,
             memData_i => memData_78,
             memExcept_i => dataExcept_i,
-            dataEnable_o => dataEnable_o,
-            dataWrite_o => dataWrite_o,
             loadedData_i => dataData_i,
             savingData_o => dataData_o,
             memAddr_o => dataAddr_o,
+            dataEnable_o => dataEnable_o,
+            dataWrite_o => dataWrite_o,
             dataByteSelect_o => dataByteSelect_o,
 
             cp0RegData_i => cp0RegData_78,
             cp0RegWriteAddr_i => cp0RegWriteAddr_78,
             cp0RegWe_i => cp0RegWe_78,
+            cp0Sp_i => cp0Sp_78,
+            cp0Sel_i => cp0Sel_78,
             cp0RegData_o => cp0RegData_89,
             cp0RegWriteAddr_o => cp0RegWriteAddr_89,
             cp0RegWe_o => cp0RegWe_89,
-
-            cp0Sp_i => cp0Sp_78,
             cp0Sp_o => cp0Sp_89,
+            cp0Sel_o => cp0Sel_89,
 
             valid_i => valid_78,
             exceptCause_i => exceptCause_78,
-            currentInstAddr_i => currentInstAddr_78,
             isInDelaySlot_i => isInDelaySlot_78,
-
+            currentInstAddr_i => currentInstAddr_78,
             cp0Status_i => status_c8,
             cp0Cause_i => cause_c8,
             exceptCause_o => exceptCause_8c,
-            currentInstAddr_o => currentInstAddr_8c,
-            currentAccessAddr_o => currentAccessAddr_8c,
             isInDelaySlot_o => isInDelaySlot_8c
+            currentInstAddr_o => currentInstAddr_8c,
+            currentAccessAddr_o => currentAccessAddr_8c
         );
     memToWriteReg_84 <= toWriteReg_89;
     memWriteRegAddr_84 <= writeRegAddr_89;
@@ -589,6 +614,7 @@ begin
     mem_wb_ist: entity work.mem_wb
         port map (
             rst => rst, clk => clk,
+
             stall_i => stall,
             toWriteReg_i => toWriteReg_89,
             writeRegAddr_i => writeRegAddr_89,
@@ -609,13 +635,14 @@ begin
             memCP0RegData_i => cp0RegData_89,
             memCP0RegWriteAddr_i => cp0RegWriteAddr_89,
             memCP0RegWe_i => cp0RegWe_89,
+            cp0Sp_i => cp0Sp_89,
+            cp0Sel_i => cp0Sel_89,
             wbCP0RegData_o => wbCP0RegData_9c,
             wbCP0RegWriteAddr_o => wbCP0RegWriteAddr_9c,
             wbCP0RegWe_o => wbCP0RegWe_9c,
-
-            flush_i => flush_b9,
-            cp0Sp_i => cp0Sp_89,
-            cp0Sp_o => cp0Sp_9c
+            cp0Sel_o => cp0Sel_9c,
+            cp0Sp_o => cp0Sp_9c,
+            flush_i => flush_b9
         );
     wbToWriteHi_96 <= toWriteHi_9a;
     wbToWriteLo_96 <= toWriteLo_9a;

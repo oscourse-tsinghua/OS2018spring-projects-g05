@@ -11,10 +11,15 @@ use work.except_const.all;
 entity id is
     port (
         rst: in std_logic;
+        
         pc_i: in std_logic_vector(AddrWidth);
         inst_i: in std_logic_vector(InstWidth);
         regData1_i: in std_logic_vector(DataWidth);
         regData2_i: in std_logic_vector(DataWidth);
+        regReadEnable1_o: out std_logic;
+        regReadEnable2_o: out std_logic;
+        regReadAddr1_o: out std_logic_vector(RegAddrWidth);
+        regReadAddr2_o: out std_logic_vector(RegAddrWidth);
 
         -- Push Forward --
         exToWriteReg_i: in std_logic;
@@ -24,11 +29,9 @@ entity id is
         memWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
         memWriteRegData_i: in std_logic_vector(DataWidth);
 
+        nextWillStall_i: in std_logic;
         toStall_o: out std_logic;
-        regReadEnable1_o: out std_logic;
-        regReadEnable2_o: out std_logic;
-        regReadAddr1_o: out std_logic_vector(RegAddrWidth);
-        regReadAddr2_o: out std_logic_vector(RegAddrWidth);
+
         alut_o: out AluType;
         memt_o: out MemType;
         lastMemt_i: in MemType; -- memt of last instruction, used to determine stalling
@@ -37,16 +40,15 @@ entity id is
         operandX_o: out std_logic_vector(DataWidth);
         toWriteReg_o: out std_logic;
         writeRegAddr_o: out std_logic_vector(RegAddrWidth);
-        isIdEhb_o: out std_logic;
 
         -- For ju instructions --
         isInDelaySlot_i: in std_logic;
         nextInstInDelaySlot_o: out std_logic;
         branchFlag_o: out std_logic;
         branchTargetAddress_o: out std_logic_vector(AddrWidth);
-        linkAddr_o: out std_logic_vector(AddrWidth);
         isInDelaySlot_o: out std_logic;
         blNullify_o: out std_logic; -- for "branch likely": skipping the delay slot is equivalent to nullifying next inst
+        linkAddr_o: out std_logic_vector(AddrWidth);
 
         -- For Exceptions --
         valid_i: in std_logic;
@@ -55,7 +57,11 @@ entity id is
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         currentInstAddr_o: out std_logic_vector(AddrWidth);
 
-        nextWillStall_i: in std_logic
+        -- hazard barrier --
+        isIdEhb_o: out std_logic;
+
+        -- interact with cp0 --
+        cp0Sel_o: out std_logic_vector(InstSelWidth)
     );
 end id;
 
@@ -145,6 +151,7 @@ architecture bhv of id is
     signal immInstrAddr: std_logic_vector(AddrWidth);
     signal instImmSign: std_logic_vector(InstOffsetImmWidth);
     signal instOffsetImm: std_logic_vector(InstOffsetImmWidth);
+    signal instSel:  std_logic_vector(InstSelWidth);
 
 begin
 
@@ -157,6 +164,7 @@ begin
     instFunc <= inst_i(InstFuncIdx);
     instImm  <= inst_i(InstImmIdx);
     instAddr <= inst_i(InstAddrIdx);
+    instSel  <= inst_i(instSelIdx);
     instImmSign <= inst_i(InstImmSignIdx) & "00000000000000000";
     instOffsetImm <= "0" & inst_i(InstUnsignedImmIdx) & "00";
 
@@ -204,6 +212,7 @@ begin
         regReadEnable2_o <= DISABLE;
         regReadAddr2_o <= (others => '0');
         isIdEhb_o <= NO;
+        cp0Sel_o <= (others => '0');
 
         -- Assign 'X' to them, otherwise it will introduce a level latch to keep prior values
         operand1 := (others => 'X');
@@ -858,6 +867,7 @@ begin
                                 toWriteReg_o <= NO;
                                 writeRegAddr_o <= (others => '0');
                                 isInvalid := NO;
+                                cp0Sel_o <= instSel;
                             end if;
 
                         when RS_MF =>
@@ -868,6 +878,7 @@ begin
                                 toWriteReg_o <= YES;
                                 writeRegAddr_o <= instRt;
                                 isInvalid := NO;
+                                cp0Sel_o <= instSel;
                             end if;
 
                         when RS_WAIT_OR_TLBINVF =>
