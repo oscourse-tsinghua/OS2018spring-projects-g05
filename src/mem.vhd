@@ -40,12 +40,10 @@ entity mem is
         cp0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_i: in std_logic;
         cp0Sp_i: in CP0Special;
-        cp0Sel_i: in std_logic_vector(CP0SelWidth);
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_o: out std_logic;
         cp0Sp_o: out CP0Special;
-        cp0Sel_o: out std_logic_vector(CP0SelWidth);
 
         -- for exception --
         valid_i: in std_logic;
@@ -113,7 +111,6 @@ begin
             cp0RegWe_o <= cp0RegWe_i;
             cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
             cp0RegData_o <= cp0RegData_i;
-            cp0Sel_o <= cp0Sel_i;
 
             if (exceptCause_i = NO_CAUSE) then
                 -- Byte selection --

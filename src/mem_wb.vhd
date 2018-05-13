@@ -26,12 +26,10 @@ entity mem_wb is
         memCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
         memCP0RegWe_i: in std_logic;
         cp0Sp_i: in CP0Special;
-        cp0Sel_i: in std_logic_vector(CP0SelWidth);
         wbCP0RegData_o: out std_logic_vector(DataWidth);
         wbCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         wbCP0RegWe_o: out std_logic;
         cp0Sp_o: out CP0Special;
-        cp0Sel_o: out std_logic_vector(CP0SelWidth);
 
         -- for exception --
         flush_i: in std_logic
@@ -61,7 +59,6 @@ begin
                 wbCP0RegWriteAddr_o <= (others => '0');
 
                 cp0Sp_o <= INVALID;
-                cp0Sel_o(others => '0');
             elsif (stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                 toWriteReg_o <= toWriteReg_i;
                 writeRegAddr_o <= writeRegAddr_i;
@@ -77,7 +74,6 @@ begin
                 wbCP0RegData_o <= memCP0RegData_i;
 
                 cp0Sp_o <= cp0Sp_i;
-                cp0Sel_o <= cp0Sel_i;
             end if;
         end if;
     end process;

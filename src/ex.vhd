@@ -59,13 +59,13 @@ entity ex is
         memCP0RegData_i: in std_logic_vector(DataWidth);
         memCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
         memCP0RegWe_i: in std_logic;
-        cp0Sel_i: in std_logic_vector(CP0SelWidth);
+        cp0Sel_i: in std_logic_vector(SelWidth);
         cp0RegReadAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_o: out std_logic;
         cp0Sp_o: out CP0Special;
-        cp0Sel_o: out std_logic_vector(CP0SelWidth);
+        cp0Sel_o: out std_logic_vector(SelWidth);
 
         -- for exception --
         valid_i: in std_logic;

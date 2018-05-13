@@ -61,7 +61,7 @@ entity id is
         isIdEhb_o: out std_logic;
 
         -- interact with cp0 --
-        cp0Sel_o: out std_logic_vector(InstSelWidth)
+        cp0Sel_o: out std_logic_vector(SelWidth)
     );
 end id;
 
@@ -151,7 +151,7 @@ architecture bhv of id is
     signal immInstrAddr: std_logic_vector(AddrWidth);
     signal instImmSign: std_logic_vector(InstOffsetImmWidth);
     signal instOffsetImm: std_logic_vector(InstOffsetImmWidth);
-    signal instSel:  std_logic_vector(InstSelWidth);
+    signal instSel:  std_logic_vector(SelWidth);
 
 begin
 
@@ -164,8 +164,8 @@ begin
     instFunc <= inst_i(InstFuncIdx);
     instImm  <= inst_i(InstImmIdx);
     instAddr <= inst_i(InstAddrIdx);
-    instSel  <= inst_i(instSelIdx);
-    instImmSign <= inst_i(InstImmSignIdx) & "00000000000000000";
+    instSel  <= inst_i(InstSelIdx);
+    instImmSign <= inst_i(InstImmSignIdx) & 17ub"0";
     instOffsetImm <= "0" & inst_i(InstUnsignedImmIdx) & "00";
 
     -- calculated the addresses that maybe used by jmp instructions first --
@@ -860,7 +860,7 @@ begin
                 when OP_COP0 =>
                     case (instRs) is
                         when RS_MT =>
-                            if (inst_i(InstSaFuncIdx) = "00000000") then
+                            if (inst_i(InstSaFuncIdx) = 8ub"0") then
                                 alut_o <= ALU_MTC0;
                                 oprSrc1 := REGID;
                                 oprSrc2 := REG;
@@ -871,7 +871,7 @@ begin
                             end if;
 
                         when RS_MF =>
-                            if (inst_i(InstSaFuncIdx) = "00000000") then
+                            if (inst_i(InstSaFuncIdx) = 8ub"0") then
                                 alut_o <= ALU_MFC0;
                                 oprSrc1 := REGID;
                                 oprSrc2 := INVALID;
@@ -894,7 +894,7 @@ begin
 
                         -- Note: in release 6, we need to clear register rt --
                         when RS_MFH =>
-                            if (inst_i(InstSaFuncIdx) = "00000000") then
+                            if (inst_i(InstSaFuncIdx) = 8ub"0") then
                                 alut_o <= ALU_MFH;
                                 oprSrc1 := INVALID;
                                 oprSrc2 := REG;
@@ -965,20 +965,20 @@ begin
                     end if;
 
                 when SA =>
-                    operand1 := "000000000000000000000000000" & instSa;
+                    operand1 := 27ub"0" & instSa;
 
                 when IMM =>
-                    operand1 := "0000000000000000" & instImm;
+                    operand1 := 16ub"0" & instImm;
 
                 when SGN_IMM =>
                     if (instImm(15) = '0') then
-                        operand1 := "0000000000000000" & instImm;
+                        operand1 := 16ub"0" & instImm;
                     else
-                        operand1 := "1111111111111111" & instImm;
+                        operand1 := 16sb"1" & instImm;
                     end if;
 
                 when REGID =>
-                    operand1 := "000000000000000000000000000" & instRd;
+                    operand1 := 27ub"0" & instRd;
 
                 when others =>
                     operand1 := (others => '0');
@@ -993,13 +993,13 @@ begin
                     -- Push Forward --
                     if (memToWriteReg_i = YES and memWriteRegAddr_i = instRt) then
                         operand2 := memWriteRegData_i;
-                        if (instRt = "00000") then
+                        if (instRt = 5ub"0") then
                             operand2 := (others => '0');
                         end if;
                     end if;
                     if (exToWriteReg_i = YES and exWriteRegAddr_i = instRt) then
                         operand2 := exWriteRegData_i;
-                        if (instRt = "00000") then
+                        if (instRt = 5ub"0") then
                             operand2 := (others => '0');
                         elsif (lastMemt_i /= INVALID) then
                             toStall := PIPELINE_STOP;

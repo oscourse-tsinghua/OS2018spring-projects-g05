@@ -46,8 +46,8 @@ entity id_ex is
         exCurrentInstAddr_o: out std_logic_vector(AddrWidth);
 
         -- interact with cp0 --
-        cp0Sel_i: in std_logic_vector(instSelWidth);
-        cp0Sel_o: out std_logic_vector(instSelWidth)
+        cp0Sel_i: in std_logic_vector(SelWidth);
+        cp0Sel_o: out std_logic_vector(SelWidth)
     );
 end id_ex;
 

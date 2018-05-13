@@ -8,12 +8,11 @@ use ieee.numeric_std.all;
 use work.global_const.all;
 use work.except_const.all;
 use work.cp0_const.all;
+use work.cp0_config_const.all;
 use work.mmu_const.all;
 
 entity cp0_reg is
     port(
-        -- input signals for CP0 processor
-        -- refers to page 295 in that book
         rst, clk: in std_logic;
 
         we_i: in std_logic;
@@ -21,12 +20,9 @@ entity cp0_reg is
         raddr_i: in std_logic_vector(CP0RegAddrWidth);
         data_i: in std_logic_vector(DataWidth);
         int_i: in std_logic_vector(IntWidth);
-        cp0Sel_i: in std_logic_vector(InstSelWidth);
+        cp0Sel_i: in std_logic_vector(SelWidth);
         data_o: out std_logic_vector(DataWidth);
         timerInt_o: out std_logic;
-
-        -- output signals for CP0 processor
-        -- refers to page 295 in that book still
         status_o: out std_logic_vector(DataWidth);
         cause_o: out std_logic_vector(DataWidth);
         epc_o: out std_logic_vector(DataWidth);
@@ -41,11 +37,12 @@ entity cp0_reg is
         cp0Sp_i: in CP0Special;
         entryIndex_i: in std_logic_vector(TLBIndexWidth);
         entryIndexValid_i: in std_logic;
+        entry_i: in TLBEntry;
         entryIndex_o: out std_logic_vector(TLBIndexWidth);
         entryWrite_o: out std_logic;
-        entry_i: in TLBEntry;
         entry_o: out TLBEntry;
         entryFlush_o: out std_logic;
+        pageMask_o: out std_logic_vector(AddrWidth);
 
         -- Connect ctrl, for address error after eret instruction
         ctrlBadVAddr_i: in std_logic_vector(DataWidth);
@@ -66,7 +63,12 @@ begin
     cause_o <= curArr(CAUSE_REG);
     epc_o <= curArr(EPC_REG);
 
-    data_o <= curArr(conv_integer(raddr_i));
+    data_o <= PRID_CONSTANT when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and cp0Sel_i = "000") else
+              CONFIG1_CONSTANT when (conv_integer(raddr_i) = CONFIG_REG and cp0Sel_i = "001") else
+              curArr(BAD_V_ADDR_REG) when (conv_integer(raddr_i) = BAD_V_ADDR_REG and cp0Sel_i = "000") else -- BADVADDR and config1 is the only two registers we care with sel = 1 --
+              curArr(PRID_OR_EBASE_REG) when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and cp0Sel_i = "001") else
+              curArr(conv_integer(raddr_i)) when cp0Sel_i = "000" else 
+              32ux"0";
 
     timerInt_o <= timerInt;
 
@@ -83,7 +85,10 @@ begin
     entry_o.lo0 <= curArr(ENTRY_LO0_REG);
     entry_o.lo1 <= curArr(ENTRY_LO1_REG);
 
-    cp0EBaseAddr_o <= curArr(EBASE_REG);
+    -- we can still do this because PRID is a preset constant --
+    cp0EBaseAddr_o <= curArr(PRID_OR_EBASE_REG);
+
+    pageMask_o <= 4ub"0" & curArr(PAGEMASK_REG)(PageMaskMaskBits) & 12ub"0";
 
     process (all) begin
         for i in 0 to CP0_MAX_ID loop
@@ -95,12 +100,27 @@ begin
                     curArr(CAUSE_REG)(CauseIpSoftBits) <= data_i(CauseIpSoftBits);
                     curArr(CAUSE_REG)(CAUSE_IV_BIT) <= data_i(CAUSE_IV_BIT);
                     curArr(CAUSE_REG)(CAUSE_WP_BIT) <= data_i(CAUSE_WP_BIT);
-                when EBASE_REG =>
-                    curArr(EBASE_REG)(EbaseAddrBits) <= data_i(EbaseAddrBits);
                 when ENTRY_LO0_REG =>
                     curArr(ENTRY_LO0_REG)(EntryLoRWBits) <= data_i(EntryLoRWBits);
                 when ENTRY_LO1_REG =>
                     curArr(ENTRY_LO1_REG)(EntryLoRWBits) <= data_i(EntryLoRWBits);
+                when CONFIG_REG =>
+                    if (cp0Sel_i = 3ub"0") then
+                        -- only config0 could be writable --
+                        if (data_i(2 downto 1) = "01") then
+                            -- only write 2 or 3 should be allowed here --
+                            curArr(CONFIG_REG)(Config0K0Bits) <= data_i(Config0K0Bits);
+                        end if;
+                    end if;
+                when PRID_OR_EBASE_REG =>
+                    -- PRID is not writable, but ebase is --
+                    if (cp0Sel_i = "001") then
+                        curArr(PRID_OR_EBASE_REG)(EbaseAddrBits) <= data_i(EbaseAddrBits);
+                    end if;
+                when CONTEXT_REG =>
+                    curArr(CONTEXT_REG)(ContextPTEBaseBits) <= data_i(ContextPTEBaseBits);
+                when PAGEMASK_REG =>
+                    curArr(PAGEMASK_REG)(PageMaskMaskBits) <= data_i(PageMaskMaskBits);
                 when others =>
                     curArr(conv_integer(waddr_i)) <= data_i;
             end case;
@@ -124,10 +144,12 @@ begin
                 regArr(STATUS_REG) <= (
                     STATUS_CP0_BIT => '1', STATUS_BEV_BIT => '1', STATUS_ERL_BIT => '1', StatusImBits => '1', others => '0'
                 );
+                regArr(CONTEXT_REG) <= (others => '0');
+                regArr(PAGEMASK_REG) <= (others => '0');
                 regArr(CAUSE_REG) <= (others => '0');
                 regArr(EPC_REG) <= (others => '0');
-                regArr(EBASE_REG) <= (31 => '1', others => '0');
-                regArr(CONFIG_REG) <= (others => '0');
+                regArr(PRID_OR_EBASE_REG) <= (31 => '1', others => '0');
+                regArr(CONFIG_REG) <= (31 => '1', 7 => '1', 1 => '1', 0 => '1', others => '0');
                 regArr(WATCHLO_REG) <= (others => '0');
                 regArr(WATCHHI_REG) <= (others => '0');
 
@@ -187,6 +209,7 @@ begin
                     when TLB_LOAD_CAUSE|TLB_STORE_CAUSE|ADDR_ERR_LOAD_OR_IF_CAUSE|ADDR_ERR_STORE_CAUSE =>
                         regArr(BAD_V_ADDR_REG) <= currentAccessAddr_i;
                         regArr(ENTRY_HI_REG)(EntryHiVPN2Bits) <= currentAccessAddr_i(EntryHiVPN2Bits);
+                        regArr(CONTEXT_REG)(ContextBadVPNBits) <= currentAccessAddr_i(EntryHiVPN2Bits);
                     when others =>
                         null;
                 end case;

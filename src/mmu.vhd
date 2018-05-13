@@ -29,7 +29,8 @@ entity mmu is
         entryWrite_i: in std_logic;
         entryFlush_i: in std_logic;
         entry_i: in TLBEntry;
-        entry_o: out TLBEntry
+        entry_o: out TLBEntry;
+        pageMask_i: in std_logic_vector(AddrWidth)
     );
 end mmu;
 
@@ -64,7 +65,7 @@ begin
         else
             -- kuseg, kseg2 (mapped)
             for i in 0 to TLB_ENTRY_NUM - 1 loop
-                if (entries(i).hi(EntryHiVPN2Bits) = addr_i(EntryHiVPN2Bits)) then
+                if ((entries(i).hi(EntryHiVPN2Bits) or pageMask_i(EntryHiVPN2Bits)) = (addr_i(EntryHiVPN2Bits) or pageMask_i(EntryHiVPN2Bits))) then
                     -- VPN match
                     if (
                         (entries(i).lo0(ENTRY_LO_G_BIT) and entries(i).lo1(ENTRY_LO_G_BIT)) = '1' or -- global
