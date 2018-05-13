@@ -7,16 +7,16 @@ package cp0_config_const is
     /* 
     	config registers specification:
     	for config0:
-    	    bit 31		1, because config1 is present
-    	    bit 30:25	5ub"0", we do not have a fixed mapping MMU
-         	bit 24:16	8ub"0", this field is reserved for implementation
-        	bit 15	 	0, because processor is running in little-endian mode
-        	bit 14:13	2ub"0", architecture type is mips32
-    	    bit 12:10	3ub"0", revision level is release 1
-    	    bit 9:7		3ub"1", we have a standard TLB
-    	    bit 6:4		this field must be zero
-    	    bit 3		0, instruction cache is not virtual
-    	    bit 2:0		3, KSeg0 cacheability, 2 for uncached and 3 for cacheable
+    	    bit 31      1, because config1 is present
+    	    bit 30:25   5ub"0", we do not have a fixed mapping MMU
+         	bit 24:16   8ub"0", this field is reserved for implementation
+        	bit 15      0, because processor is running in little-endian mode
+        	bit 14:13   2ub"0", architecture type is mips32
+    	    bit 12:10   3ub"0", revision level is release 1
+    	    bit 9:7     3ub"1", we have a standard TLB
+    	    bit 6:4     3ub"0", this field must be zero
+    	    bit 3       0, instruction cache is not virtual
+    	    bit 2:0     3, KSeg0 cacheability, 2 for uncached and 3 for cacheable
             only bit 2:0 is writable(but only write "010" or "011" is allowed here)
 
         for config1:
