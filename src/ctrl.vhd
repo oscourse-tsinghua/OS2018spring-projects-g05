@@ -34,6 +34,7 @@ entity ctrl is
         exceptionBase_i: in std_logic_vector(DataWidth);
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         cp0Status_i, cp0Cause_i, cp0Epc_i: in std_logic_vector(DataWidth);
+        debugPoint_i: in std_logic;
         newPC_o: out std_logic_vector(AddrWidth);
         flush_o: out std_logic;
         toWriteBadVAddr_o: out std_logic;

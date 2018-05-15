@@ -475,7 +475,7 @@ begin
                             oprSrc1 := INVALID;
                             oprSrc2 := INVALID;
                             toWriteReg_o <= NO;
-                            exceptCause_o <= BREAK_CAUSE;
+                            exceptCause_o <= BREAKPOINT_CAUSE;
                             isInvalid := NO;
 
                         when FUNC_TNE =>

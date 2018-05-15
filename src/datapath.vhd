@@ -251,6 +251,7 @@ architecture bhv of datapath is
     signal exceptCause_8c: std_logic_vector(ExceptionCauseWidth);
     signal currentInstAddr_8c, currentAccessAddr_8c: std_logic_vector(AddrWidth);
     signal isInDelaySlot_8c: std_logic;
+    signal memDataWrite_8c: std_logic;
 
     -- Signals connecting cp0 and ctrl --
     signal cp0Status_cb: std_logic_vector(DataWidth);
@@ -259,6 +260,7 @@ architecture bhv of datapath is
     signal cp0EBaseAddr_cb: std_logic_vector(DataWidth);
     signal ctrlToWriteBadVAddr_cb: std_logic;
     signal ctrlBadVAddr_cb: std_logic_vector(DataWidth);
+    signal debugPoint_cb: std_logic;
 
     -- Signals connecting mem and ctrl --
     signal exceptCause_8b: std_logic_vector(ExceptionCauseWidth);
@@ -569,7 +571,7 @@ begin
             savingData_o => dataData_o,
             memAddr_o => dataAddr_o,
             dataEnable_o => dataEnable_o,
-            dataWrite_o => dataWrite_o,
+            dataWrite_o => memDataWrite_8c,
             dataByteSelect_o => dataByteSelect_o,
 
             cp0RegData_i => cp0RegData_78,
@@ -604,6 +606,7 @@ begin
     cp0RegWe_86 <= cp0RegWe_89;
     exceptCause_8b <= exceptCause_8c;
     memcp0regWe_8b <= cp0regWe_89;
+    dataWrite_o <= memDataWrite_8c;
 
     mem_wb_ist: entity work.mem_wb
         port map (
@@ -673,6 +676,7 @@ begin
             newPC_o => newPC_b1,
             exceptionBase_i => cp0EBaseAddr_cb,
             exceptCause_i => exceptCause_8b,
+            debugPoint_i => debugPoint_cb,
             cp0Status_i => cp0Status_cb,
             cp0Cause_i => cp0Cause_cb,
             cp0Epc_i => cp0Epc_cb,
@@ -708,8 +712,10 @@ begin
             exceptCause_i => exceptCause_8c,
             currentInstAddr_i => currentInstAddr_8c,
             currentAccessAddr_i => currentAccessAddr_8c,
+            memDataWrite_i => memDataWrite_8c,
             isInDelaySlot_i => isInDelaySlot_8c,
             isKernelMode_o => isKernelMode_o,
+            debugPoint_o => debugPoint_cb,
 
             cp0Sp_i => cp0Sp_9c,
             entryIndex_i => entryIndex_i,
