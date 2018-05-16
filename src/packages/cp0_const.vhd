@@ -103,6 +103,9 @@ package cp0_const is
     subtype WatchHiASIDBits is integer range 23 downto 16;
     subtype WatchHiMaskBits is integer range 11 downto 3;
     subtype WatchHiW1CBits is integer range 2 downto 0; -- write 1 to clear
+    constant WATCHHI_I_BIT: integer := 2;
+    constant WATCHHI_R_BIT: integer := 1;
+    constant WATCHHI_W_BIT: integer := 0;
 
     --
     -- Bits of WatchLo register

@@ -68,7 +68,7 @@ begin
         else
             toWriteBadVAddr <= NO;
             badVAddr <= (others => '0');
-            if (exceptCause_i /= NO_CAUSE) then
+            if ((exceptCause_i /= NO_CAUSE) or debugPoint_i = '1') then
                 flush_o <= '1';
                 stall_o <= (others => '0');
                 if (cp0Status_i(STATUS_BEV_BIT) = '0') then

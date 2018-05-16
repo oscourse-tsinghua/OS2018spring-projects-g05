@@ -88,7 +88,7 @@ begin
     entry_o.lo0 <= curArr(ENTRY_LO0_REG);
     entry_o.lo1 <= curArr(ENTRY_LO1_REG);
     -- debugPoint_o <= debugPoint;
-    debugPoint_o <= '0';
+    debugPoint_o <= debugPoint;
 
     -- we can still do this because PRID is a preset constant --
     cp0EBaseAddr_o <= curArr(PRID_OR_EBASE_REG);
@@ -130,7 +130,7 @@ begin
                     curArr(WATCHHI_REG)(WATCHHI_G_BIT) <= data_i(WATCHHI_G_BIT);
                     curArr(WATCHHI_REG)(WatchHiASIDBits) <= data_i(WatchHiASIDBits);
                     curArr(WATCHHI_REG)(WatchHiMaskBits) <= data_i(WatchHiMaskBits);
-                    --curArr(WATCHHI_REG)(WatchHiW1CBits) <= data_i(WatchHiW1CBits);
+                    curArr(WATCHHI_REG)(WatchHiW1CBits) <= curArr(WATCHHI_REG)(WatchHiW1CBits) and (not data_i(WatchHiW1CBits));
                 when others =>
                     curArr(conv_integer(waddr_i)) <= data_i;
             end case;
@@ -204,19 +204,21 @@ begin
                 end if;
 
                 debugPoint <= NO;
-                /*
                 if (regArr(WATCHHI_REG)(WATCHHI_G_BIT) = '1' or regArr(WATCHHI_REG)(WatchHiASIDBits) = regArr(ENTRY_HI_REG)(EntryHiASIDBits)) then
-                    if (regArr(WATCHLO_REG)(WatchLoVAddrBits) = currentInstAddr_i(WatchLoVAddrBits) and regArr(WATCHLO_REG)(WATCHLO_I_BIT) = '1') then
+                    if ((regArr(WATCHLO_REG)(WatchLoVAddrBits) = currentInstAddr_i(WatchLoVAddrBits)) and regArr(WATCHLO_REG)(WATCHLO_I_BIT) = '1') then
                         debugPoint <= YES;
+                        regArr(WATCHHI_REG)(WATCHHI_I_BIT) <= '1';
                     end if;
                     if (regArr(WATCHLO_REG)(WatchLoVAddrBits) = currentAccessAddr_i(WatchLoVAddrBits)) then
-                        if ((regArr(WATCHLO_REG)(WATCHLO_R_BIT) = '1' and memDataWrite_i = '0')
-                            or (regArr(WATCHLO_REG)(WATCHLO_W_BIT) = '1' and memDataWrite_i = '1')) then
+                        if (regArr(WATCHLO_REG)(WATCHLO_R_BIT) = '1' and memDataWrite_i = '0') then
                             debugPoint <= YES;
+                            regArr(WATCHHI_REG)(WATCHHI_R_BIT) <= '1';
+                        elsif (regArr(WATCHLO_REG)(WATCHLO_W_BIT) = '1' and memDataWrite_i = '1') then
+                            debugPoint <= YES;
+                            regArr(WATCHHI_REG)(WATCHHI_W_BIT) <= '1';
                         end if;
                     end if;
                 end if;
-                */
 
                 if (((exceptCause_i /= NO_CAUSE) and (exceptCause_i /= ERET_CAUSE)) or (debugPoint = YES)) then
                     regArr(STATUS_REG)(STATUS_EXL_BIT) <= '1';

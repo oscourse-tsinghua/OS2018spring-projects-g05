@@ -25,7 +25,6 @@ RUN mtc0 $2, $2
 RUN tlbwr
 
 # 0x14
-# I don't know why should I write TLBINVF in this format.
 RUN lui $1, 0x4
 
 # 0x18
