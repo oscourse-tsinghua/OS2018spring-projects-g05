@@ -48,6 +48,7 @@ package inst_const is
     constant OP_ORI: std_logic_vector(InstOpWidth) := "001101";
     constant OP_XORI: std_logic_vector(InstOpWidth) := "001110";
     constant OP_LUI: std_logic_vector(InstOpWidth) := "001111";
+    constant OP_PREF: std_logic_vector(InstOpWidth) := "110011";
 
     --
     -- Algebraic FUNC codes
@@ -165,6 +166,7 @@ package inst_const is
     constant RS_WAIT_OR_TLBINVF: std_logic_vector(InstRsWidth) := "10000";
     constant FUNC_SYSCALL: std_logic_vector(InstFuncWidth) := "001100";
     constant FUNC_ERET: std_logic_vector(InstFuncWidth) := "011000";
+    constant FUNC_DERET: std_logic_vector(InstFuncWidth) := "011111";
     constant FUNC_BREAK: std_logic_vector(InstFuncWidth) := "001101";
     constant FUNC_SDBBP: std_logic_vector(InstFuncWidth) := "111111";
 

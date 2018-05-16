@@ -31,6 +31,7 @@ entity cp0_reg is
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         currentInstAddr_i, currentAccessAddr_i: in std_logic_vector(AddrWidth);
         memDataWrite_i: in std_logic;
+        isWatchIssued_i: in std_logic;
         isIndelaySlot_i: in std_logic;
         isKernelMode_o: out std_logic;
         debugPoint_o: out std_logic;
@@ -51,7 +52,8 @@ entity cp0_reg is
         ctrlToWriteBadVAddr_i: in std_logic;
 
         -- Connect ctrl, for ExceptNormalBaseAddress modification
-        cp0EBaseAddr_o: out std_logic_vector(DataWidth)
+        cp0EBaseAddr_o: out std_logic_vector(DataWidth);
+        depc_o: out std_logic_vector(AddrWidth)
     );
 end cp0_reg;
 
@@ -65,6 +67,7 @@ begin
     status_o <= curArr(STATUS_REG);
     cause_o <= curArr(CAUSE_REG);
     epc_o <= curArr(EPC_REG);
+    depc_o <= curArr(DEPC_REG);
 
     data_o <= PRID_CONSTANT when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and cp0Sel_i = "000") else
               CONFIG1_CONSTANT when (conv_integer(raddr_i) = CONFIG_REG and cp0Sel_i = "001") else
@@ -87,8 +90,10 @@ begin
     entry_o.hi <= curArr(ENTRY_HI_REG);
     entry_o.lo0 <= curArr(ENTRY_LO0_REG);
     entry_o.lo1 <= curArr(ENTRY_LO1_REG);
-    -- debugPoint_o <= debugPoint;
-    debugPoint_o <= debugPoint;
+    debugPoint_o <= debugPoint or 
+        (regArr(CAUSE_REG)(CAUSE_WP_BIT) and 
+        (not regArr(STATUS_REG)(STATUS_EXL_BIT)) and 
+        (not regArr(STATUS_REG)(STATUS_ERL_BIT)));
 
     -- we can still do this because PRID is a preset constant --
     cp0EBaseAddr_o <= curArr(PRID_OR_EBASE_REG);
@@ -104,7 +109,9 @@ begin
                 when CAUSE_REG =>
                     curArr(CAUSE_REG)(CauseIpSoftBits) <= data_i(CauseIpSoftBits);
                     curArr(CAUSE_REG)(CAUSE_IV_BIT) <= data_i(CAUSE_IV_BIT);
-                    curArr(CAUSE_REG)(CAUSE_WP_BIT) <= data_i(CAUSE_WP_BIT);
+                    if (data_i(CAUSE_WP_BIT) = '0') then -- we cannot write 1 when it's 0 --
+                        curArr(CAUSE_REG)(CAUSE_WP_BIT) <= data_i(CAUSE_WP_BIT);
+                    end if;
                 when ENTRY_LO0_REG =>
                     curArr(ENTRY_LO0_REG)(EntryLoRWBits) <= data_i(EntryLoRWBits);
                 when ENTRY_LO1_REG =>
@@ -208,19 +215,37 @@ begin
                     if ((regArr(WATCHLO_REG)(WatchLoVAddrBits) = currentInstAddr_i(WatchLoVAddrBits)) and regArr(WATCHLO_REG)(WATCHLO_I_BIT) = '1') then
                         debugPoint <= YES;
                         regArr(WATCHHI_REG)(WATCHHI_I_BIT) <= '1';
+                        if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
+                            regArr(DEPC_REG) <= currentInstAddr_i - 4;
+                        else
+                            regArr(DEPC_REG) <= currentInstAddr_i;
+                        end if;
                     end if;
                     if (regArr(WATCHLO_REG)(WatchLoVAddrBits) = currentAccessAddr_i(WatchLoVAddrBits)) then
                         if (regArr(WATCHLO_REG)(WATCHLO_R_BIT) = '1' and memDataWrite_i = '0') then
                             debugPoint <= YES;
                             regArr(WATCHHI_REG)(WATCHHI_R_BIT) <= '1';
+                            regArr(DEPC_REG) <= currentAccessAddr_i;
                         elsif (regArr(WATCHLO_REG)(WATCHLO_W_BIT) = '1' and memDataWrite_i = '1') then
                             debugPoint <= YES;
                             regArr(WATCHHI_REG)(WATCHHI_W_BIT) <= '1';
+                            regArr(DEPC_REG) <= currentAccessAddr_i;
                         end if;
                     end if;
                 end if;
+                if ((debugPoint = YES) and ((regArr(STATUS_REG)(STATUS_ERL_BIT) or regArr(STATUS_REG)(STATUS_EXL_BIT)) = '1')) then
+                    -- Then we should pending the watch_cause --
+                    debugPoint <= NO;
+                    regArr(CAUSE_REG)(CAUSE_WP_BIT) <= '1';
+                else
+                    regArr(CAUSE_REG)(CauseExcCodeBits) <= WATCH_CAUSE;
+                end if;
 
-                if (((exceptCause_i /= NO_CAUSE) and (exceptCause_i /= ERET_CAUSE)) or (debugPoint = YES)) then
+                if (isWatchIssued_i = '1') then
+                    regArr(CAUSE_REG)(CAUSE_WP_BIT) <= '0';
+                end if;
+
+                if (((exceptCause_i /= NO_CAUSE) and (exceptCause_i /= ERET_CAUSE))) then
                     regArr(STATUS_REG)(STATUS_EXL_BIT) <= '1';
                     if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
                         regArr(EPC_REG) <= currentInstAddr_i - 4;
@@ -229,8 +254,7 @@ begin
                         regArr(EPC_REG) <= currentInstAddr_i;
                         regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '0';
                     end if;
-                    regArr(CAUSE_REG)(CauseExcCodeBits) <= exceptCause_i when debugPoint = NO
-                                                                         else BREAKPOINT_CAUSE;
+                    regArr(CAUSE_REG)(CauseExcCodeBits) <= exceptCause_i;
                 end if;
                 case (exceptCause_i) is
                     when ERET_CAUSE =>

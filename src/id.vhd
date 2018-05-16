@@ -913,6 +913,10 @@ begin
                                 isInvalid := NO;
                                 exceptCause_o <= ERET_CAUSE;
 
+                            when FUNC_DERET =>
+                                isInvalid := NO;
+                                exceptCause_o <= DERET_CAUSE;
+
                             when FUNC_TLBWI =>
                                 isInvalid := NO;
                                 alut_o <= ALU_TLBWI;

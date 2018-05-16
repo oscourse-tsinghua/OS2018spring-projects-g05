@@ -25,6 +25,8 @@ package except_const is
     constant INVALID_INST_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"a";
     constant OVERFLOW_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"c";
     constant TRAP_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"d";
-    constant ERET_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"e";
-    -- Cause of eret is not in standard. We do this because 14~22 is reserved
+    constant ERET_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"10";
+    constant DERET_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"11";
+    constant WATCH_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"17";
+    -- Cause of eret and deret is not in standard. We do this because 16~17 is implementation-dependent
 end except_const;

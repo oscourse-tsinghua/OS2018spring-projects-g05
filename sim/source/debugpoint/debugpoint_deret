@@ -1,0 +1,46 @@
+# Line starting with '#' is comment
+# The comment should be in seperated lines
+
+# Import a package
+# Grammar: "IMPORT <packageName>"
+# "IMPORT" should be in UPPER CASE, same below
+
+# Define a signal to be checked
+# Grammar: "DEFINE <signalName> <sub_instace_name.sub_sub_instance_name.(...).signal_name>: <type>"
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+# Execute an assembly instruction
+# Grammar: "RUN <assembly>"
+
+RUN lui $2, 0x8000
+RUN ori $2, $2, 0x0024
+# Move to entry Hi
+RUN mtc0 $2, $18
+# 0x10
+RUN nop
+RUN nop
+RUN nop
+RUN nop
+# 0x20
+RUN nop
+RUN nop
+RUN nop
+RUN nop
+# 0x30
+RUN lui $7, 0xabcd
+RUN nop
+RUN j 0x30
+RUN nop
+# 0x40
+RUN mtc0 $0, $18, 0
+RUN nop
+RUN nop
+RUN nop
+RUN nop
+RUN deret
+RUN nop
+RUN nop
+RUN nop
+RUN nop
+RUN nop
+ASSERT 40 reg(7) 32ux"abcd0000"

@@ -29,8 +29,9 @@ package cp0_const is
     constant CONFIG_REG:        integer := 16;
     constant WATCHLO_REG:       integer := 18;
     constant WATCHHI_REG:       integer := 19;
+    constant DEPC_REG:          integer := 24;
     -- Max implemented ID of CP0 registers
-    constant CP0_MAX_ID: integer := 19;
+    constant CP0_MAX_ID: integer := 24;
     
 
     --
@@ -103,7 +104,7 @@ package cp0_const is
     subtype WatchHiASIDBits is integer range 23 downto 16;
     subtype WatchHiMaskBits is integer range 11 downto 3;
     subtype WatchHiW1CBits is integer range 2 downto 0; -- write 1 to clear
-    constant WATCHHI_I_BIT: integer := 2;
+    constant WATCHHI_I_BIT: integer := 2; -- though WATCH_I_BIT is enough, write this to keep the name consistent
     constant WATCHHI_R_BIT: integer := 1;
     constant WATCHHI_W_BIT: integer := 0;
 

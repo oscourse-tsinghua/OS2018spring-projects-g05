@@ -261,6 +261,8 @@ architecture bhv of datapath is
     signal ctrlToWriteBadVAddr_cb: std_logic;
     signal ctrlBadVAddr_cb: std_logic_vector(DataWidth);
     signal debugPoint_cb: std_logic;
+    signal depc_cb: std_logic_vector(AddrWidth);
+    signal isWatchIssued_bc: std_logic;
 
     -- Signals connecting mem and ctrl --
     signal exceptCause_8b: std_logic_vector(ExceptionCauseWidth);
@@ -680,6 +682,8 @@ begin
             cp0Status_i => cp0Status_cb,
             cp0Cause_i => cp0Cause_cb,
             cp0Epc_i => cp0Epc_cb,
+            depc_i => depc_cb,
+            isWatchIssued_o => isWatchIssued_bc,
             toWriteBadVAddr_o => ctrlToWriteBadVAddr_cb,
             badVAddr_o => ctrlBadVAddr_cb,
             isIdEhb_i => isIdEhb_4b,
@@ -708,12 +712,14 @@ begin
             status_o => status_c8,
             cause_o => cause_c8,
             epc_o => epc_c8,
+            depc_o => depc_cb,
 
             exceptCause_i => exceptCause_8c,
             currentInstAddr_i => currentInstAddr_8c,
             currentAccessAddr_i => currentAccessAddr_8c,
             memDataWrite_i => memDataWrite_8c,
             isInDelaySlot_i => isInDelaySlot_8c,
+            isWatchIssued_i => isWatchIssued_bc,
             isKernelMode_o => isKernelMode_o,
             debugPoint_o => debugPoint_cb,
 
