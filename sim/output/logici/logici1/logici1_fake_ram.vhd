@@ -15,7 +15,9 @@ entity logici1_fake_ram is
         data_i: in std_logic_vector(DataWidth);
         addr_i: in std_logic_vector(AddrWidth);
         byteSelect_i: in std_logic_vector(3 downto 0);
-        data_o: out std_logic_vector(DataWidth)
+        data_o: out std_logic_vector(DataWidth);
+        sync_i: in std_logic_vector(2 downto 0);
+        scCorrect_o: out std_logic
     );
 end logici1_fake_ram;
 
@@ -24,6 +26,8 @@ architecture bhv of logici1_fake_ram is
     signal words: WordsArray;
     signal wordAddr: integer;
     signal bitSelect: std_logic_vector(DataWidth);
+    signal llBit: std_logic;
+    signal llLoc: std_logic_vector(AddrWidth);
 begin
     wordAddr <= to_integer(unsigned(addr_i(31 downto 2)));
 
@@ -49,6 +53,26 @@ words(8) <= x"33_33_02_38"; -- RUN xori $2, $0, 0x3333
 words(9) <= x"66_66_01_34"; -- RUN ori $1, $0, 0x6666
             elsif ((enable_i = '1') and (write_i = '1')) then
                 words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
+            end if;
+        end if;
+    end process;
+
+    process(clk) begin
+        if (falling_edge(clk)) then
+            scCorrect_o <= '0';
+            if (sync_i(0) = '1') then
+                llBit <= '1';
+                llLoc <= addr_i;
+            elsif (sync_i(1) = '1' and llBit = '1') then
+                if (addr_i = llLoc) then
+                    scCorrect_o <= '1';
+                    llBit <= '0';
+                end if;
+            elsif (addr_i = llLoc) then
+                llBit <= '0';
+            end if;
+            if (sync_i(2) = '1') then
+                llBit <= '0';
             end if;
         end if;
     end process;

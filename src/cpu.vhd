@@ -22,6 +22,8 @@ entity cpu is
         devDataLoad_i: in std_logic_vector(DataWidth);
         devPhysicalAddr_o: out std_logic_vector(AddrWidth);
         devByteSelect_o: out std_logic_vector(3 downto 0);
+        scCorrect_i: in std_logic;
+        sync_o: out std_logic_vector(2 downto 0);
 
         int_i: in std_logic_vector(IntWidth);
         timerInt_o: out std_logic
@@ -173,7 +175,9 @@ begin
             entryFlush_o => entryFlush,
             entry_i => entryLoad,
             entry_o => entrySave,
-            pageMask_o => pageMask
+            pageMask_o => pageMask,
+            scCorrect_i => scCorrect_i,
+            sync_o => sync_o
         );
 
 end bhv;

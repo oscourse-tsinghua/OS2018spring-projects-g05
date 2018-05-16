@@ -104,6 +104,8 @@ async_transmitter
 wire devEnable, devWrite, devBusy;
 wire[31:0] dataSave, dataLoad, addr;
 wire[3:0] byteSelect;
+wire scCorrect;
+wire[2:0] sync;
 wire[5:0] int;
 wire timerInt, comInt, usbInt, ethInt;
 assign int = {timerInt, 1'b0, 1'b0, comInt, ethInt, usbInt};
@@ -135,6 +137,8 @@ cpu #(
     .devDataLoad_i(dataLoad),
     .devPhysicalAddr_o(addr),
     .devByteSelect_o(byteSelect),
+    .sync_o(sync),
+    .scCorrect_i(scCorrect),
     .int_i(int),
     .timerInt_o(timerInt)
 );
@@ -222,7 +226,10 @@ devctrl devctrl_ist(
     .ledEnable_o(ledEnable),
     .ledData_o(ledData),
     .numEnable_o(numEnable),
-    .numData_o(numData)
+    .numData_o(numData),
+
+    .sync_i(sync),
+    .scCorrect_o(scCorrect)
 );
 
 // Please don't pass inout port into a sub-module

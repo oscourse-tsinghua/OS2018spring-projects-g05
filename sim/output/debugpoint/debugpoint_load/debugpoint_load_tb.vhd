@@ -21,6 +21,8 @@ architecture bhv of debugpoint_load_tb is
     signal devDataSave, devDataLoad: std_logic_vector(DataWidth);
     signal devPhysicalAddr: std_logic_vector(AddrWidth);
     signal devByteSelect: std_logic_vector(3 downto 0);
+    signal sync: std_logic_vector(2 downto 0);
+    signal scCorrect: std_logic;
 
     signal int: std_logic_vector(IntWidth);
     signal timerInt: std_logic;
@@ -34,7 +36,9 @@ begin
             data_i => devDataSave,
             addr_i => devPhysicalAddr,
             byteSelect_i => devByteSelect,
-            data_o => devDataLoad
+            data_o => devDataLoad,
+            scCorrect_o => scCorrect,
+            sync_i => sync
         );
 
     cpu_ist: entity work.cpu
@@ -57,7 +61,9 @@ begin
             devByteSelect_o => devByteSelect,
 
             int_i => int,
-            timerInt_o => timerInt
+            timerInt_o => timerInt,
+            sync_o => sync,
+            scCorrect_i => scCorrect
         );
     int <= (0 => timerInt, others => '0');
 

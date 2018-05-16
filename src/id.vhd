@@ -644,6 +644,16 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
+                when OP_LL =>
+                    oprSrc1 := REG;
+                    oprSrc2 := INVALID;
+                    oprSrcX := IMM;
+                    alut_o <= ALU_LOAD;
+                    memt_o <= MEM_LL;
+                    toWriteReg_o <= YES;
+                    writeRegAddr_o <= instRt;
+                    isInvalid := NO;
+
                 -- For LWL and LWR, we load rt here, fill the bytes to be loaded
                 -- in MEM, and write it back in WB. This might be slow because a
                 -- LWL is usually followed by a LWR, in which case there will be
@@ -690,6 +700,16 @@ begin
                     oprSrcX := IMM;
                     alut_o <= ALU_STORE;
                     memt_o <= MEM_SW;
+                    isInvalid := NO;
+
+                when OP_SC =>
+                    oprSrc1 := REG;
+                    oprSrc2 := REG;
+                    oprSrcX := IMM;
+                    alut_o <= ALU_STORE;
+                    memt_o <= MEM_SC;
+                    toWriteReg_o <= YES;
+                    writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
                 when OP_SWL =>

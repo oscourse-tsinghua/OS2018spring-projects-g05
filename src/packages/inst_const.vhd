@@ -90,6 +90,8 @@ package inst_const is
     constant OP_SW: std_logic_vector(InstOpWidth) := "101011";
     constant OP_SWL: std_logic_vector(InstOpWidth) := "101010";
     constant OP_SWR: std_logic_vector(InstOpWidth) := "101110";
+    constant OP_LL: std_logic_vector(InstOpWidth) := "110000";
+    constant OP_SC: std_logic_vector(InstOpWidth) := "111000";
 
     --
     -- Arith OP/FUNC codes

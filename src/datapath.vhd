@@ -24,9 +24,11 @@ entity datapath is
         dataEnable_o: out std_logic;
         dataWrite_o: out std_logic;
         dataData_i: in std_logic_vector(DataWidth);
+        scCorrect_i: in std_logic;
         dataData_o: out std_logic_vector(DataWidth);
         dataAddr_o: out std_logic_vector(AddrWidth);
         dataByteSelect_o: out std_logic_vector(3 downto 0);
+        sync_o: out std_logic_vector(2 downto 0);
 
         instExcept_i, dataExcept_i: in std_logic_vector(ExceptionCauseWidth);
         ifToStall_i, memToStall_i: in std_logic;
@@ -570,11 +572,13 @@ begin
             memData_i => memData_78,
             memExcept_i => dataExcept_i,
             loadedData_i => dataData_i,
+            scCorrect_i => scCorrect_i,
             savingData_o => dataData_o,
             memAddr_o => dataAddr_o,
             dataEnable_o => dataEnable_o,
             dataWrite_o => memDataWrite_8c,
             dataByteSelect_o => dataByteSelect_o,
+            sync_o => sync_o,
 
             cp0RegData_i => cp0RegData_78,
             cp0RegWriteAddr_i => cp0RegWriteAddr_78,

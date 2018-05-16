@@ -54,7 +54,11 @@ entity mem is
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         isInDelaySlot_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth);
-        currentAccessAddr_o: out std_logic_vector(AddrWidth)
+        currentAccessAddr_o: out std_logic_vector(AddrWidth);
+
+        -- for sync --
+        scCorrect_i: in std_logic;
+        sync_o: out std_logic_vector(2 downto 0) -- bit0 for ll, bit1 for sc, 2 for flush caused by eret
     );
 end mem;
 
@@ -98,6 +102,7 @@ begin
             cp0RegWe_o <= NO;
             cp0RegWriteAddr_o <= (others => '0');
             cp0RegData_o <= (others => '0');
+            sync_o <= (others => '0');
         else
             toWriteReg_o <= toWriteReg_i;
             writeRegAddr_o <= writeRegAddr_i;
@@ -112,10 +117,14 @@ begin
             cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
             cp0RegData_o <= cp0RegData_i;
 
+            sync_o(2) <= '1' when exceptCause_i = ERET_CAUSE else '0';
+            sync_o(1) <= '1' when memt_i = MEM_SC else '0';
+            sync_o(0) <= '1' when memt_i = MEM_LL else '0';
+
             if (exceptCause_i = NO_CAUSE) then
                 -- Byte selection --
                 case memt_i is
-                    when MEM_LW|MEM_SW =>
+                    when MEM_LW|MEM_SW|MEM_LL|MEM_SC =>
                         savingData_o <= memData_i;
                         dataByteSelect_o <= "1111";
                     when MEM_LWL|MEM_SWL =>
@@ -204,7 +213,7 @@ begin
                     when MEM_LHU =>
                         writeRegData_o <= std_logic_vector(resize(unsigned(loadedShort), 32));
                         dataEnable_o <= ENABLE;
-                    when MEM_LW =>
+                    when MEM_LW|MEM_LL =>
                         writeRegData_o <= loadedData_i;
                         dataEnable_o <= ENABLE;
                     when MEM_LWL|MEM_LWR =>
@@ -213,6 +222,10 @@ begin
                     when MEM_SB|MEM_SH|MEM_SW|MEM_SWL|MEM_SWR =>
                         dataWrite <= YES;
                         dataEnable_o <= ENABLE;
+                    when MEM_SC =>
+                        dataWrite <= YES;
+                        dataEnable_o <= ENABLE;
+                        writeRegData_o <= 31ub"0" & scCorrect_i;
                     when others =>
                         null;
                 end case;
