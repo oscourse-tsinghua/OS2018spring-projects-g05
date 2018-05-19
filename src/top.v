@@ -84,11 +84,12 @@ clk_ctrl clk_ctrl_ist(
     .clk_out1(clkMain)
 );
 */
-wire clk200;
+wire clk200, clk100;
 clk_wiz clk_wiz_ist(
     .clk_in1(clk_in),
     .clk_out1(clk200),
-    .clk_out2(clkMain)
+    .clk_out2(clkMain),
+    .clk_out3(clk100)
 );
 
 // Serial COM
@@ -163,8 +164,8 @@ wire[31:0] comDataSave, comDataLoad;
 wire usbEnable, usbReadEnable, usbWriteEnable, usbBusy;
 wire[31:0] usbReadData, usbWriteData;
 
-wire ethEnable, ethReadEnable, ethWriteBusy;
-wire[31:0] ethDataLoad, ethDataSave;
+wire ethEnable, ethReadEnable, ethBusy;
+wire[31:0] ethReadData, ethWriteData;
 
 wire[31:0] bootDataLoad;
 
@@ -215,9 +216,9 @@ devctrl devctrl_ist(
 
     .ethEnable_o(ethEnable),
     .ethReadEnable_o(ethReadEnable),
-    .ethDataLoad_i(ethDataLoad),
-    .ethDataSave_o(ethDataSave),
-    .ethWriteBusy_i(ethWriteBusy),
+    .ethDataLoad_i(ethReadData),
+    .ethDataSave_o(ethWriteData),
+    .ethBusy_i(ethBusy),
 
     .ledEnable_o(ledEnable),
     .ledData_o(ledData),
@@ -296,7 +297,7 @@ vga_ctrl vga_ctrl_ist(
 */
 
 ddr3_ctrl_encap ddr3_ctrl_encap_ist(
-    .clk_100(clk_in),
+    .clk_100(clk100),
     .clk_200(clk200),
     .clk_25(clkMain),
     .rst(rst),
@@ -401,6 +402,38 @@ eth_ctrl eth_ctrl_ist(
 assign dm9k_data = ethTriStateWrite ? ethDataSave[15:0] : 16'hzzzz;
 assign ethDataLoad = {16'b0, dm9k_data};
 */
+
+wire eth_mdio_i, eth_mdio_o, eth_mdio_t;
+eth_ctrl_encap eth_ctrl_encap_ist(
+    .clk_100(clk100),
+    .clk_25(clkMain),
+    .rst(rst),
+    .enable_i(ethEnable),
+    .readEnable_i(ethReadEnable),
+    .addr_i(addr),
+    .readData_o(ethReadData),
+    .writeData_i(ethWriteData),
+    .byteSelect_i(byteSelect),
+    .busy_o(ethBusy),
+
+    .eth_rst_n(eth_rst_n),
+    .eth_txclk(eth_txclk),
+    .eth_rxclk(eth_rxclk),
+    .eth_txen(eth_txen),
+    .eth_rxdv(eth_rxdv),
+    .eth_txerr(eth_txerr),
+    .eth_rxerr(eth_rxerr),
+    .eth_txd(eth_txd),
+    .eth_rxd(eth_rxd),
+    .eth_coll(eth_coll),
+    .eth_crs(eth_crs),
+    .eth_mdio_i(eth_mdio_i),
+    .eth_mdio_o(eth_mdio_o),
+    .eth_mdio_t(eth_mdio_t),
+    .eth_mdc(eth_mdc)
+);
+assign eth_mdio = eth_mdio_t ? 1'bz : eth_mdio_o;
+assign eth_mdio_i = eth_mdio;
 
 seg7_ctrl seg7_ctrl_ist(
     .clk(clkMain),
