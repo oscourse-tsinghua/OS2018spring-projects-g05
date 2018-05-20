@@ -107,6 +107,8 @@ wire[31:0] dataSave, dataLoad, addr;
 wire[3:0] byteSelect;
 wire[5:0] int;
 wire timerInt, comInt, usbInt, ethInt;
+assign usbInt = 0;
+assign ethInt = 0;
 assign int = {timerInt, 1'b0, 1'b0, comInt, ethInt, usbInt};
 // NOTE: 1'b0 cannot be written as 0
 // MIPS standard requires int[5] = timer
@@ -379,29 +381,6 @@ lattice_ram_ctrl lattice_ram_ctrl_ist(
     .readData_o(ltcDataLoad),
     .busy_o(ltcBusy)
 );
-
-/*
-wire ethTriStateWrite;
-eth_ctrl eth_ctrl_ist(
-    .clk(clkMain),
-    .rst(rst),
-    .enable_i(ethEnable),
-    .readEnable_i(ethReadEnable),
-    .addr_i(addr),
-    .writeBusy_o(ethWriteBusy),
-    .int_o(ethInt),
-    .triStateWrite_o(ethTriStateWrite),
-
-    .ethInt_i(dm9k_int),
-    .ethCmd_o(dm9k_cmd),
-    .ethWE_o(dm9k_we_n),
-    .ethRD_o(dm9k_rd_n),
-    .ethCS_o(dm9k_cs_n),
-    .ethRst_o(dm9k_rst_n)
-);
-assign dm9k_data = ethTriStateWrite ? ethDataSave[15:0] : 16'hzzzz;
-assign ethDataLoad = {16'b0, dm9k_data};
-*/
 
 wire eth_mdio_i, eth_mdio_o, eth_mdio_t;
 eth_ctrl_encap eth_ctrl_encap_ist(
