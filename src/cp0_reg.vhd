@@ -73,7 +73,7 @@ begin
               CONFIG1_CONSTANT when (conv_integer(raddr_i) = CONFIG_REG and cp0Sel_i = "001") else
               curArr(BAD_V_ADDR_REG) when (conv_integer(raddr_i) = BAD_V_ADDR_REG and cp0Sel_i = "000") else -- BADVADDR and config1 is the only two registers we care with sel = 1 --
               curArr(PRID_OR_EBASE_REG) when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and cp0Sel_i = "001") else
-              curArr(conv_integer(raddr_i)) when cp0Sel_i = "000" else 
+              curArr(conv_integer(raddr_i)) when cp0Sel_i = "000" else
               32ux"0";
 
     timerInt_o <= timerInt;
@@ -90,9 +90,9 @@ begin
     entry_o.hi <= curArr(ENTRY_HI_REG);
     entry_o.lo0 <= curArr(ENTRY_LO0_REG);
     entry_o.lo1 <= curArr(ENTRY_LO1_REG);
-    debugPoint_o <= debugPoint or 
-        (regArr(CAUSE_REG)(CAUSE_WP_BIT) and 
-        (not regArr(STATUS_REG)(STATUS_EXL_BIT)) and 
+    debugPoint_o <= debugPoint or
+        (regArr(CAUSE_REG)(CAUSE_WP_BIT) and
+        (not regArr(STATUS_REG)(STATUS_EXL_BIT)) and
         (not regArr(STATUS_REG)(STATUS_ERL_BIT)));
 
     -- we can still do this because PRID is a preset constant --
@@ -137,7 +137,7 @@ begin
                     curArr(WATCHHI_REG)(WATCHHI_G_BIT) <= data_i(WATCHHI_G_BIT);
                     curArr(WATCHHI_REG)(WatchHiASIDBits) <= data_i(WatchHiASIDBits);
                     curArr(WATCHHI_REG)(WatchHiMaskBits) <= data_i(WatchHiMaskBits);
-                    curArr(WATCHHI_REG)(WatchHiW1CBits) <= curArr(WATCHHI_REG)(WatchHiW1CBits) and (not data_i(WatchHiW1CBits));
+                    curArr(WATCHHI_REG)(WatchHiW1CBits) <= regArr(WATCHHI_REG)(WatchHiW1CBits) and (not data_i(WatchHiW1CBits));
                 when others =>
                     curArr(conv_integer(waddr_i)) <= data_i;
             end case;
