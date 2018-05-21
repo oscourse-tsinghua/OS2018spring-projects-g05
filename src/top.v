@@ -177,6 +177,9 @@ wire[15:0] ledData;
 wire[31:0] numData;
 
 devctrl devctrl_ist(
+    .clk(clkMain),
+    .rst(rst),
+
     .devEnable_i(devEnable),
     .devWrite_i(devWrite),
     .devBusy_o(devBusy),
