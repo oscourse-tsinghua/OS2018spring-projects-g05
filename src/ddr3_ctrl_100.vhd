@@ -53,12 +53,12 @@ end ddr3_ctrl_100;
 
 architecture bhv of ddr3_ctrl_100 is
 
-    signal wid, rid: std_logic_vector(7 downto 0);
+    signal rid: std_logic_vector(7 downto 0);
     signal recv_cnt: std_logic_vector(BurstLenWidth);
     signal readData_reg: BurstDataType;
     signal readData_last: std_logic_vector(31 downto 0);
     signal round_zeros: std_logic_vector((BURST_LEN_WIDTH + 1) downto 0);
-    
+
     type ReadState is (INIT, READ);
     signal rstate: ReadState;
     type WriteState is (INIT, AOK, DOK, WRITE);
@@ -69,7 +69,7 @@ architecture bhv of ddr3_ctrl_100 is
 
 begin
 
-    axi_awid_o <= wid;
+    axi_awid_o <= 8ub"0";
     axi_awaddr_o <= addr_i(26 downto 0);
     axi_awlen_o <= 8ub"0";
     axi_awsize_o <= "010";
@@ -84,7 +84,7 @@ begin
     axi_bready_o <= '1' when wstate = WRITE else '0';
 
     -------
-    
+
     rid <= 8ub"0";
 
     axi_arid_o <= rid;

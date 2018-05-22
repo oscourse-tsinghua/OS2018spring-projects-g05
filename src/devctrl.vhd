@@ -59,7 +59,7 @@ entity devctrl is
         ethReadEnable_o: out std_logic;
         ethDataSave_o: out std_logic_vector(DataWidth);
         ethDataLoad_i: in std_logic_vector(DataWidth);
-        ethWriteBusy_i: in std_logic;
+        ethBusy_i: in std_logic;
 
         ledEnable_o: out std_logic;
         ledData_o: out std_logic_vector(15 downto 0);
@@ -143,14 +143,13 @@ begin
                 ltcReadEnable_o <= ENABLE;
                 devDataLoad_o <= ltcDataLoad_i;
                 devBusy_o <= ltcBusy_i;
-            elsif (devPhysicalAddr_i >= 32ux"1c020100" and devPhysicalAddr_i <= 32ux"1c020104") then
+            elsif (devPhysicalAddr_i >= 32ux"1c030000" and devPhysicalAddr_i <= 32ux"1c03ffff") then
                 -- Ethernet --
-                -- 1c020100: index port; 1c020104: data port (required by U-Boot)--
                 ethEnable_o <= ENABLE;
                 ethReadEnable_o <= not devWrite_i;
                 ethDataSave_o <= devDataSave_i;
                 devDataLoad_o <= ethDataLoad_i;
-                devBusy_o <= ethWriteBusy_i;
+                devBusy_o <= ethBusy_i;
             elsif (devPhysicalAddr_i >= 32ux"1c020000" and devPhysicalAddr_i <= 32ux"1c020004") then
                 -- USB --
                 usbEnable_o <= ENABLE;
