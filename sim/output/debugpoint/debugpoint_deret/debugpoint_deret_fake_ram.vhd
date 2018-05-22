@@ -45,7 +45,7 @@ begin
 words(1) <= x"00_80_02_3c"; -- RUN lui $2, 0x8000
 words(2) <= x"24_00_42_34"; -- RUN ori $2, $2, 0x0024
 words(3) <= x"00_90_82_40"; -- RUN mtc0 $2, $18
-words(4) <= x"00_00_00_00"; -- RUN nop
+words(4) <= x"00_60_80_40"; -- RUN mtc0 $0, $12
 words(5) <= x"00_00_00_00"; -- RUN nop
 words(6) <= x"00_00_00_00"; -- RUN nop
 words(7) <= x"00_00_00_00"; -- RUN nop
@@ -74,22 +74,25 @@ words(26) <= x"00_00_00_00"; -- RUN nop
         end if;
     end process;
 
+    scCorrect_o <= llBit when addr_i = llLoc else '0';
+
     process(clk) begin
-        if (falling_edge(clk)) then
-            scCorrect_o <= '0';
-            if (sync_i(0) = '1') then
-                llBit <= '1';
-                llLoc <= addr_i;
-            elsif (sync_i(1) = '1' and llBit = '1') then
-                if (addr_i = llLoc) then
-                    scCorrect_o <= '1';
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                llBit <= '0';
+                llLoc <= (others => 'X');
+            else
+                if (sync_i(0) = '1') then -- LL
+                    llBit <= '1';
+                    llLoc <= addr_i;
+                elsif (sync_i(1) = '1') then -- SC
+                    llBit <= '0';
+                elsif (addr_i = llLoc) then -- Others
                     llBit <= '0';
                 end if;
-            elsif (addr_i = llLoc) then
-                llBit <= '0';
-            end if;
-            if (sync_i(2) = '1') then
-                llBit <= '0';
+                if (sync_i(2) = '1') then -- Flush
+                    llBit <= '0';
+                end if;
             end if;
         end if;
     end process;

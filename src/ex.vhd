@@ -434,11 +434,12 @@ begin
                 when ALU_MFC0 =>
                     cp0RegReadAddr_o <= operand1_i(4 downto 0);
                     writeRegData_o <= cp0RegData_i;
-
+                    
                     -- Push forward for cp0 --
                     if (memCP0RegWe_i = YES and memCP0RegWriteAddr_i = operand1_i(4 downto 0)) then
                         writeRegData_o <= memCP0RegData_i;
                     end if;
+
 
                 when ALU_MTC0 =>
                     cp0RegWriteAddr_o <= operand1_i(4 downto 0);

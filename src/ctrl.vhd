@@ -34,13 +34,11 @@ entity ctrl is
         exceptionBase_i: in std_logic_vector(DataWidth);
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         cp0Status_i, cp0Cause_i, cp0Epc_i: in std_logic_vector(DataWidth);
-        debugPoint_i: in std_logic;
         depc_i: in std_logic_vector(AddrWidth);
         newPC_o: out std_logic_vector(AddrWidth);
         flush_o: out std_logic;
         toWriteBadVAddr_o: out std_logic;
         badVAddr_o: out std_logic_vector(AddrWidth);
-        isWatchIssued_o: out std_logic;
         
         -- Hazard Barrier
         isIdEhb_i: in std_logic;
@@ -61,7 +59,6 @@ begin
         newPC_o <= (others => '0');
         newPC := (others => 'X');
         isMtc0 := excp0regWe_i or memcp0regWe_i or wbcp0regWe_i;
-        isWatchIssued_o <= NO;
         if (rst = RST_ENABLE) then
             stall_o <= (others => '0');
             flush_o <= '0';
@@ -71,7 +68,7 @@ begin
         else
             toWriteBadVAddr <= NO;
             badVAddr <= (others => '0');
-            if ((exceptCause_i /= NO_CAUSE) or debugPoint_i = '1') then
+            if (exceptCause_i /= NO_CAUSE) then
                 flush_o <= '1';
                 stall_o <= (others => '0');
                 if (cp0Status_i(STATUS_BEV_BIT) = '0') then
@@ -98,9 +95,6 @@ begin
                     newPC := depc_i;
                 else
                     newPC := newPC + generalExceptOffset;
-                    if (debugPoint_i = '1') then
-                        isWatchIssued_o <= YES;
-                    end if;
                 end if;
                 newPC_o <= newPC;
             else

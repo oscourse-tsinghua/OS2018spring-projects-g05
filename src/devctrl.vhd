@@ -171,6 +171,7 @@ begin
                 llBit <= '0';
                 llLoc <= (others => 'X');
             else
+                -- see page 347 in document MD00086(Volume II-A revision 6.06)
                 if (sync_i(0) = '1') then -- LL
                     llBit <= '1';
                     llLoc <= devPhysicalAddr_i;

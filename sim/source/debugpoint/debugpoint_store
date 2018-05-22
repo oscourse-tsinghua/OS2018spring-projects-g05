@@ -14,10 +14,9 @@ DEFINE reg regfile_ist.regArray: RegArrayType
 
 RUN lui $2, 0x8000
 RUN ori $2, $2, 0x0061
-# Move to entry Hi
 RUN mtc0 $2, $18
 # 0x10
-RUN nop
+RUN mtc0 $0, $12
 RUN nop
 RUN xori $4, $2, 0x0001
 RUN sw $5, 0($4)

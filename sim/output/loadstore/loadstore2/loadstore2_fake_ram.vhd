@@ -55,22 +55,25 @@ words(7) <= x"03_01_a1_8c"; -- RUN lw  $1, 0x103($5)
         end if;
     end process;
 
+    scCorrect_o <= llBit when addr_i = llLoc else '0';
+
     process(clk) begin
-        if (falling_edge(clk)) then
-            scCorrect_o <= '0';
-            if (sync_i(0) = '1') then
-                llBit <= '1';
-                llLoc <= addr_i;
-            elsif (sync_i(1) = '1' and llBit = '1') then
-                if (addr_i = llLoc) then
-                    scCorrect_o <= '1';
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                llBit <= '0';
+                llLoc <= (others => 'X');
+            else
+                if (sync_i(0) = '1') then -- LL
+                    llBit <= '1';
+                    llLoc <= addr_i;
+                elsif (sync_i(1) = '1') then -- SC
+                    llBit <= '0';
+                elsif (addr_i = llLoc) then -- Others
                     llBit <= '0';
                 end if;
-            elsif (addr_i = llLoc) then
-                llBit <= '0';
-            end if;
-            if (sync_i(2) = '1') then
-                llBit <= '0';
+                if (sync_i(2) = '1') then -- Flush
+                    llBit <= '0';
+                end if;
             end if;
         end if;
     end process;

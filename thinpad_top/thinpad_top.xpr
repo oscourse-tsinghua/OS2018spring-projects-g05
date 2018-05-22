@@ -29,8 +29,8 @@
     <Option Name="IPStaticSourceDir" Val="$PIPUSERFILESDIR/ipstatic"/>
     <Option Name="EnableBDX" Val="FALSE"/>
     <Option Name="DSANumComputeUnits" Val="16"/>
-    <Option Name="WTXSimLaunchSim" Val="189"/>
-    <Option Name="WTModelSimLaunchSim" Val="16"/>
+    <Option Name="WTXSimLaunchSim" Val="192"/>
+    <Option Name="WTModelSimLaunchSim" Val="79"/>
     <Option Name="WTQuestaLaunchSim" Val="0"/>
     <Option Name="WTIesLaunchSim" Val="0"/>
     <Option Name="WTVcsLaunchSim" Val="0"/>
@@ -1917,6 +1917,7 @@
       </Config>
     </FileSet>
     <FileSet Name="tlb_pagemask" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/tlb_pagemask">
+      <Filter Type="Srcs"/>
       <File Path="$PPRDIR/../sim/output/tlb/tlb_pagemask/tlb_pagemask_test_const.vhd">
         <FileInfo SFType="VHDL2008">
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -1969,12 +1970,12 @@
         <StratHandle Name="Flow_PerfOptimized_high" Flow="Vivado Synthesis 2017"/>
         <Step Id="synth_design">
           <Option Id="ResourceSharing">2</Option>
-          <Option Id="FsmExtraction">1</Option>
-          <Option Id="RepFanoutThreshold">400</Option>
-          <Option Id="MoreOptsStr"><![CDATA[-verilog_define USE_BOOTLOADER -verilog_define FUNC_TEST]]></Option>
-          <Option Id="NoCombineLuts">1</Option>
           <Option Id="KeepEquivalentRegisters">1</Option>
+          <Option Id="FsmExtraction">1</Option>
           <Option Id="ShregMinSize">5</Option>
+          <Option Id="RepFanoutThreshold">400</Option>
+          <Option Id="NoCombineLuts">1</Option>
+          <Option Id="MoreOptsStr"><![CDATA[-verilog_define USE_BOOTLOADER -verilog_define FUNC_TEST]]></Option>
         </Step>
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>

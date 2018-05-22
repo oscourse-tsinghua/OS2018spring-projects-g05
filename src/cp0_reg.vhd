@@ -31,10 +31,9 @@ entity cp0_reg is
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         currentInstAddr_i, currentAccessAddr_i: in std_logic_vector(AddrWidth);
         memDataWrite_i: in std_logic;
-        isWatchIssued_i: in std_logic;
         isIndelaySlot_i: in std_logic;
+        exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         isKernelMode_o: out std_logic;
-        debugPoint_o: out std_logic;
 
         -- For MMU
         cp0Sp_i: in CP0Special;
@@ -63,6 +62,8 @@ architecture bhv of cp0_reg is
     -- curArr including the data that will be written to regArr in the next period
     signal timerInt: std_logic;
     signal debugPoint: std_logic;
+    signal exceptCause: std_logic_vector(ExceptionCauseWidth);
+    signal issueDebug: std_logic;
 begin
     status_o <= curArr(STATUS_REG);
     cause_o <= curArr(CAUSE_REG);
@@ -71,9 +72,8 @@ begin
 
     data_o <= PRID_CONSTANT when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and cp0Sel_i = "000") else
               CONFIG1_CONSTANT when (conv_integer(raddr_i) = CONFIG_REG and cp0Sel_i = "001") else
-              curArr(BAD_V_ADDR_REG) when (conv_integer(raddr_i) = BAD_V_ADDR_REG and cp0Sel_i = "000") else -- BADVADDR and config1 is the only two registers we care with sel = 1 --
               curArr(PRID_OR_EBASE_REG) when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and cp0Sel_i = "001") else
-              curArr(conv_integer(raddr_i)) when cp0Sel_i = "000" else
+              curArr(conv_integer(raddr_i)) when (cp0Sel_i = "000" and conv_integer(raddr_i) /= PRID_OR_EBASE_REG) else 
               32ux"0";
 
     timerInt_o <= timerInt;
@@ -90,10 +90,14 @@ begin
     entry_o.hi <= curArr(ENTRY_HI_REG);
     entry_o.lo0 <= curArr(ENTRY_LO0_REG);
     entry_o.lo1 <= curArr(ENTRY_LO1_REG);
-    debugPoint_o <= debugPoint or
-        (regArr(CAUSE_REG)(CAUSE_WP_BIT) and
-        (not regArr(STATUS_REG)(STATUS_EXL_BIT)) and
-        (not regArr(STATUS_REG)(STATUS_ERL_BIT)));
+
+    issueDebug <= (debugPoint or curArr(CAUSE_REG)(CAUSE_WP_BIT)) and
+                  (not regArr(STATUS_REG)(STATUS_EXL_BIT)) and 
+                  (not regArr(STATUS_REG)(STATUS_ERL_BIT));
+
+
+    exceptCause_o <= exceptCause_i when issueDebug = NO else
+                     WATCH_CAUSE;
 
     -- we can still do this because PRID is a preset constant --
     cp0EBaseAddr_o <= curArr(PRID_OR_EBASE_REG);
@@ -101,6 +105,7 @@ begin
     pageMask_o <= 4ub"0" & curArr(PAGEMASK_REG)(PageMaskMaskBits) & 12ub"0";
 
     process (all) begin
+        -- write to cp0 --
         for i in 0 to CP0_MAX_ID loop
             curArr(i) <= regArr(i);
         end loop;
@@ -109,7 +114,7 @@ begin
                 when CAUSE_REG =>
                     curArr(CAUSE_REG)(CauseIpSoftBits) <= data_i(CauseIpSoftBits);
                     curArr(CAUSE_REG)(CAUSE_IV_BIT) <= data_i(CAUSE_IV_BIT);
-                    if (data_i(CAUSE_WP_BIT) = '0') then -- we cannot write 1 when it's 0 --
+                    if (data_i(CAUSE_WP_BIT) = '0') then -- we cannot write 1 when it's 0
                         curArr(CAUSE_REG)(CAUSE_WP_BIT) <= data_i(CAUSE_WP_BIT);
                     end if;
                 when ENTRY_LO0_REG =>
@@ -137,14 +142,48 @@ begin
                     curArr(WATCHHI_REG)(WATCHHI_G_BIT) <= data_i(WATCHHI_G_BIT);
                     curArr(WATCHHI_REG)(WatchHiASIDBits) <= data_i(WatchHiASIDBits);
                     curArr(WATCHHI_REG)(WatchHiMaskBits) <= data_i(WatchHiMaskBits);
+                    -- write 1 to clear --
                     curArr(WATCHHI_REG)(WatchHiW1CBits) <= regArr(WATCHHI_REG)(WatchHiW1CBits) and (not data_i(WatchHiW1CBits));
                 when others =>
                     curArr(conv_integer(waddr_i)) <= data_i;
             end case;
         end if;
+        
+        -- debug point --
+        debugPoint <= NO;
+        if (regArr(WATCHHI_REG)(WATCHHI_G_BIT) = '1' or regArr(WATCHHI_REG)(WatchHiASIDBits) = regArr(ENTRY_HI_REG)(EntryHiASIDBits)) then
+            if ((regArr(WATCHLO_REG)(WatchLoVAddrBits) = currentInstAddr_i(WatchLoVAddrBits)) and regArr(WATCHLO_REG)(WATCHLO_I_BIT) = '1') then
+                debugPoint <= YES;
+                curArr(WATCHHI_REG)(WATCHHI_I_BIT) <= '1';
+                if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
+                    curArr(DEPC_REG) <= currentInstAddr_i - 4;
+                else
+                    curArr(DEPC_REG) <= currentInstAddr_i;
+                end if;
+            end if;
+            if (regArr(WATCHLO_REG)(WatchLoVAddrBits) = currentAccessAddr_i(WatchLoVAddrBits)) then
+                if (regArr(WATCHLO_REG)(WATCHLO_R_BIT) = '1' and memDataWrite_i = '0') then
+                    debugPoint <= YES;
+                    curArr(WATCHHI_REG)(WATCHHI_R_BIT) <= '1';
+                    curArr(DEPC_REG) <= currentAccessAddr_i;
+                elsif (regArr(WATCHLO_REG)(WATCHLO_W_BIT) = '1' and memDataWrite_i = '1') then
+                    debugPoint <= YES;
+                    curArr(WATCHHI_REG)(WATCHHI_W_BIT) <= '1';
+                    curArr(DEPC_REG) <= currentAccessAddr_i;
+                end if;
+            end if;
+        end if;
+        if ((debugPoint = YES) and ((regArr(STATUS_REG)(STATUS_ERL_BIT) or regArr(STATUS_REG)(STATUS_EXL_BIT)) = '1')) then
+            -- Then we should pending the watch_cause --
+            debugPoint <= NO;
+            curArr(CAUSE_REG)(CAUSE_WP_BIT) <= '1';
+        elsif (debugPoint = YES) then
+            curArr(CAUSE_REG)(CauseExcCodeBits) <= WATCH_CAUSE;
+        end if;
     end process;
+    
 
-    process(clk) begin
+    process (clk) begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then
                 -- Please refer to MIPS Vol3 for reset value
@@ -170,8 +209,11 @@ begin
                 regArr(WATCHLO_REG) <= (others => '0');
                 regArr(WATCHHI_REG) <= (others => '0');
 
+                regArr(DEPC_REG) <= (others => '0');
+
                 timerInt <= INTERRUPT_NOT_ASSERT;
                 debugPoint <= NO;
+                issueDebug <= NO;
             else
                 regArr(CAUSE_REG)(CauseIpHardBits) <= int_i;
 
@@ -210,63 +252,6 @@ begin
                     end if;
                 end if;
 
-                debugPoint <= NO;
-                if (regArr(WATCHHI_REG)(WATCHHI_G_BIT) = '1' or regArr(WATCHHI_REG)(WatchHiASIDBits) = regArr(ENTRY_HI_REG)(EntryHiASIDBits)) then
-                    if ((regArr(WATCHLO_REG)(WatchLoVAddrBits) = currentInstAddr_i(WatchLoVAddrBits)) and regArr(WATCHLO_REG)(WATCHLO_I_BIT) = '1') then
-                        debugPoint <= YES;
-                        regArr(WATCHHI_REG)(WATCHHI_I_BIT) <= '1';
-                        if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
-                            regArr(DEPC_REG) <= currentInstAddr_i - 4;
-                        else
-                            regArr(DEPC_REG) <= currentInstAddr_i;
-                        end if;
-                    end if;
-                    if (regArr(WATCHLO_REG)(WatchLoVAddrBits) = currentAccessAddr_i(WatchLoVAddrBits)) then
-                        if (regArr(WATCHLO_REG)(WATCHLO_R_BIT) = '1' and memDataWrite_i = '0') then
-                            debugPoint <= YES;
-                            regArr(WATCHHI_REG)(WATCHHI_R_BIT) <= '1';
-                            regArr(DEPC_REG) <= currentAccessAddr_i;
-                        elsif (regArr(WATCHLO_REG)(WATCHLO_W_BIT) = '1' and memDataWrite_i = '1') then
-                            debugPoint <= YES;
-                            regArr(WATCHHI_REG)(WATCHHI_W_BIT) <= '1';
-                            regArr(DEPC_REG) <= currentAccessAddr_i;
-                        end if;
-                    end if;
-                end if;
-                if ((debugPoint = YES) and ((regArr(STATUS_REG)(STATUS_ERL_BIT) or regArr(STATUS_REG)(STATUS_EXL_BIT)) = '1')) then
-                    -- Then we should pending the watch_cause --
-                    debugPoint <= NO;
-                    regArr(CAUSE_REG)(CAUSE_WP_BIT) <= '1';
-                else
-                    regArr(CAUSE_REG)(CauseExcCodeBits) <= WATCH_CAUSE;
-                end if;
-
-                if (isWatchIssued_i = '1') then
-                    regArr(CAUSE_REG)(CAUSE_WP_BIT) <= '0';
-                end if;
-
-                if (((exceptCause_i /= NO_CAUSE) and (exceptCause_i /= ERET_CAUSE))) then
-                    regArr(STATUS_REG)(STATUS_EXL_BIT) <= '1';
-                    if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
-                        regArr(EPC_REG) <= currentInstAddr_i - 4;
-                        regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '1';
-                    else
-                        regArr(EPC_REG) <= currentInstAddr_i;
-                        regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '0';
-                    end if;
-                    regArr(CAUSE_REG)(CauseExcCodeBits) <= exceptCause_i;
-                end if;
-                case (exceptCause_i) is
-                    when ERET_CAUSE =>
-                        regArr(STATUS_REG)(STATUS_EXL_BIT) <= '0';
-                    when TLB_LOAD_CAUSE|TLB_STORE_CAUSE|ADDR_ERR_LOAD_OR_IF_CAUSE|ADDR_ERR_STORE_CAUSE =>
-                        regArr(BAD_V_ADDR_REG) <= currentAccessAddr_i;
-                        regArr(ENTRY_HI_REG)(EntryHiVPN2Bits) <= currentAccessAddr_i(EntryHiVPN2Bits);
-                        regArr(CONTEXT_REG)(ContextBadVPNBits) <= currentAccessAddr_i(EntryHiVPN2Bits);
-                    when others =>
-                        null;
-                end case;
-
                 if (ctrlToWriteBadVAddr_i = YES) then
                     regArr(BAD_V_ADDR_REG) <= ctrlBadVAddr_i;
                     regArr(STATUS_REG)(STATUS_EXL_BIT) <= '1';
@@ -279,7 +264,39 @@ begin
                     end if;
                     regArr(CAUSE_REG)(CauseExcCodeBits) <= ADDR_ERR_LOAD_OR_IF_CAUSE;
                 end if;
+                if (issueDebug = YES) then
+                    regArr(CAUSE_REG)(CAUSE_WP_BIT) <= '0';
+                    debugPoint <= NO;
+                    issueDebug <= NO;
+                end if;
+                regArr(DEPC_REG) <= curArr(DEPC_REG);
+                regArr(WATCHHI_REG) <= curArr(WATCHHI_REG);
             end if;
+            
+            if (((exceptCause_i /= NO_CAUSE) and (exceptCause_i /= ERET_CAUSE))) then
+                regArr(STATUS_REG)(STATUS_EXL_BIT) <= '1';
+                if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
+                    regArr(EPC_REG) <= currentInstAddr_i - 4;
+                    regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '1';
+                else
+                    regArr(EPC_REG) <= currentInstAddr_i;
+                    regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '0';
+                end if;
+                regArr(CAUSE_REG)(CauseExcCodeBits) <= exceptCause_i;
+            end if;
+            case (exceptCause_i) is
+                when ERET_CAUSE =>
+                    regArr(STATUS_REG)(STATUS_EXL_BIT) <= '0';
+                when TLB_LOAD_CAUSE|TLB_STORE_CAUSE|ADDR_ERR_LOAD_OR_IF_CAUSE|ADDR_ERR_STORE_CAUSE =>
+                    if (debugPoint = NO) then
+                        -- when debugpoint happened with tlb or address exception, issue debugpoint first to improve robustness.
+                        regArr(BAD_V_ADDR_REG) <= currentAccessAddr_i;
+                        regArr(ENTRY_HI_REG)(EntryHiVPN2Bits) <= currentAccessAddr_i(EntryHiVPN2Bits);
+                        regArr(CONTEXT_REG)(ContextBadVPNBits) <= currentAccessAddr_i(EntryHiVPN2Bits);
+                    end if;
+                when others =>
+                    null;
+            end case;
         end if;
     end process;
 end bhv;

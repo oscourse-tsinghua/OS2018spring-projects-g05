@@ -13,11 +13,10 @@ DEFINE reg regfile_ist.regArray: RegArrayType
 # Grammar: "RUN <assembly>"
 
 RUN lui $2, 0x8000
-RUN ori $2, $2, 0x0024
-# Move to entry Hi
+RUN ori $2, $2, 0x002c
 RUN mtc0 $2, $18
 # 0x10
-RUN nop
+RUN mtc0 $0, $12
 RUN nop
 RUN nop
 RUN nop

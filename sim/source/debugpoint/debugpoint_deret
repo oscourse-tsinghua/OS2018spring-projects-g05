@@ -14,10 +14,9 @@ DEFINE reg regfile_ist.regArray: RegArrayType
 
 RUN lui $2, 0x8000
 RUN ori $2, $2, 0x0024
-# Move to entry Hi
 RUN mtc0 $2, $18
 # 0x10
-RUN nop
+RUN mtc0 $0, $12
 RUN nop
 RUN nop
 RUN nop
@@ -27,6 +26,7 @@ RUN nop
 RUN nop
 RUN nop
 # 0x30
+# Note: if no debugpoint implemented, we can still pass this testcase, but debugpoint_iFetch will fail.
 RUN lui $7, 0xabcd
 RUN nop
 RUN j 0x30

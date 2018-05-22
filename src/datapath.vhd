@@ -262,12 +262,10 @@ architecture bhv of datapath is
     signal cp0EBaseAddr_cb: std_logic_vector(DataWidth);
     signal ctrlToWriteBadVAddr_cb: std_logic;
     signal ctrlBadVAddr_cb: std_logic_vector(DataWidth);
-    signal debugPoint_cb: std_logic;
+    signal exceptCause_cb: std_logic_vector(ExceptionCauseWidth);
     signal depc_cb: std_logic_vector(AddrWidth);
-    signal isWatchIssued_bc: std_logic;
 
     -- Signals connecting mem and ctrl --
-    signal exceptCause_8b: std_logic_vector(ExceptionCauseWidth);
     signal memCp0RegWe_8b: std_logic;
 
 begin
@@ -610,7 +608,6 @@ begin
     cp0RegData_86 <= cp0RegData_89;
     cp0RegWriteAddr_86 <= cp0RegWriteAddr_89;
     cp0RegWe_86 <= cp0RegWe_89;
-    exceptCause_8b <= exceptCause_8c;
     memcp0regWe_8b <= cp0regWe_89;
     dataWrite_o <= memDataWrite_8c;
 
@@ -681,13 +678,11 @@ begin
             flush_o => flush_b1,
             newPC_o => newPC_b1,
             exceptionBase_i => cp0EBaseAddr_cb,
-            exceptCause_i => exceptCause_8b,
-            debugPoint_i => debugPoint_cb,
+            exceptCause_i => exceptCause_cb,
             cp0Status_i => cp0Status_cb,
             cp0Cause_i => cp0Cause_cb,
             cp0Epc_i => cp0Epc_cb,
             depc_i => depc_cb,
-            isWatchIssued_o => isWatchIssued_bc,
             toWriteBadVAddr_o => ctrlToWriteBadVAddr_cb,
             badVAddr_o => ctrlBadVAddr_cb,
             isIdEhb_i => isIdEhb_4b,
@@ -723,9 +718,8 @@ begin
             currentAccessAddr_i => currentAccessAddr_8c,
             memDataWrite_i => memDataWrite_8c,
             isInDelaySlot_i => isInDelaySlot_8c,
-            isWatchIssued_i => isWatchIssued_bc,
+            exceptCause_o => exceptCause_cb,
             isKernelMode_o => isKernelMode_o,
-            debugPoint_o => debugPoint_cb,
 
             cp0Sp_i => cp0Sp_9c,
             entryIndex_i => entryIndex_i,
