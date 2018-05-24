@@ -34,6 +34,7 @@ entity ctrl is
         exceptionBase_i: in std_logic_vector(DataWidth);
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         cp0Status_i, cp0Cause_i, cp0Epc_i: in std_logic_vector(DataWidth);
+        depc_i: in std_logic_vector(AddrWidth);
         newPC_o: out std_logic_vector(AddrWidth);
         flush_o: out std_logic;
         toWriteBadVAddr_o: out std_logic;
@@ -90,6 +91,8 @@ begin
                     newPC := newPC + tlbRefillExl0Offset;
                 elsif (exceptCause_i = EXTERNAL_CAUSE and cp0Cause_i(CAUSE_IV_BIT) = '1') then
                     newPC := newPC + interruptIv1Offset;
+                elsif (exceptCause_i = DERET_CAUSE) then
+                    newPC := depc_i;
                 else
                     newPC := newPC + generalExceptOffset;
                 end if;

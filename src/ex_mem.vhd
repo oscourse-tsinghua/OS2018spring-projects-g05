@@ -8,6 +8,7 @@ use work.cp0_const.all;
 entity ex_mem is
     port (
         rst, clk: in std_logic;
+
         stall_i: in std_logic_vector(StallWidth);
         toWriteReg_i: in std_logic;
         writeRegAddr_i: in std_logic_vector(RegAddrWidth);
@@ -40,22 +41,22 @@ entity ex_mem is
         cp0RegData_i: in std_logic_vector(DataWidth);
         cp0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_i: in std_logic;
+        cp0Sp_i: in CP0Special;
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_o: out std_logic;
-        cp0Sp_i: in CP0Special;
         cp0Sp_o: out CP0Special;
 
         -- for exception --
         valid_i: in std_logic;
-        valid_o: out std_logic;
+        flush_i: in std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         isInDelaySlot_i: in std_logic;
         currentInstAddr_i: in std_logic_vector(AddrWidth);
+        valid_o: out std_logic;
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         isInDelaySlot_o: out std_logic;
-        currentInstAddr_o: out std_logic_vector(AddrWidth);
-        flush_i: in std_logic
+        currentInstAddr_o: out std_logic_vector(AddrWidth)
     );
 end ex_mem;
 

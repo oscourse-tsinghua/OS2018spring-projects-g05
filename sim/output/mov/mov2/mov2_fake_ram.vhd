@@ -15,7 +15,9 @@ entity mov2_fake_ram is
         data_i: in std_logic_vector(DataWidth);
         addr_i: in std_logic_vector(AddrWidth);
         byteSelect_i: in std_logic_vector(3 downto 0);
-        data_o: out std_logic_vector(DataWidth)
+        data_o: out std_logic_vector(DataWidth);
+        sync_i: in std_logic_vector(2 downto 0);
+        scCorrect_o: out std_logic
     );
 end mov2_fake_ram;
 
@@ -24,6 +26,8 @@ architecture bhv of mov2_fake_ram is
     signal words: WordsArray;
     signal wordAddr: integer;
     signal bitSelect: std_logic_vector(DataWidth);
+    signal llBit: std_logic;
+    signal llLoc: std_logic_vector(AddrWidth);
 begin
     wordAddr <= to_integer(unsigned(addr_i(31 downto 2)));
 
@@ -46,6 +50,29 @@ words(5) <= x"26_28_83_00"; -- RUN xor $5, $4, $3
 words(6) <= x"0a_30_85_00"; -- RUN movz $6, $4, $5
             elsif ((enable_i = '1') and (write_i = '1')) then
                 words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
+            end if;
+        end if;
+    end process;
+
+    scCorrect_o <= llBit when addr_i = llLoc else '0';
+
+    process(clk) begin
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                llBit <= '0';
+                llLoc <= (others => 'X');
+            else
+                if (sync_i(0) = '1') then -- LL
+                    llBit <= '1';
+                    llLoc <= addr_i;
+                elsif (sync_i(1) = '1') then -- SC
+                    llBit <= '0';
+                elsif (addr_i = llLoc) then -- Others
+                    llBit <= '0';
+                end if;
+                if (sync_i(2) = '1') then -- Flush
+                    llBit <= '0';
+                end if;
             end if;
         end if;
     end process;

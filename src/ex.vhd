@@ -13,6 +13,7 @@ use work.cp0_const.all;
 entity ex is
     port (
         rst: in std_logic;
+
         alut_i: in AluType;
         memt_i: in MemType;
         operand1_i: in std_logic_vector(DataWidth);
@@ -22,7 +23,6 @@ entity ex is
         writeRegAddr_i: in std_logic_vector(RegAddrWidth);
         linkAddress_i: in std_logic_vector(AddrWidth);
         isInDelaySlot_i: in std_logic;
-
         toStall_o: out std_logic;
         toWriteReg_o: out std_logic;
         writeRegAddr_o: out std_logic_vector(RegAddrWidth);
@@ -49,21 +49,23 @@ entity ex is
         cnt_o: out std_logic_vector(CntWidth);
 
         -- interact with div --
-        divEnable_o: out std_logic;
-        dividend_o, divider_o: out std_logic_vector(DataWidth);
         divBusy_i: in std_logic;
         quotient_i, remainder_i: in std_logic_vector(DataWidth);
+        divEnable_o: out std_logic;
+        dividend_o, divider_o: out std_logic_vector(DataWidth);
 
         -- interact with CP0 --
         cp0RegData_i: in std_logic_vector(DataWidth);
         memCP0RegData_i: in std_logic_vector(DataWidth);
         memCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
         memCP0RegWe_i: in std_logic;
+        cp0Sel_i: in std_logic_vector(SelWidth);
         cp0RegReadAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWe_o: out std_logic;
         cp0Sp_o: out CP0Special;
+        cp0Sel_o: out std_logic_vector(SelWidth);
 
         -- for exception --
         valid_i: in std_logic;
@@ -153,6 +155,7 @@ begin
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;
     valid_o <= valid_i;
+    cp0Sel_o <= cp0Sel_i;
 
     -- multiplication --
     process(multip1, multip2, alut_i, calcMult)
@@ -431,11 +434,12 @@ begin
                 when ALU_MFC0 =>
                     cp0RegReadAddr_o <= operand1_i(4 downto 0);
                     writeRegData_o <= cp0RegData_i;
-
+                    
                     -- Push forward for cp0 --
                     if (memCP0RegWe_i = YES and memCP0RegWriteAddr_i = operand1_i(4 downto 0)) then
                         writeRegData_o <= memCP0RegData_i;
                     end if;
+
 
                 when ALU_MTC0 =>
                     cp0RegWriteAddr_o <= operand1_i(4 downto 0);
