@@ -713,6 +713,7 @@ begin
             epc_o => epc_c8,
             depc_o => depc_cb,
 
+            valid_i => valid_78,
             exceptCause_i => exceptCause_8c,
             currentInstAddr_i => currentInstAddr_8c,
             currentAccessAddr_i => currentAccessAddr_8c,

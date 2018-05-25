@@ -39,7 +39,7 @@ entity ctrl is
         flush_o: out std_logic;
         toWriteBadVAddr_o: out std_logic;
         badVAddr_o: out std_logic_vector(AddrWidth);
-        
+
         -- Hazard Barrier
         isIdEhb_i: in std_logic;
         excp0regWe_i: in std_logic;
@@ -53,7 +53,7 @@ architecture bhv of ctrl is
     signal badVAddr: std_logic_vector(AddrWidth);
 begin
     process(all)
-        variable newPC: std_logic_vector(AddrWidth);
+        variable newPC, epc: std_logic_vector(AddrWidth);
         variable isMtc0: std_logic;
     begin
         newPC_o <= (others => '0');
@@ -76,12 +76,17 @@ begin
                 else
                     newPC := exceptBootBaseAddr;
                 end if;
-                if (exceptCause_i = ERET_CAUSE) then
+                if (exceptCause_i = ERET_CAUSE or exceptCause_i = DERET_CAUSE) then
+                    if (exceptCause_i = ERET_CAUSE) then
+                        epc := cp0Epc_i;
+                    else
+                        epc := depc_i;
+                    end if;
                     if (cp0Epc_i(1 downto 0) = "00") then
-                        newPC := cp0Epc_i;
+                        newPC := epc;
                     else
                         toWriteBadVAddr <= YES;
-                        badVAddr <= cp0Epc_i;
+                        badVAddr <= epc;
                         newPC := newPC + generalExceptOffset;
                     end if;
                 elsif (
@@ -91,8 +96,6 @@ begin
                     newPC := newPC + tlbRefillExl0Offset;
                 elsif (exceptCause_i = EXTERNAL_CAUSE and cp0Cause_i(CAUSE_IV_BIT) = '1') then
                     newPC := newPC + interruptIv1Offset;
-                elsif (exceptCause_i = DERET_CAUSE) then
-                    newPC := depc_i;
                 else
                     newPC := newPC + generalExceptOffset;
                 end if;
