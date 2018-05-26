@@ -17,10 +17,8 @@ int main(int argc, char* argv[]){
 		printf("Error: input file not exist\n");
 		return 0;
 	}
-	unsigned char buf[MAXLEN];
-	unsigned char res[MAXLEN];
-	int rc;
-	rc = fread(buf, sizeof(unsigned char), MAXLEN, infile);
+	static unsigned char buf[MAXLEN];
+	fread(buf, sizeof(unsigned char), MAXLEN, infile);
 	fwrite(buf, sizeof(unsigned char), MAXLEN, outfile);
 	printf("Output file write successfully at %s\n", argv[2]);
 	return 0;
