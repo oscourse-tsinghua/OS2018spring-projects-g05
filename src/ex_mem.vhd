@@ -40,10 +40,12 @@ entity ex_mem is
         -- interact with cp0 --
         cp0RegData_i: in std_logic_vector(DataWidth);
         cp0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
+        cp0RegWriteSel_i: in std_logic_vector(SelWidth);
         cp0RegWe_i: in std_logic;
         cp0Sp_i: in CP0Special;
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
+        cp0RegWriteSel_o: out std_logic_vector(SelWidth);
         cp0RegWe_o: out std_logic;
         cp0Sp_o: out CP0Special;
 
@@ -91,6 +93,7 @@ begin
                 cp0RegWe_o <= NO;
                 cp0RegData_o <= (others => '0');
                 cp0RegWriteAddr_o <= (others => '0');
+                cp0RegWriteSel_o <= (others => '0');
                 cp0Sp_o <= INVALID;
 
                 valid_o <= NO;
@@ -115,6 +118,7 @@ begin
 
                 cp0RegWe_o <= cp0RegWe_i;
                 cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
+                cp0RegWriteSel_o <= cp0RegWriteSel_i;
                 cp0RegData_o <= cp0RegData_i;
                 cp0Sp_o <= cp0Sp_i;
 

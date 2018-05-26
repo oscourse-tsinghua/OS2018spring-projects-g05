@@ -43,11 +43,7 @@ entity id_ex is
         exIsInDelaySlot_o: out std_logic;
         isInDelaySlot_o: out std_logic;
         idCurrentInstAddr_i: in std_logic_vector(AddrWidth);
-        exCurrentInstAddr_o: out std_logic_vector(AddrWidth);
-
-        -- interact with cp0 --
-        cp0Sel_i: in std_logic_vector(SelWidth);
-        cp0Sel_o: out std_logic_vector(SelWidth)
+        exCurrentInstAddr_o: out std_logic_vector(AddrWidth)
     );
 end id_ex;
 
@@ -72,7 +68,6 @@ begin
                 isInDelaySlot_o <= NO;
                 exCurrentInstAddr_o <= (others => '0');
                 valid_o <= NO;
-                cp0Sel_o <= (others => '0');
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_STOP and stall_i(EX_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= INVALID;
                 memt_o <= INVALID;
@@ -87,7 +82,6 @@ begin
                 -- Keep `isInDelaySlot_o` as old value
                 exCurrentInstAddr_o <= (others => '0');
                 valid_o <= NO;
-                cp0Sel_o <= (others => '0');
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= alut_i;
                 memt_o <= memt_i;
@@ -104,7 +98,6 @@ begin
                 exExceptCause_o <= idExceptCause_i;
                 exCurrentInstAddr_o <= idCurrentInstAddr_i;
                 valid_o <= valid_i;
-                cp0Sel_o <= cp0Sel_i;
             end if;
         end if;
     end process;

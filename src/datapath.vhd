@@ -95,7 +95,6 @@ architecture bhv of datapath is
     signal valid_45: std_logic;
     signal exceptCause_45: std_logic_vector(ExceptionCauseWidth);
     signal currentInstAddr_45: std_logic_vector(AddrWidth);
-    signal cp0Sel_45: std_logic_vector(SelWidth);
 
     -- Signals connecting id_ex and ex --
     signal alut_56: AluType;
@@ -110,7 +109,6 @@ architecture bhv of datapath is
     signal exExceptCause_56: std_logic_vector(ExceptionCauseWidth);
     signal exCurrentInstAddr_56: std_logic_vector(AddrWidth);
     signal valid_56: std_logic;
-    signal cp0Sel_56: std_logic_vector(SelWidth);
 
     -- Signals connecting ex and id --
     signal exToWriteReg_64: std_logic;
@@ -129,6 +127,7 @@ architecture bhv of datapath is
     signal memData_67: std_logic_vector(DataWidth);
     signal cp0RegData_67: std_logic_vector(DataWidth);
     signal cp0RegWriteAddr_67: std_logic_vector(CP0RegAddrWidth);
+    signal cp0RegWriteSel_67: std_logic_vector(SelWidth);
     signal cp0RegWe_67: std_logic;
     signal cp0Sp_67: CP0Special;
     signal tempProduct_67, tempProduct_76: std_logic_vector(DoubleDataWidth);
@@ -140,7 +139,7 @@ architecture bhv of datapath is
 
     -- Signals connecting ex and cp0 --
     signal cp0RegReadAddr_6c: std_logic_vector(CP0RegAddrWidth);
-    signal cp0Sel_6c: std_logic_vector(SelWidth);
+    signal cp0RegReadSel_6c: std_logic_vector(SelWidth);
 
     -- Signals connecting ex and div --
     signal divEnable_6d: std_logic;
@@ -159,6 +158,7 @@ architecture bhv of datapath is
     signal memData_78: std_logic_vector(DataWidth);
     signal cp0RegData_78: std_logic_vector(DataWidth);
     signal cp0RegWriteAddr_78: std_logic_vector(CP0RegAddrWidth);
+    signal cp0RegWriteSel_78: std_logic_vector(SelWidth);
     signal cp0RegWe_78: std_logic;
     signal cp0Sp_78: CP0Special;
     signal exceptCause_78: std_logic_vector(ExceptionCauseWidth);
@@ -186,6 +186,7 @@ architecture bhv of datapath is
     signal writeHiData_89, writeLoData_89: std_logic_vector(DataWidth);
     signal cp0RegData_89: std_logic_vector(DataWidth);
     signal cp0RegWriteAddr_89: std_logic_vector(CP0RegAddrWidth);
+    signal cp0RegWriteSel_89: std_logic_vector(SelWidth);
     signal cp0RegWe_89: std_logic;
     signal cp0Sp_89: CP0Special;
 
@@ -205,6 +206,7 @@ architecture bhv of datapath is
     -- Signals connecting mem_wb and cp0 --
     signal wbCP0RegData_9c: std_logic_vector(DataWidth);
     signal wbCP0RegWriteAddr_9c: std_logic_vector(CP0RegAddrWidth);
+    signal wbCP0RegWriteSel_9c: std_logic_vector(SelWidth);
     signal wbCP0RegWe_9c: std_logic;
     signal cp0Sp_9c: CP0Special;
 
@@ -362,7 +364,6 @@ begin
             exceptCause_o => exceptCause_45,
             currentInstAddr_o => currentInstAddr_45,
 
-            cp0Sel_o => cp0Sel_45,
             isIdEhb_o => isIdEhb_4b
         );
 
@@ -400,10 +401,7 @@ begin
             exIsInDelaySlot_o => exIsInDelaySlot_56,
             isInDelaySlot_o => isInDelaySlot_54,
             idCurrentInstAddr_i => currentInstAddr_45,
-            exCurrentInstAddr_o => exCurrentInstAddr_56,
-
-            cp0Sel_i => cp0Sel_45,
-            cp0Sel_o => cp0Sel_56
+            exCurrentInstAddr_o => exCurrentInstAddr_56
         );
 
     ex_ist: entity work.ex
@@ -459,13 +457,13 @@ begin
             memCP0RegData_i => cp0RegData_86,
             memCP0RegWriteAddr_i => cp0RegWriteAddr_86,
             memCP0RegWe_i => cp0RegWe_86,
-            cp0Sel_i => cp0Sel_56,
             cp0RegReadAddr_o => cp0RegReadAddr_6c,
+            cp0RegReadSel_o => cp0RegReadSel_6c,
             cp0RegData_o => cp0RegData_67,
             cp0RegWriteAddr_o => cp0RegWriteAddr_67,
+            cp0RegWriteSel_o => cp0RegWriteSel_67,
             cp0RegWe_o => cp0RegWe_67,
             cp0Sp_o => cp0Sp_67,
-            cp0Sel_o => cp0Sel_6c,
 
             valid_i => valid_56,
             valid_o => valid_67,
@@ -528,10 +526,12 @@ begin
 
             cp0RegData_i => cp0RegData_67,
             cp0RegWriteAddr_i => cp0RegWriteAddr_67,
+            cp0RegWriteSel_i => cp0RegWriteSel_67,
             cp0RegWe_i => cp0RegWe_67,
             cp0Sp_i => cp0Sp_67,
             cp0RegData_o => cp0RegData_78,
             cp0RegWriteAddr_o => cp0RegWriteAddr_78,
+            cp0RegWriteSel_o => cp0RegWriteSel_78,
             cp0RegWe_o => cp0RegWe_78,
             cp0Sp_o => cp0Sp_78,
 
@@ -580,10 +580,12 @@ begin
 
             cp0RegData_i => cp0RegData_78,
             cp0RegWriteAddr_i => cp0RegWriteAddr_78,
+            cp0RegWriteSel_i => cp0RegWriteSel_78,
             cp0RegWe_i => cp0RegWe_78,
             cp0Sp_i => cp0Sp_78,
             cp0RegData_o => cp0RegData_89,
             cp0RegWriteAddr_o => cp0RegWriteAddr_89,
+            cp0RegWriteSel_o => cp0RegWriteSel_89,
             cp0RegWe_o => cp0RegWe_89,
             cp0Sp_o => cp0Sp_89,
 
@@ -634,10 +636,12 @@ begin
 
             memCP0RegData_i => cp0RegData_89,
             memCP0RegWriteAddr_i => cp0RegWriteAddr_89,
+            memCP0RegWriteSel_i => cp0RegWriteSel_89,
             memCP0RegWe_i => cp0RegWe_89,
             cp0Sp_i => cp0Sp_89,
             wbCP0RegData_o => wbCP0RegData_9c,
             wbCP0RegWriteAddr_o => wbCP0RegWriteAddr_9c,
+            wbCP0RegWriteSel_o => wbCP0RegWriteSel_9c,
             wbCP0RegWe_o => wbCP0RegWe_9c,
             cp0Sp_o => cp0Sp_9c,
             flush_i => flush_b9
@@ -701,10 +705,11 @@ begin
             clk => clk,
             we_i => wbCP0RegWe_9c,
             waddr_i => wbCP0RegWriteAddr_9c,
+            wsel_i => wbCP0RegWriteSel_9c,
             raddr_i => cp0RegReadAddr_6c,
+            rsel_i => cp0RegReadSel_6c,
             data_i => wbCP0RegData_9c,
             int_i => int_i,
-            cp0Sel_i => cp0Sel_6c,
             data_o => data_c6,
             timerInt_o => timerInt_o,
 

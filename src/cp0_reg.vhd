@@ -18,9 +18,10 @@ entity cp0_reg is
         we_i: in std_logic;
         waddr_i: in std_logic_vector(CP0RegAddrWidth);
         raddr_i: in std_logic_vector(CP0RegAddrWidth);
+        wsel_i: in std_logic_vector(SelWidth);
+        rsel_i: in std_logic_vector(SelWidth);
         data_i: in std_logic_vector(DataWidth);
         int_i: in std_logic_vector(IntWidth);
-        cp0Sel_i: in std_logic_vector(SelWidth);
         data_o: out std_logic_vector(DataWidth);
         timerInt_o: out std_logic;
         status_o: out std_logic_vector(DataWidth);
@@ -72,10 +73,10 @@ begin
     epc_o <= curArr(EPC_REG);
     depc_o <= curArr(DEPC_REG);
 
-    data_o <= PRID_CONSTANT when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and cp0Sel_i = "000") else
-              CONFIG1_CONSTANT when (conv_integer(raddr_i) = CONFIG_REG and cp0Sel_i = "001") else
-              curArr(PRID_OR_EBASE_REG) when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and cp0Sel_i = "001") else
-              curArr(conv_integer(raddr_i)) when (cp0Sel_i = "000" and conv_integer(raddr_i) /= PRID_OR_EBASE_REG) else
+    data_o <= PRID_CONSTANT when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and rsel_i = "000") else
+              curArr(PRID_OR_EBASE_REG) when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and rsel_i = "001") else
+              CONFIG1_CONSTANT when (conv_integer(raddr_i) = CONFIG_REG and rsel_i = "001") else
+              curArr(conv_integer(raddr_i)) when (rsel_i = "000" and conv_integer(raddr_i) /= PRID_OR_EBASE_REG) else
               32ux"0";
 
     timerInt_o <= timerInt;
@@ -116,7 +117,7 @@ begin
                 when ENTRY_LO1_REG =>
                     curArr(ENTRY_LO1_REG)(EntryLoRWBits) <= data_i(EntryLoRWBits);
                 when CONFIG_REG =>
-                    if (cp0Sel_i = 3ub"0") then
+                    if (wsel_i = 3ub"0") then
                         -- only config0 could be writable --
                         if (data_i(2 downto 1) = "01") then
                             -- only write 2 or 3 should be allowed here --
@@ -125,7 +126,7 @@ begin
                     end if;
                 when PRID_OR_EBASE_REG =>
                     -- PRID is not writable, but ebase is --
-                    if (cp0Sel_i = "001") then
+                    if (wsel_i = "001") then
                         curArr(PRID_OR_EBASE_REG)(EbaseAddrBits) <= data_i(EbaseAddrBits);
                     end if;
                 when CONTEXT_REG =>

@@ -59,13 +59,13 @@ entity ex is
         memCP0RegData_i: in std_logic_vector(DataWidth);
         memCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
         memCP0RegWe_i: in std_logic;
-        cp0Sel_i: in std_logic_vector(SelWidth);
         cp0RegReadAddr_o: out std_logic_vector(CP0RegAddrWidth);
+        cp0RegReadSel_o: out std_logic_vector(SelWidth);
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
+        cp0RegWriteSel_o: out std_logic_vector(SelWidth);
         cp0RegWe_o: out std_logic;
         cp0Sp_o: out CP0Special;
-        cp0Sel_o: out std_logic_vector(SelWidth);
 
         -- for exception --
         valid_i: in std_logic;
@@ -155,7 +155,6 @@ begin
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;
     valid_o <= valid_i;
-    cp0Sel_o <= cp0Sel_i;
 
     -- multiplication --
     process(multip1, multip2, alut_i, calcMult)
@@ -235,11 +234,13 @@ begin
         cnt_o <= (others => '0');
         cp0RegWe_o <= NO;
         cp0RegWriteAddr_o <= (others => '0');
+        cp0RegWriteSel_o <= (others => '0');
         cp0RegData_o <= (others => '0');
         cp0Sp_o <= INVALID;
         writeHiData_o <= (others => '0');
         writeLoData_o <= (others => '0');
         cp0RegReadAddr_o <= (others => '0');
+        cp0RegReadSel_o <= (others => '0');
         divEnable_o <= DISABLE;
         dividend_o <= (others => '0');
         divider_o <= (others => '0');
@@ -433,8 +434,9 @@ begin
 
                 when ALU_MFC0 =>
                     cp0RegReadAddr_o <= operand1_i(4 downto 0);
+                    cp0RegReadSel_o <= operandX_i(SelWidth);
                     writeRegData_o <= cp0RegData_i;
-                    
+
                     -- Push forward for cp0 --
                     if (memCP0RegWe_i = YES and memCP0RegWriteAddr_i = operand1_i(4 downto 0)) then
                         writeRegData_o <= memCP0RegData_i;
@@ -443,6 +445,7 @@ begin
 
                 when ALU_MTC0 =>
                     cp0RegWriteAddr_o <= operand1_i(4 downto 0);
+                    cp0RegWriteSel_o <= operandX_i(SelWidth);
                     cp0RegWe_o <= YES;
                     cp0RegData_o <= operand2_i;
 

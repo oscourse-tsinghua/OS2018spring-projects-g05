@@ -9,7 +9,7 @@ use work.except_const.all;
 entity mem is
     port (
         rst: in std_logic;
-        
+
         toWriteReg_i: in std_logic;
         writeRegAddr_i: in std_logic_vector(RegAddrWidth);
         writeRegData_i: in std_logic_vector(DataWidth);
@@ -38,10 +38,12 @@ entity mem is
         -- interact with cp0 --
         cp0RegData_i: in std_logic_vector(DataWidth);
         cp0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
+        cp0RegWriteSel_i: in std_logic_vector(SelWidth);
         cp0RegWe_i: in std_logic;
         cp0Sp_i: in CP0Special;
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
+        cp0RegWriteSel_o: out std_logic_vector(SelWidth);
         cp0RegWe_o: out std_logic;
         cp0Sp_o: out CP0Special;
 
@@ -101,6 +103,7 @@ begin
 
             cp0RegWe_o <= NO;
             cp0RegWriteAddr_o <= (others => '0');
+            cp0RegWriteSel_o <= (others => '0');
             cp0RegData_o <= (others => '0');
             sync_o <= (others => '0');
         else
@@ -115,6 +118,7 @@ begin
 
             cp0RegWe_o <= cp0RegWe_i;
             cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
+            cp0RegWriteSel_o <= cp0RegWriteSel_i;
             cp0RegData_o <= cp0RegData_i;
 
             sync_o(2) <= '1' when exceptCause_i = ERET_CAUSE else '0';

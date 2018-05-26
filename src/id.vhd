@@ -11,7 +11,7 @@ use work.except_const.all;
 entity id is
     port (
         rst: in std_logic;
-        
+
         pc_i: in std_logic_vector(AddrWidth);
         inst_i: in std_logic_vector(InstWidth);
         regData1_i: in std_logic_vector(DataWidth);
@@ -58,10 +58,7 @@ entity id is
         currentInstAddr_o: out std_logic_vector(AddrWidth);
 
         -- hazard barrier --
-        isIdEhb_o: out std_logic;
-
-        -- interact with cp0 --
-        cp0Sel_o: out std_logic_vector(SelWidth)
+        isIdEhb_o: out std_logic
     );
 end id;
 
@@ -151,7 +148,6 @@ architecture bhv of id is
     signal immInstrAddr: std_logic_vector(AddrWidth);
     signal instImmSign: std_logic_vector(InstOffsetImmWidth);
     signal instOffsetImm: std_logic_vector(InstOffsetImmWidth);
-    signal instSel:  std_logic_vector(SelWidth);
 
 begin
 
@@ -164,7 +160,6 @@ begin
     instFunc <= inst_i(InstFuncIdx);
     instImm  <= inst_i(InstImmIdx);
     instAddr <= inst_i(InstAddrIdx);
-    instSel  <= inst_i(InstSelIdx);
     instImmSign <= inst_i(InstImmSignIdx) & 17ub"0";
     instOffsetImm <= "0" & inst_i(InstUnsignedImmIdx) & "00";
 
@@ -212,7 +207,6 @@ begin
         regReadEnable2_o <= DISABLE;
         regReadAddr2_o <= (others => '0');
         isIdEhb_o <= NO;
-        cp0Sel_o <= (others => '0');
 
         -- Assign 'X' to them, otherwise it will introduce a level latch to keep prior values
         operand1 := (others => 'X');
@@ -884,10 +878,10 @@ begin
                                 alut_o <= ALU_MTC0;
                                 oprSrc1 := REGID;
                                 oprSrc2 := REG;
+                                oprSrcX := IMM;
                                 toWriteReg_o <= NO;
                                 writeRegAddr_o <= (others => '0');
                                 isInvalid := NO;
-                                cp0Sel_o <= instSel;
                             end if;
 
                         when RS_MF =>
@@ -895,10 +889,10 @@ begin
                                 alut_o <= ALU_MFC0;
                                 oprSrc1 := REGID;
                                 oprSrc2 := INVALID;
+                                oprSrcX := IMM;
                                 toWriteReg_o <= YES;
                                 writeRegAddr_o <= instRt;
                                 isInvalid := NO;
-                                cp0Sel_o <= instSel;
                             end if;
 
                         when RS_WAIT_OR_TLBINVF =>
