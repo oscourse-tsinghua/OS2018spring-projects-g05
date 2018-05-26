@@ -754,7 +754,8 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
-                when OP_CACHE =>
+                when OP_CACHE|OP_PREF =>
+                    -- Currently not implemented
                     oprSrc1 := INVALID;
                     oprSrc2 := INVALID;
                     toWriteReg_o <= NO;
