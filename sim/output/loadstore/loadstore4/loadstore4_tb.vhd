@@ -89,37 +89,37 @@ alias user_reg is <<signal ^.cpu_ist.datapath_ist.regfile_ist.regArray: RegArray
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 15 * CLK_PERIOD;
-    assert user_reg(4) = x"000000ef" severity FAILURE;
+    assert user_reg(4) = x"ef000000" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 17 * CLK_PERIOD;
-    assert user_reg(4) = x"012345ef" severity FAILURE;
+    assert user_reg(4) = x"ef012345" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 21 * CLK_PERIOD;
-    assert user_reg(4) = x"0000cdef" severity FAILURE;
+    assert user_reg(4) = x"cdef0000" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 23 * CLK_PERIOD;
-    assert user_reg(4) = x"0123cdef" severity FAILURE;
+    assert user_reg(4) = x"cdef0123" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 27 * CLK_PERIOD;
-    assert user_reg(4) = x"01000000" severity FAILURE;
+    assert user_reg(4) = x"00000001" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 29 * CLK_PERIOD;
-    assert user_reg(4) = x"01abcdef" severity FAILURE;
+    assert user_reg(4) = x"abcdef01" severity FAILURE;
     wait;
 end process;
 process begin

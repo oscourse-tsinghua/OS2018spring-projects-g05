@@ -101,37 +101,37 @@ end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 32 * CLK_PERIOD;
-    assert user_reg(6) = x"012345ff" severity FAILURE;
+    assert user_reg(6) = x"234567ff" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 33 * CLK_PERIOD;
-    assert user_reg(7) = x"ffffffef" severity FAILURE;
+    assert user_reg(7) = x"ffffff89" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 44 * CLK_PERIOD;
-    assert user_reg(6) = x"0123ffff" severity FAILURE;
+    assert user_reg(6) = x"4567ffff" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 45 * CLK_PERIOD;
-    assert user_reg(7) = x"ffffcdef" severity FAILURE;
+    assert user_reg(7) = x"ffff89ab" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 56 * CLK_PERIOD;
-    assert user_reg(6) = x"01ffffff" severity FAILURE;
+    assert user_reg(6) = x"67ffffff" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 57 * CLK_PERIOD;
-    assert user_reg(7) = x"ffabcdef" severity FAILURE;
+    assert user_reg(7) = x"ff89abcd" severity FAILURE;
     wait;
 end process;
     end block assertBlk;
