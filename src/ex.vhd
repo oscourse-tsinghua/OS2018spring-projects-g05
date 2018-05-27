@@ -257,9 +257,11 @@ begin
                 when ALU_AND => writeRegData_o <= operand1_i and operand2_i;
                 when ALU_XOR => writeRegData_o <= operand1_i xor operand2_i;
                 when ALU_NOR => writeRegData_o <= operand1_i nor operand2_i;
-                when ALU_SLL => writeRegData_o <= operand2_i sll to_integer(unsigned(operand1_i));
-                when ALU_SRL => writeRegData_o <= operand2_i srl to_integer(unsigned(operand1_i));
-                when ALU_SRA => writeRegData_o <= to_stdlogicvector(to_bitvector(operand2_i) sra to_integer(unsigned(operand1_i)));
+                when ALU_SLL => writeRegData_o <= operand2_i sll to_integer(unsigned(operand1_i(4 downto 0)));
+                when ALU_SRL => writeRegData_o <= operand2_i srl to_integer(unsigned(operand1_i(4 downto 0)));
+                when ALU_SRA => writeRegData_o <= to_stdlogicvector(
+                    to_bitvector(operand2_i) sra to_integer(unsigned(operand1_i(4 downto 0)))
+                );
                 when ALU_LUI => writeRegData_o <= operand1_i(15 downto 0) & 16b"0";
                 when ALU_JBAL => writeRegData_o <= linkAddress_i;
 
