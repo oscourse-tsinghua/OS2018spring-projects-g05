@@ -36,8 +36,8 @@ RUN swr $4, 0x101($10)
 RUN swl $5, 0x104($10)
 RUN lw $6, 0x100($10)
 RUN lw $7, 0x104($10)
-ASSERT 32 reg(6) x"012345ff"
-ASSERT 33 reg(7) x"ffffffef"
+ASSERT 32 reg(6) x"234567ff"
+ASSERT 33 reg(7) x"ffffff89"
 
 RUN sw $3, 0x100($10)
 RUN sw $3, 0x104($10)
@@ -45,8 +45,8 @@ RUN swr $4, 0x102($10)
 RUN swl $5, 0x105($10)
 RUN lw $6, 0x100($10)
 RUN lw $7, 0x104($10)
-ASSERT 44 reg(6) x"0123ffff"
-ASSERT 45 reg(7) x"ffffcdef"
+ASSERT 44 reg(6) x"4567ffff"
+ASSERT 45 reg(7) x"ffff89ab"
 
 RUN sw $3, 0x100($10)
 RUN sw $3, 0x104($10)
@@ -54,8 +54,8 @@ RUN swr $4, 0x103($10)
 RUN swl $5, 0x106($10)
 RUN lw $6, 0x100($10)
 RUN lw $7, 0x104($10)
-ASSERT 56 reg(6) x"01ffffff"
-ASSERT 57 reg(7) x"ffabcdef"
+ASSERT 56 reg(6) x"67ffffff"
+ASSERT 57 reg(7) x"ff89abcd"
 
 # IF    | ID    | EX    | MEM   | WB    | assertion | period (*=assertion)
 # lui   |       |       |       |       |           | 1
