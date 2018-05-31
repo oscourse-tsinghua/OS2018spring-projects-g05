@@ -37,6 +37,8 @@ end mmu;
 architecture bhv of mmu is
     type EntryArr is array (0 to TLB_ENTRY_NUM - 1) of TLBEntry;
     signal entries: EntryArr;
+    signal pageMask: std_logic_vector(4 downto 0);
+    signal idx: std_logic_vector(4 downto 0);
 begin
     -- Translation
     -- We can't use 'Z' inside chip, so here we are using sequential look-up
@@ -71,7 +73,7 @@ begin
                         (entries(i).lo0(ENTRY_LO_G_BIT) and entries(i).lo1(ENTRY_LO_G_BIT)) = '1' or -- global
                         entries(i).hi(EntryHiASIDBits) = entry_i.hi(EntryHiASIDBits) -- ASID match
                     ) then
-                        if (addr_i(12) = '0') then
+                        if (addr_i(conv_integer(pageMask)) = '0') then
                             targetLo := entries(i).lo0;
                         else
                             targetLo := entries(i).lo1;
@@ -80,7 +82,7 @@ begin
                             -- Valid
                             if (targetLo(ENTRY_LO_D_BIT) = '1' or isLoad_i = '1') then
                                 -- Dirty or being read (Only dirty page can be written)
-                                addr_o <= targetLo(EntryLoPFNBits) & addr_i(11 downto 0);
+                                addr_o <= targetLo(25 downto conv_integer(pageMask) - 6) & addr_i(conv_integer(pageMask) - 1 downto 0);
                                 tlbExcept := false;
                             end if;
                         end if;
@@ -117,12 +119,20 @@ begin
                     entries(i).lo0 <= (others => '0');
                     entries(i).lo1 <= (others => '0');
                 end loop;
+                pageMask <= 5ux"c";
             elsif (entryWrite_i = YES) then
                 entries(conv_integer(index_i)) <= entry_i;
             elsif (entryFlush_i = YES) then
                 for i in 0 to TLB_ENTRY_NUM - 1 loop
                     entries(i).lo0(ENTRY_LO_V_BIT) <= '0';
                     entries(i).lo1(ENTRY_LO_V_BIT) <= '0';
+                end loop;
+            else
+                pageMask <= 5ux"c";
+                for i in 28 downto 13 loop
+                    if ((pageMask_i(i + 1) = '0') and (pageMask_i(i) = '1')) then
+                        pageMask <= conv_std_logic_vector(i, 5);
+                    end if;
                 end loop;
             end if;
         end if;
