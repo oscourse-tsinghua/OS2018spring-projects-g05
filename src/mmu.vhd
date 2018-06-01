@@ -81,7 +81,9 @@ begin
                             -- Valid
                             if (targetLo(ENTRY_LO_D_BIT) = '1' or isLoad_i = '1') then
                                 -- Dirty or being read (Only dirty page can be written)
-                                addr_o <= targetLo(25 downto conv_integer(pageMask) - 6) & addr_i(conv_integer(pageMask) - 1 downto 0);
+                                addr_o <= ((targetLo(25 downto 6) and ("1" & not pageMask_i(31 downto 13)))
+                                          or ("0" & (pageMask_i(31 downto 13) and addr_i(30 downto 12))))
+                                          & addr_i(11 downto 0);
                                 tlbExcept := false;
                             end if;
                         end if;
