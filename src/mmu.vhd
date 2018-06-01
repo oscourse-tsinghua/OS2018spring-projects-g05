@@ -38,7 +38,6 @@ architecture bhv of mmu is
     type EntryArr is array (0 to TLB_ENTRY_NUM - 1) of TLBEntry;
     signal entries: EntryArr;
     signal pageMask: std_logic_vector(4 downto 0);
-    signal idx: std_logic_vector(4 downto 0);
 begin
     -- Translation
     -- We can't use 'Z' inside chip, so here we are using sequential look-up
