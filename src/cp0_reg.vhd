@@ -97,7 +97,7 @@ begin
     -- we can still do this because PRID is a preset constant --
     cp0EBaseAddr_o <= curArr(PRID_OR_EBASE_REG);
 
-    pageMask_o <= 4ub"0" & curArr(PAGEMASK_REG)(PageMaskMaskBits) & 12ub"0";
+    pageMask_o <= 3ub"0" & curArr(PAGEMASK_REG)(PageMaskMaskBits) & 13ub"0";
 
     process (all) begin
         -- write to cp0 --

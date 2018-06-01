@@ -29,7 +29,7 @@ architecture bhv of jump3_fake_ram is
     signal llBit: std_logic;
     signal llLoc: std_logic_vector(AddrWidth);
 begin
-    wordAddr <= to_integer(unsigned(addr_i(31 downto 2)));
+    wordAddr <= to_integer(unsigned(addr_i(11 downto 2)));
 
     bitSelect <= (
         31 downto 24 => byteSelect_i(3),
