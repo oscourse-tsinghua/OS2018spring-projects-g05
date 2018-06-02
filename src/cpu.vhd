@@ -22,6 +22,8 @@ entity cpu is
         devDataLoad_i: in std_logic_vector(DataWidth);
         devPhysicalAddr_o: out std_logic_vector(AddrWidth);
         devByteSelect_o: out std_logic_vector(3 downto 0);
+        scCorrect_i: in std_logic;
+        sync_o: out std_logic_vector(2 downto 0);
 
         int_i: in std_logic_vector(IntWidth);
         timerInt_o: out std_logic
@@ -54,6 +56,7 @@ architecture bhv of cpu is
     signal entryWrite: std_logic;
     signal entryFlush: std_logic;
     signal entrySave, entryLoad: TLBEntry;
+    signal pageMask: std_logic_vector(AddrWidth);
 
     signal dataLoadConv, dataSaveConv: std_logic_vector(DataWidth);
     signal byteSelectConv: std_logic_vector(3 downto 0);
@@ -98,6 +101,7 @@ begin
             enable_o => devEnable_o,
             exceptCause_o => devExcept,
 
+            pageMask_i => pageMask,
             index_i => entryIndexSave,
             index_o => entryIndexLoad,
             indexValid_o => entryIndexValid,
@@ -171,7 +175,10 @@ begin
             entryWrite_o => entryWrite,
             entryFlush_o => entryFlush,
             entry_i => entryLoad,
-            entry_o => entrySave
+            entry_o => entrySave,
+            pageMask_o => pageMask,
+            scCorrect_i => scCorrect_i,
+            sync_o => sync_o
         );
 
 end bhv;

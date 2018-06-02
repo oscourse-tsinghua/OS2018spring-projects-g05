@@ -11,10 +11,15 @@ use work.except_const.all;
 entity id is
     port (
         rst: in std_logic;
+
         pc_i: in std_logic_vector(AddrWidth);
         inst_i: in std_logic_vector(InstWidth);
         regData1_i: in std_logic_vector(DataWidth);
         regData2_i: in std_logic_vector(DataWidth);
+        regReadEnable1_o: out std_logic;
+        regReadEnable2_o: out std_logic;
+        regReadAddr1_o: out std_logic_vector(RegAddrWidth);
+        regReadAddr2_o: out std_logic_vector(RegAddrWidth);
 
         -- Push Forward --
         exToWriteReg_i: in std_logic;
@@ -24,11 +29,9 @@ entity id is
         memWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
         memWriteRegData_i: in std_logic_vector(DataWidth);
 
+        nextWillStall_i: in std_logic;
         toStall_o: out std_logic;
-        regReadEnable1_o: out std_logic;
-        regReadEnable2_o: out std_logic;
-        regReadAddr1_o: out std_logic_vector(RegAddrWidth);
-        regReadAddr2_o: out std_logic_vector(RegAddrWidth);
+
         alut_o: out AluType;
         memt_o: out MemType;
         lastMemt_i: in MemType; -- memt of last instruction, used to determine stalling
@@ -37,23 +40,25 @@ entity id is
         operandX_o: out std_logic_vector(DataWidth);
         toWriteReg_o: out std_logic;
         writeRegAddr_o: out std_logic_vector(RegAddrWidth);
-        isIdEhb_o: out std_logic;
 
         -- For ju instructions --
         isInDelaySlot_i: in std_logic;
         nextInstInDelaySlot_o: out std_logic;
         branchFlag_o: out std_logic;
         branchTargetAddress_o: out std_logic_vector(AddrWidth);
-        linkAddr_o: out std_logic_vector(AddrWidth);
         isInDelaySlot_o: out std_logic;
         blNullify_o: out std_logic; -- for "branch likely": skipping the delay slot is equivalent to nullifying next inst
+        linkAddr_o: out std_logic_vector(AddrWidth);
 
         -- For Exceptions --
         valid_i: in std_logic;
         valid_o: out std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-        currentInstAddr_o: out std_logic_vector(AddrWidth)
+        currentInstAddr_o: out std_logic_vector(AddrWidth);
+
+        -- hazard barrier --
+        isIdEhb_o: out std_logic
     );
 end id;
 
@@ -143,6 +148,7 @@ architecture bhv of id is
     signal immInstrAddr: std_logic_vector(AddrWidth);
     signal instImmSign: std_logic_vector(InstOffsetImmWidth);
     signal instOffsetImm: std_logic_vector(InstOffsetImmWidth);
+
 begin
 
     -- Segment the instruction --
@@ -154,7 +160,7 @@ begin
     instFunc <= inst_i(InstFuncIdx);
     instImm  <= inst_i(InstImmIdx);
     instAddr <= inst_i(InstAddrIdx);
-    instImmSign <= inst_i(InstImmSignIdx) & "00000000000000000";
+    instImmSign <= inst_i(InstImmSignIdx) & 17ub"0";
     instOffsetImm <= "0" & inst_i(InstUnsignedImmIdx) & "00";
 
     -- calculated the addresses that maybe used by jmp instructions first --
@@ -463,7 +469,7 @@ begin
                             oprSrc1 := INVALID;
                             oprSrc2 := INVALID;
                             toWriteReg_o <= NO;
-                            exceptCause_o <= BREAK_CAUSE;
+                            exceptCause_o <= BREAKPOINT_CAUSE;
                             isInvalid := NO;
 
                         when FUNC_TNE =>
@@ -632,6 +638,16 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
+                when OP_LL =>
+                    oprSrc1 := REG;
+                    oprSrc2 := INVALID;
+                    oprSrcX := IMM;
+                    alut_o <= ALU_LOAD;
+                    memt_o <= MEM_LL;
+                    toWriteReg_o <= YES;
+                    writeRegAddr_o <= instRt;
+                    isInvalid := NO;
+
                 -- For LWL and LWR, we load rt here, fill the bytes to be loaded
                 -- in MEM, and write it back in WB. This might be slow because a
                 -- LWL is usually followed by a LWR, in which case there will be
@@ -678,6 +694,16 @@ begin
                     oprSrcX := IMM;
                     alut_o <= ALU_STORE;
                     memt_o <= MEM_SW;
+                    isInvalid := NO;
+
+                when OP_SC =>
+                    oprSrc1 := REG;
+                    oprSrc2 := REG;
+                    oprSrcX := IMM;
+                    alut_o <= ALU_STORE;
+                    memt_o <= MEM_SC;
+                    toWriteReg_o <= YES;
+                    writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
                 when OP_SWL =>
@@ -728,7 +754,8 @@ begin
                     writeRegAddr_o <= instRt;
                     isInvalid := NO;
 
-                when OP_CACHE =>
+                when OP_CACHE|OP_PREF =>
+                    -- Currently not implemented
                     oprSrc1 := INVALID;
                     oprSrc2 := INVALID;
                     toWriteReg_o <= NO;
@@ -848,20 +875,22 @@ begin
                 when OP_COP0 =>
                     case (instRs) is
                         when RS_MT =>
-                            if (inst_i(InstSaFuncIdx) = "00000000") then
+                            if (inst_i(InstSaFuncIdx) = 8ub"0") then
                                 alut_o <= ALU_MTC0;
                                 oprSrc1 := REGID;
                                 oprSrc2 := REG;
+                                oprSrcX := IMM;
                                 toWriteReg_o <= NO;
                                 writeRegAddr_o <= (others => '0');
                                 isInvalid := NO;
                             end if;
 
                         when RS_MF =>
-                            if (inst_i(InstSaFuncIdx) = "00000000") then
+                            if (inst_i(InstSaFuncIdx) = 8ub"0") then
                                 alut_o <= ALU_MFC0;
                                 oprSrc1 := REGID;
                                 oprSrc2 := INVALID;
+                                oprSrcX := IMM;
                                 toWriteReg_o <= YES;
                                 writeRegAddr_o <= instRt;
                                 isInvalid := NO;
@@ -880,7 +909,7 @@ begin
 
                         -- Note: in release 6, we need to clear register rt --
                         when RS_MFH =>
-                            if (inst_i(InstSaFuncIdx) = "00000000") then
+                            if (inst_i(InstSaFuncIdx) = 8ub"0") then
                                 alut_o <= ALU_MFH;
                                 oprSrc1 := INVALID;
                                 oprSrc2 := REG;
@@ -898,6 +927,10 @@ begin
                             when FUNC_ERET =>
                                 isInvalid := NO;
                                 exceptCause_o <= ERET_CAUSE;
+
+                            when FUNC_DERET =>
+                                isInvalid := NO;
+                                exceptCause_o <= DERET_CAUSE;
 
                             when FUNC_TLBWI =>
                                 isInvalid := NO;
@@ -951,20 +984,20 @@ begin
                     end if;
 
                 when SA =>
-                    operand1 := "000000000000000000000000000" & instSa;
+                    operand1 := 27ub"0" & instSa;
 
                 when IMM =>
-                    operand1 := "0000000000000000" & instImm;
+                    operand1 := 16ub"0" & instImm;
 
                 when SGN_IMM =>
                     if (instImm(15) = '0') then
-                        operand1 := "0000000000000000" & instImm;
+                        operand1 := 16ub"0" & instImm;
                     else
-                        operand1 := "1111111111111111" & instImm;
+                        operand1 := 16sb"1" & instImm;
                     end if;
 
                 when REGID =>
-                    operand1 := "000000000000000000000000000" & instRd;
+                    operand1 := 27ub"0" & instRd;
 
                 when others =>
                     operand1 := (others => '0');
@@ -979,13 +1012,13 @@ begin
                     -- Push Forward --
                     if (memToWriteReg_i = YES and memWriteRegAddr_i = instRt) then
                         operand2 := memWriteRegData_i;
-                        if (instRt = "00000") then
+                        if (instRt = 5ub"0") then
                             operand2 := (others => '0');
                         end if;
                     end if;
                     if (exToWriteReg_i = YES and exWriteRegAddr_i = instRt) then
                         operand2 := exWriteRegData_i;
-                        if (instRt = "00000") then
+                        if (instRt = 5ub"0") then
                             operand2 := (others => '0');
                         elsif (lastMemt_i /= INVALID) then
                             toStall := PIPELINE_STOP;
@@ -1088,12 +1121,12 @@ begin
             exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
         end if;
 
-        if (toStall = PIPELINE_STOP) then
-            branchFlag := NOT_BRANCH_FLAG; -- See pc_reg.vhd for reason
-        end if;
-
         if (tneFlag = YES and operand1 /= operand2) then
             exceptCause_o <= TRAP_CAUSE;
+        end if;
+
+        if (nextWillStall_i = '1') then
+            branchFlag := NOT_BRANCH_FLAG;
         end if;
 
         operand1_o <= operand1;

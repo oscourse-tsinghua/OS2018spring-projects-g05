@@ -15,16 +15,18 @@ package except_const is
     --
     constant NO_CAUSE: std_logic_vector(ExceptionCauseWidth) := (others => '1');
     -- NOTE: Because 0x0 if for interruption, we use 0x1F for none
-    constant EXTERNAL_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"0";
-    constant TLB_LOAD_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"2";
-    constant TLB_STORE_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"3";
-    constant ADDR_ERR_LOAD_OR_IF_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"4";
-    constant ADDR_ERR_STORE_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"5";
-    constant SYSCALL_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"8";
-    constant BREAK_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"9";
-    constant INVALID_INST_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"10";
-    constant OVERFLOW_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"12";
-    constant TRAP_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"13";
-    constant ERET_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ud"14";
-    -- Cause of eret is not in standard. We do this because 14~22 is reserved
+    constant EXTERNAL_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"0";
+    constant TLB_LOAD_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"2";
+    constant TLB_STORE_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"3";
+    constant ADDR_ERR_LOAD_OR_IF_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"4";
+    constant ADDR_ERR_STORE_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"5";
+    constant SYSCALL_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"8";
+    constant BREAKPOINT_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"9";
+    constant INVALID_INST_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"a";
+    constant OVERFLOW_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"c";
+    constant TRAP_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"d";
+    constant ERET_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"10";
+    constant DERET_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"11";
+    constant WATCH_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"17";
+    -- Cause of eret and deret is not in standard. We do this because 16~17 is implementation-dependent
 end except_const;

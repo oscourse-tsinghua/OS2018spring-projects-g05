@@ -22,6 +22,8 @@ architecture bhv of loadstore4_tb is
     signal devDataSave, devDataLoad: std_logic_vector(DataWidth);
     signal devPhysicalAddr: std_logic_vector(AddrWidth);
     signal devByteSelect: std_logic_vector(3 downto 0);
+    signal sync: std_logic_vector(2 downto 0);
+    signal scCorrect: std_logic;
 
     signal int: std_logic_vector(IntWidth);
     signal timerInt: std_logic;
@@ -35,7 +37,9 @@ begin
             data_i => devDataSave,
             addr_i => devPhysicalAddr,
             byteSelect_i => devByteSelect,
-            data_o => devDataLoad
+            data_o => devDataLoad,
+            scCorrect_o => scCorrect,
+            sync_i => sync
         );
 
     cpu_ist: entity work.cpu
@@ -58,7 +62,9 @@ begin
             devByteSelect_o => devByteSelect,
 
             int_i => int,
-            timerInt_o => timerInt
+            timerInt_o => timerInt,
+            sync_o => sync,
+            scCorrect_i => scCorrect
         );
     int <= (0 => timerInt, others => '0');
 
@@ -83,37 +89,37 @@ alias user_reg is <<signal ^.cpu_ist.datapath_ist.regfile_ist.regArray: RegArray
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 15 * CLK_PERIOD;
-    assert user_reg(4) = x"000000ef" severity FAILURE;
+    assert user_reg(4) = x"ef000000" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 17 * CLK_PERIOD;
-    assert user_reg(4) = x"012345ef" severity FAILURE;
+    assert user_reg(4) = x"ef012345" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 21 * CLK_PERIOD;
-    assert user_reg(4) = x"0000cdef" severity FAILURE;
+    assert user_reg(4) = x"cdef0000" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 23 * CLK_PERIOD;
-    assert user_reg(4) = x"0123cdef" severity FAILURE;
+    assert user_reg(4) = x"cdef0123" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 27 * CLK_PERIOD;
-    assert user_reg(4) = x"01000000" severity FAILURE;
+    assert user_reg(4) = x"00000001" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 29 * CLK_PERIOD;
-    assert user_reg(4) = x"01abcdef" severity FAILURE;
+    assert user_reg(4) = x"abcdef01" severity FAILURE;
     wait;
 end process;
 process begin

@@ -22,6 +22,8 @@ architecture bhv of loadstore5_tb is
     signal devDataSave, devDataLoad: std_logic_vector(DataWidth);
     signal devPhysicalAddr: std_logic_vector(AddrWidth);
     signal devByteSelect: std_logic_vector(3 downto 0);
+    signal sync: std_logic_vector(2 downto 0);
+    signal scCorrect: std_logic;
 
     signal int: std_logic_vector(IntWidth);
     signal timerInt: std_logic;
@@ -35,7 +37,9 @@ begin
             data_i => devDataSave,
             addr_i => devPhysicalAddr,
             byteSelect_i => devByteSelect,
-            data_o => devDataLoad
+            data_o => devDataLoad,
+            scCorrect_o => scCorrect,
+            sync_i => sync
         );
 
     cpu_ist: entity work.cpu
@@ -58,7 +62,9 @@ begin
             devByteSelect_o => devByteSelect,
 
             int_i => int,
-            timerInt_o => timerInt
+            timerInt_o => timerInt,
+            sync_o => sync,
+            scCorrect_i => scCorrect
         );
     int <= (0 => timerInt, others => '0');
 
@@ -95,37 +101,37 @@ end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 32 * CLK_PERIOD;
-    assert user_reg(6) = x"012345ff" severity FAILURE;
+    assert user_reg(6) = x"234567ff" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 33 * CLK_PERIOD;
-    assert user_reg(7) = x"ffffffef" severity FAILURE;
+    assert user_reg(7) = x"ffffff89" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 44 * CLK_PERIOD;
-    assert user_reg(6) = x"0123ffff" severity FAILURE;
+    assert user_reg(6) = x"4567ffff" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 45 * CLK_PERIOD;
-    assert user_reg(7) = x"ffffcdef" severity FAILURE;
+    assert user_reg(7) = x"ffff89ab" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 56 * CLK_PERIOD;
-    assert user_reg(6) = x"01ffffff" severity FAILURE;
+    assert user_reg(6) = x"67ffffff" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 57 * CLK_PERIOD;
-    assert user_reg(7) = x"ffabcdef" severity FAILURE;
+    assert user_reg(7) = x"ff89abcd" severity FAILURE;
     wait;
 end process;
     end block assertBlk;

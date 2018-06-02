@@ -6,6 +6,10 @@
 /thinpad_top.sim
 /thinpad_top.hw
 /thinpad_top.ip_user_files
+/.cxl.ip
+/.cxl.modelsim.version
+/compile_simlib.log
+modelsim.ini
 *.cache
 .Xil
 *.backup.*

@@ -24,21 +24,21 @@ RUN sw  $3, 0x104($10)
 
 RUN or  $4, $0, $0
 RUN lwl $4, 0x104($10)
-ASSERT 15 reg(4) x"000000ef"
+ASSERT 15 reg(4) x"ef000000"
 RUN lwr $4, 0x101($10)
-ASSERT 17 reg(4) x"012345ef"
+ASSERT 17 reg(4) x"ef012345"
 
 RUN or  $4, $0, $0
 RUN lwl $4, 0x105($10)
-ASSERT 21 reg(4) x"0000cdef"
+ASSERT 21 reg(4) x"cdef0000"
 RUN lwr $4, 0x102($10)
-ASSERT 23 reg(4) x"0123cdef"
+ASSERT 23 reg(4) x"cdef0123"
 
 RUN or  $4, $0, $0
 RUN lwr $4, 0x103($10)
-ASSERT 27 reg(4) x"01000000"
+ASSERT 27 reg(4) x"00000001"
 RUN lwl $4, 0x106($10)
-ASSERT 29 reg(4) x"01abcdef"
+ASSERT 29 reg(4) x"abcdef01"
 
 RUN lwl $4, 0x103($10)
 ASSERT 31 reg(4) x"01234567"

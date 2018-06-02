@@ -6,6 +6,7 @@ use work.cp0_const.all;
 entity mem_wb is
     port (
         rst, clk: in std_logic;
+
         stall_i: in std_logic_vector(StallWidth);
         toWriteReg_i: in std_logic;
         writeRegAddr_i: in std_logic_vector(RegAddrWidth);
@@ -23,11 +24,13 @@ entity mem_wb is
         -- interact with CP0 --
         memCP0RegData_i: in std_logic_vector(DataWidth);
         memCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
+        memCP0RegWriteSel_i: in std_logic_vector(SelWidth);
         memCP0RegWe_i: in std_logic;
+        cp0Sp_i: in CP0Special;
         wbCP0RegData_o: out std_logic_vector(DataWidth);
         wbCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
+        wbCP0RegWriteSel_o: out std_logic_vector(SelWidth);
         wbCP0RegWe_o: out std_logic;
-        cp0Sp_i: in CP0Special;
         cp0Sp_o: out CP0Special;
 
         -- for exception --
@@ -56,6 +59,7 @@ begin
                 wbCP0RegWe_o <= NO;
                 wbCP0RegData_o <= (others => '0');
                 wbCP0RegWriteAddr_o <= (others => '0');
+                wbCP0RegWriteSel_o <= (others => '0');
 
                 cp0Sp_o <= INVALID;
             elsif (stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
@@ -70,6 +74,7 @@ begin
 
                 wbCP0RegWe_o <= memCP0RegWe_i;
                 wbCP0RegWriteAddr_o <= memCP0RegWriteAddr_i;
+                wbCP0RegWriteSel_o <= memCP0RegWriteSel_i;
                 wbCP0RegData_o <= memCP0RegData_i;
 
                 cp0Sp_o <= cp0Sp_i;

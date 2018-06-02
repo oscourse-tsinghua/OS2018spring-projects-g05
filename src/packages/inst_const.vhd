@@ -19,6 +19,7 @@ package inst_const is
     subtype InstJmpUnchangeIdx      is integer range 31 downto 28;
     subtype InstImmAddrIdx          is integer range 25 downto  0;
     subtype InstSaFuncIdx           is integer range 10 downto  3;
+    subtype InstSelIdx              is integer range  2 downto  0;
 
     subtype InstOpWidth             is integer range  5 downto  0;
     subtype InstRsWidth             is integer range  4 downto  0;
@@ -33,7 +34,7 @@ package inst_const is
     subtype InstJmpUnchangeWidth    is integer range  3 downto  0;
     subtype InstImmAddrWidth        is integer range 25 downto  0;
     subtype InstOffsetImmWidth      is integer range 17 downto  0;
-    subtype InstSaFuncWidth         is integer range 10 downto  0;
+    subtype InstSaFuncWidth         is integer range  7 downto  0;
 
     --
     -- Logic OP/FUNC codes
@@ -47,6 +48,7 @@ package inst_const is
     constant OP_ORI: std_logic_vector(InstOpWidth) := "001101";
     constant OP_XORI: std_logic_vector(InstOpWidth) := "001110";
     constant OP_LUI: std_logic_vector(InstOpWidth) := "001111";
+    constant OP_PREF: std_logic_vector(InstOpWidth) := "110011";
 
     --
     -- Algebraic FUNC codes
@@ -88,6 +90,8 @@ package inst_const is
     constant OP_SW: std_logic_vector(InstOpWidth) := "101011";
     constant OP_SWL: std_logic_vector(InstOpWidth) := "101010";
     constant OP_SWR: std_logic_vector(InstOpWidth) := "101110";
+    constant OP_LL: std_logic_vector(InstOpWidth) := "110000";
+    constant OP_SC: std_logic_vector(InstOpWidth) := "111000";
 
     --
     -- Arith OP/FUNC codes
@@ -164,6 +168,7 @@ package inst_const is
     constant RS_WAIT_OR_TLBINVF: std_logic_vector(InstRsWidth) := "10000";
     constant FUNC_SYSCALL: std_logic_vector(InstFuncWidth) := "001100";
     constant FUNC_ERET: std_logic_vector(InstFuncWidth) := "011000";
+    constant FUNC_DERET: std_logic_vector(InstFuncWidth) := "011111";
     constant FUNC_BREAK: std_logic_vector(InstFuncWidth) := "001101";
     constant FUNC_SDBBP: std_logic_vector(InstFuncWidth) := "111111";
 

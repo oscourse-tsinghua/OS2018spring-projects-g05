@@ -5,6 +5,8 @@ use work.global_const.all;
 
 entity devctrl is
     port (
+        clk, rst: in std_logic;
+        
         -- Signals connecting to mmu --
         devEnable_i, devWrite_i: in std_logic;
         devBusy_o: out std_logic;
@@ -70,11 +72,17 @@ entity devctrl is
         ledEnable_o: out std_logic;
         ledData_o: out std_logic_vector(15 downto 0);
         numEnable_o: out std_logic;
-        numData_o: out std_logic_vector(7 downto 0)
+        numData_o: out std_logic_vector(7 downto 0);
+
+        -- for sync --
+        sync_i: in std_logic_vector(2 downto 0);
+        scCorrect_o: out std_logic
     );
 end devctrl;
 
 architecture bhv of devctrl is
+    signal llBit: std_logic;
+    signal llLoc: std_logic_vector(AddrWidth);
 begin
     process (all) begin
         devBusy_o <= PIPELINE_NONSTOP;
@@ -171,6 +179,30 @@ begin
                 usbWriteData_o <= devDataSave_i;
                 devDataLoad_o <= usbReadData_i;
                 devBusy_o <= usbBusy_i;
+            end if;
+        end if;
+    end process;
+
+    scCorrect_o <= llBit when devPhysicalAddr_i = llLoc else '0';
+
+    process(clk) begin
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                llBit <= '0';
+                llLoc <= (others => 'X');
+            else
+                -- see page 347 in document MD00086(Volume II-A revision 6.06)
+                if (sync_i(0) = '1') then -- LL
+                    llBit <= '1';
+                    llLoc <= devPhysicalAddr_i;
+                elsif (sync_i(1) = '1') then -- SC
+                    llBit <= '0';
+                elsif (devPhysicalAddr_i = llLoc) then -- Others
+                    llBit <= '0';
+                end if;
+                if (sync_i(2) = '1') then -- Flush
+                    llBit <= '0';
+                end if;
             end if;
         end if;
     end process;

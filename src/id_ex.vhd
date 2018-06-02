@@ -8,35 +8,42 @@ use work.except_const.all;
 entity id_ex is
     port (
         rst, clk: in std_logic;
-        stall_i: in std_logic_vector(StallWidth);
-        alut_i: in AluType;
-        memt_i: in MemType;
+
+        -- basic operation --
         operand1_i: in std_logic_vector(DataWidth);
         operand2_i: in std_logic_vector(DataWidth);
         operandX_i: in std_logic_vector(DataWidth);
         toWriteReg_i: in std_logic;
         writeRegAddr_i: in std_logic_vector(RegAddrWidth);
-        idLinkAddress_i: in std_logic_vector(AddrWidth);
-        idIsInDelaySlot_i: in std_logic;
-        nextInstInDelaySlot_i: in std_logic;
-        flush_i: in std_logic;
-        idCurrentInstAddr_i: in std_logic_vector(AddrWidth);
-        idExceptCause_i: in std_logic_vector(ExceptionCauseWidth);
-        valid_i: in std_logic;
-
-        alut_o: out AluType;
-        memt_o: out MemType;
         operand1_o: out std_logic_vector(DataWidth);
         operand2_o: out std_logic_vector(DataWidth);
         operandX_o: out std_logic_vector(DataWidth);
         toWriteReg_o: out std_logic;
         writeRegAddr_o: out std_logic_vector(RegAddrWidth);
+
+        -- memory and stall --
+        alut_i: in AluType;
+        memt_i: in MemType;
+        alut_o: out AluType;
+        memt_o: out MemType;
+        stall_i: in std_logic_vector(StallWidth);
+
+        -- exception --
+        idExceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        exExceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        valid_i: in std_logic;
+        valid_o: out std_logic;
+        flush_i: in std_logic;
+
+        -- branch --
+        idLinkAddress_i: in std_logic_vector(AddrWidth);
+        idIsInDelaySlot_i: in std_logic;
+        nextInstInDelaySlot_i: in std_logic;
         exLinkAddress_o: out std_logic_vector(AddrWidth);
         exIsInDelaySlot_o: out std_logic;
         isInDelaySlot_o: out std_logic;
-        exCurrentInstAddr_o: out std_logic_vector(AddrWidth);
-        exExceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-        valid_o: out std_logic
+        idCurrentInstAddr_i: in std_logic_vector(AddrWidth);
+        exCurrentInstAddr_o: out std_logic_vector(AddrWidth)
     );
 end id_ex;
 
@@ -85,7 +92,9 @@ begin
                 writeRegAddr_o <= writeRegAddr_i;
                 exLinkAddress_o <= idLinkAddress_i;
                 exIsInDelaySlot_o <= idIsInDelaySlot_i;
-                isInDelaySlot_o <= nextInstInDelaySlot_i;
+                if (valid_i = YES) then
+                    isInDelaySlot_o <= nextInstInDelaySlot_i;
+                end if;
                 exExceptCause_o <= idExceptCause_i;
                 exCurrentInstAddr_o <= idCurrentInstAddr_i;
                 valid_o <= valid_i;
