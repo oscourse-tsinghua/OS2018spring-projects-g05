@@ -168,7 +168,7 @@ wire[31:0] dataSave, dataLoad, addr;
 wire[3:0] byteSelect;
 wire[5:0] int;
 wire timerInt, comInt, usbInt, ethInt;
-assign int = {timerInt, 1'b0, 1'b0, comInt, ethInt, usbInt};
+assign int = {timerInt, 1'b0, 1'b0, comInt, ethInt, 1'b0};
 // NOTE: 1'b0 cannot be written as 0
 // MIPS standard requires int[5] = timer
 // Monitor requires int[2] = COM
