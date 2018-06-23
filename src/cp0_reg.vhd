@@ -283,7 +283,7 @@ begin
                     end if;
                 end if;
                 if ((exceptCause /= NO_CAUSE) and (exceptCause /= ERET_CAUSE) and (exceptCause /= DERET_CAUSE)) then
-                    if (curArr(STATUS_REG)(STATUS_EXL_BIT) = '0') then -- See doc of Status[EXL]
+                    if (curArr(STATUS_REG)(STATUS_EXL_BIT) = '0') then -- See doc of Status[EXL]; replace regArr by curArr
                         if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
                             epc := currentInstAddr_i - 4;
                             regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '1';
