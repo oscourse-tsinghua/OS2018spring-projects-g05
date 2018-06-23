@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 use work.global_const.all;
 use work.mem_const.all;
 use work.except_const.all;
@@ -53,10 +54,12 @@ entity ex_mem is
         valid_i: in std_logic;
         flush_i: in std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_i: in std_logic;
         isInDelaySlot_i: in std_logic;
         currentInstAddr_i: in std_logic_vector(AddrWidth);
         valid_o: out std_logic;
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_o: out std_logic;
         isInDelaySlot_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth)
     );
@@ -87,6 +90,7 @@ begin
                 tempProduct_o <= (others => '0');
                 cnt_o <= (others => '0');
                 exceptCause_o <= NO_CAUSE;
+                tlbRefill_o <= '0';
                 isInDelaySlot_o <= NO;
                 currentInstAddr_o <= (others => '0');
 
@@ -123,6 +127,7 @@ begin
                 cp0Sp_o <= cp0Sp_i;
 
                 exceptCause_o <= exceptCause_i;
+                tlbRefill_o <= tlbRefill_i;
                 isInDelaySlot_o <= isInDelaySlot_i;
                 currentInstAddr_o <= currentInstAddr_i;
 

@@ -30,7 +30,9 @@ entity id_ex is
 
         -- exception --
         idExceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        idTlbRefill_i: in std_logic;
         exExceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        exTlbRefill_o: out std_logic;
         valid_i: in std_logic;
         valid_o: out std_logic;
         flush_i: in std_logic;
@@ -63,6 +65,7 @@ begin
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
                 exExceptCause_o <= NO_CAUSE;
+                exTlbRefill_o <= '0';
                 exLinkAddress_o <= (others => '0');
                 exIsInDelaySlot_o <= NO;
                 isInDelaySlot_o <= NO;
@@ -77,6 +80,7 @@ begin
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
                 exExceptCause_o <= NO_CAUSE;
+                exTlbRefill_o <= '0';
                 exLinkAddress_o <= (others => '0');
                 exIsInDelaySlot_o <= NO;
                 -- Keep `isInDelaySlot_o` as old value
@@ -96,6 +100,7 @@ begin
                     isInDelaySlot_o <= nextInstInDelaySlot_i;
                 end if;
                 exExceptCause_o <= idExceptCause_i;
+                exTlbRefill_o <= idTlbRefill_i;
                 exCurrentInstAddr_o <= idCurrentInstAddr_i;
                 valid_o <= valid_i;
             end if;
