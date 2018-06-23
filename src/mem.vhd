@@ -28,6 +28,7 @@ entity mem is
         memAddr_i: in std_logic_vector(AddrWidth);
         memData_i: in std_logic_vector(DataWidth); -- Data to store
         memExcept_i: in std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_i: in std_logic;
         loadedData_i: in std_logic_vector(DataWidth); -- Data loaded from RAM
         savingData_o: out std_logic_vector(DataWidth);
         memAddr_o: out std_logic_vector(AddrWidth);
@@ -50,10 +51,12 @@ entity mem is
         -- for exception --
         valid_i: in std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        instTlbRefill_i: in std_logic;
         isInDelaySlot_i: in std_logic;
         currentInstAddr_i: in std_logic_vector(AddrWidth);
         cp0Status_i, cp0Cause_i: in std_logic_vector(DataWidth);
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_o: out std_logic;
         isInDelaySlot_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth);
         currentAccessAddr_o: out std_logic_vector(AddrWidth);
@@ -255,5 +258,7 @@ begin
     exceptCause_o <= interrupt when
                      interrupt /= NO_CAUSE else
                      exceptCause_i and memExcept_i;
+    tlbRefill_o <= '0' when interrupt /= NO_CAUSE else tlbRefill_i when memExcept_i /= NO_CAUSE else instTlbRefill_i;
+    -- tlbRefill_o <= '0' when interrupt /= NO_CAUSE else tlbRefill_i;
     -- If exceptCause_i /= NO_CAUSE, there won't be any memory access, so memExcept_i should be NO_CAUSE
 end bhv;

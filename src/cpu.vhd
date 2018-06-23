@@ -49,6 +49,7 @@ architecture bhv of cpu is
 
     signal instStall, dataStall: std_logic;
     signal instExcept, dataExcept, devExcept: std_logic_vector(ExceptionCauseWidth);
+    signal devTlbRefill, instTlbRefill, dataTlbRefill: std_logic;
 
     signal isKernelMode: std_logic;
     signal entryIndexSave, entryIndexLoad: std_logic_vector(TLBIndexWidth);
@@ -99,6 +100,7 @@ begin
             addr_o => devPhysicalAddr_o,
             enable_o => devEnable_o,
             exceptCause_o => devExcept,
+            tlbRefill_o => devTlbRefill,
 
             pageMask_i => pageMask,
             index_i => entryIndexSave,
@@ -119,6 +121,7 @@ begin
             instEnable_i => instEnable,
             instStall_o => instStall,
             instExcept_o => instExcept,
+            instTlbRefill_o => instTlbRefill,
 
             -- Connect to data interface of CPU
             dataEnable_i => dataEnable,
@@ -129,6 +132,7 @@ begin
             dataByteSelect_i => dataByteSelect,
             dataStall_o => dataStall,
             dataExcept_o => dataExcept,
+            dataTlbRefill_o => dataTlbRefill,
 
             -- Connect to external device (MMU)
             devEnable_o => mmuEnable,
@@ -138,7 +142,8 @@ begin
             devAddr_o => devVirtualAddr,
             devByteSelect_o => byteSelectConv,
             devBusy_i => devBusy_i,
-            devExcept_i => devExcept
+            devExcept_i => devExcept,
+            devTlbRefill_i => devTlbRefill
         );
 
     datapath_ist: entity work.datapath
@@ -155,6 +160,7 @@ begin
             instEnable_o => instEnable,
             instData_i => instData,
             instAddr_o => instAddr,
+            instTlbRefill_i => instTlbRefill,
             dataEnable_o => dataEnable,
             dataWrite_o => dataWrite,
             dataData_i => dataDataLoad,
@@ -163,6 +169,7 @@ begin
             dataByteSelect_o => dataByteSelect,
             instExcept_i => instExcept,
             dataExcept_i => dataExcept,
+            dataTlbRefill_i => dataTlbRefill,
             ifToStall_i => instStall,
             memToStall_i => dataStall,
             int_i => int_i,
