@@ -37,6 +37,8 @@ entity cp0_reg is
         isIndelaySlot_i: in std_logic;
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         isKernelMode_o: out std_logic;
+        tlbRefill_i: in std_logic;
+        tlbRefill_o: out std_logic;
 
         -- For MMU
         cp0Sp_i: in CP0Special;
@@ -65,6 +67,7 @@ architecture bhv of cp0_reg is
     -- curArr including the data that will be written to regArr in the next period
     signal timerInt: std_logic;
     signal exceptCause: std_logic_vector(ExceptionCauseWidth);
+    signal tlbRefill: std_logic;
     signal debugPoint: std_logic;
     signal debugType: std_logic_vector(WatchHiW1CBits);
 begin
@@ -177,6 +180,7 @@ begin
     process (all) begin
         -- Add debug exception into `exceptCause` --
         exceptCause <= exceptCause_i;
+        tlbRefill <= tlbRefill_i;
         if (
             (debugPoint or regArr(CAUSE_REG)(CAUSE_WP_BIT)) = '1' and
             ((regArr(STATUS_REG)(STATUS_ERL_BIT) or regArr(STATUS_REG)(STATUS_EXL_BIT)) = '0')
@@ -184,9 +188,11 @@ begin
             -- `valid_i` can be 0 here
             -- When debugpoint happened with TLB or address exception, issue debug point first to improve robustness.
             exceptCause <= WATCH_CAUSE;
+            tlbRefill <= '0';
         end if;
     end process;
     exceptCause_o <= exceptCause;
+    tlbRefill_o <= tlbRefill;
 
     process (clk)
         variable epc: std_logic_vector(AddrWidth);
@@ -277,7 +283,9 @@ begin
                     end if;
                 end if;
                 if ((exceptCause /= NO_CAUSE) and (exceptCause /= ERET_CAUSE) and (exceptCause /= DERET_CAUSE)) then
-                    if (regArr(STATUS_REG)(STATUS_EXL_BIT) = '0') then -- See doc of Status[EXL]
+                    if (curArr(STATUS_REG)(STATUS_EXL_BIT) = '0') then -- See doc of Status[EXL]
+                        -- Here we use `curArr` instead of `regArr`, because this should happen at the same time
+                        -- as the interrupt enabled
                         if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
                             epc := currentInstAddr_i - 4;
                             regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '1';
@@ -297,7 +305,7 @@ begin
                 case (exceptCause) is
                     when ERET_CAUSE|DERET_CAUSE =>
                         regArr(STATUS_REG)(STATUS_EXL_BIT) <= '0';
-                    when TLB_LOAD_CAUSE|TLB_STORE_CAUSE|ADDR_ERR_LOAD_OR_IF_CAUSE|ADDR_ERR_STORE_CAUSE =>
+                    when TLB_LOAD_CAUSE|TLB_STORE_CAUSE|ADDR_ERR_LOAD_OR_IF_CAUSE|ADDR_ERR_STORE_CAUSE|TLB_MODIFIED_CAUSE =>
                         regArr(BAD_V_ADDR_REG) <= currentAccessAddr_i;
                         regArr(ENTRY_HI_REG)(EntryHiVPN2Bits) <= currentAccessAddr_i(EntryHiVPN2Bits);
                         regArr(CONTEXT_REG)(ContextBadVPNBits) <= currentAccessAddr_i(EntryHiVPN2Bits);

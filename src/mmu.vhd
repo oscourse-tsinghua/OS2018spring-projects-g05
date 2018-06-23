@@ -21,6 +21,7 @@ entity mmu is
         addr_o: out std_logic_vector(AddrWidth);
         enable_o: out std_logic;
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_o: out std_logic;
 
         -- Manage TLB entry
         index_i: in std_logic_vector(TLBIndexWidth);
@@ -44,11 +45,15 @@ begin
     process (all)
         variable targetLo: std_logic_vector(DataWidth);
         variable addrExcept, tlbExcept: boolean;
+        variable tlbInvalid, tlbModified: boolean;
+        variable tlbRefill: boolean;
     begin
         exceptCause_o <= NO_CAUSE;
         enable_o <= enable_i;
         addrExcept := false;
         tlbExcept := true;
+        tlbInvalid := false;
+        tlbModified := false;
         addr_o <= (others => '0');
         if (isKernelMode_i = NO and addr_i(31 downto 28) >= 4x"8") then
             -- kseg0, kseg1, kseg2
@@ -85,7 +90,11 @@ begin
                                           or ("0" & (pageMask_i(31 downto 13) and addr_i(30 downto 12))))
                                           & addr_i(11 downto 0);
                                 tlbExcept := false;
+                            else
+                                tlbModified := true;
                             end if;
+                        else
+                            tlbInvalid := true;
                         end if;
                     end if;
                 end if;
@@ -101,14 +110,27 @@ begin
             end if;
         end if;
 
+        tlbRefill := false;
         if (tlbExcept) then
             enable_o <= DISABLE;
-            if (isLoad_i = YES) then
-                exceptCause_o <= TLB_LOAD_CAUSE;
+            if (tlbInvalid) then
+                if (isLoad_i = YES) then
+                    exceptCause_o <= TLB_LOAD_CAUSE;
+                else
+                    exceptCause_o <= TLB_STORE_CAUSE;
+                end if;
+            elsif (tlbModified) then
+                exceptCause_o <= TLB_MODIFIED_CAUSE;
             else
-                exceptCause_o <= TLB_STORE_CAUSE;
+                tlbRefill := true;
+                if (isLoad_i = YES) then
+                    exceptCause_o <= TLB_LOAD_CAUSE;
+                else
+                    exceptCause_o <= TLB_STORE_CAUSE;
+                end if;
             end if;
         end if;
+        tlbRefill_o <= '1' when tlbRefill else '0';
     end process;
 
     -- Store entry
@@ -120,24 +142,29 @@ begin
                     entries(i).lo0 <= (others => '0');
                     entries(i).lo1 <= (others => '0');
                 end loop;
-                pageMask <= 5ux"c";
-            elsif (entryWrite_i = YES) then
-                entries(conv_integer(index_i)) <= entry_i;
-            elsif (entryFlush_i = YES) then
-                for i in 0 to TLB_ENTRY_NUM - 1 loop
-                    entries(i).lo0(ENTRY_LO_V_BIT) <= '0';
-                    entries(i).lo1(ENTRY_LO_V_BIT) <= '0';
-                end loop;
             else
-                pageMask <= 5ux"c";
-                for i in 28 downto 13 loop
-                    if ((pageMask_i(i + 1) = '0') and (pageMask_i(i) = '1')) then
-                        pageMask <= conv_std_logic_vector(i, 5);
-                    end if;
-                end loop;
+                if (entryWrite_i = YES) then
+                    entries(conv_integer(index_i)) <= entry_i;
+                end if;
+                if (entryFlush_i = YES) then
+                    for i in 0 to TLB_ENTRY_NUM - 1 loop
+                        entries(i).lo0(ENTRY_LO_V_BIT) <= '0';
+                        entries(i).lo1(ENTRY_LO_V_BIT) <= '0';
+                    end loop;
+                end if;
             end if;
         end if;
     end process;
+
+    process (all) begin
+        pageMask <= 5ux"c";
+        for i in 28 downto 13 loop
+            if ((pageMask_i(i + 1) = '0') and (pageMask_i(i) = '1')) then
+                pageMask <= conv_std_logic_vector(i, 5);
+            end if;
+        end loop;
+    end process;
+
 
     -- Probe entry
     -- Here might be some bugs with the synthesisier, which failed to work with `process(all)`

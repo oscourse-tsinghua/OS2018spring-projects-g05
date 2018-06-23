@@ -173,6 +173,9 @@ assign int = {timerInt, 1'b0, 1'b0, comInt, ethInt, 1'b0};
 // MIPS standard requires int[5] = timer
 // Monitor requires int[2] = COM
 
+wire scCorrect;
+wire[2:0] sync;
+
 cpu #(
 `ifdef FUNC_TEST
     .exceptBootBaseAddr(32'h80000000),
@@ -197,6 +200,8 @@ cpu #(
     .devDataLoad_i(dataLoad),
     .devPhysicalAddr_o(addr),
     .devByteSelect_o(byteSelect),
+    .scCorrect_i(scCorrect),
+    .sync_o(sync),
     .int_i(int),
     .timerInt_o(timerInt)
 );
@@ -289,7 +294,10 @@ devctrl devctrl_ist(
     .ledEnable_o(ledEnable),
     .ledData_o(ledData),
     .numEnable_o(numEnable),
-    .numData_o(numData)
+    .numData_o(numData),
+
+    .sync_i(sync),
+    .scCorrect_o(scCorrect)
 );
 
 // Please don't pass inout port into a sub-module

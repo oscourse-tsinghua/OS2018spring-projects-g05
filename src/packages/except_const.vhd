@@ -16,6 +16,7 @@ package except_const is
     constant NO_CAUSE: std_logic_vector(ExceptionCauseWidth) := (others => '1');
     -- NOTE: Because 0x0 if for interruption, we use 0x1F for none
     constant EXTERNAL_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"0";
+    constant TLB_MODIFIED_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"1";
     constant TLB_LOAD_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"2";
     constant TLB_STORE_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"3";
     constant ADDR_ERR_LOAD_OR_IF_CAUSE: std_logic_vector(ExceptionCauseWidth) := 5ux"4";
