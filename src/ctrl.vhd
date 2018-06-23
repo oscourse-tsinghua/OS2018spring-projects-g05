@@ -39,6 +39,7 @@ entity ctrl is
         flush_o: out std_logic;
         toWriteBadVAddr_o: out std_logic;
         badVAddr_o: out std_logic_vector(AddrWidth);
+        tlbRefill_i: in std_logic;
 
         -- Hazard Barrier
         isIdEhb_i: in std_logic;
@@ -91,7 +92,7 @@ begin
                     end if;
                 elsif (
                     (exceptCause_i = TLB_LOAD_CAUSE or exceptCause_i = TLB_STORE_CAUSE) and
-                    cp0Status_i(STATUS_EXL_BIT) = '0'
+                    cp0Status_i(STATUS_EXL_BIT) = '0' and tlbRefill_i = '1'
                 ) then
                     newPC := newPC + tlbRefillExl0Offset;
                 elsif (exceptCause_i = EXTERNAL_CAUSE and cp0Cause_i(CAUSE_IV_BIT) = '1') then

@@ -71,8 +71,10 @@ entity ex is
         valid_i: in std_logic;
         valid_o: out std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_i: in std_logic;
         currentInstAddr_i: in std_logic_vector(AddrWidth);
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_o: out std_logic;
         isInDelaySlot_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth)
     );
@@ -246,6 +248,7 @@ begin
         divider_o <= (others => '0');
 
         exceptCause_o <= exceptCause_i;
+        tlbRefill_o <= tlbRefill_i;
 
         res64 := (others => 'X');
         ovSum := NO; -- Otherwise it will introduce a level latch to keep the prior value
@@ -473,6 +476,7 @@ begin
                 if (ovSum = YES) then
                     toWriteReg_o <= NO;
                     exceptCause_o <= OVERFLOW_CAUSE;
+                    tlbRefill_o <= '0';
                 else
                     toWriteReg_o <= YES;
                 end if;
@@ -484,8 +488,10 @@ begin
             ) then
                 if (alut_i = ALU_LOAD) then
                     exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
+                    tlbRefill_o <= '0';
                 else
                     exceptCause_o <= ADDR_ERR_STORE_CAUSE;
+                    tlbRefill_o <= '0';
                 end if;
             end if;
         end if;

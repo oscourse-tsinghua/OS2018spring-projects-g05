@@ -27,8 +27,8 @@ architecture bhv of serial_ctrl is
     signal txIRE, rxIRE: std_logic; -- Interrupt Enable
     constant TX_READY: integer := 0;
     constant RX_READY: integer := 1;
-    constant TX_IRE: integer := 2;
-    constant RX_IRE: integer := 3;
+    constant TX_IRE: integer := 3;
+    constant RX_IRE: integer := 4;
 begin
     dataLoad_o <= (
             TX_READY => not txdBusy_i,

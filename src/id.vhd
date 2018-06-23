@@ -54,7 +54,9 @@ entity id is
         valid_i: in std_logic;
         valid_o: out std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_i: in std_logic;
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth);
 
         -- hazard barrier --
@@ -202,6 +204,7 @@ begin
         jumpToRs := NO;
         condJump := NO;
         exceptCause_o <= exceptCause_i;
+        tlbRefill_o <= tlbRefill_i;
         regReadEnable1_o <= DISABLE;
         regReadAddr1_o <= (others => '0');
         regReadEnable2_o <= DISABLE;
@@ -455,6 +458,7 @@ begin
                             oprSrc2 := INVALID;
                             toWriteReg_o <= NO;
                             exceptCause_o <= SYSCALL_CAUSE;
+                            tlbRefill_o <= '0';
                             isInvalid := NO;
 
                         when FUNC_SYNC =>
@@ -470,6 +474,7 @@ begin
                             oprSrc2 := INVALID;
                             toWriteReg_o <= NO;
                             exceptCause_o <= BREAKPOINT_CAUSE;
+                            tlbRefill_o <= '0';
                             isInvalid := NO;
 
                         when FUNC_TNE =>
@@ -927,10 +932,12 @@ begin
                             when FUNC_ERET =>
                                 isInvalid := NO;
                                 exceptCause_o <= ERET_CAUSE;
+                                tlbRefill_o <= '0';
 
                             when FUNC_DERET =>
                                 isInvalid := NO;
                                 exceptCause_o <= DERET_CAUSE;
+                                tlbRefill_o <= '0';
 
                             when FUNC_TLBWI =>
                                 isInvalid := NO;
@@ -959,6 +966,7 @@ begin
 
             if (isInvalid = YES or not zeroJudge(instOp, instRs, instRt, instRd, instSa, instFunc)) then
                 exceptCause_o <= INVALID_INST_CAUSE;
+                tlbRefill_o <= '0';
             end if;
 
             case oprSrc1 is
@@ -1119,10 +1127,12 @@ begin
             branchFlag := NOT_BRANCH_FLAG;
             branchTargetAddress := (others => '0');
             exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
+            tlbRefill_o <= '0';
         end if;
 
         if (tneFlag = YES and operand1 /= operand2) then
             exceptCause_o <= TRAP_CAUSE;
+            tlbRefill_o <= '0';
         end if;
 
         if (nextWillStall_i = '1') then

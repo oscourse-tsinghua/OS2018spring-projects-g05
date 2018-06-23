@@ -81,11 +81,13 @@ entity devctrl is
 end devctrl;
 
 architecture bhv of devctrl is
+    signal devBusy: std_logic;
     signal llBit: std_logic;
     signal llLoc: std_logic_vector(AddrWidth);
 begin
+    devBusy_o <= devBusy;
     process (all) begin
-        devBusy_o <= PIPELINE_NONSTOP;
+        devBusy <= PIPELINE_NONSTOP;
         devDataLoad_o <= (others => '0');
         ram0Enable_o <= DISABLE;
         ram0ReadEnable_o <= ENABLE;
@@ -122,20 +124,20 @@ begin
                 ram0ReadEnable_o <= not devWrite_i;
                 ram0DataSave_o <= devDataSave_i;
                 devDataLoad_o <= ram0DataLoad_i;
-                devBusy_o <= ram0WriteBusy_i;
+                devBusy <= ram0WriteBusy_i;
             elsif (devPhysicalAddr_i >= 32ux"400000" and devPhysicalAddr_i <= 32ux"7fffff") then
                 -- RAM1 --
                 ram1Enable_o <= ENABLE;
                 ram1ReadEnable_o <= not devWrite_i;
                 ram1DataSave_o <= devDataSave_i;
                 devDataLoad_o <= ram1DataLoad_i;
-                devBusy_o <= ram1WriteBusy_i;
+                devBusy <= ram1WriteBusy_i;
             elsif (devPhysicalAddr_i >= 32ux"1e000000" and devPhysicalAddr_i <= 32ux"1effffff") then
                 -- flash --
                 flashEnable_o <= ENABLE;
                 flashReadEnable_o <= not devWrite_i;
                 devDataLoad_o <= flashDataLoad_i;
-                devBusy_o <= flashBusy_i;
+                devBusy <= flashBusy_i;
             elsif (devPhysicalAddr_i >= 32ux"1fc00000" and devPhysicalAddr_i <= 32ux"1fc00fff") then
                 -- BOOT --
                 devDataLoad_o <= bootDataLoad_i;
@@ -162,7 +164,7 @@ begin
                 -- lattice --
                 ltcReadEnable_o <= ENABLE;
                 devDataLoad_o <= ltcDataLoad_i;
-                devBusy_o <= ltcBusy_i;
+                devBusy <= ltcBusy_i;
             elsif (devPhysicalAddr_i >= 32ux"1c020100" and devPhysicalAddr_i <= 32ux"1c020104") then
                 -- Ethernet --
                 -- 1c020100: index port; 1c020104: data port (required by U-Boot)--
@@ -170,7 +172,7 @@ begin
                 ethReadEnable_o <= not devWrite_i;
                 ethDataSave_o <= devDataSave_i;
                 devDataLoad_o <= ethDataLoad_i;
-                devBusy_o <= ethWriteBusy_i;
+                devBusy <= ethWriteBusy_i;
             elsif (devPhysicalAddr_i >= 32ux"1c020000" and devPhysicalAddr_i <= 32ux"1c020004") then
                 -- USB --
                 usbEnable_o <= ENABLE;
@@ -178,7 +180,7 @@ begin
                 usbWriteEnable_o <= devWrite_i;
                 usbWriteData_o <= devDataSave_i;
                 devDataLoad_o <= usbReadData_i;
-                devBusy_o <= usbBusy_i;
+                devBusy <= usbBusy_i;
             end if;
         end if;
     end process;
@@ -192,13 +194,15 @@ begin
                 llLoc <= (others => 'X');
             else
                 -- see page 347 in document MD00086(Volume II-A revision 6.06)
-                if (sync_i(0) = '1') then -- LL
-                    llBit <= '1';
-                    llLoc <= devPhysicalAddr_i;
-                elsif (sync_i(1) = '1') then -- SC
-                    llBit <= '0';
-                elsif (devPhysicalAddr_i = llLoc) then -- Others
-                    llBit <= '0';
+                if (devBusy = PIPELINE_NONSTOP) then
+                    if (sync_i(0) = '1') then -- LL
+                        llBit <= '1';
+                        llLoc <= devPhysicalAddr_i;
+                    elsif (sync_i(1) = '1') then -- SC
+                        llBit <= '0';
+                    elsif (devPhysicalAddr_i = llLoc) then -- Others
+                        llBit <= '0';
+                    end if;
                 end if;
                 if (sync_i(2) = '1') then -- Flush
                     llBit <= '0';
