@@ -26,7 +26,7 @@ end ddr3_ctrl;
 
 architecture bhv of ddr3_ctrl is
 
-    signal enable_req, readEnable_req, busy_res: std_logic;
+    signal enable_req, readEnable_req, busy_res, busy_tmp: std_logic;
     signal addr_req: std_logic_vector(AddrWidth);
     signal writeData_req: std_logic_vector(DataWidth);
     signal readDataBurst_res: BurstDataType;
@@ -35,6 +35,10 @@ architecture bhv of ddr3_ctrl is
     signal stat100, stat25: State;
 
 begin
+
+    busy_o <= PIPELINE_NONSTOP when busy_tmp = PIPELINE_NONSTOP and
+              readEnable_i = readEnable_req and addr_i = addr_req and byteSelect_i = byteSelect_req and (readEnable_i = ENABLE or writeData_i = writeData_req)
+              else PIPELINE_STOP;
 
     process (clk_100) begin
         if (rising_edge(clk_100)) then
@@ -72,7 +76,7 @@ begin
     process(clk_25) begin
         if (rising_edge(clk_25)) then
             if (rst_25 = RST_ENABLE) then
-                busy_o <= PIPELINE_STOP;
+                busy_tmp <= PIPELINE_STOP;
                 readDataBurst_o <= (others => (others => '0'));
                 enable_req <= DISABLE;
                 readEnable_req <= ENABLE;
@@ -92,15 +96,11 @@ begin
                     stat25 <= WAIT1; -- We use 2 period WAIT to meet the timing requirement
                 elsif (stat25 = WAIT1) then
                     enable_req <= DISABLE;
-                    if (enable_i = enable_req and readEnable_i = readEnable_req and addr_i = addr_req and (readEnable_i = ENABLE or writeData_i = writeData_req)) then
-                        readDataBurst_o <= readDataBurst_res;
-                        busy_o <= DISABLE;
-                        stat25 <= WAIT2;
-                    else
-                        stat25 <= INIT;
-                    end if;
+                    readDataBurst_o <= readDataBurst_res;
+                    busy_tmp <= DISABLE;
+                    stat25 <= WAIT2;
                 elsif (stat25 = WAIT2) then
-                    busy_o <= PIPELINE_STOP;
+                    busy_tmp <= PIPELINE_STOP;
                     readDataBurst_o <= (others => (others => '0'));
                     stat25 <= INIT;
                 end if;
