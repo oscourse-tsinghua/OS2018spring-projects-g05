@@ -1113,6 +1113,7 @@ begin
                 branchFlag := BRANCH_FLAG;
             elsif (branchLikely = YES) then
                 blNullify := PIPELINE_STOP;
+                nextInstInDelaySlot_o <= NOT_IN_DELAY_SLOT_FLAG;
             end if;
 
             if (branchToLink = YES) then
