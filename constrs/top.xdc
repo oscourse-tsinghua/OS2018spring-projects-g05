@@ -8,10 +8,11 @@ set_property PACKAGE_PIN AC19 [get_ports clk_in]
 set_property CLOCK_DEDICATED_ROUTE BACKBONE [get_nets clk_in]
 create_clock -period 10.000 -name clk_in -waveform {0.000 5.000} [get_ports clk_in]
 
+# FIXME: Out dated since we changed clk_ctrl to clk_wiz
 #derived clock
-create_generated_clock -name clkMain [get_pins -hierarchical *mmcm_adv_inst/CLKOUT0]\
-    -source [get_pins -hierarchical *mmcm_adv_inst/CLKIN1]\
-    -master_clock clk_in
+#create_generated_clock -name clkMain [get_pins -hierarchical *mmcm_adv_inst/CLKOUT0]\
+#    -source [get_pins -hierarchical *mmcm_adv_inst/CLKIN1]\
+#    -master_clock clk_in
 
 #reset
 set_property PACKAGE_PIN Y3 [get_ports rst_n]
@@ -198,11 +199,12 @@ set_property IOSTANDARD LVCMOS33 [get_ports eth_rxdv]
 create_clock -period 40.000 -name eth_rxclk -waveform {0.000 20.000} [get_ports eth_rxclk]
 create_clock -period 40.000 -name eth_txclk -waveform {0.000 20.000} [get_ports eth_txclk]
 
-set_false_path -from [get_clocks clk_in] -to [get_clocks clkMain]
-set_false_path -from [get_clocks eth_rxclk] -to [get_clocks clkMain]
-set_false_path -from [get_clocks eth_txclk] -to [get_clocks clkMain]
-set_false_path -from [get_clocks clkMain] -to [get_clocks eth_rxclk]
-set_false_path -from [get_clocks clkMain] -to [get_clocks eth_txclk]
+# FIXME
+#set_false_path -from [get_clocks clk_in] -to [get_clocks clkMain]
+#set_false_path -from [get_clocks eth_rxclk] -to [get_clocks clkMain]
+#set_false_path -from [get_clocks eth_txclk] -to [get_clocks clkMain]
+#set_false_path -from [get_clocks clkMain] -to [get_clocks eth_rxclk]
+#set_false_path -from [get_clocks clkMain] -to [get_clocks eth_txclk]
 
 set_property CFGBVS VCCO [current_design]
 set_property CONFIG_VOLTAGE 3.3 [current_design]

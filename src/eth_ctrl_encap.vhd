@@ -1,17 +1,13 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use work.global_const.all;
+use work.bus_const.all;
 
 entity eth_ctrl_encap is
     port (
         clk_100, clk_25, rst: in std_logic;
 
-        enable_i, readEnable_i: in std_logic;
-        addr_i: in std_logic_vector(AddrWidth);
-        writeData_i: in std_logic_vector(DataWidth);
-        readData_o: out std_logic_vector(DataWidth);
-        byteSelect_i: in std_logic_vector(3 downto 0);
-        busy_o: out std_logic;
+        cpu_io: inout BusInterface;
 
         eth_txclk, eth_rxclk, eth_rxdv, eth_rxerr, eth_coll, eth_crs: in std_logic;
         eth_txen, eth_txerr, eth_rst_n: out std_logic;
@@ -131,13 +127,13 @@ begin
             rst_100 => rst,
             rst_25 => rst,
 
-            enable_i => enable_i,
-            readEnable_i => readEnable_i,
-            addr_i => addr_i,
-            writeData_i => writeData_i,
-            readData_o => readData_o,
-            byteSelect_i => byteSelect_i,
-            busy_o => busy_o,
+            enable_i => cpu_io.enable_c2d,
+            readEnable_i => not cpu_io.write_c2d,
+            addr_i => cpu_io.addr_c2d,
+            writeData_i => cpu_io.dataSave_c2d,
+            readData_o => cpu_io.dataLoad_d2c,
+            byteSelect_i => cpu_io.byteSelect_c2d,
+            busy_o => cpu_io.busy_d2c,
 
             enable_o => enable_100_i,
             readEnable_o => readEnable_100_i,

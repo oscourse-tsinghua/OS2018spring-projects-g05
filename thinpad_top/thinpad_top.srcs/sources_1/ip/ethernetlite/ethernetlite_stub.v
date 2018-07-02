@@ -1,10 +1,10 @@
 // Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2017.2 (win64) Build 1909853 Thu Jun 15 18:39:09 MDT 2017
-// Date        : Fri May 18 22:15:47 2018
-// Host        : DESKTOP-RJNJ8R0 running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode synth_stub
-//               E:/Development/OS2018spring-projects-g05/thinpad_top/thinpad_top.srcs/sources_1/ip/ethernetlite/ethernetlite_stub.v
+// Date        : Fri May 25 19:29:15 2018
+// Host        : LAPTOP-FKIVSI39 running 64-bit major release  (build 9200)
+// Command     : write_verilog -force -mode synth_stub -rename_top ethernetlite -prefix
+//               ethernetlite_ ethernetlite_stub.v
 // Design      : ethernetlite
 // Purpose     : Stub declaration of top-level module interface
 // Device      : xc7a200tfbg676-2

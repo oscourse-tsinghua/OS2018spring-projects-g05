@@ -1,15 +1,13 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use work.global_const.all;
+use work.bus_const.all;
 
 entity serial_ctrl is
     port (
         clk, rst: in std_logic;
 
-        enable_i, readEnable_i: in std_logic; -- read enable means write disable
-        mode_i: in std_logic; -- 1 for status (0xBFD003FC), 0 for data (0xBFD003F8)
-        dataSave_i: in std_logic_vector(DataWidth);
-        dataLoad_o: out std_logic_vector(DataWidth);
+        cpu_io: inout BusInterface; -- addr: 0xBFD003FC for status, 0xBFD003F8 for data
 
         int_o: out std_logic; -- Interruption
 
@@ -30,15 +28,17 @@ architecture bhv of serial_ctrl is
     constant TX_IRE: integer := 3;
     constant RX_IRE: integer := 4;
 begin
-    dataLoad_o <= (
+    cpu_io.dataLoad_d2c <= (
             TX_READY => not txdBusy_i,
             RX_READY => rxdReady_i or recvAvail,
             TX_IRE => txIRE,
             RX_IRE => rxIRE,
             others => '0'
-        ) when mode_i = '1' else
+        ) when cpu_io.addr_c2d(2) = '1' else
             24ux"0" & rxdData_i when rxdReady_i = '1' else 24ux"0" & recvData;
     -- When recvAvail = NO or chip disabled, outputting whatever is OK
+
+    cpu_io.busy_d2c <= PIPELINE_NONSTOP;
 
     int_o <= ((rxdReady_i or recvAvail) and rxIRE) or (not txdBusy_i and txIRE);
 
@@ -56,19 +56,19 @@ begin
                     recvAvail <= YES;
                     recvData <= rxdData_i;
                 end if;
-                if (enable_i = ENABLE and readEnable_i = ENABLE and mode_i = '0') then
+                if (cpu_io.enable_c2d = ENABLE and cpu_io.write_c2d = NO and cpu_io.addr_c2d(2) = '0') then
                     recvAvail <= NO;
                     recvData <= (others => '0');
                 end if;
 
-                if (enable_i = ENABLE and readEnable_i = DISABLE) then
-                    if (mode_i = '1') then
-                        txIRE <= dataSave_i(TX_IRE);
-                        rxIRE <= dataSave_i(RX_IRE);
-                    elsif (txdBusy_i = '0') then -- mode_i = '0'
+                if (cpu_io.enable_c2d = ENABLE and cpu_io.write_c2d = YES) then
+                    if (cpu_io.addr_c2d(2) = '1') then
+                        txIRE <= cpu_io.dataSave_c2d(TX_IRE);
+                        rxIRE <= cpu_io.dataSave_c2d(RX_IRE);
+                    elsif (txdBusy_i = '0') then -- cpu_io.addr_c2d(2) = '0'
                         -- If busy, ignore it
                         txdStart_o <= '1';
-                        txdData_o <= dataSave_i(7 downto 0);
+                        txdData_o <= cpu_io.dataSave_c2d(7 downto 0);
                     end if;
                 end if;
             end if;
