@@ -13,3 +13,6 @@ modelsim.ini
 *.cache
 .Xil
 *.backup.*
+*changelog.txt
+log.txt
+*.log
