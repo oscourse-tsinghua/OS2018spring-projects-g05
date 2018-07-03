@@ -12,9 +12,7 @@ use work.bus_const.all;
 entity mov1_fake_ram is
     port (
         clk, rst: in std_logic;
-        cpu_io: inout BusInterface;
-        sync_i: in std_logic_vector(2 downto 0);
-        scCorrect_o: out std_logic
+        cpu_io: inout BusInterface
     );
 end mov1_fake_ram;
 
@@ -46,29 +44,6 @@ words(2) <= x"11_00_40_00"; -- RUN mthi $2
 words(3) <= x"10_18_00_00"; -- RUN mfhi $3
             elsif ((cpu_io.enable_c2d = '1') and (cpu_io.write_c2d = '1')) then
                 words(wordAddr) <= (words(wordAddr) and not bitSelect) or (cpu_io.dataSave_c2d and bitSelect);
-            end if;
-        end if;
-    end process;
-
-    scCorrect_o <= llBit when cpu_io.addr_c2d = llLoc else '0';
-
-    process(clk) begin
-        if (rising_edge(clk)) then
-            if (rst = RST_ENABLE) then
-                llBit <= '0';
-                llLoc <= (others => 'X');
-            else
-                if (sync_i(0) = '1') then -- LL
-                    llBit <= '1';
-                    llLoc <= cpu_io.addr_c2d;
-                elsif (sync_i(1) = '1') then -- SC
-                    llBit <= '0';
-                elsif (cpu_io.addr_c2d = llLoc) then -- Others
-                    llBit <= '0';
-                end if;
-                if (sync_i(2) = '1') then -- Flush
-                    llBit <= '0';
-                end if;
             end if;
         end if;
     end process;

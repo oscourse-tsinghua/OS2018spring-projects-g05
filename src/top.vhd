@@ -131,7 +131,8 @@ architecture bhv of top is
     signal clkMain: std_logic; -- 25MHz clock
     signal clk200, clk100: std_logic;
 
-    signal cpuBus, ddr3Bus, flashBus, serialBus, bootBus, ethBus, ledBus, numBus: BusInterface;
+    signal cpu1InstBus, cpu1DataBus: BusInterface;
+    signal ddr3Bus, flashBus, serialBus, bootBus, ethBus, ledBus, numBus: BusInterface;
 
     signal scCorrect: std_logic;
     signal sync: std_logic_vector(2 downto 0);
@@ -196,7 +197,8 @@ begin
         port map (
             clk => clkMain,
             rst => rst,
-            dev_io => cpuBus,
+            instDev_io => cpu1InstBus,
+            dataDev_io => cpu1DataBus,
             sync_o => sync,
             scCorrect_i => scCorrect,
             int_i => irq,
@@ -208,7 +210,9 @@ begin
             clk => clkMain,
             rst => rst,
 
-            cpu_io => cpuBus,
+            cpu1Inst_io => cpu1InstBus,
+            cpu1Data_io => cpu1DataBus,
+
             ddr3_io => ddr3Bus,
             flash_io => flashBus,
             serial_io => serialBus,
