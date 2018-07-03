@@ -3,6 +3,7 @@ use ieee.std_logic_1164.all;
 use work.global_const.all;
 use work.except_const.all;
 use work.mmu_const.all;
+use work.bus_const.all;
 
 entity cpu is
     generic (
@@ -16,12 +17,7 @@ entity cpu is
     port (
         clk, rst: in std_logic;
 
-        devEnable_o, devWrite_o: out std_logic;
-        devBusy_i: in std_logic;
-        devDataSave_o: out std_logic_vector(DataWidth);
-        devDataLoad_i: in std_logic_vector(DataWidth);
-        devPhysicalAddr_o: out std_logic_vector(AddrWidth);
-        devByteSelect_o: out std_logic_vector(3 downto 0);
+        dev_io: inout BusInterface;
         scCorrect_i: in std_logic;
         sync_o: out std_logic_vector(2 downto 0);
 
@@ -68,7 +64,7 @@ begin
             enable => convEndianEnable
         )
         port map (
-            input => devDataLoad_i,
+            input => dev_io.dataLoad_d2c,
             output => dataLoadConv
         );
     conv_endian_save: entity work.conv_endian
@@ -77,17 +73,17 @@ begin
         )
         port map (
             input => dataSaveConv,
-            output => devDataSave_o
+            output => dev_io.dataSave_c2d
         );
     process (all) begin
         if (convEndianEnable) then
-            devByteSelect_o <= byteSelectConv(0) & byteSelectConv(1) & byteSelectConv(2) & byteSelectConv(3);
+            dev_io.byteSelect_c2d <= byteSelectConv(0) & byteSelectConv(1) & byteSelectConv(2) & byteSelectConv(3);
         else
-            devByteSelect_o <= byteSelectConv;
+            dev_io.byteSelect_c2d <= byteSelectConv;
         end if;
     end process;
 
-    devWrite_o <= devWrite;
+    dev_io.write_c2d <= devWrite;
 
     mmu_ist: entity work.mmu
         port map (
@@ -97,8 +93,8 @@ begin
             isKernelMode_i => isKernelMode,
             isLoad_i => not devWrite,
             addr_i => devVirtualAddr,
-            addr_o => devPhysicalAddr_o,
-            enable_o => devEnable_o,
+            addr_o => dev_io.addr_c2d,
+            enable_o => dev_io.enable_c2d,
             exceptCause_o => devExcept,
             tlbRefill_o => devTlbRefill,
 
@@ -141,7 +137,7 @@ begin
             devData_o => dataSaveConv,
             devAddr_o => devVirtualAddr,
             devByteSelect_o => byteSelectConv,
-            devBusy_i => devBusy_i,
+            devBusy_i => dev_io.busy_d2c,
             devExcept_i => devExcept,
             devTlbRefill_i => devTlbRefill
         );

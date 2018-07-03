@@ -7,15 +7,12 @@ use ieee.numeric_std.all;
 
 use work.loadstore5_test_const.all;
 use work.global_const.all;
+use work.bus_const.all;
 
 entity loadstore5_fake_ram is
     port (
         clk, rst: in std_logic;
-        enable_i, write_i: in std_logic;
-        data_i: in std_logic_vector(DataWidth);
-        addr_i: in std_logic_vector(AddrWidth);
-        byteSelect_i: in std_logic_vector(3 downto 0);
-        data_o: out std_logic_vector(DataWidth);
+        cpu_io: inout BusInterface;
         sync_i: in std_logic_vector(2 downto 0);
         scCorrect_o: out std_logic
     );
@@ -29,13 +26,15 @@ architecture bhv of loadstore5_fake_ram is
     signal llBit: std_logic;
     signal llLoc: std_logic_vector(AddrWidth);
 begin
-    wordAddr <= to_integer(unsigned(addr_i(11 downto 2)));
+    cpu_io.busy_d2c <= PIPELINE_NONSTOP;
+
+    wordAddr <= to_integer(unsigned(cpu_io.addr_c2d(11 downto 2)));
 
     bitSelect <= (
-        31 downto 24 => byteSelect_i(3),
-        23 downto 16 => byteSelect_i(2),
-        15 downto 8 => byteSelect_i(1),
-        7 downto 0 => byteSelect_i(0)
+        31 downto 24 => cpu_io.byteSelect_c2d(3),
+        23 downto 16 => cpu_io.byteSelect_c2d(2),
+        15 downto 8 => cpu_io.byteSelect_c2d(1),
+        7 downto 0 => cpu_io.byteSelect_c2d(0)
     );
 
     process (clk) begin
@@ -73,13 +72,13 @@ words(28) <= x"03_01_44_b9"; -- RUN swr $4, 0x103($10)
 words(29) <= x"06_01_45_a9"; -- RUN swl $5, 0x106($10)
 words(30) <= x"00_01_46_8d"; -- RUN lw $6, 0x100($10)
 words(31) <= x"04_01_47_8d"; -- RUN lw $7, 0x104($10)
-            elsif ((enable_i = '1') and (write_i = '1')) then
-                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (data_i and bitSelect);
+            elsif ((cpu_io.enable_c2d = '1') and (cpu_io.write_c2d = '1')) then
+                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (cpu_io.dataSave_c2d and bitSelect);
             end if;
         end if;
     end process;
 
-    scCorrect_o <= llBit when addr_i = llLoc else '0';
+    scCorrect_o <= llBit when cpu_io.addr_c2d = llLoc else '0';
 
     process(clk) begin
         if (rising_edge(clk)) then
@@ -89,10 +88,10 @@ words(31) <= x"04_01_47_8d"; -- RUN lw $7, 0x104($10)
             else
                 if (sync_i(0) = '1') then -- LL
                     llBit <= '1';
-                    llLoc <= addr_i;
+                    llLoc <= cpu_io.addr_c2d;
                 elsif (sync_i(1) = '1') then -- SC
                     llBit <= '0';
-                elsif (addr_i = llLoc) then -- Others
+                elsif (cpu_io.addr_c2d = llLoc) then -- Others
                     llBit <= '0';
                 end if;
                 if (sync_i(2) = '1') then -- Flush
@@ -102,5 +101,5 @@ words(31) <= x"04_01_47_8d"; -- RUN lw $7, 0x104($10)
         end if;
     end process;
 
-    data_o <= words(wordAddr) when (enable_i = '1') and (write_i = '0') else 32b"0";
+    cpu_io.dataLoad_d2c <= words(wordAddr) when (cpu_io.enable_c2d = '1') and (cpu_io.write_c2d = '0') else 32b"0";
 end bhv;

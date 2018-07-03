@@ -106,7 +106,7 @@ architecture bhv of ex is
         res := x - y;
         return (x(31) and not y(31) and not res(31)) = '1' or -- Negative - positive -> positive
                (not x(31) and y(31) and res(31)) = '1'; -- Positive - negative -> negative
-   end subOverflow;
+    end subOverflow;
 
     signal realHiData, realLoData: std_logic_vector(DataWidth) := (others => '0');
     signal clo, clz: std_logic_vector(DataWidth);

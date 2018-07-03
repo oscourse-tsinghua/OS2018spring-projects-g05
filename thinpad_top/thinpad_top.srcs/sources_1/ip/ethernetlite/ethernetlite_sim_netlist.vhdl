@@ -1,10 +1,10 @@
 -- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2017.2 (win64) Build 1909853 Thu Jun 15 18:39:09 MDT 2017
--- Date        : Fri May 18 22:15:47 2018
--- Host        : DESKTOP-RJNJ8R0 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim
---               E:/Development/OS2018spring-projects-g05/thinpad_top/thinpad_top.srcs/sources_1/ip/ethernetlite/ethernetlite_sim_netlist.vhdl
+-- Date        : Fri May 25 19:29:15 2018
+-- Host        : LAPTOP-FKIVSI39 running 64-bit major release  (build 9200)
+-- Command     : write_vhdl -force -mode funcsim -rename_top ethernetlite -prefix
+--               ethernetlite_ ethernetlite_sim_netlist.vhdl
 -- Design      : ethernetlite
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -113,8 +113,6 @@ entity ethernetlite_axi_interface is
     \MDIO_GEN.mdio_wr_data_reg_reg[15]_0\ : in STD_LOGIC_VECTOR ( 4 downto 0 );
     D : in STD_LOGIC_VECTOR ( 31 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_axi_interface : entity is "axi_interface";
 end ethernetlite_axi_interface;
 
 architecture STRUCTURE of ethernetlite_axi_interface is
@@ -1839,8 +1837,6 @@ entity ethernetlite_cdc_sync is
     SR : in STD_LOGIC_VECTOR ( 0 to 0 );
     CLK : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_cdc_sync : entity is "cdc_sync";
 end ethernetlite_cdc_sync;
 
 architecture STRUCTURE of ethernetlite_cdc_sync is
@@ -2518,8 +2514,6 @@ entity ethernetlite_cntr5bit is
     \thisState_reg[0]\ : in STD_LOGIC;
     E : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_cntr5bit : entity is "cntr5bit";
 end ethernetlite_cntr5bit;
 
 architecture STRUCTURE of ethernetlite_cntr5bit is
@@ -2771,8 +2765,6 @@ entity ethernetlite_crcgenrx is
     E : in STD_LOGIC_VECTOR ( 0 to 0 );
     s_axi_aclk : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_crcgenrx : entity is "crcgenrx";
 end ethernetlite_crcgenrx;
 
 architecture STRUCTURE of ethernetlite_crcgenrx is
@@ -3429,8 +3421,6 @@ entity ethernetlite_crcnibshiftreg is
     E : in STD_LOGIC_VECTOR ( 0 to 0 );
     s_axi_aclk : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_crcnibshiftreg : entity is "crcnibshiftreg";
 end ethernetlite_crcnibshiftreg;
 
 architecture STRUCTURE of ethernetlite_crcnibshiftreg is
@@ -4172,8 +4162,6 @@ entity ethernetlite_defer_state is
     s_axi_aresetn : in STD_LOGIC;
     s_axi_aclk : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_defer_state : entity is "defer_state";
 end ethernetlite_defer_state;
 
 architecture STRUCTURE of ethernetlite_defer_state is
@@ -4338,8 +4326,6 @@ entity ethernetlite_ld_arith_reg is
     checkBusFifoFull : in STD_LOGIC;
     \out\ : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_ld_arith_reg : entity is "ld_arith_reg";
 end ethernetlite_ld_arith_reg;
 
 architecture STRUCTURE of ethernetlite_ld_arith_reg is
@@ -5400,8 +5386,6 @@ entity ethernetlite_mdio_if is
     s_axi_wdata : in STD_LOGIC_VECTOR ( 0 to 0 );
     p_19_out : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_mdio_if : entity is "mdio_if";
 end ethernetlite_mdio_if;
 
 architecture STRUCTURE of ethernetlite_mdio_if is
@@ -6827,8 +6811,6 @@ entity ethernetlite_mux_onehot_f is
     STATE15A_2 : in STD_LOGIC;
     Q : in STD_LOGIC_VECTOR ( 11 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_mux_onehot_f : entity is "mux_onehot_f";
 end ethernetlite_mux_onehot_f;
 
 architecture STRUCTURE of ethernetlite_mux_onehot_f is
@@ -6971,8 +6953,6 @@ entity ethernetlite_ram16x4 is
     mac_addr_ram_we : in STD_LOGIC;
     mac_addr_ram_addr : in STD_LOGIC_VECTOR ( 0 to 3 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_ram16x4 : entity is "ram16x4";
 end ethernetlite_ram16x4;
 
 architecture STRUCTURE of ethernetlite_ram16x4 is
@@ -7139,8 +7119,6 @@ entity ethernetlite_rx_statemachine is
     \AXI4_LITE_IF_GEN.write_in_prog_reg\ : in STD_LOGIC;
     \RX_PONG_REG_GEN.pong_rx_status_reg_1\ : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_rx_statemachine : entity is "rx_statemachine";
 end ethernetlite_rx_statemachine;
 
 architecture STRUCTURE of ethernetlite_rx_statemachine is
@@ -8394,8 +8372,6 @@ entity ethernetlite_tx_statemachine is
     tx_intr_en0 : in STD_LOGIC;
     loopback_en_reg_1 : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_tx_statemachine : entity is "tx_statemachine";
 end ethernetlite_tx_statemachine;
 
 architecture STRUCTURE of ethernetlite_tx_statemachine is
@@ -10021,8 +9997,6 @@ entity ethernetlite_xpm_memory_base is
   attribute MESSAGE_CONTROL of ethernetlite_xpm_memory_base : entity is 0;
   attribute NUM_CHAR_LOC : integer;
   attribute NUM_CHAR_LOC of ethernetlite_xpm_memory_base : entity is 0;
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_xpm_memory_base : entity is "xpm_memory_base";
   attribute P_ECC_MODE : string;
   attribute P_ECC_MODE of ethernetlite_xpm_memory_base : entity is "no_ecc";
   attribute P_ENABLE_BYTE_WRITE_A : integer;
@@ -11812,8 +11786,6 @@ entity ethernetlite_dmem is
     phy_tx_clk : in STD_LOGIC;
     AR : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_dmem : entity is "dmem";
 end ethernetlite_dmem;
 
 architecture STRUCTURE of ethernetlite_dmem is
@@ -12317,8 +12289,6 @@ entity ethernetlite_rd_bin_cntr is
     phy_tx_clk : in STD_LOGIC;
     AR : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_rd_bin_cntr : entity is "rd_bin_cntr";
 end ethernetlite_rd_bin_cntr;
 
 architecture STRUCTURE of ethernetlite_rd_bin_cntr is
@@ -12688,8 +12658,6 @@ entity ethernetlite_rd_handshaking_flags is
     ping_rx_status_reg : in STD_LOGIC;
     \RX_PONG_REG_GEN.pong_rx_status_reg\ : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_rd_handshaking_flags : entity is "rd_handshaking_flags";
 end ethernetlite_rd_handshaking_flags;
 
 architecture STRUCTURE of ethernetlite_rd_handshaking_flags is
@@ -12742,8 +12710,6 @@ entity ethernetlite_rd_status_flags_as is
     AR : in STD_LOGIC_VECTOR ( 0 to 0 );
     fifo_tx_en : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_rd_status_flags_as : entity is "rd_status_flags_as";
 end ethernetlite_rd_status_flags_as;
 
 architecture STRUCTURE of ethernetlite_rd_status_flags_as is
@@ -12894,8 +12860,6 @@ entity ethernetlite_synchronizer_ff is
     in0 : in STD_LOGIC_VECTOR ( 0 to 0 );
     phy_tx_clk : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_synchronizer_ff : entity is "synchronizer_ff";
 end ethernetlite_synchronizer_ff;
 
 architecture STRUCTURE of ethernetlite_synchronizer_ff is
@@ -13981,8 +13945,6 @@ entity ethernetlite_wr_bin_cntr is
     s_axi_aclk : in STD_LOGIC;
     AR : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_wr_bin_cntr : entity is "wr_bin_cntr";
 end ethernetlite_wr_bin_cntr;
 
 architecture STRUCTURE of ethernetlite_wr_bin_cntr is
@@ -14403,8 +14365,6 @@ entity ethernetlite_wr_status_flags_as is
     waitFifoEmpty : in STD_LOGIC;
     STATE14A : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_wr_status_flags_as : entity is "wr_status_flags_as";
 end ethernetlite_wr_status_flags_as;
 
 architecture STRUCTURE of ethernetlite_wr_status_flags_as is
@@ -14548,8 +14508,6 @@ entity ethernetlite_MacAddrRAM is
     mac_addr_ram_we : in STD_LOGIC;
     mac_addr_ram_addr : in STD_LOGIC_VECTOR ( 0 to 3 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_MacAddrRAM : entity is "MacAddrRAM";
 end ethernetlite_MacAddrRAM;
 
 architecture STRUCTURE of ethernetlite_MacAddrRAM is
@@ -14578,8 +14536,6 @@ entity ethernetlite_crcgentx is
     E : in STD_LOGIC_VECTOR ( 0 to 0 );
     s_axi_aclk : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_crcgentx : entity is "crcgentx";
 end ethernetlite_crcgentx;
 
 architecture STRUCTURE of ethernetlite_crcgentx is
@@ -14612,8 +14568,6 @@ entity ethernetlite_deferral is
     \PERBIT_GEN[11].FF_RST0_GEN.FDRE_i1\ : in STD_LOGIC;
     enblPreamble : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_deferral : entity is "deferral";
 end ethernetlite_deferral;
 
 architecture STRUCTURE of ethernetlite_deferral is
@@ -14720,8 +14674,6 @@ entity ethernetlite_xpm_memory_tdpram is
     p_87_in351_in : in STD_LOGIC;
     p_86_in349_in : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_xpm_memory_tdpram : entity is "xpm_memory_tdpram";
 end ethernetlite_xpm_memory_tdpram;
 
 architecture STRUCTURE of ethernetlite_xpm_memory_tdpram is
@@ -16363,8 +16315,6 @@ entity ethernetlite_clk_x_pntrs is
     D : in STD_LOGIC_VECTOR ( 2 downto 0 );
     \Q_reg_reg[1]\ : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_clk_x_pntrs : entity is "clk_x_pntrs";
 end ethernetlite_clk_x_pntrs;
 
 architecture STRUCTURE of ethernetlite_clk_x_pntrs is
@@ -17182,8 +17132,6 @@ entity ethernetlite_memory is
     phy_tx_clk : in STD_LOGIC;
     AR : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_memory : entity is "memory";
 end ethernetlite_memory;
 
 architecture STRUCTURE of ethernetlite_memory is
@@ -17295,8 +17243,6 @@ entity ethernetlite_rd_logic is
     AR : in STD_LOGIC_VECTOR ( 0 to 0 );
     fifo_tx_en : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_rd_logic : entity is "rd_logic";
 end ethernetlite_rd_logic;
 
 architecture STRUCTURE of ethernetlite_rd_logic is
@@ -17416,8 +17362,6 @@ entity ethernetlite_reset_blk_ramfifo is
     s_axi_aclk : in STD_LOGIC;
     Rst0 : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_reset_blk_ramfifo : entity is "reset_blk_ramfifo";
 end ethernetlite_reset_blk_ramfifo;
 
 architecture STRUCTURE of ethernetlite_reset_blk_ramfifo is
@@ -18016,8 +17960,6 @@ entity ethernetlite_wr_logic is
     E : in STD_LOGIC_VECTOR ( 0 to 0 );
     AR : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_wr_logic : entity is "wr_logic";
 end ethernetlite_wr_logic;
 
 architecture STRUCTURE of ethernetlite_wr_logic is
@@ -18124,8 +18066,6 @@ entity ethernetlite_emac_dpram is
     p_92_in368_in : in STD_LOGIC;
     \reg_data_out_reg[31]\ : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_emac_dpram : entity is "emac_dpram";
 end ethernetlite_emac_dpram;
 
 architecture STRUCTURE of ethernetlite_emac_dpram is
@@ -18348,8 +18288,6 @@ entity ethernetlite_fifo_generator_ramfifo is
     fifo_tx_en : in STD_LOGIC;
     axi_phy_tx_en_i_p : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_fifo_generator_ramfifo : entity is "fifo_generator_ramfifo";
 end ethernetlite_fifo_generator_ramfifo;
 
 architecture STRUCTURE of ethernetlite_fifo_generator_ramfifo is
@@ -18678,8 +18616,6 @@ entity ethernetlite_fifo_generator_top is
     fifo_tx_en : in STD_LOGIC;
     axi_phy_tx_en_i_p : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_fifo_generator_top : entity is "fifo_generator_top";
 end ethernetlite_fifo_generator_top;
 
 architecture STRUCTURE of ethernetlite_fifo_generator_top is
@@ -18816,8 +18752,6 @@ entity ethernetlite_fifo_generator_v13_1_4_synth is
     fifo_tx_en : in STD_LOGIC;
     axi_phy_tx_en_i_p : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_fifo_generator_v13_1_4_synth : entity is "fifo_generator_v13_1_4_synth";
 end ethernetlite_fifo_generator_v13_1_4_synth;
 
 architecture STRUCTURE of ethernetlite_fifo_generator_v13_1_4_synth is
@@ -18954,8 +18888,6 @@ entity ethernetlite_fifo_generator_v13_1_4 is
     fifo_tx_en : in STD_LOGIC;
     axi_phy_tx_en_i_p : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_fifo_generator_v13_1_4 : entity is "fifo_generator_v13_1_4";
 end ethernetlite_fifo_generator_v13_1_4;
 
 architecture STRUCTURE of ethernetlite_fifo_generator_v13_1_4 is
@@ -19092,8 +19024,6 @@ entity ethernetlite_async_fifo_fg is
     fifo_tx_en : in STD_LOGIC;
     axi_phy_tx_en_i_p : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_async_fifo_fg : entity is "async_fifo_fg";
 end ethernetlite_async_fifo_fg;
 
 architecture STRUCTURE of ethernetlite_async_fifo_fg is
@@ -19248,8 +19178,6 @@ entity ethernetlite_rx_intrfce is
     rxCrcRst : in STD_LOGIC;
     SS : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_rx_intrfce : entity is "rx_intrfce";
 end ethernetlite_rx_intrfce;
 
 architecture STRUCTURE of ethernetlite_rx_intrfce is
@@ -19323,8 +19251,6 @@ entity ethernetlite_tx_intrfce is
     fifo_tx_en : in STD_LOGIC;
     axi_phy_tx_en_i_p : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_tx_intrfce : entity is "tx_intrfce";
 end ethernetlite_tx_intrfce;
 
 architecture STRUCTURE of ethernetlite_tx_intrfce is
@@ -19414,8 +19340,6 @@ entity ethernetlite_receive is
     \AXI4_LITE_IF_GEN.bus2ip_addr_i_reg[11]\ : in STD_LOGIC;
     \AXI4_LITE_IF_GEN.write_in_prog_reg\ : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_receive : entity is "receive";
 end ethernetlite_receive;
 
 architecture STRUCTURE of ethernetlite_receive is
@@ -19693,8 +19617,6 @@ entity ethernetlite_transmit is
     tx_intr_en0 : in STD_LOGIC;
     loopback_en_reg_1 : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_transmit : entity is "transmit";
 end ethernetlite_transmit;
 
 architecture STRUCTURE of ethernetlite_transmit is
@@ -20430,8 +20352,6 @@ entity ethernetlite_axi_ethernetlite_v3_0_11_emac is
     \AXI4_LITE_IF_GEN.write_in_prog_reg\ : in STD_LOGIC;
     \gen_wr_b.gen_word_wide.mem_reg_4\ : in STD_LOGIC_VECTOR ( 3 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_axi_ethernetlite_v3_0_11_emac : entity is "axi_ethernetlite_v3_0_11_emac";
 end ethernetlite_axi_ethernetlite_v3_0_11_emac;
 
 architecture STRUCTURE of ethernetlite_axi_ethernetlite_v3_0_11_emac is
@@ -21312,8 +21232,6 @@ entity ethernetlite_xemac is
     \AXI4_LITE_IF_GEN.bus2ip_addr_i_reg[2]_4\ : in STD_LOGIC_VECTOR ( 0 to 0 );
     \AXI4_LITE_IF_GEN.bus2ip_addr_i_reg[2]_5\ : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_xemac : entity is "xemac";
 end ethernetlite_xemac;
 
 architecture STRUCTURE of ethernetlite_xemac is
@@ -23413,8 +23331,6 @@ entity ethernetlite_axi_ethernetlite is
   attribute C_S_AXI_PROTOCOL of ethernetlite_axi_ethernetlite : entity is "AXI4LITE";
   attribute C_TX_PING_PONG : integer;
   attribute C_TX_PING_PONG of ethernetlite_axi_ethernetlite : entity is 1;
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of ethernetlite_axi_ethernetlite : entity is "axi_ethernetlite";
   attribute downgradeipidentifiedwarnings : string;
   attribute downgradeipidentifiedwarnings of ethernetlite_axi_ethernetlite : entity is "yes";
 end ethernetlite_axi_ethernetlite;

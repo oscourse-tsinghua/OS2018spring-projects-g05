@@ -8,6 +8,7 @@ use work.debugpoint_pending_test_const.all;
 use work.global_const.all;
 use work.except_const.all;
 use work.mmu_const.all;
+use work.bus_const.all;
 -- CODE BELOW IS AUTOMATICALLY GENERATED
 
 entity debugpoint_pending_tb is
@@ -17,10 +18,7 @@ architecture bhv of debugpoint_pending_tb is
     signal rst: std_logic := '1';
     signal clk: std_logic := '0';
 
-    signal devEnable, devWrite: std_logic;
-    signal devDataSave, devDataLoad: std_logic_vector(DataWidth);
-    signal devPhysicalAddr: std_logic_vector(AddrWidth);
-    signal devByteSelect: std_logic_vector(3 downto 0);
+    signal conn: BusInterface;
     signal sync: std_logic_vector(2 downto 0);
     signal scCorrect: std_logic;
 
@@ -31,12 +29,7 @@ begin
         port map (
             clk => clk,
             rst => rst,
-            enable_i => devEnable,
-            write_i => devWrite,
-            data_i => devDataSave,
-            addr_i => devPhysicalAddr,
-            byteSelect_i => devByteSelect,
-            data_o => devDataLoad,
+            cpu_io => conn,
             scCorrect_o => scCorrect,
             sync_i => sync
         );
@@ -52,14 +45,7 @@ begin
         )
         port map (
             rst => rst, clk => clk,
-            devEnable_o => devEnable,
-            devBusy_i => PIPELINE_NONSTOP,
-            devWrite_o => devWrite,
-            devDataSave_o => devDataSave,
-            devDataLoad_i => devDataLoad,
-            devPhysicalAddr_o => devPhysicalAddr,
-            devByteSelect_o => devByteSelect,
-
+            dev_io => conn,
             int_i => int,
             timerInt_o => timerInt,
             sync_o => sync,

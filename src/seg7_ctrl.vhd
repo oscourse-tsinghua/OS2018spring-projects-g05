@@ -1,12 +1,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use work.global_const.all;
+use work.bus_const.all;
 
 entity seg7_ctrl is
     port (
         clk, rst: in std_logic;
-        we_i: in std_logic;
-        data_i: in std_logic_vector(DataWidth);
+        cpu_io: inout BusInterface;
         cs_n_o: out std_logic_vector(7 downto 0);
         lights_o: out std_logic_vector(6 downto 0)
     );
@@ -17,6 +17,9 @@ architecture bhv of seg7_ctrl is
     signal cs: std_logic_vector(7 downto 0);
     signal part: std_logic_vector(3 downto 0);
 begin
+    cpu_io.busy_d2c <= PIPELINE_NONSTOP;
+    cpu_io.dataLoad_d2c <= (others => 'X');
+
     process (all) begin
         case (cs) is
             when "00000001" => part <= data(3 downto 0);
@@ -61,8 +64,8 @@ begin
                 data <= (others => '0');
                 cs <= "00000001";
             else
-                if (we_i = ENABLE) then
-                    data <= data_i;
+                if (cpu_io.enable_c2d = ENABLE) then
+                    data <= cpu_io.dataSave_c2d;
                 end if;
                 case (cs) is
                     when "00000001" => cs <= "00000010";
