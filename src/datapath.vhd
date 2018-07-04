@@ -13,7 +13,8 @@ entity datapath is
         exceptBootBaseAddr:     std_logic_vector(AddrWidth);
         tlbRefillExl0Offset:    std_logic_vector(AddrWidth);
         generalExceptOffset:    std_logic_vector(AddrWidth);
-        interruptIv1Offset:     std_logic_vector(AddrWidth)
+        interruptIv1Offset:     std_logic_vector(AddrWidth);
+        cpuId: std_logic_vector(9 downto 0)
     );
     port (
         rst, clk: in std_logic;
@@ -721,6 +722,9 @@ begin
     flush_b9 <= flush_b1;
 
     cp0_reg_ist: entity work.cp0_reg
+        generic map(
+            cpuId => cpuId
+        )
         port map(
             rst => rst,
             clk => clk,

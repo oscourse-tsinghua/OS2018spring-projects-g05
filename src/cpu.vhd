@@ -12,7 +12,8 @@ entity cpu is
         tlbRefillExl0Offset: std_logic_vector(AddrWidth) := 32ux"000";
         generalExceptOffset: std_logic_vector(AddrWidth) := 32ux"180";
         interruptIv1Offset: std_logic_vector(AddrWidth) := 32ux"200";
-        convEndianEnable: boolean := false
+        convEndianEnable: boolean := false;
+        cpuId: std_logic_vector(9 downto 0) := 10ub"0"
     );
     port (
         clk, rst: in std_logic;
@@ -113,7 +114,8 @@ begin
             exceptBootBaseAddr      => exceptBootBaseAddr,
             tlbRefillExl0Offset     => tlbRefillExl0Offset,
             generalExceptOffset     => generalExceptOffset,
-            interruptIv1Offset      => interruptIv1Offset
+            interruptIv1Offset      => interruptIv1Offset,
+            cpuId                   => cpuId
         )
         port map (
             rst => rst,
