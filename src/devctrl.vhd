@@ -8,21 +8,24 @@ entity devctrl is
     port (
         clk, rst: in std_logic;
 
-        cpu1Inst_i, cpu1Data_i: in BusC2D;
-        cpu1Inst_o, cpu1Data_o: out BusD2C;
+        cpu1Inst_i, cpu1Data_i, cpu2Inst_i, cpu2Data_i: in BusC2D;
+        cpu1Inst_o, cpu1Data_o, cpu2Inst_o, cpu2Data_o: out BusD2C;
         ddr3_i, flash_i, serial_i, boot_i, eth_i, led_i, num_i: in BusD2C;
         ddr3_o, flash_o, serial_o, boot_o, eth_o, led_o, num_o: out BusC2D;
 
         -- for sync --
-        sync_i: in std_logic_vector(2 downto 0);
-        scCorrect_o: out std_logic
+        sync1_i, sync2_i: in std_logic_vector(2 downto 0);
+        scCorrect1_o, scCorrect2_o: out std_logic
     );
 end devctrl;
 
 architecture bhv of devctrl is
-    signal conn_c2d: BusC2D;
-    signal conn_d2c: BusD2C;
-    signal llBit: std_logic;
+    signal cpu1_c2d, cpu2_c2d, conn_c2d: BusC2D;
+    signal cpu1_d2c, cpu2_d2c, conn_d2c: BusD2C;
+    signal priority, curCPU: std_logic;
+    signal sync: std_logic_vector(2 downto 0);
+    signal scCorrect: std_logic;
+    signal llBit, llCPU: std_logic;
     signal llLoc: std_logic_vector(AddrWidth);
 
     procedure connectRange(
@@ -79,8 +82,42 @@ architecture bhv of devctrl is
         end if;
     end procedure mergeIfMem;
 begin
+    process (clk) begin
+        if (rising_edge(clk)) then
+            if (rst = RST_ENABLE) then
+                priority <= CPU1_ID;
+            else
+                priority <= not priority;
+            end if;
+        end if;
+    end process;
+
     process (all) begin
-        mergeIfMem(cpu1Inst_i, cpu1Data_i, cpu1Inst_o, cpu1Data_o, conn_d2c, conn_c2d);
+        mergeIfMem(cpu1Inst_i, cpu1Data_i, cpu1Inst_o, cpu1Data_o, cpu1_d2c, cpu1_c2d);
+    end process;
+
+    process (all) begin
+        mergeIfMem(cpu2Inst_i, cpu2Data_i, cpu2Inst_o, cpu2Data_o, cpu2_d2c, cpu2_c2d);
+    end process;
+
+    process (all) begin
+        cpu1_d2c.busy <= cpu1_c2d.enable;
+        cpu2_d2c.busy <= cpu2_c2d.enable;
+        cpu1_d2c.dataLoad <= (others => 'X');
+        cpu2_d2c.dataLoad <= (others => 'X');
+        scCorrect1_o <= '0';
+        scCorrect2_o <= '0';
+        if (cpu1_c2d.enable = ENABLE and (cpu2_c2d.enable = DISABLE or priority = CPU1_ID)) then
+            curCPU <= CPU1_ID;
+            connect(cpu1_c2d, cpu1_d2c, conn_d2c, conn_c2d);
+            sync <= sync1_i;
+            scCorrect1_o <= scCorrect;
+        else
+            curCPU <= CPU2_ID;
+            connect(cpu2_c2d, cpu2_d2c, conn_d2c, conn_c2d);
+            sync <= sync2_i;
+            scCorrect2_o <= scCorrect;
+        end if;
     end process;
 
     process (all) begin
@@ -95,7 +132,7 @@ begin
         connectRange(x"1c030000", x"1c03ffff", conn_c2d, conn_d2c, eth_i, eth_o);
     end process;
 
-    scCorrect_o <= llBit when conn_c2d.addr = llLoc else '0';
+    scCorrect <= llBit when conn_c2d.addr = llLoc and curCPU = llCPU else '0';
 
     process(clk) begin
         if (rising_edge(clk)) then
@@ -105,16 +142,17 @@ begin
             else
                 -- see page 347 in document MD00086(Volume II-A revision 6.06)
                 if (conn_d2c.busy = PIPELINE_NONSTOP) then
-                    if (sync_i(0) = '1') then -- LL
+                    if (sync(0) = '1') then -- LL
                         llBit <= '1';
                         llLoc <= conn_c2d.addr;
-                    elsif (sync_i(1) = '1') then -- SC
+                        llCPU <= curCPU;
+                    elsif (sync(1) = '1') then -- SC
                         llBit <= '0';
                     elsif (conn_c2d.addr = llLoc) then -- Others
                         llBit <= '0';
                     end if;
                 end if;
-                if (sync_i(2) = '1') then -- Flush
+                if (sync(2) = '1') then -- Flush
                     llBit <= '0';
                 end if;
             end if;
