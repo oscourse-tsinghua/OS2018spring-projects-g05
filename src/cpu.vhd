@@ -18,7 +18,8 @@ entity cpu is
     port (
         clk, rst: in std_logic;
 
-        instDev_io, dataDev_io: inout BusInterface;
+        instDev_i, dataDev_i: in BusD2C;
+        instDev_o, dataDev_o: out BusC2D;
         scCorrect_i: in std_logic;
         sync_o: out std_logic_vector(2 downto 0);
 
@@ -52,28 +53,28 @@ architecture bhv of cpu is
     signal pageMask: std_logic_vector(AddrWidth);
 
 begin
-    instDev_io.dataSave_c2d <= (others => 'X');
+    instDev_o.dataSave <= (others => 'X');
     conv_endian_inst_load: entity work.conv_endian
         generic map (enable => convEndianEnable)
-        port map (input => instDev_io.dataLoad_d2c, output => instData);
+        port map (input => instDev_i.dataLoad, output => instData);
     conv_endian_data_save: entity work.conv_endian
         generic map (enable => convEndianEnable)
-        port map (input => dataDataSave, output => dataDev_io.dataSave_c2d);
+        port map (input => dataDataSave, output => dataDev_o.dataSave);
     conv_endian_data_load: entity work.conv_endian
         generic map (enable => convEndianEnable)
-        port map (input => dataDev_io.dataLoad_d2c, output => dataDataLoad);
+        port map (input => dataDev_i.dataLoad, output => dataDataLoad);
 
-    instDev_io.byteSelect_c2d <= "1111";
+    instDev_o.byteSelect <= "1111";
     process (all) begin
         if (convEndianEnable) then
-            dataDev_io.byteSelect_c2d <= dataByteSelect(0) & dataByteSelect(1) & dataByteSelect(2) & dataByteSelect(3);
+            dataDev_o.byteSelect <= dataByteSelect(0) & dataByteSelect(1) & dataByteSelect(2) & dataByteSelect(3);
         else
-            dataDev_io.byteSelect_c2d <= dataByteSelect;
+            dataDev_o.byteSelect <= dataByteSelect;
         end if;
     end process;
 
-    instDev_io.write_c2d <= NO;
-    dataDev_io.write_c2d <= dataWrite;
+    instDev_o.write <= NO;
+    dataDev_o.write <= dataWrite;
 
     mmu_ist: entity work.mmu
         port map (
@@ -84,16 +85,16 @@ begin
             enable1_i => instEnable,
             isLoad1_i => YES,
             addr1_i => instVAddr,
-            addr1_o => instDev_io.addr_c2d,
-            enable1_o => instDev_io.enable_c2d,
+            addr1_o => instDev_o.addr,
+            enable1_o => instDev_o.enable,
             exceptCause1_o => instExcept,
             tlbRefill1_o => instTlbRefill,
 
             enable2_i => dataEnable,
             isLoad2_i => not dataWrite,
             addr2_i => dataVAddr,
-            addr2_o => dataDev_io.addr_c2d,
-            enable2_o => dataDev_io.enable_c2d,
+            addr2_o => dataDev_o.addr,
+            enable2_o => dataDev_o.enable,
             exceptCause2_o => dataExcept,
             tlbRefill2_o => dataTlbRefill,
 
@@ -133,8 +134,8 @@ begin
             instExcept_i => instExcept,
             dataExcept_i => dataExcept,
             dataTlbRefill_i => dataTlbRefill,
-            ifToStall_i => instDev_io.busy_d2c,
-            memToStall_i => dataDev_io.busy_d2c,
+            ifToStall_i => instDev_i.busy,
+            memToStall_i => dataDev_i.busy,
             int_i => int_i,
             timerInt_o => timerInt_o,
             isKernelMode_o => isKernelMode,

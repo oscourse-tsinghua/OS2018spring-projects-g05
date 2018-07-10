@@ -7,7 +7,8 @@ entity eth_ctrl_encap is
     port (
         clk_100, clk_25, rst: in std_logic;
 
-        cpu_io: inout BusInterface;
+        cpu_i: in BusC2D;
+        cpu_o: out BusD2C;
 
         eth_txclk, eth_rxclk, eth_rxdv, eth_rxerr, eth_coll, eth_crs: in std_logic;
         eth_txen, eth_txerr, eth_rst_n: out std_logic;
@@ -127,13 +128,13 @@ begin
             rst_100 => rst,
             rst_25 => rst,
 
-            enable_i => cpu_io.enable_c2d,
-            readEnable_i => not cpu_io.write_c2d,
-            addr_i => cpu_io.addr_c2d,
-            writeData_i => cpu_io.dataSave_c2d,
-            readData_o => cpu_io.dataLoad_d2c,
-            byteSelect_i => cpu_io.byteSelect_c2d,
-            busy_o => cpu_io.busy_d2c,
+            enable_i => cpu_i.enable,
+            readEnable_i => not cpu_i.write,
+            addr_i => cpu_i.addr,
+            writeData_i => cpu_i.dataSave,
+            readData_o => cpu_o.dataLoad,
+            byteSelect_i => cpu_i.byteSelect,
+            busy_o => cpu_o.busy,
 
             enable_o => enable_100_i,
             readEnable_o => readEnable_100_i,

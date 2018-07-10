@@ -131,8 +131,10 @@ architecture bhv of top is
     signal clkMain: std_logic; -- 25MHz clock
     signal clk200, clk100: std_logic;
 
-    signal cpu1InstBus, cpu1DataBus: BusInterface;
-    signal ddr3Bus, flashBus, serialBus, bootBus, ethBus, ledBus, numBus: BusInterface;
+    signal cpu1Inst_c2d, cpu1Data_c2d: BusC2D;
+    signal cpu1Inst_d2c, cpu1Data_d2c: BusD2C;
+    signal ddr3_c2d, flash_c2d, serial_c2d, boot_c2d, eth_c2d, led_c2d, num_c2d: BusC2D;
+    signal ddr3_d2c, flash_d2c, serial_d2c, boot_d2c, eth_d2c, led_d2c, num_d2c: BusD2C;
 
     signal scCorrect: std_logic;
     signal sync: std_logic_vector(2 downto 0);
@@ -197,8 +199,10 @@ begin
         port map (
             clk => clkMain,
             rst => rst,
-            instDev_io => cpu1InstBus,
-            dataDev_io => cpu1DataBus,
+            instDev_i => cpu1Inst_d2c,
+            dataDev_i => cpu1Data_d2c,
+            instDev_o => cpu1Inst_c2d,
+            dataDev_o => cpu1Data_c2d,
             sync_o => sync,
             scCorrect_i => scCorrect,
             int_i => irq,
@@ -210,16 +214,25 @@ begin
             clk => clkMain,
             rst => rst,
 
-            cpu1Inst_io => cpu1InstBus,
-            cpu1Data_io => cpu1DataBus,
+            cpu1Inst_i => cpu1Inst_c2d,
+            cpu1Data_i => cpu1Data_c2d,
+            cpu1Inst_o => cpu1Inst_d2c,
+            cpu1Data_o => cpu1Data_d2c,
 
-            ddr3_io => ddr3Bus,
-            flash_io => flashBus,
-            serial_io => serialBus,
-            boot_io => bootBus,
-            eth_io => ethBus,
-            led_io => ledBus,
-            num_io => numBus,
+            ddr3_i => ddr3_d2c,
+            flash_i => flash_d2c,
+            serial_i => serial_d2c,
+            boot_i => boot_d2c,
+            eth_i => eth_d2c,
+            led_i => led_d2c,
+            num_i => num_d2c,
+            ddr3_o => ddr3_c2d,
+            flash_o => flash_c2d,
+            serial_o => serial_c2d,
+            boot_o => boot_c2d,
+            eth_o => eth_c2d,
+            led_o => led_c2d,
+            num_o => num_c2d,
 
             sync_i => sync,
             scCorrect_o => scCorrect
@@ -231,7 +244,8 @@ begin
         port map (
             clk => clkMain,
             rst => rst,
-            cpu_io => flashBus,
+            cpu_i => flash_c2d,
+            cpu_o => flash_d2c,
             clk_o => spi_clk,
             cs_n_o => spi_cs_n,
             di_o => spi_di,
@@ -245,7 +259,8 @@ begin
             clk_25 => clkMain,
             rst => rst,
 
-            cpu_io => ddr3Bus,
+            cpu_i => ddr3_c2d,
+            cpu_o => ddr3_d2c,
 
             ddr3_dq => ddr3_dq,
             ddr3_addr => ddr3_addr,
@@ -267,7 +282,8 @@ begin
         port map (
             clk => clkMain,
             rst => rst,
-            cpu_io => serialBus,
+            cpu_i => serial_c2d,
+            cpu_o => serial_d2c,
             int_o => comInt,
             rxdReady_i => rxdReady,
             rxdData_i => rxdData,
@@ -278,7 +294,8 @@ begin
 
     boot_ctrl_ist: entity work.boot_ctrl
         port map (
-            cpu_io => bootBus
+            cpu_i => boot_c2d,
+            cpu_o => boot_d2c
         );
 
     eth_ctrl_encap_ist: entity work.eth_ctrl_encap
@@ -287,7 +304,8 @@ begin
             clk_25 => clkMain,
             rst => rst,
 
-            cpu_io => ethBus,
+            cpu_i => eth_c2d,
+            cpu_o => eth_d2c,
 
             eth_rst_n => eth_rst_n,
             eth_txclk => eth_txclk,
@@ -312,20 +330,21 @@ begin
         port map (
             clk => clkMain,
             rst => rst,
-            cpu_io => numBus,
+            cpu_i => num_c2d,
+            cpu_o => num_d2c,
             cs_n_o => num_cs_n,
             lights_o => num_a_g
         );
 
-    ledBus.busy_d2c <= PIPELINE_NONSTOP;
-    ledBus.dataLoad_d2c <= (others => 'X');
+    led_d2c.busy <= PIPELINE_NONSTOP;
+    led_d2c.dataLoad <= (others => 'X');
     led_n <= not ledHold;
     process (clkMain) begin
         if (rising_edge(clkMain)) then
             if (rst = '1') then
                 ledHold <= (others => '0');
-            elsif (ledBus.enable_c2d = '1') then
-                ledHold <= ledBus.dataSave_c2d(15 downto 0);
+            elsif (led_c2d.enable = '1') then
+                ledHold <= led_c2d.dataSave(15 downto 0);
             end if;
         end if;
     end process;

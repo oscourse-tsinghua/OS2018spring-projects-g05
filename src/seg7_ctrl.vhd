@@ -6,7 +6,8 @@ use work.bus_const.all;
 entity seg7_ctrl is
     port (
         clk, rst: in std_logic;
-        cpu_io: inout BusInterface;
+        cpu_i: in BusC2D;
+        cpu_o: out BusD2C;
         cs_n_o: out std_logic_vector(7 downto 0);
         lights_o: out std_logic_vector(6 downto 0)
     );
@@ -17,8 +18,8 @@ architecture bhv of seg7_ctrl is
     signal cs: std_logic_vector(7 downto 0);
     signal part: std_logic_vector(3 downto 0);
 begin
-    cpu_io.busy_d2c <= PIPELINE_NONSTOP;
-    cpu_io.dataLoad_d2c <= (others => 'X');
+    cpu_o.busy <= PIPELINE_NONSTOP;
+    cpu_o.dataLoad <= (others => 'X');
 
     process (all) begin
         case (cs) is
@@ -64,8 +65,8 @@ begin
                 data <= (others => '0');
                 cs <= "00000001";
             else
-                if (cpu_io.enable_c2d = ENABLE) then
-                    data <= cpu_io.dataSave_c2d;
+                if (cpu_i.enable = ENABLE) then
+                    data <= cpu_i.dataSave;
                 end if;
                 case (cs) is
                     when "00000001" => cs <= "00000010";

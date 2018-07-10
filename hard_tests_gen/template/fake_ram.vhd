@@ -11,7 +11,8 @@ use work.bus_const.all;
 entity {{{TEST_NAME}}}_fake_ram is
     port (
         clk, rst: in std_logic;
-        cpu_io: inout BusInterface
+        cpu_i: in BusC2D;
+        cpu_o: out BusD2C
     );
 end {{{TEST_NAME}}}_fake_ram;
 
@@ -23,26 +24,26 @@ architecture bhv of {{{TEST_NAME}}}_fake_ram is
     signal llBit: std_logic;
     signal llLoc: std_logic_vector(AddrWidth);
 begin
-    cpu_io.busy_d2c <= PIPELINE_NONSTOP;
+    cpu_o.busy <= PIPELINE_NONSTOP;
 
-    wordAddr <= to_integer(unsigned(cpu_io.addr_c2d(11 downto 2)));
+    wordAddr <= to_integer(unsigned(cpu_i.addr(11 downto 2)));
 
     bitSelect <= (
-        31 downto 24 => cpu_io.byteSelect_c2d(3),
-        23 downto 16 => cpu_io.byteSelect_c2d(2),
-        15 downto 8 => cpu_io.byteSelect_c2d(1),
-        7 downto 0 => cpu_io.byteSelect_c2d(0)
+        31 downto 24 => cpu_i.byteSelect(3),
+        23 downto 16 => cpu_i.byteSelect(2),
+        15 downto 8 => cpu_i.byteSelect(1),
+        7 downto 0 => cpu_i.byteSelect(0)
     );
 
     process (clk) begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then
                 {{{INIT_INST_RAM}}}
-            elsif ((cpu_io.enable_c2d = '1') and (cpu_io.write_c2d = '1')) then
-                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (cpu_io.dataSave_c2d and bitSelect);
+            elsif ((cpu_i.enable = '1') and (cpu_i.write = '1')) then
+                words(wordAddr) <= (words(wordAddr) and not bitSelect) or (cpu_i.dataSave and bitSelect);
             end if;
         end if;
     end process;
 
-    cpu_io.dataLoad_d2c <= words(wordAddr) when (cpu_io.enable_c2d = '1') and (cpu_io.write_c2d = '0') else 32b"0";
+    cpu_o.dataLoad <= words(wordAddr) when (cpu_i.enable = '1') and (cpu_i.write = '0') else 32b"0";
 end bhv;
