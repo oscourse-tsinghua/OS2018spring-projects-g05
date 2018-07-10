@@ -8,7 +8,10 @@ entity devctrl is
     port (
         clk, rst: in std_logic;
 
-        cpu_io, ddr3_io, flash_io, serial_io, boot_io, eth_io, led_io, num_io: inout BusInterface;
+        cpu1Inst_i, cpu1Data_i: in BusC2D;
+        cpu1Inst_o, cpu1Data_o: out BusD2C;
+        ddr3_i, flash_i, serial_i, boot_i, eth_i, led_i, num_i: in BusD2C;
+        ddr3_o, flash_o, serial_o, boot_o, eth_o, led_o, num_o: out BusC2D;
 
         -- for sync --
         sync_i: in std_logic_vector(2 downto 0);
@@ -17,47 +20,82 @@ entity devctrl is
 end devctrl;
 
 architecture bhv of devctrl is
-    procedure connect(
-        constant lo, hi: in std_logic_vector(AddrWidth); -- Inclusive
-        signal cpu, dev: inout BusInterface
-    ) is begin
-        dev.addr_c2d <= cpu.addr_c2d;
-        dev.byteSelect_c2d <= cpu.byteSelect_c2d;
-        dev.dataSave_c2d <= cpu.dataSave_c2d;
-        if (cpu.enable_c2d = ENABLE and cpu.addr_c2d >= lo and cpu.addr_c2d <= hi) then
-            dev.enable_c2d <= ENABLE;
-            dev.write_c2d <= cpu.write_c2d;
-            cpu.dataLoad_d2c <= dev.dataLoad_d2c;
-            cpu.busy_d2c <= dev.busy_d2c;
-        else
-            dev.enable_c2d <= DISABLE;
-            dev.write_c2d <= NO;
-        end if;
-    end procedure connect;
-
-    signal cpu: BusInterface;
+    signal conn_c2d: BusC2D;
+    signal conn_d2c: BusD2C;
     signal llBit: std_logic;
     signal llLoc: std_logic_vector(AddrWidth);
+
+    procedure connectRange(
+        constant lo, hi: in std_logic_vector(AddrWidth); -- Inclusive
+        signal cpu_i: in BusC2D;
+        signal cpu_o: out BusD2C;
+        signal dev_i: in BusD2C;
+        signal dev_o: out BusC2D
+    ) is begin
+        dev_o.addr <= cpu_i.addr;
+        dev_o.byteSelect <= cpu_i.byteSelect;
+        dev_o.dataSave <= cpu_i.dataSave;
+        if (cpu_i.enable = ENABLE and cpu_i.addr >= lo and cpu_i.addr <= hi) then
+            dev_o.enable <= ENABLE;
+            dev_o.write <= cpu_i.write;
+            cpu_o.dataLoad <= dev_i.dataLoad;
+            cpu_o.busy <= dev_i.busy;
+        else
+            dev_o.enable <= DISABLE;
+            dev_o.write <= NO;
+        end if;
+    end procedure connectRange;
+
+    procedure connect(
+        signal cpu_i: in BusC2D;
+        signal cpu_o: out BusD2C;
+        signal dev_i: in BusD2C;
+        signal dev_o: out BusC2D
+    ) is begin
+        dev_o.addr <= cpu_i.addr;
+        dev_o.byteSelect <= cpu_i.byteSelect;
+        dev_o.dataSave <= cpu_i.dataSave;
+        dev_o.enable <= cpu_i.enable;
+        dev_o.write <= cpu_i.write;
+        cpu_o.dataLoad <= dev_i.dataLoad;
+        cpu_o.busy <= dev_i.busy;
+    end procedure connect;
+
+    procedure mergeIfMem(
+        signal inst_i, data_i: in BusC2D;
+        signal inst_o, data_o: out BusD2C;
+        signal cpu_i: in BusD2C;
+        signal cpu_o: out BusC2D
+    ) is begin
+        data_o.busy <= PIPELINE_NONSTOP;
+        data_o.dataLoad <= (others => 'X');
+        inst_o.busy <= PIPELINE_NONSTOP;
+        inst_o.dataLoad <= (others => 'X');
+        if (data_i.enable = ENABLE) then
+            inst_o.busy <= PIPELINE_STOP;
+            connect(data_i, data_o, cpu_i, cpu_o);
+        else
+            connect(inst_i, inst_o, cpu_i, cpu_o);
+        end if;
+    end procedure mergeIfMem;
 begin
     process (all) begin
-        cpu_io.busy_d2c <= PIPELINE_NONSTOP;
-        cpu_io.dataLoad_d2c <= (others => 'X');
-        connect(x"00000000", x"ffffffff", cpu_io, cpu);
+        mergeIfMem(cpu1Inst_i, cpu1Data_i, cpu1Inst_o, cpu1Data_o, conn_d2c, conn_c2d);
     end process;
 
     process (all) begin
-        cpu.busy_d2c <= PIPELINE_NONSTOP;
-        cpu.dataLoad_d2c <= (others => 'X');
-        connect(x"00000000", x"07ffffff", cpu, ddr3_io);
-        connect(x"1e000000", x"1effffff", cpu, flash_io);
-        connect(x"1fc00000", x"1fc00fff", cpu, boot_io);
-        connect(x"1fd003f8", x"1fd003fc", cpu, serial_io);
-        connect(x"1fd0f000", x"1fd0f000", cpu, led_io);
-        connect(x"1fd0f010", x"1fd0f010", cpu, num_io);
-        connect(x"1c030000", x"1c03ffff", cpu, eth_io);
+        conn_d2c.busy <= PIPELINE_NONSTOP;
+        conn_d2c.dataLoad <= (others => 'X');
+        connectRange(x"00000000", x"07ffffff", conn_c2d, conn_d2c, ddr3_i, ddr3_o);
+        connectRange(x"1e000000", x"1effffff", conn_c2d, conn_d2c, flash_i, flash_o);
+        connectRange(x"1fc00000", x"1fc00fff", conn_c2d, conn_d2c, boot_i, boot_o);
+        connectRange(x"1fd003f8", x"1fd003fc", conn_c2d, conn_d2c, serial_i, serial_o);
+        connectRange(x"1fd0f000", x"1fd0f000", conn_c2d, conn_d2c, led_i, led_o);
+        connectRange(x"1fd0f010", x"1fd0f010", conn_c2d, conn_d2c, num_i, num_o);
+        connectRange(x"1c030000", x"1c03ffff", conn_c2d, conn_d2c, eth_i, eth_o);
     end process;
 
-    scCorrect_o <= llBit when cpu.addr_c2d = llLoc else '0';
+    scCorrect_o <= llBit when conn_c2d.addr = llLoc else '0';
 
     process(clk) begin
         if (rising_edge(clk)) then
@@ -66,13 +104,13 @@ begin
                 llLoc <= (others => 'X');
             else
                 -- see page 347 in document MD00086(Volume II-A revision 6.06)
-                if (cpu.busy_d2c = PIPELINE_NONSTOP) then
+                if (conn_d2c.busy = PIPELINE_NONSTOP) then
                     if (sync_i(0) = '1') then -- LL
                         llBit <= '1';
-                        llLoc <= cpu.addr_c2d;
+                        llLoc <= conn_c2d.addr;
                     elsif (sync_i(1) = '1') then -- SC
                         llBit <= '0';
-                    elsif (cpu.addr_c2d = llLoc) then -- Others
+                    elsif (conn_c2d.addr = llLoc) then -- Others
                         llBit <= '0';
                     end if;
                 end if;

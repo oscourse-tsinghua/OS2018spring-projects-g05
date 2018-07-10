@@ -12,7 +12,10 @@ use work.cp0_config_const.all;
 use work.mmu_const.all;
 
 entity cp0_reg is
-    port(
+    generic (
+        cpuId: std_logic_vector(9 downto 0)
+    );
+    port (
         rst, clk: in std_logic;
 
         we_i: in std_logic;
@@ -217,7 +220,7 @@ begin
                 regArr(PAGEMASK_REG) <= (others => '0');
                 regArr(CAUSE_REG) <= (others => '0');
                 regArr(EPC_REG) <= (others => '0');
-                regArr(PRID_OR_EBASE_REG) <= (31 => '1', others => '0');
+                regArr(PRID_OR_EBASE_REG) <= "1000000000000000000000" & cpuId;
                 regArr(CONFIG_REG) <= (31 => '1', 7 => '1', 1 => '1', 0 => '1', others => '0');
                 regArr(WATCHLO_REG) <= (others => '0');
                 regArr(WATCHHI_REG) <= (others => '0');

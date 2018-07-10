@@ -18,7 +18,11 @@ architecture bhv of logici1_tb is
     signal rst: std_logic := '1';
     signal clk: std_logic := '0';
 
-    signal conn: BusInterface;
+    signal cpu1Inst_c2d, cpu1Data_c2d: BusC2D;
+    signal cpu1Inst_d2c, cpu1Data_d2c: BusD2C;
+    signal ram_c2d, flash_c2d, serial_c2d, boot_c2d, eth_c2d, led_c2d, num_c2d: BusC2D;
+    signal ram_d2c, flash_d2c, serial_d2c, boot_d2c, eth_d2c, led_d2c, num_d2c: BusD2C;
+
     signal sync: std_logic_vector(2 downto 0);
     signal scCorrect: std_logic;
 
@@ -29,9 +33,8 @@ begin
         port map (
             clk => clk,
             rst => rst,
-            cpu_io => conn,
-            scCorrect_o => scCorrect,
-            sync_i => sync
+            cpu_i => ram_c2d,
+            cpu_o => ram_d2c
         );
 
     cpu_ist: entity work.cpu
@@ -45,13 +48,51 @@ begin
         )
         port map (
             rst => rst, clk => clk,
-            dev_io => conn,
+            instDev_i => cpu1Inst_d2c,
+            dataDev_i => cpu1Data_d2c,
+            instDev_o => cpu1Inst_c2d,
+            dataDev_o => cpu1Data_c2d,
             int_i => int,
             timerInt_o => timerInt,
             sync_o => sync,
             scCorrect_i => scCorrect
         );
     int <= (0 => timerInt, others => '0');
+
+    devctrl_ist: entity work.devctrl
+        port map (
+            clk => clk,
+            rst => rst,
+
+            cpu1Inst_i => cpu1Inst_c2d,
+            cpu1Data_i => cpu1Data_c2d,
+            cpu1Inst_o => cpu1Inst_d2c,
+            cpu1Data_o => cpu1Data_d2c,
+
+            ddr3_i => ram_d2c,
+            flash_i => flash_d2c,
+            serial_i => serial_d2c,
+            boot_i => boot_d2c,
+            eth_i => eth_d2c,
+            led_i => led_d2c,
+            num_i => num_d2c,
+            ddr3_o => ram_c2d,
+            flash_o => flash_c2d,
+            serial_o => serial_c2d,
+            boot_o => boot_c2d,
+            eth_o => eth_c2d,
+            led_o => led_c2d,
+            num_o => num_c2d,
+
+            sync_i => sync,
+            scCorrect_o => scCorrect
+    );
+    flash_d2c.dataLoad <= (others => '0'); flash_d2c.busy <= PIPELINE_STOP;
+    serial_d2c.dataLoad <= (others => '0'); serial_d2c.busy <= PIPELINE_STOP;
+    boot_d2c.dataLoad <= (others => '0'); boot_d2c.busy <= PIPELINE_STOP;
+    eth_d2c.dataLoad <= (others => '0'); eth_d2c.busy <= PIPELINE_STOP;
+    led_d2c.dataLoad <= (others => '0'); led_d2c.busy <= PIPELINE_STOP;
+    num_d2c.dataLoad <= (others => '0'); num_d2c.busy <= PIPELINE_STOP;
 
     process begin
         wait for CLK_PERIOD / 2;

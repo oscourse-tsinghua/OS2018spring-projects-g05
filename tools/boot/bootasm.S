@@ -3,7 +3,7 @@
 #define ELF_MAGIC 0x464C457F
 
 /* off = offset from s0 */
-/* load a 32bit word from Flash, 
+/* load a 32bit word from Flash,
  * off is byte-addressed */
 #define LOAD_WORD_I(dst, off) \
   la $t7, off; \
@@ -14,15 +14,26 @@
   addiu $t7, base, off;\
   addu $t7, $s0, $t7; \
   lw dst, 0($t7);
-   
+
 #assume file base == FLASH_START
 
 .set noreorder
 .set noat
 .globl __start
 __start:
+  #spin if not the first CPU, and jump to *0x7ffffc if not zero
+  mfc0 $t0, $15, 1
+  andi $t0, $t0, 0x3ff
+  beq $t0, $0, load_elf
   nop
-  b load_elf
+  la $t0, 0x7ffffc
+  sw $0, 0($t0)
+
+spin:
+  lw $t1, 0($t0)
+  beq $t1, $0, spin
+  nop
+  jr $t1
   nop
 
 load_elf:
@@ -88,6 +99,6 @@ done:
   nop
 
 bad:
-  b bad 
+  b bad
   nop
 

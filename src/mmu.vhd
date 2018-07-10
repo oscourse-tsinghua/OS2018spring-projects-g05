@@ -14,14 +14,14 @@ entity mmu is
         rst, clk: in std_logic;
 
         -- Translate the address
-        enable_i: in std_logic;
         isKernelMode_i: in std_logic;
-        isLoad_i: in std_logic; -- This address is used for loading rather than storing
-        addr_i: in std_logic_vector(AddrWidth);
-        addr_o: out std_logic_vector(AddrWidth);
-        enable_o: out std_logic;
-        exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-        tlbRefill_o: out std_logic;
+        enable1_i, enable2_i: in std_logic;
+        isLoad1_i, isLoad2_i: in std_logic; -- This address is used for loading rather than storing
+        addr1_i, addr2_i: in std_logic_vector(AddrWidth);
+        addr1_o, addr2_o: out std_logic_vector(AddrWidth);
+        enable1_o, enable2_o: out std_logic;
+        exceptCause1_o, exceptCause2_o: out std_logic_vector(ExceptionCauseWidth);
+        tlbRefill1_o, tlbRefill2_o: out std_logic;
 
         -- Manage TLB entry
         index_i: in std_logic_vector(TLBIndexWidth);
@@ -39,22 +39,27 @@ architecture bhv of mmu is
     type EntryArr is array (0 to TLB_ENTRY_NUM - 1) of TLBEntry;
     signal entries: EntryArr;
     signal pageMask: std_logic_vector(4 downto 0);
-begin
-    -- Translation
-    -- We can't use 'Z' inside chip, so here we are using sequential look-up
-    process (all)
+
+    procedure translate(
+        signal enable_i, isLoad_i: in std_logic;
+        signal addr_i: in std_logic_vector(AddrWidth);
+        signal addr_o: out std_logic_vector(AddrWidth);
+        signal enable_o: out std_logic;
+        signal exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        signal tlbRefill_o: out std_logic
+    ) is
         variable targetLo: std_logic_vector(DataWidth);
-        variable addrExcept, tlbExcept: boolean;
-        variable tlbInvalid, tlbModified: boolean;
-        variable tlbRefill: boolean;
+        variable addrExcept, tlbExcept, tlbInvalid, tlbModified: boolean;
     begin
-        exceptCause_o <= NO_CAUSE;
+        -- We can't use 'Z' inside chip, so here we are using sequential look-up
+        addr_o <= (others => '0');
         enable_o <= enable_i;
+        exceptCause_o <= NO_CAUSE;
+        tlbRefill_o <= NO;
         addrExcept := false;
         tlbExcept := true;
         tlbInvalid := false;
         tlbModified := false;
-        addr_o <= (others => '0');
         if (isKernelMode_i = NO and addr_i(31 downto 28) >= 4x"8") then
             -- kseg0, kseg1, kseg2
             addrExcept := true;
@@ -101,7 +106,7 @@ begin
             end loop;
         end if;
 
-        if (addrExcept) then
+        if (enable_i = ENABLE and addrExcept) then
             enable_o <= DISABLE;
             if (isLoad_i = YES) then -- Conditional assignment in sequential code has not been supported in Vivado yet
                 exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
@@ -110,27 +115,45 @@ begin
             end if;
         end if;
 
-        tlbRefill := false;
-        if (tlbExcept) then
+        if (enable_i = ENABLE and tlbExcept) then
             enable_o <= DISABLE;
-            if (tlbInvalid) then
-                if (isLoad_i = YES) then
-                    exceptCause_o <= TLB_LOAD_CAUSE;
-                else
-                    exceptCause_o <= TLB_STORE_CAUSE;
-                end if;
-            elsif (tlbModified) then
+            if (tlbModified) then
                 exceptCause_o <= TLB_MODIFIED_CAUSE;
             else
-                tlbRefill := true;
                 if (isLoad_i = YES) then
                     exceptCause_o <= TLB_LOAD_CAUSE;
                 else
                     exceptCause_o <= TLB_STORE_CAUSE;
                 end if;
+                tlbRefill_o <= NO when tlbInvalid else YES;
             end if;
         end if;
-        tlbRefill_o <= '1' when tlbRefill else '0';
+    end translate;
+begin
+    -- Translation
+    process (all)
+    begin
+        translate(
+            enable_i => enable1_i,
+            isLoad_i => isLoad1_i,
+            addr_i => addr1_i,
+            addr_o => addr1_o,
+            enable_o => enable1_o,
+            exceptCause_o => exceptCause1_o,
+            tlbRefill_o => tlbRefill1_o
+        );
+    end process;
+    process (all)
+    begin
+        translate(
+            enable_i => enable2_i,
+            isLoad_i => isLoad2_i,
+            addr_i => addr2_i,
+            addr_o => addr2_o,
+            enable_o => enable2_o,
+            exceptCause_o => exceptCause2_o,
+            tlbRefill_o => tlbRefill2_o
+        );
     end process;
 
     -- Store entry

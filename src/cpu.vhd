@@ -12,12 +12,14 @@ entity cpu is
         tlbRefillExl0Offset: std_logic_vector(AddrWidth) := 32ux"000";
         generalExceptOffset: std_logic_vector(AddrWidth) := 32ux"180";
         interruptIv1Offset: std_logic_vector(AddrWidth) := 32ux"200";
-        convEndianEnable: boolean := false
+        convEndianEnable: boolean := false;
+        cpuId: std_logic_vector(9 downto 0) := 10ub"0"
     );
     port (
         clk, rst: in std_logic;
 
-        dev_io: inout BusInterface;
+        instDev_i, dataDev_i: in BusD2C;
+        instDev_o, dataDev_o: out BusC2D;
         scCorrect_i: in std_logic;
         sync_o: out std_logic_vector(2 downto 0);
 
@@ -30,22 +32,17 @@ architecture bhv of cpu is
 
     signal instEnable: std_logic;
     signal instData: std_logic_vector(DataWidth);
-    signal instAddr: std_logic_vector(AddrWidth);
+    signal instVAddr: std_logic_vector(AddrWidth);
+    signal instExcept: std_logic_vector(ExceptionCauseWidth);
+    signal instTlbRefill: std_logic;
 
-    signal dataEnable: std_logic;
-    signal dataWrite: std_logic;
+    signal dataEnable, dataWrite: std_logic;
     signal dataDataSave: std_logic_vector(DataWidth);
     signal dataDataLoad: std_logic_vector(DataWidth);
-    signal dataAddr: std_logic_vector(AddrWidth);
+    signal dataVAddr: std_logic_vector(AddrWidth);
     signal dataByteSelect: std_logic_vector(3 downto 0);
-
-    signal mmuEnable: std_logic;
-    signal devWrite: std_logic;
-    signal devVirtualAddr: std_logic_vector(AddrWidth);
-
-    signal instStall, dataStall: std_logic;
-    signal instExcept, dataExcept, devExcept: std_logic_vector(ExceptionCauseWidth);
-    signal devTlbRefill, instTlbRefill, dataTlbRefill: std_logic;
+    signal dataExcept: std_logic_vector(ExceptionCauseWidth);
+    signal dataTlbRefill: std_logic;
 
     signal isKernelMode: std_logic;
     signal entryIndexSave, entryIndexLoad: std_logic_vector(TLBIndexWidth);
@@ -55,48 +52,51 @@ architecture bhv of cpu is
     signal entrySave, entryLoad: TLBEntry;
     signal pageMask: std_logic_vector(AddrWidth);
 
-    signal dataLoadConv, dataSaveConv: std_logic_vector(DataWidth);
-    signal byteSelectConv: std_logic_vector(3 downto 0);
-
 begin
-    conv_endian_load: entity work.conv_endian
-        generic map (
-            enable => convEndianEnable
-        )
-        port map (
-            input => dev_io.dataLoad_d2c,
-            output => dataLoadConv
-        );
-    conv_endian_save: entity work.conv_endian
-        generic map (
-            enable => convEndianEnable
-        )
-        port map (
-            input => dataSaveConv,
-            output => dev_io.dataSave_c2d
-        );
+    instDev_o.dataSave <= (others => 'X');
+    conv_endian_inst_load: entity work.conv_endian
+        generic map (enable => convEndianEnable)
+        port map (input => instDev_i.dataLoad, output => instData);
+    conv_endian_data_save: entity work.conv_endian
+        generic map (enable => convEndianEnable)
+        port map (input => dataDataSave, output => dataDev_o.dataSave);
+    conv_endian_data_load: entity work.conv_endian
+        generic map (enable => convEndianEnable)
+        port map (input => dataDev_i.dataLoad, output => dataDataLoad);
+
+    instDev_o.byteSelect <= "1111";
     process (all) begin
         if (convEndianEnable) then
-            dev_io.byteSelect_c2d <= byteSelectConv(0) & byteSelectConv(1) & byteSelectConv(2) & byteSelectConv(3);
+            dataDev_o.byteSelect <= dataByteSelect(0) & dataByteSelect(1) & dataByteSelect(2) & dataByteSelect(3);
         else
-            dev_io.byteSelect_c2d <= byteSelectConv;
+            dataDev_o.byteSelect <= dataByteSelect;
         end if;
     end process;
 
-    dev_io.write_c2d <= devWrite;
+    instDev_o.write <= NO;
+    dataDev_o.write <= dataWrite;
 
     mmu_ist: entity work.mmu
         port map (
             clk => clk, rst => rst,
 
-            enable_i => mmuEnable,
             isKernelMode_i => isKernelMode,
-            isLoad_i => not devWrite,
-            addr_i => devVirtualAddr,
-            addr_o => dev_io.addr_c2d,
-            enable_o => dev_io.enable_c2d,
-            exceptCause_o => devExcept,
-            tlbRefill_o => devTlbRefill,
+
+            enable1_i => instEnable,
+            isLoad1_i => YES,
+            addr1_i => instVAddr,
+            addr1_o => instDev_o.addr,
+            enable1_o => instDev_o.enable,
+            exceptCause1_o => instExcept,
+            tlbRefill1_o => instTlbRefill,
+
+            enable2_i => dataEnable,
+            isLoad2_i => not dataWrite,
+            addr2_i => dataVAddr,
+            addr2_o => dataDev_o.addr,
+            enable2_o => dataDev_o.enable,
+            exceptCause2_o => dataExcept,
+            tlbRefill2_o => dataTlbRefill,
 
             pageMask_i => pageMask,
             index_i => entryIndexSave,
@@ -109,65 +109,33 @@ begin
             entry_o => entryLoad
         );
 
-    memctrl_ist: entity work.memctrl
-        port map (
-            -- Connect to instruction interface of CPU
-            instData_o => instData,
-            instAddr_i => instAddr,
-            instEnable_i => instEnable,
-            instStall_o => instStall,
-            instExcept_o => instExcept,
-            instTlbRefill_o => instTlbRefill,
-
-            -- Connect to data interface of CPU
-            dataEnable_i => dataEnable,
-            dataWrite_i => dataWrite,
-            dataData_o => dataDataLoad,
-            dataData_i => dataDataSave,
-            dataAddr_i => dataAddr,
-            dataByteSelect_i => dataByteSelect,
-            dataStall_o => dataStall,
-            dataExcept_o => dataExcept,
-            dataTlbRefill_o => dataTlbRefill,
-
-            -- Connect to external device (MMU)
-            devEnable_o => mmuEnable,
-            devWrite_o => devWrite,
-            devData_i => dataLoadConv,
-            devData_o => dataSaveConv,
-            devAddr_o => devVirtualAddr,
-            devByteSelect_o => byteSelectConv,
-            devBusy_i => dev_io.busy_d2c,
-            devExcept_i => devExcept,
-            devTlbRefill_i => devTlbRefill
-        );
-
     datapath_ist: entity work.datapath
         generic map (
             instEntranceAddr        => instEntranceAddr,
             exceptBootBaseAddr      => exceptBootBaseAddr,
             tlbRefillExl0Offset     => tlbRefillExl0Offset,
             generalExceptOffset     => generalExceptOffset,
-            interruptIv1Offset      => interruptIv1Offset
+            interruptIv1Offset      => interruptIv1Offset,
+            cpuId                   => cpuId
         )
         port map (
             rst => rst,
             clk => clk,
             instEnable_o => instEnable,
             instData_i => instData,
-            instAddr_o => instAddr,
+            instAddr_o => instVAddr,
             instTlbRefill_i => instTlbRefill,
             dataEnable_o => dataEnable,
             dataWrite_o => dataWrite,
             dataData_i => dataDataLoad,
             dataData_o => dataDataSave,
-            dataAddr_o => dataAddr,
+            dataAddr_o => dataVAddr,
             dataByteSelect_o => dataByteSelect,
             instExcept_i => instExcept,
             dataExcept_i => dataExcept,
             dataTlbRefill_i => dataTlbRefill,
-            ifToStall_i => instStall,
-            memToStall_i => dataStall,
+            ifToStall_i => instDev_i.busy,
+            memToStall_i => dataDev_i.busy,
             int_i => int_i,
             timerInt_o => timerInt_o,
             isKernelMode_o => isKernelMode,

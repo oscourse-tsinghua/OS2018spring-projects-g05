@@ -9,7 +9,8 @@ entity flash_ctrl is
     port (
         clk, rst: in std_logic;
 
-        cpu_io: inout BusInterface;
+        cpu_i: in BusC2D;
+        cpu_o: out BusD2C;
 
         clk_o, cs_n_o, di_o: out std_logic;
         do_i: in std_logic
@@ -26,14 +27,14 @@ begin
 
     chipEnable <= DISABLE when
         rst = RST_ENABLE or
-        cpu_io.enable_c2d = DISABLE or
+        cpu_i.enable = DISABLE or
         state = "0000000" or -- Not started yet
         state = "1000001" -- Done
         else ENABLE;
     cs_n_o <= not chipEnable;
     clk_o <= clk or not chipEnable; -- Pull up clock when disable, which guarentees
                                     -- the first rising edge comes after enabling
-    cpu_io.busy_d2c <= PIPELINE_NONSTOP when state = "1000001" else PIPELINE_STOP;
+    cpu_o.busy <= PIPELINE_NONSTOP when state = "1000001" else PIPELINE_STOP;
 
     process (clk) begin -- Transmitter
         if (falling_edge(clk)) then
@@ -51,16 +52,16 @@ begin
             rxd <= rxd(30 downto 0) & do_i;
         end if;
     end process;
-    cpu_io.dataLoad_d2c <= rxd(7 downto 0) & rxd(15 downto 8) & rxd(23 downto 16) & rxd(31 downto 24);
+    cpu_o.dataLoad <= rxd(7 downto 0) & rxd(15 downto 8) & rxd(23 downto 16) & rxd(31 downto 24);
 
     process (clk) begin -- Controller
         if (rising_edge(clk)) then
             txdHold <= (others => '0');
             txdStart <= NO;
             state <= "0000000";
-            if (rst = RST_DISABLE and cpu_io.enable_c2d = ENABLE) then
+            if (rst = RST_DISABLE and cpu_i.enable = ENABLE) then
                 if (state = "0000000") then
-                    txdHold <= CMD_READ & cpu_io.addr_c2d(23 downto 0);
+                    txdHold <= CMD_READ & cpu_i.addr(23 downto 0);
                     txdStart <= YES;
                 end if;
                 if (state = "1000001") then

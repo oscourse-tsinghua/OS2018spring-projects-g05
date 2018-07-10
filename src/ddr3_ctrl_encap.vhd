@@ -10,7 +10,8 @@ entity ddr3_ctrl_encap is
     port (
         clk_100, clk_200, clk_25, rst: in std_logic;
 
-        cpu_io: inout BusInterface;
+        cpu_i: in BusC2D;
+        cpu_o: out BusD2C;
 
         ddr3_dq: inout std_logic_vector(15 downto 0);
         ddr3_addr: out std_logic_vector(12 downto 0);
@@ -195,13 +196,13 @@ begin
     ddr3_ctrl_cache_ist: entity work.ddr3_ctrl_cache
         port map (
             clk => clk_25, rst => rst,
-            enable_i => cpu_io.enable_c2d,
-            readEnable_i => not cpu_io.write_c2d,
-            addr_i => cpu_io.addr_c2d,
-            writeData_i => cpu_io.dataSave_c2d,
-            readData_o => cpu_io.dataLoad_d2c,
-            byteSelect_i => cpu_io.byteSelect_c2d,
-            busy_o => cpu_io.busy_d2c,
+            enable_i => cpu_i.enable,
+            readEnable_i => not cpu_i.write,
+            addr_i => cpu_i.addr,
+            writeData_i => cpu_i.dataSave,
+            readData_o => cpu_o.dataLoad,
+            byteSelect_i => cpu_i.byteSelect,
+            busy_o => cpu_o.busy,
             enable_o => enable_25_i,
             readDataBurst_i => readDataBurst_25_o,
             busy_i => busy_25_o
@@ -215,11 +216,11 @@ begin
             rst_25 => rst,
 
             enable_i => enable_25_i,
-            readEnable_i => not cpu_io.write_c2d,
-            addr_i => cpu_io.addr_c2d,
-            writeData_i => cpu_io.dataSave_c2d,
+            readEnable_i => not cpu_i.write,
+            addr_i => cpu_i.addr,
+            writeData_i => cpu_i.dataSave,
             readDataBurst_o => readDataBurst_25_o,
-            byteSelect_i => cpu_io.byteSelect_c2d,
+            byteSelect_i => cpu_i.byteSelect,
             busy_o => busy_25_o,
 
             enable_o => enable_100_i,
