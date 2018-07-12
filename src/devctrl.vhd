@@ -87,7 +87,11 @@ begin
             if (rst = RST_ENABLE) then
                 priority <= CPU1_ID;
             else
-                priority <= not priority;
+                if (conn_c2d.enable = ENABLE and conn_d2c.busy = PIPELINE_STOP) then
+                    priority <= curCPU;
+                else
+                    priority <= not priority;
+                end if;
             end if;
         end if;
     end process;
