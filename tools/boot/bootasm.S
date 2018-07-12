@@ -26,7 +26,7 @@ __start:
   andi $t0, $t0, 0x3ff
   beq $t0, $0, load_elf
   nop
-  la $t0, 0x7ffffc
+  la $t0, 0x807ffffc
   sw $0, 0($t0)
 
 spin:
