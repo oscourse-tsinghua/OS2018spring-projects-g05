@@ -4,17 +4,18 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.branch_likely1_test_const.all;
+use work.multicore1_test_const.all;
 use work.global_const.all;
 use work.except_const.all;
 use work.mmu_const.all;
 use work.bus_const.all;
 -- CODE BELOW IS AUTOMATICALLY GENERATED
+use work.alu_const.all;
 
-entity branch_likely1_tb is
-end branch_likely1_tb;
+entity multicore1_tb is
+end multicore1_tb;
 
-architecture bhv of branch_likely1_tb is
+architecture bhv of multicore1_tb is
     signal rst: std_logic := '1';
     signal clk: std_logic := '0';
 
@@ -31,7 +32,7 @@ architecture bhv of branch_likely1_tb is
     signal int1, int2: std_logic_vector(IntWidth);
     signal timerInt1, timerInt2: std_logic;
 begin
-    ram_ist: entity work.branch_likely1_fake_ram
+    ram_ist: entity work.multicore1_fake_ram
         port map (
             clk => clk,
             rst => rst,
@@ -129,6 +130,7 @@ begin
     process (all) begin
         cpu2On <= '0';
         -- CODE BELOW IS AUTOMATICALLY GENERATED
+cpu2On <= '1';
     end process;
 
     process begin
@@ -146,20 +148,21 @@ begin
     assertBlk: block
         -- NOTE: `assertBlk` is also a layer in the herarchical reference
         -- CODE BELOW IS AUTOMATICALLY GENERATED
-alias user_reg is <<signal ^.cpu1_ist.datapath_ist.regfile_ist.regArray: RegArrayType>>;
+alias user_reg1 is <<signal ^.cpu1_ist.datapath_ist.regfile_ist.regArray: RegArrayType>>;
 -- CODE BELOW IS AUTOMATICALLY GENERATED
+alias user_reg2 is <<signal ^.cpu2_ist.datapath_ist.regfile_ist.regArray: RegArrayType>>;
     begin
         -- CODE BELOW IS AUTOMATICALLY GENERATED
 process begin
     wait for CLK_PERIOD; -- resetting
-    wait for 21 * CLK_PERIOD;
-    assert user_reg(2) = x"00000212" severity FAILURE;
+    wait for 500 * CLK_PERIOD;
+    assert user_reg1(17) = 32ux"a" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
-    wait for 30 * CLK_PERIOD;
-    assert user_reg(2) = x"00000212" severity FAILURE;
+    wait for 500 * CLK_PERIOD;
+    assert user_reg2(17) = 32ux"0" severity FAILURE;
     wait;
 end process;
     end block assertBlk;
