@@ -5,7 +5,7 @@ use work.bus_const.all;
 
 entity top is
     generic (
-        FUNC_TEST, MONITOR, USE_BOOTLOADER: integer -- Only integer is supported in top level
+        FUNC_TEST, MONITOR, USE_BOOTLOADER, ENABLE_CPU2: integer -- Only integer is supported in top level
     );
     port (
         clk_in: in std_logic; -- 100MHz clock input
@@ -95,6 +95,13 @@ architecture bhv of top is
             return 32ux"80000000";
         end if;
     end getInstEntranceAddr;
+    function cpu2On return std_logic is begin
+        if (ENABLE_CPU2 = 1) then
+            return '1';
+        else
+            return '0';
+        end if;
+    end cpu2On;
 
     -- Verilog entities must be declared
     component clk_wiz
@@ -222,7 +229,7 @@ begin
         )
         port map (
             clk => clkMain,
-            rst => rst,
+            rst => rst or not cpu2On,
             instDev_i => cpu2Inst_d2c,
             dataDev_i => cpu2Data_d2c,
             instDev_o => cpu2Inst_c2d,

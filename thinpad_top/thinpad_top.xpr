@@ -346,6 +346,7 @@
         <Generic Name="FUNC_TEST" Val="0"/>
         <Generic Name="MONITOR" Val="0"/>
         <Generic Name="USE_BOOTLOADER" Val="1"/>
+        <Generic Name="ENABLE_CPU2" Val="1"/>
       </Config>
     </FileSet>
     <FileSet Name="constrs_1" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1">
@@ -1902,6 +1903,7 @@
       </Config>
     </FileSet>
     <FileSet Name="multicore1" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/multicore1">
+      <Filter Type="Srcs"/>
       <File Path="$PPRDIR/../sim/output/multicore/multicore1/multicore1_test_const.vhd">
         <FileInfo SFType="VHDL2008">
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -1931,6 +1933,7 @@
       </Config>
     </FileSet>
     <FileSet Name="multicore2" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/multicore2">
+      <Filter Type="Srcs"/>
       <File Path="$PPRDIR/../sim/output/multicore/multicore2/multicore2_test_const.vhd">
         <FileInfo SFType="VHDL2008">
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -1960,6 +1963,7 @@
       </Config>
     </FileSet>
     <FileSet Name="multicore_boot1" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/multicore_boot1">
+      <Filter Type="Srcs"/>
       <File Path="$PPRDIR/../sim/output/multicore/multicore_boot1/multicore_boot1_test_const.vhd">
         <FileInfo SFType="VHDL2008">
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -2014,8 +2018,8 @@
         <Step Id="synth_design">
           <Option Id="ResourceSharing">2</Option>
           <Option Id="KeepEquivalentRegisters">1</Option>
-          <Option Id="FsmExtraction">1</Option>
           <Option Id="NoCombineLuts">1</Option>
+          <Option Id="FsmExtraction">1</Option>
           <Option Id="ShregMinSize">5</Option>
           <Option Id="RepFanoutThreshold">400</Option>
         </Step>
