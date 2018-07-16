@@ -142,7 +142,10 @@ architecture bhv of top is
     signal cpu1Inst_d2c, cpu1Data_d2c, cpu2Inst_d2c, cpu2Data_d2c: BusD2C;
     signal ddr3_c2d, flash_c2d, serial_c2d, boot_c2d, eth_c2d, led_c2d, num_c2d: BusC2D;
     signal ddr3_d2c, flash_d2c, serial_d2c, boot_d2c, eth_d2c, led_d2c, num_d2c: BusD2C;
+
     signal busMon: BusC2D;
+    signal llBit: std_logic;
+    signal llLoc: std_logic_vector(AddrWidth);
 
     signal scCorrect1, scCorrect2: std_logic;
     signal sync1, sync2: std_logic_vector(2 downto 0);
@@ -215,6 +218,8 @@ begin
             instDev_o => cpu1Inst_c2d,
             dataDev_o => cpu1Data_c2d,
             busMon_i => busMon,
+            llBit_i => llBit,
+            llLoc_i => llLoc,
             sync_o => sync1,
             scCorrect_i => scCorrect1,
             int_i => irq1,
@@ -237,6 +242,8 @@ begin
             instDev_o => cpu2Inst_c2d,
             dataDev_o => cpu2Data_c2d,
             busMon_i => busMon,
+            llBit_i => llBit,
+            llLoc_i => llLoc,
             sync_o => sync2,
             scCorrect_i => scCorrect2,
             int_i => irq2,
@@ -273,6 +280,8 @@ begin
             num_o => num_c2d,
 
             busMon_o => busMon,
+            llBit_o => llBit,
+            llLoc_o => llLoc,
 
             sync1_i => sync1,
             scCorrect1_o => scCorrect1,

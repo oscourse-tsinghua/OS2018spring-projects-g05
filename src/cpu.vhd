@@ -22,6 +22,8 @@ entity cpu is
         instDev_i, dataDev_i: in BusD2C;
         instDev_o, dataDev_o: out BusC2D;
         busMon_i: in BusC2D;
+        llBit_i: in std_logic;
+        llLoc_i: in std_logic_vector(AddrWidth);
         scCorrect_i: in std_logic;
         sync_o: out std_logic_vector(2 downto 0);
 
@@ -57,6 +59,7 @@ architecture bhv of cpu is
     signal entrySave, entryLoad: TLBEntry;
     signal pageMask: std_logic_vector(AddrWidth);
 
+    signal sync: std_logic_vector(2 downto 0);
 begin
     inst_cache: entity work.cache
         generic map (
@@ -67,9 +70,12 @@ begin
             vAddr_i => instVAddr,
             req_i => instCache_c2d,
             res_o => instCache_d2c,
+            sync_i => "000",
             req_o => instDev_o,
             res_i => instDev_i,
-            mon_i => busMon_i
+            mon_i => busMon_i,
+            llBit_i => llBit_i,
+            llLoc_i => llLoc_i
         );
     data_cache: entity work.cache
         generic map (
@@ -80,9 +86,12 @@ begin
             vAddr_i => dataVAddr,
             req_i => dataCache_c2d,
             res_o => dataCache_d2c,
+            sync_i => sync,
             req_o => dataDev_o,
             res_i => dataDev_i,
-            mon_i => busMon_i
+            mon_i => busMon_i,
+            llBit_i => llBit_i,
+            llLoc_i => llLoc_i
         );
 
     instCache_c2d.dataSave <= (others => 'X');
@@ -180,7 +189,8 @@ begin
             entry_o => entrySave,
             pageMask_o => pageMask,
             scCorrect_i => scCorrect_i,
-            sync_o => sync_o
+            sync_o => sync
         );
+    sync_o <= sync;
 
 end bhv;

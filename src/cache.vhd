@@ -16,11 +16,14 @@ entity cache is
         -- From / to CPU
         req_i: in BusC2D;
         res_o: out BusD2C;
+        sync_i: in std_logic_vector(2 downto 0);
 
         -- From / to devices
         req_o: out BusC2D;
         res_i: in BusD2C;
-        mon_i: in BusC2D
+        mon_i: in BusC2D;
+        llBit_i: in std_logic;
+        llLoc_i: in std_logic_vector(AddrWidth)
     );
 end cache;
 
@@ -45,7 +48,12 @@ architecture bhv of cache is
     signal readFromCache, satisfied: std_logic;
 begin
 
-    readFromCache <= NO when vAddr_i(31 downto 28) >= 4x"a" and vAddr_i(31 downto 28) < 4x"c" else enableCache;
+    readFromCache <= NO when
+                        (vAddr_i(31 downto 28) >= 4x"a" and vAddr_i(31 downto 28) < 4x"c") or
+                        sync_i /= "000" or
+                        (llBit_i = '1' and llLoc_i = req_i.addr)
+                     else
+                         enableCache;
 
     process (all) begin
         reqTag <= (others => 'X');
