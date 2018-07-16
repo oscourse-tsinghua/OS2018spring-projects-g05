@@ -22,12 +22,26 @@ entity ddr3_ctrl_cache is
 end ddr3_ctrl_cache;
 
 architecture bhv of ddr3_ctrl_cache is
+    constant OFFSET_WIDTH: integer := BURST_LEN_WIDTH;
+    constant INDEX_WIDTH: integer := 4;
+    constant TAG_WIDTH: integer := 25 - OFFSET_WIDTH - INDEX_WIDTH;
+
+    constant INDEX_NUM: integer := 2 ** INDEX_WIDTH;
+
+    type CacheItemType is record
+        present: std_logic;
+        tag: std_logic_vector(TAG_WIDTH - 1 downto 0);
+        data: BurstDataType;
+    end record CacheItemType;
+
+    type CacheTableType is array(0 to INDEX_NUM - 1) of CacheItemType;
+
     signal table: CacheTableType;
     signal tag: std_logic_vector(TAG_WIDTH - 1 downto 0);
     signal index, offset: integer;
     signal needToRead: std_logic;
 begin
-    
+
     tag <= addr_i(26 downto 27 - TAG_WIDTH);
     index <= conv_integer(addr_i(26 - TAG_WIDTH downto 27 - TAG_WIDTH - INDEX_WIDTH));
     offset <= conv_integer(addr_i(OFFSET_WIDTH + 1 downto 2));

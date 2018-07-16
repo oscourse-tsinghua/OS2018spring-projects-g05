@@ -12,6 +12,7 @@ entity devctrl is
         cpu1Inst_o, cpu1Data_o, cpu2Inst_o, cpu2Data_o: out BusD2C;
         ddr3_i, flash_i, serial_i, boot_i, eth_i, led_i, num_i: in BusD2C;
         ddr3_o, flash_o, serial_o, boot_o, eth_o, led_o, num_o: out BusC2D;
+        busMon_o: out BusC2D;
 
         -- for sync --
         sync1_i, sync2_i: in std_logic_vector(2 downto 0);
@@ -123,6 +124,7 @@ begin
             scCorrect2_o <= scCorrect;
         end if;
     end process;
+    busMon_o <= conn_c2d;
 
     process (all) begin
         conn_d2c.busy <= PIPELINE_NONSTOP;

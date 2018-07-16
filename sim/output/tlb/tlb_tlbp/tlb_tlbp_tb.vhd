@@ -18,18 +18,21 @@ architecture bhv of tlb_tlbp_tb is
     signal rst: std_logic := '1';
     signal clk: std_logic := '0';
 
-    signal cpu2On: std_logic;
-
     signal cpu1Inst_c2d, cpu1Data_c2d, cpu2Inst_c2d, cpu2Data_c2d: BusC2D;
     signal cpu1Inst_d2c, cpu1Data_d2c, cpu2Inst_d2c, cpu2Data_d2c: BusD2C;
     signal ram_c2d, flash_c2d, serial_c2d, boot_c2d, eth_c2d, led_c2d, num_c2d: BusC2D;
     signal ram_d2c, flash_d2c, serial_d2c, boot_d2c, eth_d2c, led_d2c, num_d2c: BusD2C;
+    signal busMon_c2d: BusC2D;
 
     signal sync1, sync2: std_logic_vector(2 downto 0);
     signal scCorrect1, scCorrect2: std_logic;
 
     signal int1, int2: std_logic_vector(IntWidth);
     signal timerInt1, timerInt2: std_logic;
+
+    -- CODE BELOW IS AUTOMATICALLY GENERATED
+constant CPU2_ON: std_logic := '0';
+constant ENABLE_CACHE: std_logic := '0';
 begin
     ram_ist: entity work.tlb_tlbp_fake_ram
         port map (
@@ -47,7 +50,8 @@ begin
             generalExceptOffset     => 32ux"40",
             interruptIv1Offset      => 32ux"40",
             convEndianEnable        => true,
-            cpuId => (0 => CPU1_ID, others => '0')
+            cpuId                   => (0 => CPU1_ID, others => '0'),
+            enableCache             => ENABLE_CACHE
         )
         port map (
             rst => rst, clk => clk,
@@ -55,6 +59,7 @@ begin
             dataDev_i => cpu1Data_d2c,
             instDev_o => cpu1Inst_c2d,
             dataDev_o => cpu1Data_c2d,
+            busMon_i => busMon_c2d,
             int_i => int1,
             timerInt_o => timerInt1,
             sync_o => sync1,
@@ -70,14 +75,16 @@ begin
             generalExceptOffset     => 32ux"40",
             interruptIv1Offset      => 32ux"40",
             convEndianEnable        => true,
-            cpuId => (0 => CPU2_ID, others => '0')
+            cpuId                   => (0 => CPU2_ID, others => '0'),
+            enableCache             => ENABLE_CACHE
         )
         port map (
-            rst => rst or not cpu2On, clk => clk,
+            rst => rst or not CPU2_ON, clk => clk,
             instDev_i => cpu2Inst_d2c,
             dataDev_i => cpu2Data_d2c,
             instDev_o => cpu2Inst_c2d,
             dataDev_o => cpu2Data_c2d,
+            busMon_i => busMon_c2d,
             int_i => int2,
             timerInt_o => timerInt2,
             sync_o => sync2,
@@ -114,6 +121,8 @@ begin
             led_o => led_c2d,
             num_o => num_c2d,
 
+            busMon_o => busMon_c2d,
+
             sync1_i => sync1,
             scCorrect1_o => scCorrect1,
             sync2_i => sync2,
@@ -125,11 +134,6 @@ begin
     eth_d2c.dataLoad <= (others => '0'); eth_d2c.busy <= PIPELINE_STOP;
     led_d2c.dataLoad <= (others => '0'); led_d2c.busy <= PIPELINE_STOP;
     num_d2c.dataLoad <= (others => '0'); num_d2c.busy <= PIPELINE_STOP;
-
-    process (all) begin
-        cpu2On <= '0';
-        -- CODE BELOW IS AUTOMATICALLY GENERATED
-    end process;
 
     process begin
         wait for CLK_PERIOD / 2;
