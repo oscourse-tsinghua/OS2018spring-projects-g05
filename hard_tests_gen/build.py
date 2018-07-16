@@ -59,7 +59,13 @@ def genAssertions(assertCmd):
 def genAliases(defineCmd):
     stmts = ['-- CODE BELOW IS AUTOMATICALLY GENERATED']
     for alias, hierarchy in defineCmd:
-        stmts.append('alias user_%s is <<signal ^.cpu_ist.datapath_ist.%s>>;'%(alias, hierarchy))
+        stmts.append('alias user_%s is <<signal ^.cpu1_ist.datapath_ist.%s>>;'%(alias, hierarchy))
+    return '\n'.join(stmts)
+
+def genAliasesCPU2(defineCmd):
+    stmts = ['-- CODE BELOW IS AUTOMATICALLY GENERATED']
+    for alias, hierarchy in defineCmd:
+        stmts.append('alias user_%s is <<signal ^.cpu2_ist.datapath_ist.%s>>;'%(alias, hierarchy))
     return '\n'.join(stmts)
 
 def genImports(importCmd):
@@ -68,12 +74,23 @@ def genImports(importCmd):
         stmts.append('use work.%s.all;' % package)
     return '\n'.join(stmts)
 
+def genConfigs(configCmd):
+    stmts = ['-- CODE BELOW IS AUTOMATICALLY GENERATED']
+    for item in configCmd:
+        if item.upper() == 'CPU2_ON':
+            stmts.append("cpu2On <= '1';")
+        else:
+            raise Exception("Unrecognized config '%s'"%(item))
+    return '\n'.join(stmts)
+
 ''' Parse test file and return (RUN instructions, ASSERT (period #,signal,literal), DEFINE (alias,reference) '''
 def parse(filename):
     runCmd = []
     assertCmd = []
     defineCmd = []
+    defineCPU2Cmd = []
     importCmd = []
+    configCmd = []
     with open(src_dir + filename) as f:
         for line in f:
             line = line.rstrip()
@@ -88,11 +105,15 @@ def parse(filename):
                 assertCmd.append(param.split(None, 2))
             elif op == 'DEFINE':
                 defineCmd.append(param.split(None, 1))
+            elif op == 'DEFINE_CPU2':
+                defineCPU2Cmd.append(param.split(None, 1))
             elif op == 'IMPORT':
                 importCmd.append(param)
+            elif op == 'CONFIG':
+                configCmd.append(param)
             else:
                 raise Exception("Unrecognized op '%s'"%(op))
-    return (runCmd, assertCmd, defineCmd, importCmd)
+    return (runCmd, assertCmd, defineCmd, defineCPU2Cmd, importCmd, configCmd)
 
 templateNames = ['tb.vhd', 'fake_ram.vhd', 'test_const.vhd']
 templates = {}
@@ -104,11 +125,12 @@ for name in templateNames:
 def generate(testCase):
     if testCase[0] == '.': # Might be editor temporary files
         return
-    runCmd, assertCmd, defineCmd, importCmd = parse(testCase)
+    runCmd, assertCmd, defineCmd, defineCPU2Cmd, importCmd, configCmd = parse(testCase)
     initInstRam = genInitInstRam(runCmd)
     assertions = genAssertions(assertCmd)
-    aliases = genAliases(defineCmd)
+    aliases = genAliases(defineCmd) + '\n' + genAliasesCPU2(defineCPU2Cmd)
     imports = genImports(importCmd)
+    configs = genConfigs(configCmd)
 
     try:
         os.makedirs(out_dir + testCase)
@@ -124,6 +146,7 @@ def generate(testCase):
         out = out.replace("{{{ASSERTIONS}}}", assertions)
         out = out.replace("{{{ALIASES}}}", aliases)
         out = out.replace("{{{IMPORT}}}", imports)
+        out = out.replace("{{{CONFIGS}}}", configs)
         outputName = name if name != 'template.vhd' else testCase + '.vhd'
         with open("%s/%s/%s"%(out_dir, testCase, "%s_%s"%(testCase, outputName)), 'w') as outFile:
             outFile.write(out)

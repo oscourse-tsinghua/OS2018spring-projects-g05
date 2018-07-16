@@ -50,4 +50,6 @@ package global_const is
     constant IN_DELAY_SLOT_FLAG: std_logic := '1';
     constant NOT_IN_DELAY_SLOT_FLAG: std_logic := '0';
 
+    constant CPU1_ID: std_logic := '0';
+    constant CPU2_ID: std_logic := '1';
 end global_const;

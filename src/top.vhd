@@ -5,7 +5,7 @@ use work.bus_const.all;
 
 entity top is
     generic (
-        FUNC_TEST, MONITOR, USE_BOOTLOADER: integer -- Only integer is supported in top level
+        FUNC_TEST, MONITOR, USE_BOOTLOADER, ENABLE_CPU2: integer -- Only integer is supported in top level
     );
     port (
         clk_in: in std_logic; -- 100MHz clock input
@@ -95,6 +95,13 @@ architecture bhv of top is
             return 32ux"80000000";
         end if;
     end getInstEntranceAddr;
+    function cpu2On return std_logic is begin
+        if (ENABLE_CPU2 = 1) then
+            return '1';
+        else
+            return '0';
+        end if;
+    end cpu2On;
 
     -- Verilog entities must be declared
     component clk_wiz
@@ -131,15 +138,15 @@ architecture bhv of top is
     signal clkMain: std_logic; -- 25MHz clock
     signal clk200, clk100: std_logic;
 
-    signal cpu1Inst_c2d, cpu1Data_c2d: BusC2D;
-    signal cpu1Inst_d2c, cpu1Data_d2c: BusD2C;
+    signal cpu1Inst_c2d, cpu1Data_c2d, cpu2Inst_c2d, cpu2Data_c2d: BusC2D;
+    signal cpu1Inst_d2c, cpu1Data_d2c, cpu2Inst_d2c, cpu2Data_d2c: BusD2C;
     signal ddr3_c2d, flash_c2d, serial_c2d, boot_c2d, eth_c2d, led_c2d, num_c2d: BusC2D;
     signal ddr3_d2c, flash_d2c, serial_d2c, boot_d2c, eth_d2c, led_d2c, num_d2c: BusD2C;
 
-    signal scCorrect: std_logic;
-    signal sync: std_logic_vector(2 downto 0);
-    signal irq: std_logic_vector(5 downto 0);
-    signal timerInt, comInt, usbInt, ethInt: std_logic;
+    signal scCorrect1, scCorrect2: std_logic;
+    signal sync1, sync2: std_logic_vector(2 downto 0);
+    signal irq1, irq2: std_logic_vector(5 downto 0);
+    signal timerInt1, timerInt2, comInt, usbInt, ethInt: std_logic;
 
     -- Serial COM
     signal rxdReady, txdBusy, txdStart: std_logic;
@@ -185,16 +192,19 @@ begin
             TxD_data => txdData
         );
 
-    irq <= (5 => timerInt, 2 => comInt, others => '0');
+    irq1 <= (5 => timerInt1, 2 => comInt, others => '0');
+    irq2 <= (5 => timerInt2, others => '0');
     -- MIPS standard requires irq[5] = timer
     -- Monitor requires irq[2] = COM
+    -- The CPU who receives irq should be consistent with the .dts file in Linux
 
-    cpu_ist: entity work.cpu
+    cpu1_ist: entity work.cpu
         generic map (
             exceptBootBaseAddr => getExceptBootBaseAddr,
             tlbRefillExl0Offset => getTlbRefillExl0Offset,
             generalExceptOffset => getGeneralExceptOffset,
-            instEntranceAddr => getInstEntranceAddr
+            instEntranceAddr => getInstEntranceAddr,
+            cpuId => (0 => CPU1_ID, others => '0')
         )
         port map (
             clk => clkMain,
@@ -203,10 +213,31 @@ begin
             dataDev_i => cpu1Data_d2c,
             instDev_o => cpu1Inst_c2d,
             dataDev_o => cpu1Data_c2d,
-            sync_o => sync,
-            scCorrect_i => scCorrect,
-            int_i => irq,
-            timerInt_o => timerInt
+            sync_o => sync1,
+            scCorrect_i => scCorrect1,
+            int_i => irq1,
+            timerInt_o => timerInt1
+        );
+
+    cpu2_ist: entity work.cpu
+        generic map (
+            exceptBootBaseAddr => getExceptBootBaseAddr,
+            tlbRefillExl0Offset => getTlbRefillExl0Offset,
+            generalExceptOffset => getGeneralExceptOffset,
+            instEntranceAddr => getInstEntranceAddr,
+            cpuId => (0 => CPU2_ID, others => '0')
+        )
+        port map (
+            clk => clkMain,
+            rst => rst or not cpu2On,
+            instDev_i => cpu2Inst_d2c,
+            dataDev_i => cpu2Data_d2c,
+            instDev_o => cpu2Inst_c2d,
+            dataDev_o => cpu2Data_c2d,
+            sync_o => sync2,
+            scCorrect_i => scCorrect2,
+            int_i => irq2,
+            timerInt_o => timerInt2
         );
 
     devctrl_ist: entity work.devctrl
@@ -218,6 +249,10 @@ begin
             cpu1Data_i => cpu1Data_c2d,
             cpu1Inst_o => cpu1Inst_d2c,
             cpu1Data_o => cpu1Data_d2c,
+            cpu2Inst_i => cpu2Inst_c2d,
+            cpu2Data_i => cpu2Data_c2d,
+            cpu2Inst_o => cpu2Inst_d2c,
+            cpu2Data_o => cpu2Data_d2c,
 
             ddr3_i => ddr3_d2c,
             flash_i => flash_d2c,
@@ -234,8 +269,10 @@ begin
             led_o => led_c2d,
             num_o => num_c2d,
 
-            sync_i => sync,
-            scCorrect_o => scCorrect
+            sync1_i => sync1,
+            scCorrect1_o => scCorrect1,
+            sync2_i => sync2,
+            scCorrect2_o => scCorrect2
     );
 
     -- Please don't pass tri-state ports into a sub-module

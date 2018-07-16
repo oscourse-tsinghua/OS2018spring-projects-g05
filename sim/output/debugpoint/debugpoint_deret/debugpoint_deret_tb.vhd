@@ -18,16 +18,18 @@ architecture bhv of debugpoint_deret_tb is
     signal rst: std_logic := '1';
     signal clk: std_logic := '0';
 
-    signal cpu1Inst_c2d, cpu1Data_c2d: BusC2D;
-    signal cpu1Inst_d2c, cpu1Data_d2c: BusD2C;
+    signal cpu2On: std_logic;
+
+    signal cpu1Inst_c2d, cpu1Data_c2d, cpu2Inst_c2d, cpu2Data_c2d: BusC2D;
+    signal cpu1Inst_d2c, cpu1Data_d2c, cpu2Inst_d2c, cpu2Data_d2c: BusD2C;
     signal ram_c2d, flash_c2d, serial_c2d, boot_c2d, eth_c2d, led_c2d, num_c2d: BusC2D;
     signal ram_d2c, flash_d2c, serial_d2c, boot_d2c, eth_d2c, led_d2c, num_d2c: BusD2C;
 
-    signal sync: std_logic_vector(2 downto 0);
-    signal scCorrect: std_logic;
+    signal sync1, sync2: std_logic_vector(2 downto 0);
+    signal scCorrect1, scCorrect2: std_logic;
 
-    signal int: std_logic_vector(IntWidth);
-    signal timerInt: std_logic;
+    signal int1, int2: std_logic_vector(IntWidth);
+    signal timerInt1, timerInt2: std_logic;
 begin
     ram_ist: entity work.debugpoint_deret_fake_ram
         port map (
@@ -37,14 +39,15 @@ begin
             cpu_o => ram_d2c
         );
 
-    cpu_ist: entity work.cpu
+    cpu1_ist: entity work.cpu
         generic map (
             instEntranceAddr        => 32ux"8000_0004",
             exceptBootBaseAddr      => 32ux"8000_0000",
             tlbRefillExl0Offset     => 32ux"40",
             generalExceptOffset     => 32ux"40",
             interruptIv1Offset      => 32ux"40",
-            convEndianEnable        => true
+            convEndianEnable        => true,
+            cpuId => (0 => CPU1_ID, others => '0')
         )
         port map (
             rst => rst, clk => clk,
@@ -52,12 +55,35 @@ begin
             dataDev_i => cpu1Data_d2c,
             instDev_o => cpu1Inst_c2d,
             dataDev_o => cpu1Data_c2d,
-            int_i => int,
-            timerInt_o => timerInt,
-            sync_o => sync,
-            scCorrect_i => scCorrect
+            int_i => int1,
+            timerInt_o => timerInt1,
+            sync_o => sync1,
+            scCorrect_i => scCorrect1
         );
-    int <= (0 => timerInt, others => '0');
+    int1 <= (0 => timerInt1, others => '0');
+
+    cpu2_ist: entity work.cpu
+        generic map (
+            instEntranceAddr        => 32ux"8000_0004",
+            exceptBootBaseAddr      => 32ux"8000_0000",
+            tlbRefillExl0Offset     => 32ux"40",
+            generalExceptOffset     => 32ux"40",
+            interruptIv1Offset      => 32ux"40",
+            convEndianEnable        => true,
+            cpuId => (0 => CPU2_ID, others => '0')
+        )
+        port map (
+            rst => rst or not cpu2On, clk => clk,
+            instDev_i => cpu2Inst_d2c,
+            dataDev_i => cpu2Data_d2c,
+            instDev_o => cpu2Inst_c2d,
+            dataDev_o => cpu2Data_c2d,
+            int_i => int2,
+            timerInt_o => timerInt2,
+            sync_o => sync2,
+            scCorrect_i => scCorrect2
+        );
+    int2 <= (0 => timerInt2, others => '0');
 
     devctrl_ist: entity work.devctrl
         port map (
@@ -68,6 +94,10 @@ begin
             cpu1Data_i => cpu1Data_c2d,
             cpu1Inst_o => cpu1Inst_d2c,
             cpu1Data_o => cpu1Data_d2c,
+            cpu2Inst_i => cpu2Inst_c2d,
+            cpu2Data_i => cpu2Data_c2d,
+            cpu2Inst_o => cpu2Inst_d2c,
+            cpu2Data_o => cpu2Data_d2c,
 
             ddr3_i => ram_d2c,
             flash_i => flash_d2c,
@@ -84,8 +114,10 @@ begin
             led_o => led_c2d,
             num_o => num_c2d,
 
-            sync_i => sync,
-            scCorrect_o => scCorrect
+            sync1_i => sync1,
+            scCorrect1_o => scCorrect1,
+            sync2_i => sync2,
+            scCorrect2_o => scCorrect2
     );
     flash_d2c.dataLoad <= (others => '0'); flash_d2c.busy <= PIPELINE_STOP;
     serial_d2c.dataLoad <= (others => '0'); serial_d2c.busy <= PIPELINE_STOP;
@@ -93,6 +125,11 @@ begin
     eth_d2c.dataLoad <= (others => '0'); eth_d2c.busy <= PIPELINE_STOP;
     led_d2c.dataLoad <= (others => '0'); led_d2c.busy <= PIPELINE_STOP;
     num_d2c.dataLoad <= (others => '0'); num_d2c.busy <= PIPELINE_STOP;
+
+    process (all) begin
+        cpu2On <= '0';
+        -- CODE BELOW IS AUTOMATICALLY GENERATED
+    end process;
 
     process begin
         wait for CLK_PERIOD / 2;
@@ -109,7 +146,8 @@ begin
     assertBlk: block
         -- NOTE: `assertBlk` is also a layer in the herarchical reference
         -- CODE BELOW IS AUTOMATICALLY GENERATED
-alias user_reg is <<signal ^.cpu_ist.datapath_ist.regfile_ist.regArray: RegArrayType>>;
+alias user_reg is <<signal ^.cpu1_ist.datapath_ist.regfile_ist.regArray: RegArrayType>>;
+-- CODE BELOW IS AUTOMATICALLY GENERATED
     begin
         -- CODE BELOW IS AUTOMATICALLY GENERATED
 process begin
