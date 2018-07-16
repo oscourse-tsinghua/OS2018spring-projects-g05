@@ -42,7 +42,7 @@ architecture bhv of cache is
     signal table: CacheTableType;
     signal reqTag, monTag: std_logic_vector(TAG_WIDTH - 1 downto 0);
     signal reqIndex, monIndex: integer;
-    signal readFromCache: std_logic;
+    signal readFromCache, satisfied: std_logic;
 begin
 
     readFromCache <= NO when vAddr_i(31 downto 28) >= 4x"a" and vAddr_i(31 downto 28) < 4x"c" else enableCache;
@@ -66,6 +66,7 @@ begin
         res_o.busy <= PIPELINE_NONSTOP;
         res_o.dataLoad <= (others => 'X');
         req_o.enable <= DISABLE;
+        satisfied <= NO;
         if (req_i.enable = ENABLE) then
             if (
                 readFromCache = YES and req_i.write = NO and
@@ -73,6 +74,7 @@ begin
             ) then
                 res_o.busy <= PIPELINE_NONSTOP;
                 res_o.dataLoad <= table(reqIndex).data;
+                satisfied <= YES;
             else
                 res_o.busy <= res_i.busy;
                 res_o.dataLoad <= res_i.dataLoad;
@@ -106,7 +108,10 @@ begin
                         end if;
                     end if;
                 end if;
-                if (req_i.enable = ENABLE and req_i.write = NO and res_i.busy = PIPELINE_NONSTOP) then
+                if (
+                    req_i.enable = ENABLE and req_i.write = NO and
+                    satisfied = NO and res_i.busy = PIPELINE_NONSTOP
+                ) then
                     table(reqIndex) <= (present => '1', tag => reqTag, data => res_i.dataLoad);
                 end if;
             end if;
