@@ -76,11 +76,14 @@ def genImports(importCmd):
 
 def genConfigs(configCmd):
     stmts = ['-- CODE BELOW IS AUTOMATICALLY GENERATED']
+    pairs = {'CPU2_ON': 0, 'ENABLE_CACHE': 0}
     for item in configCmd:
-        if item.upper() == 'CPU2_ON':
-            stmts.append("cpu2On <= '1';")
+        if item.upper() in pairs:
+            pairs[item.upper()] = 1
         else:
             raise Exception("Unrecognized config '%s'"%(item))
+    for key in pairs:
+        stmts.append("constant %s: std_logic := '%d';"%(key, pairs[key]))
     return '\n'.join(stmts)
 
 ''' Parse test file and return (RUN instructions, ASSERT (period #,signal,literal), DEFINE (alias,reference) '''
