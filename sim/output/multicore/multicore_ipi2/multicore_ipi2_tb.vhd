@@ -4,7 +4,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.multicore2_test_const.all;
+use work.multicore_ipi2_test_const.all;
 use work.global_const.all;
 use work.except_const.all;
 use work.mmu_const.all;
@@ -12,10 +12,10 @@ use work.bus_const.all;
 -- CODE BELOW IS AUTOMATICALLY GENERATED
 use work.alu_const.all;
 
-entity multicore2_tb is
-end multicore2_tb;
+entity multicore_ipi2_tb is
+end multicore_ipi2_tb;
 
-architecture bhv of multicore2_tb is
+architecture bhv of multicore_ipi2_tb is
     signal rst: std_logic := '1';
     signal clk: std_logic := '0';
 
@@ -36,10 +36,10 @@ architecture bhv of multicore2_tb is
     signal timerInt1, timerInt2: std_logic;
 
     -- CODE BELOW IS AUTOMATICALLY GENERATED
-constant ENABLE_CACHE: std_logic := '0';
 constant CPU2_ON: std_logic := '1';
+constant ENABLE_CACHE: std_logic := '0';
 begin
-    ram_ist: entity work.multicore2_fake_ram
+    ram_ist: entity work.multicore_ipi2_fake_ram
         port map (
             clk => clk,
             rst => rst,
@@ -180,13 +180,13 @@ alias user_reg2 is <<signal ^.cpu2_ist.datapath_ist.regfile_ist.regArray: RegArr
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 500 * CLK_PERIOD;
-    assert user_reg1(17) = 32ux"a" severity FAILURE;
+    assert user_reg1(9) = 32ux"2" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 500 * CLK_PERIOD;
-    assert user_reg2(17) = 32ux"a" severity FAILURE;
+    assert user_reg2(9) = 32ux"0" severity FAILURE;
     wait;
 end process;
     end block assertBlk;
