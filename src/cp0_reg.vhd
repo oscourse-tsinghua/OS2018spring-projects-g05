@@ -112,6 +112,14 @@ begin
         end loop;
         if (rst = RST_DISABLE and we_i = ENABLE) then
             case (conv_integer(waddr_i)) is
+                when STATUS_REG =>
+                    curArr(STATUS_REG)(STATUS_CP0_BIT) <= data_i(STATUS_CP0_BIT);
+                    curArr(STATUS_REG)(STATUS_BEV_BIT) <= data_i(STATUS_BEV_BIT);
+                    curArr(STATUS_REG)(StatusImBits) <= data_i(StatusImBits);
+                    curArr(STATUS_REG)(STATUS_UM_BIT) <= data_i(STATUS_UM_BIT);
+                    curArr(STATUS_REG)(STATUS_ERL_BIT) <= data_i(STATUS_ERL_BIT);
+                    curArr(STATUS_REG)(STATUS_EXL_BIT) <= data_i(STATUS_EXL_BIT);
+                    curArr(STATUS_REG)(STATUS_IE_BIT) <= data_i(STATUS_IE_BIT);
                 when CAUSE_REG =>
                     curArr(CAUSE_REG)(CauseIpSoftBits) <= data_i(CauseIpSoftBits);
                     curArr(CAUSE_REG)(CAUSE_IV_BIT) <= data_i(CAUSE_IV_BIT);
