@@ -69,6 +69,19 @@ architecture bhv of devctrl is
         cpu_o.busy <= dev_i.busy;
     end procedure connect;
 
+    procedure emptyCPU(signal cpu_o: out BusD2C) is begin
+        cpu_o.dataLoad <= (others => 'X');
+        cpu_o.busy <= PIPELINE_NONSTOP;
+    end procedure emptyCPU;
+
+    procedure disableDev(signal dev_o: out BusC2D) is begin
+        dev_o.enable <= DISABLE;
+        dev_o.write <= NO;
+        dev_o.addr <= (others => 'X');
+        dev_o.byteSelect <= (others => 'X');
+        dev_o.dataSave <= (others => 'X');
+    end procedure disableDev;
+
     procedure mergeIfMem(
         signal inst_i, data_i: in BusC2D;
         signal inst_o, data_o: out BusD2C;
@@ -116,14 +129,23 @@ begin
         cpu2_d2c.dataLoad <= (others => 'X');
         scCorrect1_o <= '0';
         scCorrect2_o <= '0';
+        disableDev(conn_c2d);
         if (cpu1_c2d.enable = ENABLE and (cpu2_c2d.enable = DISABLE or priority = CPU1_ID)) then
             curCPU <= CPU1_ID;
-            connect(cpu1_c2d, cpu1_d2c, conn_d2c, conn_c2d);
+            if (sync1_i(1) = '0' or scCorrect = '1') then
+                connect(cpu1_c2d, cpu1_d2c, conn_d2c, conn_c2d);
+            else
+                emptyCPU(cpu1_d2c);
+            end if;
             sync <= sync1_i;
             scCorrect1_o <= scCorrect;
         else
             curCPU <= CPU2_ID;
-            connect(cpu2_c2d, cpu2_d2c, conn_d2c, conn_c2d);
+            if (sync2_i(1) = '0' or scCorrect = '1') then
+                connect(cpu2_c2d, cpu2_d2c, conn_d2c, conn_c2d);
+            else
+                emptyCPU(cpu2_d2c);
+            end if;
             sync <= sync2_i;
             scCorrect2_o <= scCorrect;
         end if;
