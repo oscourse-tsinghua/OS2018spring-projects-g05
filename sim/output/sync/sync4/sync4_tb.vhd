@@ -4,7 +4,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.loadstore5_test_const.all;
+use work.sync4_test_const.all;
 use work.global_const.all;
 use work.except_const.all;
 use work.mmu_const.all;
@@ -12,10 +12,10 @@ use work.bus_const.all;
 -- CODE BELOW IS AUTOMATICALLY GENERATED
 use work.alu_const.all;
 
-entity loadstore5_tb is
-end loadstore5_tb;
+entity sync4_tb is
+end sync4_tb;
 
-architecture bhv of loadstore5_tb is
+architecture bhv of sync4_tb is
     signal rst: std_logic := '1';
     signal clk: std_logic := '0';
 
@@ -36,10 +36,10 @@ architecture bhv of loadstore5_tb is
     signal timerInt1, timerInt2: std_logic;
 
     -- CODE BELOW IS AUTOMATICALLY GENERATED
-constant CPU2_ON: std_logic := '0';
 constant ENABLE_CACHE: std_logic := '0';
+constant CPU2_ON: std_logic := '1';
 begin
-    ram_ist: entity work.loadstore5_fake_ram
+    ram_ist: entity work.sync4_fake_ram
         port map (
             clk => clk,
             rst => rst,
@@ -174,56 +174,21 @@ begin
     assertBlk: block
         -- NOTE: `assertBlk` is also a layer in the herarchical reference
         -- CODE BELOW IS AUTOMATICALLY GENERATED
-alias user_reg is <<signal ^.cpu1_ist.datapath_ist.regfile_ist.regArray: RegArrayType>>;
+alias user_reg1 is <<signal ^.cpu1_ist.datapath_ist.regfile_ist.regArray: RegArrayType>>;
 -- CODE BELOW IS AUTOMATICALLY GENERATED
+alias user_reg2 is <<signal ^.cpu2_ist.datapath_ist.regfile_ist.regArray: RegArrayType>>;
     begin
         -- CODE BELOW IS AUTOMATICALLY GENERATED
 process begin
     wait for CLK_PERIOD; -- resetting
-    wait for 20 * CLK_PERIOD;
-    assert user_reg(6) = x"01234567" severity FAILURE;
+    wait for 500 * CLK_PERIOD;
+    assert user_reg1(9) = 32ux"1234" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
-    wait for 21 * CLK_PERIOD;
-    assert user_reg(7) = x"89abcdef" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 32 * CLK_PERIOD;
-    assert user_reg(6) = x"234567ff" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 33 * CLK_PERIOD;
-    assert user_reg(7) = x"ffffff89" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 44 * CLK_PERIOD;
-    assert user_reg(6) = x"4567ffff" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 45 * CLK_PERIOD;
-    assert user_reg(7) = x"ffff89ab" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 56 * CLK_PERIOD;
-    assert user_reg(6) = x"67ffffff" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 57 * CLK_PERIOD;
-    assert user_reg(7) = x"ff89abcd" severity FAILURE;
+    wait for 500 * CLK_PERIOD;
+    assert user_reg2(9) = 32ux"1234" severity FAILURE;
     wait;
 end process;
     end block assertBlk;

@@ -35,8 +35,8 @@ architecture bhv of tlbinvf_tb is
     signal timerInt1, timerInt2: std_logic;
 
     -- CODE BELOW IS AUTOMATICALLY GENERATED
-constant CPU2_ON: std_logic := '0';
 constant ENABLE_CACHE: std_logic := '0';
+constant CPU2_ON: std_logic := '0';
 begin
     ram_ist: entity work.tlbinvf_fake_ram
         port map (
@@ -64,7 +64,8 @@ begin
             interruptIv1Offset      => 32ux"40",
             convEndianEnable        => true,
             cpuId                   => (0 => CPU1_ID, others => '0'),
-            enableCache             => ENABLE_CACHE
+            enableCache             => ENABLE_CACHE,
+            scStallPeriods          => 0
         )
         port map (
             rst => rst, clk => clk,
@@ -91,7 +92,8 @@ begin
             interruptIv1Offset      => 32ux"40",
             convEndianEnable        => true,
             cpuId                   => (0 => CPU2_ID, others => '0'),
-            enableCache             => ENABLE_CACHE
+            enableCache             => ENABLE_CACHE,
+            scStallPeriods          => 64
         )
         port map (
             rst => rst or not CPU2_ON, clk => clk,
