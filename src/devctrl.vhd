@@ -25,8 +25,8 @@ entity devctrl is
 end devctrl;
 
 architecture bhv of devctrl is
-    signal cpu1_c2d, cpu2_c2d, conn_c2d: BusC2D;
-    signal cpu1_d2c, cpu2_d2c, conn_d2c: BusD2C;
+    signal cpu1_c2d, cpu2_c2d, beforeSync_c2d, conn_c2d: BusC2D;
+    signal cpu1_d2c, cpu2_d2c, beforeSync_d2c, conn_d2c: BusD2C;
     signal priority, curCPU: std_logic;
     signal sync: std_logic_vector(2 downto 0);
     signal scCorrect: std_logic;
@@ -129,25 +129,24 @@ begin
         cpu2_d2c.dataLoad <= (others => 'X');
         scCorrect1_o <= '0';
         scCorrect2_o <= '0';
-        disableDev(conn_c2d);
         if (cpu1_c2d.enable = ENABLE and (cpu2_c2d.enable = DISABLE or priority = CPU1_ID)) then
             curCPU <= CPU1_ID;
-            if (sync1_i(1) = '0' or scCorrect = '1') then
-                connect(cpu1_c2d, cpu1_d2c, conn_d2c, conn_c2d);
-            else
-                emptyCPU(cpu1_d2c);
-            end if;
+            connect(cpu1_c2d, cpu1_d2c, beforeSync_d2c, beforeSync_c2d);
             sync <= sync1_i;
             scCorrect1_o <= scCorrect;
         else
             curCPU <= CPU2_ID;
-            if (sync2_i(1) = '0' or scCorrect = '1') then
-                connect(cpu2_c2d, cpu2_d2c, conn_d2c, conn_c2d);
-            else
-                emptyCPU(cpu2_d2c);
-            end if;
+            connect(cpu2_c2d, cpu2_d2c, beforeSync_d2c, beforeSync_c2d);
             sync <= sync2_i;
             scCorrect2_o <= scCorrect;
+        end if;
+    end process;
+
+    process (all) begin
+        disableDev(conn_c2d);
+        emptyCPU(beforeSync_d2c);
+        if (sync(1) = '0' or scCorrect = '1') then
+            connect(beforeSync_c2d, beforeSync_d2c, conn_d2c, conn_c2d);
         end if;
     end process;
     busMon_o <= conn_c2d;
@@ -165,7 +164,7 @@ begin
         connectRange(x"1ff01000", x"1ff0103f", conn_c2d, conn_d2c, ipi_i, ipi_o);
     end process;
 
-    scCorrect <= llBit when conn_c2d.addr = llLoc and curCPU = llCPU else '0';
+    scCorrect <= llBit when beforeSync_c2d.addr = llLoc and curCPU = llCPU else '0';
 
     process(clk) begin
         if (rising_edge(clk)) then
@@ -174,14 +173,14 @@ begin
                 llLoc <= (others => 'X');
             else
                 -- see page 347 in document MD00086(Volume II-A revision 6.06)
-                if (conn_d2c.busy = PIPELINE_NONSTOP) then
+                if (beforeSync_d2c.busy = PIPELINE_NONSTOP) then
                     if (sync(0) = '1') then -- LL
                         llBit <= '1';
-                        llLoc <= conn_c2d.addr;
+                        llLoc <= beforeSync_c2d.addr;
                         llCPU <= curCPU;
                     elsif (sync(1) = '1') then -- SC
                         llBit <= '0';
-                    elsif (conn_c2d.addr = llLoc) then -- Others
+                    elsif (beforeSync_c2d.addr = llLoc) then -- Others
                         llBit <= '0';
                     end if;
                 end if;

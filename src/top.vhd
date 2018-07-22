@@ -209,7 +209,8 @@ begin
             tlbRefillExl0Offset => getTlbRefillExl0Offset,
             generalExceptOffset => getGeneralExceptOffset,
             instEntranceAddr => getInstEntranceAddr,
-            cpuId => (0 => CPU1_ID, others => '0')
+            cpuId => (0 => CPU1_ID, others => '0'),
+            scStallPeriods => 0
         )
         port map (
             clk => clkMain,
@@ -233,7 +234,8 @@ begin
             tlbRefillExl0Offset => getTlbRefillExl0Offset,
             generalExceptOffset => getGeneralExceptOffset,
             instEntranceAddr => getInstEntranceAddr,
-            cpuId => (0 => CPU2_ID, others => '0')
+            cpuId => (0 => CPU2_ID, others => '0'),
+            scStallPeriods => 63
         )
         port map (
             clk => clkMain,

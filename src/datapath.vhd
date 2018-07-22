@@ -14,7 +14,8 @@ entity datapath is
         tlbRefillExl0Offset:    std_logic_vector(AddrWidth);
         generalExceptOffset:    std_logic_vector(AddrWidth);
         interruptIv1Offset:     std_logic_vector(AddrWidth);
-        cpuId: std_logic_vector(9 downto 0)
+        cpuId:                  std_logic_vector(9 downto 0);
+        scStallPeriods:         integer
     );
     port (
         rst, clk: in std_logic;
@@ -278,6 +279,7 @@ architecture bhv of datapath is
 
     -- Signals connecting mem and ctrl --
     signal memCp0RegWe_8b: std_logic;
+    signal scStall_8b: integer;
 begin
 
     pc_reg_ist: entity work.pc_reg
@@ -565,6 +567,9 @@ begin
         );
 
     mem_ist: entity work.mem
+        generic map (
+            scStallPeriods => scStallPeriods
+        )
         port map (
             rst => rst,
             toWriteReg_i => toWriteReg_78,
@@ -596,6 +601,7 @@ begin
             dataWrite_o => memDataWrite_8c,
             dataByteSelect_o => dataByteSelect_o,
             sync_o => sync_o,
+            scStall_o => scStall_8b,
 
             cp0RegData_i => cp0RegData_78,
             cp0RegWriteAddr_i => cp0RegWriteAddr_78,
@@ -714,7 +720,8 @@ begin
             isIdEhb_i => isIdEhb_4b,
             excp0RegWe_i => excp0RegWe_6b,
             memCP0RegWe_i => memCp0RegWe_8b,
-            wbcp0regWe_i => wbCP0RegWe_9b
+            wbcp0regWe_i => wbCP0RegWe_9b,
+            scStall_i => scStall_8b
         );
     flush_b2 <= flush_b1;
     flush_b5 <= flush_b1;

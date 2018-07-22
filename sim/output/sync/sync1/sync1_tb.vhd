@@ -64,7 +64,8 @@ begin
             interruptIv1Offset      => 32ux"40",
             convEndianEnable        => true,
             cpuId                   => (0 => CPU1_ID, others => '0'),
-            enableCache             => ENABLE_CACHE
+            enableCache             => ENABLE_CACHE,
+            scStallPeriods          => 0
         )
         port map (
             rst => rst, clk => clk,
@@ -91,7 +92,8 @@ begin
             interruptIv1Offset      => 32ux"40",
             convEndianEnable        => true,
             cpuId                   => (0 => CPU2_ID, others => '0'),
-            enableCache             => ENABLE_CACHE
+            enableCache             => ENABLE_CACHE,
+            scStallPeriods          => 64
         )
         port map (
             rst => rst or not CPU2_ON, clk => clk,

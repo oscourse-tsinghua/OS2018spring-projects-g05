@@ -28,6 +28,7 @@ entity ctrl is
 
         -- Stall
         ifToStall_i, idToStall_i, exToStall_i, memToStall_i, blNullify_i: in std_logic;
+        scStall_i: in integer;
         stall_o: out std_logic_vector(StallWidth);
 
         -- Exception
@@ -52,6 +53,7 @@ end ctrl;
 architecture bhv of ctrl is
     signal toWriteBadVAddr: std_logic;
     signal badVAddr: std_logic_vector(AddrWidth);
+    signal scStall: integer;
 begin
     process(all)
         variable newPC, epc: std_logic_vector(AddrWidth);
@@ -105,7 +107,7 @@ begin
                 flush_o <= '0';
                 if (memToStall_i = PIPELINE_STOP) then
                     stall_o <= "111110";
-                elsif (exToStall_i = PIPELINE_STOP) then
+                elsif (exToStall_i = PIPELINE_STOP or scStall_i /= 0 or scStall /= 0) then
                     stall_o <= "111100";
                 elsif ((idToStall_i = PIPELINE_STOP) or (isIdEhb_i = '1' and isMtc0 = '1')) then
                     stall_o <= "111000";
@@ -124,6 +126,15 @@ begin
         if (rising_edge(clk)) then
             badVAddr_o <= badVAddr;
             toWriteBadVAddr_o <= toWriteBadVAddr;
+            if (rst = RST_ENABLE) then
+                scStall <= 0;
+            else
+                if (scStall_i /= 0) then
+                    scStall <= scStall_i;
+                elsif (scStall /= 0) then
+                    scStall <= scStall - 1;
+                end if;
+            end if;
         end if;
     end process;
 end bhv;

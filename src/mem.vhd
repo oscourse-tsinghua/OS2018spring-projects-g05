@@ -7,6 +7,10 @@ use work.cp0_const.all;
 use work.except_const.all;
 
 entity mem is
+    generic (
+        -- Periods to stall after SC fails. It should be configured differently among CPUs
+        scStallPeriods: integer := 0
+    );
     port (
         rst: in std_logic;
 
@@ -62,6 +66,7 @@ entity mem is
         currentAccessAddr_o: out std_logic_vector(AddrWidth);
 
         -- for sync --
+        scStall_o: out integer;
         scCorrect_i: in std_logic;
         sync_o: out std_logic_vector(2 downto 0) -- bit0 for ll, bit1 for sc, 2 for flush caused by eret
     );
@@ -91,6 +96,7 @@ begin
         dataByteSelect_o <= "0000";
         loadedByte := (others => '0');
         loadedShort := (others => '0');
+        scStall_o <= 0;
 
         if (rst = RST_ENABLE) then
             toWriteReg_o <= NO;
@@ -234,6 +240,9 @@ begin
                         dataWrite <= YES;
                         dataEnable_o <= ENABLE;
                         writeRegData_o <= 31ub"0" & scCorrect_i;
+                        if (scCorrect_i = '0') then
+                            scStall_o <= scStallPeriods;
+                        end if;
                     when others =>
                         null;
                 end case;
