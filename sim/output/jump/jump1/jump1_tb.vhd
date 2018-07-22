@@ -21,8 +21,8 @@ architecture bhv of jump1_tb is
 
     signal cpu1Inst_c2d, cpu1Data_c2d, cpu2Inst_c2d, cpu2Data_c2d: BusC2D;
     signal cpu1Inst_d2c, cpu1Data_d2c, cpu2Inst_d2c, cpu2Data_d2c: BusD2C;
-    signal ram_c2d, flash_c2d, serial_c2d, boot_c2d, eth_c2d, led_c2d, num_c2d: BusC2D;
-    signal ram_d2c, flash_d2c, serial_d2c, boot_d2c, eth_d2c, led_d2c, num_d2c: BusD2C;
+    signal ram_c2d, flash_c2d, serial_c2d, boot_c2d, eth_c2d, led_c2d, num_c2d, ipi_c2d: BusC2D;
+    signal ram_d2c, flash_d2c, serial_d2c, boot_d2c, eth_d2c, led_d2c, num_d2c, ipi_d2c: BusD2C;
 
     signal busMon_c2d: BusC2D;
     signal llBit: std_logic;
@@ -32,6 +32,7 @@ architecture bhv of jump1_tb is
     signal scCorrect1, scCorrect2: std_logic;
 
     signal int1, int2: std_logic_vector(IntWidth);
+    signal ipiInt: std_logic_vector(1 downto 0);
     signal timerInt1, timerInt2: std_logic;
 
     -- CODE BELOW IS AUTOMATICALLY GENERATED
@@ -44,6 +45,15 @@ begin
             rst => rst,
             cpu_i => ram_c2d,
             cpu_o => ram_d2c
+        );
+
+    ipi_ctrl_ist: entity work.ipi_ctrl
+        port map (
+            clk => clk,
+            rst => rst,
+            cpu_i => ipi_c2d,
+            cpu_o => ipi_d2c,
+            int_o => ipiInt
         );
 
     cpu1_ist: entity work.cpu
@@ -71,7 +81,7 @@ begin
             sync_o => sync1,
             scCorrect_i => scCorrect1
         );
-    int1 <= (0 => timerInt1, others => '0');
+    int1 <= (5 => timerInt1, 4 => ipiInt(0), others => '0');
 
     cpu2_ist: entity work.cpu
         generic map (
@@ -98,7 +108,7 @@ begin
             sync_o => sync2,
             scCorrect_i => scCorrect2
         );
-    int2 <= (0 => timerInt2, others => '0');
+    int2 <= (5 => timerInt2, 4 => ipiInt(1), others => '0');
 
     devctrl_ist: entity work.devctrl
         port map (
@@ -121,6 +131,7 @@ begin
             eth_i => eth_d2c,
             led_i => led_d2c,
             num_i => num_d2c,
+            ipi_i => ipi_d2c,
             ddr3_o => ram_c2d,
             flash_o => flash_c2d,
             serial_o => serial_c2d,
@@ -128,6 +139,7 @@ begin
             eth_o => eth_c2d,
             led_o => led_c2d,
             num_o => num_c2d,
+            ipi_o => ipi_c2d,
 
             busMon_o => busMon_c2d,
             llBit_o => llBit,

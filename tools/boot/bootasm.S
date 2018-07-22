@@ -26,13 +26,15 @@ __start:
   andi $t0, $t0, 0x3ff
   beq $t0, $0, load_elf
   nop
-  la $t0, 0x807ffffc
+  la $t0, 0xbff01020
   sw $0, 0($t0)
 
 spin:
-  lw $t1, 0($t0)
+  lw $t1, 0x10($t0)
   beq $t1, $0, spin
   nop
+  lw $sp, 0x14($t0)
+  lw $gp, 0x18($t0)
   jr $t1
   nop
 

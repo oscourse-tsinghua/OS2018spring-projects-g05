@@ -1,0 +1,62 @@
+# Import a package
+# Grammar: "IMPORT <packageName>"
+# "IMPORT" should be in UPPER CASE, same below
+IMPORT alu_const
+
+CONFIG CPU2_ON
+
+# Define a signal to be checked
+# Grammar: "DEFINE <signalName> <sub_instace_name.sub_sub_instance_name.(...).signal_name>: <type>"
+DEFINE      reg1 regfile_ist.regArray: RegArrayType
+DEFINE_CPU2 reg2 regfile_ist.regArray: RegArrayType
+
+# Execute an assembly instruction
+# Grammar: "RUN <assembly>"
+
+# 0x04
+RUN lui $gp, 0xbff0
+# 0x08
+RUN ori $gp, $gp, 0x1000
+# 0x0c
+RUN ori $t0, $0, 0x4001
+# 0x10 (Set c0_status)
+RUN mtc0 $t0, $12
+
+# 0x14
+RUN mfc0 $t0, $15, 1
+# 0x18
+RUN andi $t0, $t0, 0x3ff
+# 0x1c
+RUN beq $t0, $0, 0x2c-0x20
+# 0x20
+RUN ori $t1, $0, 2
+# 0x24
+RUN j 0x24
+# 0x28
+RUN nop
+
+# 0x2c
+RUN ori $t2, $0, 1
+# 0x30
+RUN sw $t2, 0x28($gp)
+# 0x34
+RUN sw $t2, 0x24($gp)
+# 0x38
+RUN j 0x38
+# 0x3c
+RUN nop
+
+# 0x40 (Exception handler)
+RUN addi $t1, $t1, -1
+# 0x44
+RUN bne $t1, $0, 0x50-0x48
+# 0x48
+RUN ori $t2, $0, 1
+# 0x4c
+RUN sw $t2, 0x2c($gp)
+# 0x50
+RUN eret
+
+# $t1 = $9
+ASSERT 500 reg1(9) 32ux"2"
+ASSERT 500 reg2(9) 32ux"0"
