@@ -198,10 +198,10 @@ begin
         );
 
     irq1 <= (5 => timerInt1, 4 => ipiInt(0), 2 => comInt, others => '0');
-    irq2 <= (5 => timerInt2, 4 => ipiInt(1), others => '0');
+    irq2 <= (5 => timerInt2, 4 => ipiInt(1), 2 => comInt, others => '0');
     -- MIPS standard requires irq[5] = timer
     -- Monitor requires irq[2] = COM
-    -- The CPU who receives irq should be consistent with the .dts file in Linux
+    -- The IRQ ID should be consistent with the .dts file in Linux
 
     cpu1_ist: entity work.cpu
         generic map (
