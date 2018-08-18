@@ -166,8 +166,7 @@ begin
     aInstData <= rdata;
     aDataEnable <= YES when rvalid = '1' and table(conv_integer(rid)).target = '1' else NO;
     aDataAddr <= table(conv_integer(rid)).addr;
-    aDataData <= rdata when aDataAddr(31 downto 6) /= writeBuffer.tag else
-                 writeBuffer.data(conv_integer(aDataAddr(1 + DATA_LINE_WIDTH downto 2))).data;
+    aDataData <= rdata;
 
     awid <= "0000" when writeFrom = CACHE else "0001";
     wid <= "0000" when writeFrom = CACHE else "0001";
@@ -261,7 +260,8 @@ begin
                     elsif (bstate = WRITE and wready = '1' and writeBuffer.sendCount /= "01111") then
                         bstate <= AOK;
                         writeBuffer.sendCount <= writeBuffer.sendCount + '1';
-                    elsif (bvalid = '1') then
+                    end if;
+                    if (bvalid = '1') then
                         bstate <= INIT;
                         writeBuffer.state <= SYNCED;
                         writeFrom <= IDLE;
