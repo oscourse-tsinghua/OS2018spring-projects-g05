@@ -35,15 +35,14 @@ entity data_cache is
 end data_cache;
 
 architecture bhv of data_cache is
-    constant OFFSET_WIDTH: integer := 2;
-    constant INDEX_WIDTH: integer := 6;
+    constant INDEX_WIDTH: integer := DATA_INDEX_WIDTH;
     constant TAG_WIDTH: integer := 32 - OFFSET_WIDTH - INDEX_WIDTH - DATA_LINE_WIDTH;
 
     constant INDEX_NUM: integer := 2 ** INDEX_WIDTH;
     constant LINE_NUM: integer := 2 ** DATA_LINE_WIDTH;
     constant PREF_INDEX: integer := INDEX_WIDTH + DATA_LINE_WIDTH + OFFSET_WIDTH - 1;
     -- if that index is one, trigger prefetch with the least priority
-    subtype AddrIndex is integer range INDEX_WIDTH + OFFSET_WIDTH - 1 downto OFFSET_WIDTH;
+    subtype AddrIndex is integer range DATA_LINE_WIDTH + OFFSET_WIDTH - 1 downto OFFSET_WIDTH;
     subtype TagIndex is integer range 31 downto (INDEX_WIDTH + OFFSET_WIDTH + DATA_LINE_WIDTH);
     subtype LineIndex is integer range INDEX_WIDTH + OFFSET_WIDTH + DATA_LINE_WIDTH - 1 downto DATA_LINE_WIDTH + OFFSET_WIDTH;
     subtype SubLineIndex is integer range (DATA_LINE_WIDTH + OFFSET_WIDTH - 1) downto (OFFSET_WIDTH);
@@ -96,10 +95,10 @@ begin
     -- NOTE: above signal only judges during the first clock period
     arenable_o <= '1' when (newRequest = '1' and newReqRead = '1' and newReqWrite = '0') or rstate /= IDLE else '0';
     awenable_o <= '1' when (newRequest = '1' and newReqWrite = '1') or wstate /= IDLE else '0';
-    araddr_o <= req_i.addr(31 downto 6) & "000000" when readFromCache = YES else req_i.addr;
+    araddr_o <= req_i.addr(31 downto DATA_LINE_WIDTH + OFFSET_WIDTH) & "000000" when readFromCache = YES else req_i.addr;
     awaddr_o <= table(conv_integer(reqTag)).tag & reqTag & "000000" when readFromCache = YES else
                 req_i.addr;
-    awdata_o <= table(conv_integer(reqTag)).unit(conv_integer(bufferCount(3 downto 0))).data when readFromCache = YES else
+    awdata_o <= table(conv_integer(reqTag)).unit(conv_integer(bufferCount(DATA_LINE_WIDTH - 1 downto 0))).data when readFromCache = YES else
                 req_i.dataSave;
     awbyteSelect_o <= req_i.byteSelect;
 
@@ -156,7 +155,7 @@ begin
                 if (enable_i = YES) then
                     if (addr_i(31 downto 16) /= 16ux"bfaf") then
                         table(conv_integer(addr_i(LineIndex))).unit(conv_integer(addr_i(SubLineIndex))).data <= data_i;
-                        if (addr_i(5 downto 2) /= "1111") then
+                        if (addr_i(5 downto 2) /= 4ub"1111") then
                             -- if not the last byte in a burst, invalidate the cache line, or vice versa
                             table(conv_integer(addr_i(LineIndex))).present <= '0';
                         else

@@ -125,16 +125,6 @@ architecture bhv of mycpu_top is
 
     signal currentSendIdx: std_logic_vector(3 downto 0);
     signal readFromInst, readFromData: std_logic;
-    signal bufferSendCount: std_logic_vector(DATA_LINE_WIDTH - 1 downto 0);
-    --attribute mark_debug: string;
-    --attribute mark_debug of araddr: signal is "true";
-    --attribute mark_debug of arvalid: signal is "true";
-    --attribute mark_debug of arready: signal is "true";
-    --attribute mark_debug of rdata: signal is "true";
-    --attribute mark_debug of debug_wb_pc: signal is "true";
-    --attribute mark_debug of debug_wb_rf_wdata: signal is "true";
-    --attribute mark_debug of aInstAraddr: signal is "true";
-    --attribute mark_debug of aDataAraddr: signal is "true";
 begin
     readFromInst <= YES when sstate = INIT and aInstArenable = YES and readFromData = NO and
                         table(conv_integer(aInstAraddr(RequestIdIndex))).state = INIT else
@@ -176,7 +166,7 @@ begin
     aInstData <= rdata;
     aDataEnable <= YES when rvalid = '1' and table(conv_integer(rid)).target = '1' else NO;
     aDataAddr <= table(conv_integer(rid)).addr;
-    aDataData <= rdata when aDataAddr(31 downto 7) /= writeBuffer.tag else
+    aDataData <= rdata when aDataAddr(31 downto 6) /= writeBuffer.tag else
                  writeBuffer.data(conv_integer(aDataAddr(1 + DATA_LINE_WIDTH downto 2))).data;
 
     awid <= "0000" when writeFrom = CACHE else "0001";
@@ -205,8 +195,8 @@ begin
 
     bready <= '1';
 
-    aDataAwrequestAck <= '1' when ((writeBuffer.tag = aDataAwaddr(31 downto 7) and writeBuffer.present = '1') or 
-                                  (writeBuffer.state = SYNCED and aDataAwenable = YES and aDataSingleByte = NO)) and writeFrom = IDLE else 
+    aDataAwrequestAck <= '1' when ((writeBuffer.tag = aDataAwaddr(31 downto 6) and writeBuffer.present = '1') or 
+                                  (writeBuffer.state = SYNCED and aDataSingleByte = NO)) and writeFrom = IDLE and aDataAwenable = YES else 
                          bvalid when aDataSingleByte = YES and aDataSingleByte = YES and writeFrom = CACHE else
                          '0';
 
@@ -239,7 +229,7 @@ begin
                         sendReqFrom <= INST;
                     end if;
                 end if;
-                if (rvalid = '1') then
+                if (rvalid = '1' and table(conv_integer(rid)).addr(5 downto 2) /= "1111") then
                     table(conv_integer(rid)).addr <= table(conv_integer(rid)).addr + 4;
                 end if;
                 if (rlast = '1' and rvalid = '1') then

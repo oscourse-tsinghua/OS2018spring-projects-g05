@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 
 package ddr3_const is
 
-    constant DATA_INDEX_WIDTH: integer := 6;
+    constant DATA_INDEX_WIDTH: integer := 5;
 	constant INST_LINE_WIDTH: integer := 4;
 	constant DATA_LINE_WIDTH: integer := 4;
 	-- dont know if it useful to use different line width for inst and data cache
