@@ -1,9 +1,0 @@
-DEFINE reg regfile_ist.regArray: RegArrayType
-DEFINE hi hi_lo_ist.hiData: std_logic_vector(DataWidth)
-DEFINE lo hi_lo_ist.loData: std_logic_vector(DataWidth)
-
-RUN lui $3, 0x4567
-RUN ori $4, 0x78
-RUN divu $0, $3, $4
-ASSERT 45 lo 32ux"940eee"
-ASSERT 45 hi 32ux"70"

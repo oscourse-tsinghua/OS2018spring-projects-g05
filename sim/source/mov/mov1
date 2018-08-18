@@ -1,6 +1,0 @@
-DEFINE reg regfile_ist.regArray: RegArrayType
-
-RUN ori $2, $2, 0x1234
-RUN mthi $2
-RUN mfhi $3
-ASSERT 8 reg(3) 32ux"1234"
