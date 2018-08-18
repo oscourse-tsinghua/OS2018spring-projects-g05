@@ -169,7 +169,7 @@ begin
         variable isInvalid, jumpToRs, condJump, branchToJump, branchToLink: std_logic;
         variable branchFlag: std_logic;
         variable branchTargetAddress: std_logic_vector(AddrWidth);
-        variable toStall, blNullify: std_logic;
+        variable rsToStall, rtToStall, blNullify: std_logic;
     begin
         oprSrc1 := INVALID;
         oprSrc2 := INVALID;
@@ -178,7 +178,8 @@ begin
         memt_o <= INVALID;
         toWriteReg_o <= NO;
         writeRegAddr_o <= (others => '0');
-        toStall := PIPELINE_NONSTOP;
+        rsToStall := PIPELINE_NONSTOP;
+        rtToStall := PIPELINE_NONSTOP;
         blNullify := PIPELINE_NONSTOP;
 
         linkAddr_o <= (others => '0');
@@ -703,17 +704,20 @@ begin
 
                     -- Push Forward --
                     if (memToWriteReg_i = YES and memWriteRegAddr_i = instRs) then
-                        operand1 := memWriteRegData_i;
+                        --operand1 := memWriteRegData_i;
                         if (instRs = "00000") then
                             operand1 := (others => '0');
+                        else
+                            rsToStall := PIPELINE_STOP;
                         end if;
                     end if;
                     if (exToWriteReg_i = YES and exWriteRegAddr_i = instRs) then
                         operand1 := exWriteRegData_i;
+                        rsToStall := PIPELINE_NONSTOP;
                         if (instRs = "00000") then
                             operand1 := (others => '0');
                         elsif (lastMemt_i /= INVALID) then
-                            toStall := PIPELINE_STOP;
+                            rsToStall := PIPELINE_STOP;
                         end if;
                     end if;
 
@@ -745,17 +749,20 @@ begin
 
                     -- Push Forward --
                     if (memToWriteReg_i = YES and memWriteRegAddr_i = instRt) then
-                        operand2 := memWriteRegData_i;
-                        if (instRt = 5ub"0") then
+                        --operand2 := memWriteRegData_i;
+                        if (instRt = "00000") then
                             operand2 := (others => '0');
+                        else
+                            rtToStall := PIPELINE_STOP;
                         end if;
                     end if;
                     if (exToWriteReg_i = YES and exWriteRegAddr_i = instRt) then
                         operand2 := exWriteRegData_i;
+                        rtToStall := PIPELINE_NONSTOP;
                         if (instRt = 5ub"0") then
                             operand2 := (others => '0');
                         elsif (lastMemt_i /= INVALID) then
-                            toStall := PIPELINE_STOP;
+                            rtToStall := PIPELINE_STOP;
                         end if;
                     end if;
 
@@ -865,7 +872,11 @@ begin
         operandX_o <= operandX;
         branchFlag_o <= branchFlag;
         branchTargetAddress_o <= branchTargetAddress;
-        toStall_o <= toStall;
+        if (rsToStall = PIPELINE_STOP or rtToStall = PIPELINE_STOP) then
+            toStall_o <= PIPELINE_STOP;
+        else
+            toStall_o <= PIPELINE_NONSTOP;
+        end if;
         blNullify_o <= blNullify;
     end process;
 end bhv;
