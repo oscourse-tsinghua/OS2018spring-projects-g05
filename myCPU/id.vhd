@@ -161,7 +161,7 @@ begin
     isInDelaySlot_o <= isInDelaySlot_i;
     valid_o <= valid_i;
 
-    process(all)
+    process (all)
         -- indicates where the operand is from --
         variable oprSrc1, oprSrc2: OprSrcType;
         variable oprSrcX: XOprSrcType;
