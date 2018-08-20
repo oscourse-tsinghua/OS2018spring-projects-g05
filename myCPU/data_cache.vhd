@@ -36,15 +36,13 @@ end data_cache;
 
 architecture bhv of data_cache is
     constant INDEX_WIDTH: integer := DATA_INDEX_WIDTH;
-    constant TAG_WIDTH: integer := 32 - OFFSET_WIDTH - INDEX_WIDTH - DATA_LINE_WIDTH;
+    constant TAG_WIDTH: integer := 32 - OFFSET_WIDTH - INDEX_WIDTH - DATA_LINE_WIDTH - 1;
 
-    constant INDEX_NUM: integer := 2 ** (INDEX_WIDTH);
+    constant INDEX_NUM: integer := 2 ** (INDEX_WIDTH + 1);
     constant LINE_NUM: integer := 2 ** DATA_LINE_WIDTH;
-    constant LINE_TOP_INDEX: integer := OFFSET_WIDTH + INDEX_WIDTH + DATA_LINE_WIDTH;
-    subtype AddrIndex is integer range DATA_LINE_WIDTH + OFFSET_WIDTH - 1 downto OFFSET_WIDTH;
-    subtype TagIndex is integer range 31 downto (INDEX_WIDTH + OFFSET_WIDTH + DATA_LINE_WIDTH + 1);
-    constant TAG_BOTTOM_INDEX: integer := INDEX_WIDTH + OFFSET_WIDTH + DATA_LINE_WIDTH - 1;
-    subtype LineIndex is integer range INDEX_WIDTH + OFFSET_WIDTH + DATA_LINE_WIDTH - 2 downto DATA_LINE_WIDTH + OFFSET_WIDTH;
+    subtype AddrIndex is integer range DATA_LINE_WIDTH + OFFSET_WIDTH downto OFFSET_WIDTH;
+    subtype TagIndex is integer range 31 downto (32 - TAG_WIDTH);
+    subtype LineIndex is integer range INDEX_WIDTH + OFFSET_WIDTH + DATA_LINE_WIDTH downto DATA_LINE_WIDTH + OFFSET_WIDTH;
     subtype SubLineIndex is integer range (DATA_LINE_WIDTH + OFFSET_WIDTH - 1) downto (OFFSET_WIDTH);
 
     type CacheUnitType is record
@@ -63,7 +61,7 @@ architecture bhv of data_cache is
     type CacheTableType is array(0 to INDEX_NUM - 1) of CacheItemType;
 
     signal table: CacheTableType;
-    signal reqTag: std_logic_vector(INDEX_WIDTH - 1 downto 0);
+    signal reqTag: std_logic_vector(INDEX_WIDTH downto 0);
     signal readFromCache: std_logic;
     signal uncachedAddress: std_logic_vector(AddrWidth);
     signal uncachedData: std_logic_vector(DataWidth);
@@ -85,9 +83,9 @@ begin
                      '1';
     singleByte_o <= '1' when req_i.addr(31 downto 16) = 16ux"bfaf" else
                     '0';
-    reqTag <= req_i.addr(LINE_TOP_INDEX) & req_i.addr(LineIndex);
+    reqTag <= req_i.addr(LineIndex);
     lineTag <= req_i.addr(SubLineIndex);
-    requestTag <= req_i.addr(TagIndex) & req_i.addr(TAG_BOTTOM_INDEX);
+    requestTag <= req_i.addr(TagIndex);
     dataInCache <= '1' when table(conv_integer(reqTag)).tag = requestTag and table(conv_integer(reqTag)).present = '1' else '0';
     newRequest <= '1' when lastRequest /= req_i and req_i.enable = '1' else '0';
     newReqRead <= '1' when (readFromCache = YES and dataInCache = NO)
@@ -98,7 +96,7 @@ begin
     arenable_o <= '1' when (newRequest = '1' and newReqRead = '1' and newReqWrite = '0') or rstate /= IDLE else '0';
     awenable_o <= '1' when (newRequest = '1' and newReqWrite = '1') or wstate /= IDLE else '0';
     araddr_o <= req_i.addr(31 downto DATA_LINE_WIDTH + OFFSET_WIDTH) & "000000" when readFromCache = YES else req_i.addr;
-    awaddr_o <= table(conv_integer(reqTag)).tag(TAG_WIDTH - 1 downto 1) & reqTag(INDEX_WIDTH - 1) & table(conv_integer(reqTag)).tag(0) & reqTag(INDEX_WIDTH - 2 downto 0) & "000000" when readFromCache = YES else
+    awaddr_o <= table(conv_integer(reqTag)).tag(TAG_WIDTH - 1 downto 0) & reqTag(INDEX_WIDTH downto 0) & "000000" when readFromCache = YES else
                 req_i.addr;
     awdata_o <= table(conv_integer(reqTag)).unit(conv_integer(bufferCount(DATA_LINE_WIDTH - 1 downto 0))).data when readFromCache = YES else
                 req_i.dataSave;
@@ -146,7 +144,7 @@ begin
     -- driven table
     process (clk)
         variable inputTag: std_logic_vector(TAG_WIDTH - 1 downto 0);
-        variable inputLine: std_logic_vector(INDEX_WIDTH - 1 downto 0); 
+        variable inputLine: std_logic_vector(INDEX_WIDTH downto 0); 
     begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then
@@ -159,8 +157,8 @@ begin
                 end if;
                 if (enable_i = YES) then
                     if (addr_i(31 downto 16) /= 16ux"bfaf") then
-                        inputTag := addr_i(TagIndex) & addr_i(TAG_BOTTOM_INDEX);
-                        inputLine := addr_i(LINE_TOP_INDEX) & addr_i(LineIndex);
+                        inputTag := addr_i(TagIndex);
+                        inputLine := addr_i(LineIndex);
                         table(conv_integer(inputLine)).unit(conv_integer(addr_i(SubLineIndex))).data <= data_i;
                         if (addr_i(5 downto 2) /= 4ub"1111") then
                             -- if not the last byte in a burst, invalidate the cache line, or vice versa
