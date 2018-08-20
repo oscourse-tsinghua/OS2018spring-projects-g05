@@ -102,13 +102,13 @@ begin
    		             	end if;
                      end if;
             	end if;
-                if (reqEnable = NO and prefetchPending = YES) then
-                    reqEnable := YES;
-                    reqAddr := prefetchAddr;
-                end if;
-                if (reqEnable = YES) and (prefetchPending = YES) and (reqAddr(31 downto 6) = prefetchAddr(31 downto 6)) then
-                    prefetchPending <= NO;
-                end if;
+                --if (reqEnable = NO and prefetchPending = YES) then
+                --    reqEnable := YES;
+                --    reqAddr := prefetchAddr;
+                --end if;
+                --if (reqEnable = YES) and (prefetchPending = YES) and (reqAddr(31 downto 6) = prefetchAddr(31 downto 6)) then
+                --    prefetchPending <= NO;
+                --end if;
             	requestEnable <= reqEnable;
             	requestAddr <= reqAddr;
             end if;

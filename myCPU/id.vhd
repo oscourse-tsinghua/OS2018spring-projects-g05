@@ -854,7 +854,7 @@ begin
             end if;
         end if;
 
-        if ((branchFlag = YES) and (branchTargetAddress(1 downto 0) /= "00")) then
+        if ((jumpToRs = YES) and (branchTargetAddress(1 downto 0) /= "00")) then
             branchFlag := NO;
             currentInstAddr_o <= branchTargetAddress;
             branchTargetAddress := (others => '0');

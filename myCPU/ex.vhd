@@ -402,7 +402,7 @@ begin
 
                     -- Push forward for cp0 --
                     if (memCP0RegWe_i = YES and memCP0RegWriteAddr_i = operand1_i(4 downto 0)) then
-                        writeRegData_o <= memCP0RegData_i;
+                        toStall_o <= PIPELINE_STOP;
                     end if;
 
 
