@@ -48,7 +48,6 @@ package inst_const is
     constant OP_ORI: std_logic_vector(InstOpWidth) := "001101";
     constant OP_XORI: std_logic_vector(InstOpWidth) := "001110";
     constant OP_LUI: std_logic_vector(InstOpWidth) := "001111";
-    constant OP_PREF: std_logic_vector(InstOpWidth) := "110011";
 
     --
     -- Algebraic FUNC codes
@@ -63,17 +62,10 @@ package inst_const is
     --
     -- Move FUNC codes
     --
-    constant FUNC_MOVN: std_logic_vector(InstFuncWidth) := "001011";
-    constant FUNC_MOVZ: std_logic_vector(InstFuncWidth) := "001010";
     constant FUNC_MFHI: std_logic_vector(InstFuncWidth) := "010000";
     constant FUNC_MFLO: std_logic_vector(InstFuncWidth) := "010010";
     constant FUNC_MTHI: std_logic_vector(InstFuncWidth) := "010001";
     constant FUNC_MTLO: std_logic_vector(InstFuncWidth) := "010011";
-
-    --
-    -- TRAP
-    --
-    constant FUNC_TNE: std_logic_vector(InstFuncWidth) := "110110";
 
     --
     -- Memory OP codes
@@ -83,15 +75,9 @@ package inst_const is
     constant OP_LH: std_logic_vector(InstOpWidth) := "100001";
     constant OP_LHU: std_logic_vector(InstOpWidth) := "100101";
     constant OP_LW: std_logic_vector(InstOpWidth) := "100011";
-    constant OP_LWL: std_logic_vector(InstOpWidth) := "100010";
-    constant OP_LWR: std_logic_vector(InstOpWidth) := "100110";
     constant OP_SB: std_logic_vector(InstOpWidth) := "101000";
     constant OP_SH: std_logic_vector(InstOpWidth) := "101001";
     constant OP_SW: std_logic_vector(InstOpWidth) := "101011";
-    constant OP_SWL: std_logic_vector(InstOpWidth) := "101010";
-    constant OP_SWR: std_logic_vector(InstOpWidth) := "101110";
-    constant OP_LL: std_logic_vector(InstOpWidth) := "110000";
-    constant OP_SC: std_logic_vector(InstOpWidth) := "111000";
 
     --
     -- Arith OP/FUNC codes
@@ -110,19 +96,8 @@ package inst_const is
     constant OP_SLTI: std_logic_vector(InstOpWidth) := "001010";
     constant OP_SLTIU: std_logic_vector(InstOpWidth) := "001011";
 
-    constant FUNC_CLO: std_logic_vector(InstFuncWidth) := "100001";
-    constant FUNC_CLZ: std_logic_vector(InstFuncWidth) := "100000";
-    constant FUNC_MUL: std_logic_vector(InstFuncWidth) := "000010";
-
-    constant FUNC_MADD: std_logic_vector(InstFuncWidth) := "000000";
-    constant FUNC_MADDU: std_logic_vector(InstFuncWidth) := "000001";
-    constant FUNC_MSUB: std_logic_vector(InstFuncWidth) := "000100";
-    constant FUNC_MSUBU: std_logic_vector(InstFuncWidth) := "000101";
-
     constant FUNC_DIV: std_logic_vector(InstFuncWidth) := "011010";
     constant FUNC_DIVU: std_logic_vector(InstFuncWidth) := "011011";
-
-    constant FUNC_WAIT: std_logic_vector(InstFuncWidth) := "100000";
 
     --
     -- Jump Opcodes
@@ -131,22 +106,16 @@ package inst_const is
     constant JMP_JR: std_logic_vector(InstFuncWidth):= "001000";
 
     constant JMP_BLTZ: std_logic_vector(InstRtWidth) := "00000";
-    constant JMP_BLTZL: std_logic_vector(InstRtWidth) := "00010";
     constant JMP_BGEZ: std_logic_vector(InstRtWidth) := "00001";
-    constant JMP_BGEZL: std_logic_vector(InstRtWidth) := "00011";
     constant JMP_BLTZAL: std_logic_vector(InstRtWidth) := "10000";
     constant JMP_BGEZAL: std_logic_vector(InstRtWidth) := "10001";
 
     constant JMP_BEQ: std_logic_vector(InstOpWidth) := "000100";
-    constant JMP_BEQL: std_logic_vector(InstOpWidth) := "010100";
     constant JMP_BGTZ: std_logic_vector(InstOpWidth) := "000111";
-    constant JMP_BGTZL: std_logic_vector(InstOpWidth) := "010111";
     constant JMP_BLEZ: std_logic_vector(InstOpWidth) := "000110";
-    constant JMP_BLEZL: std_logic_vector(InstOpWidth) := "010110";
     constant JMP_J: std_logic_vector(InstOpWidth) := "000010";
     constant JMP_JAL: std_logic_vector(InstOpWidth) := "000011";
     constant JMP_BNE: std_logic_vector(InstOpWidth) := "000101";
-    constant JMP_BNEL: std_logic_vector(InstOpWidth) := "010101";
 
     --
     -- CP0
@@ -154,35 +123,18 @@ package inst_const is
     constant OP_COP0: std_logic_vector(InstOpWidth) := "010000";
     constant RS_MF: std_logic_vector(InstRsWidth) := "00000";
     constant RS_MT: std_logic_vector(InstRsWidth) := "00100";
-    constant RS_MFH: std_logic_vector(InstRsWidth) := "00010";
-    constant RS_TLBINVF: std_logic_vector(InstRsWidth) := "10000";
-    constant FUNC_TLBWI: std_logic_vector(InstFuncWidth) := "000010";
-    constant FUNC_TLBWR: std_logic_vector(InstFuncWidth) := "000110";
-    constant FUNC_TLBINVF: std_logic_vector(InstFuncWidth) := "000100";
-    constant FUNC_TLBP: std_logic_vector(InstFuncWidth) := "001000";
-    constant FUNC_TLBR: std_logic_vector(InstFuncWidth) := "000001";
 
     --
     -- Exceptions
     --
-    constant RS_WAIT_OR_TLBINVF: std_logic_vector(InstRsWidth) := "10000";
     constant FUNC_SYSCALL: std_logic_vector(InstFuncWidth) := "001100";
     constant FUNC_ERET: std_logic_vector(InstFuncWidth) := "011000";
-    constant FUNC_DERET: std_logic_vector(InstFuncWidth) := "011111";
     constant FUNC_BREAK: std_logic_vector(InstFuncWidth) := "001101";
-    constant FUNC_SDBBP: std_logic_vector(InstFuncWidth) := "111111";
 
     --
     -- Special OP groups
     --
     constant OP_SPECIAL: std_logic_vector(InstOpWidth) := "000000";
-    constant OP_SPECIAL2: std_logic_vector(InstOpWidth) := "011100";
     constant OP_JMPSPECIAL: std_logic_vector(InstOpWidth) := "000001";
-
-    --
-    -- Cache(unimplemented)
-    --
-    constant FUNC_SYNC: std_logic_vector(InstFuncWidth) := "001111";
-    constant OP_CACHE: std_logic_vector(InstOpWidth) := "101111";
 
 end inst_const;

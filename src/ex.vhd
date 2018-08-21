@@ -65,18 +65,17 @@ entity ex is
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWriteSel_o: out std_logic_vector(SelWidth);
         cp0RegWe_o: out std_logic;
-        cp0Sp_o: out CP0Special;
 
         -- for exception --
         valid_i: in std_logic;
         valid_o: out std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
-        tlbRefill_i: in std_logic;
         currentInstAddr_i: in std_logic_vector(AddrWidth);
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-        tlbRefill_o: out std_logic;
         isInDelaySlot_o: out std_logic;
-        currentInstAddr_o: out std_logic_vector(AddrWidth)
+        currentInstAddr_o: out std_logic_vector(AddrWidth);
+        flushForceWrite_i: in std_logic;
+        flushForceWrite_o: out std_logic
     );
 end ex;
 
@@ -118,6 +117,7 @@ architecture bhv of ex is
     signal reg1Ltreg2: std_logic;
 begin
     memt_o <= memt_i;
+    flushForceWrite_o <= flushForceWrite_i;
 
     clo <= 32ux"00" when operand1_i(31) = '0' else 32ux"01" when operand1_i(30) = '0' else
            32ux"02" when operand1_i(29) = '0' else 32ux"03" when operand1_i(28) = '0' else
@@ -165,7 +165,7 @@ begin
         variable sgnMul: boolean;
         variable neg: boolean;
     begin
-        if (alut_i = ALU_MULTU or alut_i = ALU_MADDU or alut_i = ALU_MSUBU) then
+        if (alut_i = ALU_MULTU) then
             sgnMul := false;
         else
             sgnMul := true;
@@ -238,7 +238,6 @@ begin
         cp0RegWriteAddr_o <= (others => '0');
         cp0RegWriteSel_o <= (others => '0');
         cp0RegData_o <= (others => '0');
-        cp0Sp_o <= INVALID;
         writeHiData_o <= (others => '0');
         writeLoData_o <= (others => '0');
         cp0RegReadAddr_o <= (others => '0');
@@ -248,7 +247,6 @@ begin
         divider_o <= (others => '0');
 
         exceptCause_o <= exceptCause_i;
-        tlbRefill_o <= tlbRefill_i;
 
         res64 := (others => 'X');
         ovSum := NO; -- Otherwise it will introduce a level latch to keep the prior value
@@ -267,22 +265,6 @@ begin
                 );
                 when ALU_LUI => writeRegData_o <= operand1_i(15 downto 0) & 16b"0";
                 when ALU_JBAL => writeRegData_o <= linkAddress_i;
-
-                when ALU_MOVN =>
-                    if (operand2_i /= ZEROS_32) then
-                        writeRegData_o <= operand1_i;
-                    else
-                        toWriteReg_o <= NO;
-                        writeRegData_o <= (others => '0');
-                    end if;
-
-                when ALU_MOVZ =>
-                    if (operand2_i = ZEROS_32) then
-                        writeRegData_o <= operand1_i;
-                    else
-                        toWriteReg_o <= NO;
-                        writeRegData_o <= (others => '0');
-                    end if;
 
                 when ALU_MFHI =>
                     writeRegData_o <= realHiData;
@@ -371,30 +353,6 @@ begin
                     toWriteLo_o <= YES;
                     writeLoData_o <= product(LoDataWidth);
 
-                when ALU_MADD | ALU_MADDU | ALU_MSUB | ALU_MSUBU =>
-                    if (cnt_i = "00") then
-                        calcMult <= '1';
-                        multip1 <= operand1_i;
-                        multip2 <= operand2_i;
-                        tempProduct_o <= product;
-                        cnt_o <= "01";
-                        toStall_o <= PIPELINE_STOP;
-                    elsif (cnt_i = "01") then
-                        calcMult <= '0';
-                        tempProduct_o <= (others => '0');
-                        cnt_o <= "00";
-                        toStall_o <= PIPELINE_NONSTOP;
-                        toWriteHi_o <= YES;
-                        toWriteLo_o <= YES;
-                        if (alut_i = ALU_MADD or alut_i = ALU_MADDU) then
-                            res64 := (realHiData & realLoData) + tempProduct_i;
-                        elsif (alut_i = ALU_MSUB or alut_i = ALU_MSUBU) then
-                            res64 := (realHiData & realLoData) - tempProduct_i;
-                        end if;
-                        writeHiData_o <= res64(HiDataWidth);
-                        writeLoData_o <= res64(LoDataWidth);
-                    end if;
-
                 when ALU_DIV =>
                     toWriteHi_o <= YES;
                     toWriteLo_o <= YES;
@@ -444,7 +402,7 @@ begin
 
                     -- Push forward for cp0 --
                     if (memCP0RegWe_i = YES and memCP0RegWriteAddr_i = operand1_i(4 downto 0)) then
-                        writeRegData_o <= memCP0RegData_i;
+                        toStall_o <= PIPELINE_STOP;
                     end if;
 
 
@@ -453,22 +411,7 @@ begin
                     cp0RegWriteSel_o <= operandX_i(SelWidth);
                     cp0RegWe_o <= YES;
                     cp0RegData_o <= operand2_i;
-
-                when ALU_TLBWI =>
-                    cp0Sp_o <= CP0SP_TLBWI;
-
-                when ALU_TLBWR =>
-                    cp0Sp_o <= CP0SP_TLBWR;
-
-                when ALU_TLBP =>
-                    cp0Sp_o <= CP0SP_TLBP;
-
-                when ALU_TLBR =>
-                    cp0Sp_o <= CP0SP_TLBR;
-
-                when ALU_TLBINVF =>
-                    cp0Sp_o <= CP0SP_TLBINVF;
-
+ 
                 when others =>
                     toWriteReg_o <= NO;
             end case;
@@ -476,7 +419,6 @@ begin
                 if (ovSum = YES) then
                     toWriteReg_o <= NO;
                     exceptCause_o <= OVERFLOW_CAUSE;
-                    tlbRefill_o <= '0';
                 else
                     toWriteReg_o <= YES;
                 end if;
@@ -488,10 +430,8 @@ begin
             ) then
                 if (alut_i = ALU_LOAD) then
                     exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
-                    tlbRefill_o <= '0';
                 else
                     exceptCause_o <= ADDR_ERR_STORE_CAUSE;
-                    tlbRefill_o <= '0';
                 end if;
             end if;
         end if;

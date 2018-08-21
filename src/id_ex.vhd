@@ -30,9 +30,7 @@ entity id_ex is
 
         -- exception --
         idExceptCause_i: in std_logic_vector(ExceptionCauseWidth);
-        idTlbRefill_i: in std_logic;
         exExceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-        exTlbRefill_o: out std_logic;
         valid_i: in std_logic;
         valid_o: out std_logic;
         flush_i: in std_logic;
@@ -45,7 +43,9 @@ entity id_ex is
         exIsInDelaySlot_o: out std_logic;
         isInDelaySlot_o: out std_logic;
         idCurrentInstAddr_i: in std_logic_vector(AddrWidth);
-        exCurrentInstAddr_o: out std_logic_vector(AddrWidth)
+        exCurrentInstAddr_o: out std_logic_vector(AddrWidth);
+        flushForceWrite_i: in std_logic;
+        flushForceWrite_o: out std_logic
     );
 end id_ex;
 
@@ -55,7 +55,7 @@ begin
         if (rising_edge(clk)) then
             if (
                 (rst = RST_ENABLE) or
-                (flush_i = YES)
+                (flush_i = YES and idIsInDelaySlot_i = NO)
             ) then
                 alut_o <= INVALID;
                 memt_o <= INVALID;
@@ -65,12 +65,12 @@ begin
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
                 exExceptCause_o <= NO_CAUSE;
-                exTlbRefill_o <= '0';
                 exLinkAddress_o <= (others => '0');
                 exIsInDelaySlot_o <= NO;
                 isInDelaySlot_o <= NO;
                 exCurrentInstAddr_o <= (others => '0');
                 valid_o <= NO;
+                flushForceWrite_o <= NO;
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_STOP and stall_i(EX_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= INVALID;
                 memt_o <= INVALID;
@@ -80,12 +80,12 @@ begin
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
                 exExceptCause_o <= NO_CAUSE;
-                exTlbRefill_o <= '0';
                 exLinkAddress_o <= (others => '0');
                 exIsInDelaySlot_o <= NO;
                 -- Keep `isInDelaySlot_o` as old value
                 exCurrentInstAddr_o <= (others => '0');
                 valid_o <= NO;
+                flushForceWrite_o <= flushForceWrite_i;
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= alut_i;
                 memt_o <= memt_i;
@@ -100,9 +100,9 @@ begin
                     isInDelaySlot_o <= nextInstInDelaySlot_i;
                 end if;
                 exExceptCause_o <= idExceptCause_i;
-                exTlbRefill_o <= idTlbRefill_i;
                 exCurrentInstAddr_o <= idCurrentInstAddr_i;
                 valid_o <= valid_i;
+                flushForceWrite_o <= flushForceWrite_i;
             end if;
         end if;
     end process;

@@ -43,25 +43,23 @@ entity ex_mem is
         cp0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
         cp0RegWriteSel_i: in std_logic_vector(SelWidth);
         cp0RegWe_i: in std_logic;
-        cp0Sp_i: in CP0Special;
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWriteSel_o: out std_logic_vector(SelWidth);
         cp0RegWe_o: out std_logic;
-        cp0Sp_o: out CP0Special;
 
         -- for exception --
         valid_i: in std_logic;
         flush_i: in std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
-        tlbRefill_i: in std_logic;
         isInDelaySlot_i: in std_logic;
         currentInstAddr_i: in std_logic_vector(AddrWidth);
         valid_o: out std_logic;
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-        tlbRefill_o: out std_logic;
         isInDelaySlot_o: out std_logic;
-        currentInstAddr_o: out std_logic_vector(AddrWidth)
+        currentInstAddr_o: out std_logic_vector(AddrWidth);
+        flushForceWrite_i: in std_logic;
+        flushForceWrite_o: out std_logic
     );
 end ex_mem;
 
@@ -71,7 +69,7 @@ begin
         if (rising_edge(clk)) then
             if (
                 rst = RST_ENABLE or
-                flush_i = YES or
+                (flush_i = YES and isInDelaySlot_i = NO) or
                 (stall_i(EX_STOP_IDX) = PIPELINE_STOP and stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP)
             ) then
                 toWriteReg_o <= NO;
@@ -90,7 +88,6 @@ begin
                 tempProduct_o <= (others => '0');
                 cnt_o <= (others => '0');
                 exceptCause_o <= NO_CAUSE;
-                tlbRefill_o <= '0';
                 isInDelaySlot_o <= NO;
                 currentInstAddr_o <= (others => '0');
 
@@ -98,9 +95,9 @@ begin
                 cp0RegData_o <= (others => '0');
                 cp0RegWriteAddr_o <= (others => '0');
                 cp0RegWriteSel_o <= (others => '0');
-                cp0Sp_o <= INVALID;
 
                 valid_o <= NO;
+                flushForceWrite_o <= NO;
 
                 if (stall_i(EX_STOP_IDX) = PIPELINE_STOP and stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                     tempProduct_o <= tempProduct_i;
@@ -124,10 +121,8 @@ begin
                 cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
                 cp0RegWriteSel_o <= cp0RegWriteSel_i;
                 cp0RegData_o <= cp0RegData_i;
-                cp0Sp_o <= cp0Sp_i;
 
                 exceptCause_o <= exceptCause_i;
-                tlbRefill_o <= tlbRefill_i;
                 isInDelaySlot_o <= isInDelaySlot_i;
                 currentInstAddr_o <= currentInstAddr_i;
 
@@ -135,6 +130,7 @@ begin
 
                 tempProduct_o <= tempProduct_i;
                 cnt_o <= cnt_i;
+                flushForceWrite_o <= flushForceWrite_i;
             end if;
         end if;
     end process;
