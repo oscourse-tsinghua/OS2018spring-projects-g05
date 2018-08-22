@@ -126,16 +126,10 @@ begin
             if (rst = RST_ENABLE) then
                 -- Please refer to MIPS Vol3 for reset value
                 -- Undefined reset value are reset to 0 here for robustness
-                regArr(INDEX_REG) <= (others => '0');
-                regArr(WIRED_REG) <= (others => '0');
-                regArr(BAD_V_ADDR_REG) <= (others => '0');
-                regArr(COUNT_REG) <= (others => '0');
-                regArr(COMPARE_REG) <= (others => '0');
+                regArr <= (others => (others => '0'));
                 regArr(STATUS_REG) <= (
                     STATUS_CP0_BIT => '1', STATUS_BEV_BIT => '1', STATUS_ERL_BIT => '1', StatusImBits => '1', others => '0'
                 );
-                regArr(CAUSE_REG) <= (others => '0');
-                regArr(EPC_REG) <= (others => '0');
                 regArr(PRID_OR_EBASE_REG) <= "1000000000000000000000" & cpuId;
                 exceptCause <= NO_CAUSE;
             else
