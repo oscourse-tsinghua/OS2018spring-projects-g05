@@ -9,6 +9,7 @@ entity cpu is
     generic (
         instEntranceAddr: std_logic_vector(AddrWidth) := 32ux"bfc0_0000";
         exceptBootBaseAddr: std_logic_vector(AddrWidth) := 32ux"bfc0_0200";
+        tlbRefillExl0Offset: std_logic_vector(AddrWidth) := 32ux"000";
         generalExceptOffset: std_logic_vector(AddrWidth) := 32ux"180";
         interruptIv1Offset: std_logic_vector(AddrWidth) := 32ux"200";
         convEndianEnable: boolean := false;
@@ -129,9 +130,11 @@ begin
         generic map (
             instEntranceAddr        => instEntranceAddr,
             exceptBootBaseAddr      => exceptBootBaseAddr,
+            tlbRefillExl0Offset     => tlbRefillExl0Offset,
             generalExceptOffset     => generalExceptOffset,
             interruptIv1Offset      => interruptIv1Offset,
-            cpuId                   => cpuId
+            cpuId                   => cpuId,
+            scStallPeriods          => 0
         )
         port map (
             rst => rst,
@@ -145,9 +148,25 @@ begin
             dataData_o => dataDataSave,
             dataAddr_o => dataFlow_c2d.addr,
             dataByteSelect_o => dataByteSelect,
+            instExcept_i => NO_CAUSE,
+            dataExcept_i => NO_CAUSE,
+            instTlbRefill_i => NO,
+            dataTlbRefill_i => NO,
             ifToStall_i => instFlow_d2c.busy,
             memToStall_i => dataFlow_d2c.busy,
             int_i => int,
+            timerInt_o => open,
+            isKernelMode_o => open,
+            entryIndex_i => (others => '0'),
+            entryIndexValid_i => NO,
+            entryIndex_o => open,
+            entryWrite_o => open,
+            entryFlush_o => open,
+            entry_i => (others => (others => '0')),
+            entry_o => open,
+            pageMask_o => open,
+            scCorrect_i => YES,
+            sync_o => open,
             debug_wb_pc => debug_wb_pc,
             debug_wb_rf_wdata => debug_wb_rf_wdata,
             debug_wb_rf_wnum => debug_wb_rf_wnum,

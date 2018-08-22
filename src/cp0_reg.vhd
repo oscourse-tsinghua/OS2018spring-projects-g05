@@ -8,6 +8,8 @@ use ieee.numeric_std.all;
 use work.global_const.all;
 use work.except_const.all;
 use work.cp0_const.all;
+use work.cp0_config_const.all;
+use work.mmu_const.all;
 
 entity cp0_reg is
     generic (
@@ -24,6 +26,7 @@ entity cp0_reg is
         data_i: in std_logic_vector(DataWidth);
         int_i: in std_logic_vector(IntWidth);
         data_o: out std_logic_vector(DataWidth);
+        timerInt_o: out std_logic;
         status_o: out std_logic_vector(DataWidth);
         cause_o: out std_logic_vector(DataWidth);
         epc_o: out std_logic_vector(DataWidth);
@@ -36,13 +39,28 @@ entity cp0_reg is
         memDataWrite_i: in std_logic;
         isIndelaySlot_i: in std_logic;
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        isKernelMode_o: out std_logic;
+        tlbRefill_i: in std_logic;
+        tlbRefill_o: out std_logic;
+
+        -- For MMU
+        cp0Sp_i: in CP0Special;
+        entryIndex_i: in std_logic_vector(TLBIndexWidth);
+        entryIndexValid_i: in std_logic;
+        entry_i: in TLBEntry;
+        entryIndex_o: out std_logic_vector(TLBIndexWidth);
+        entryWrite_o: out std_logic;
+        entry_o: out TLBEntry;
+        entryFlush_o: out std_logic;
+        pageMask_o: out std_logic_vector(AddrWidth);
 
         -- Connect ctrl, for address error after eret instruction
         ctrlBadVAddr_i: in std_logic_vector(DataWidth);
         ctrlToWriteBadVAddr_i: in std_logic;
 
         -- Connect ctrl, for ExceptNormalBaseAddress modification
-        cp0EBaseAddr_o: out std_logic_vector(DataWidth)
+        cp0EBaseAddr_o: out std_logic_vector(DataWidth);
+        depc_o: out std_logic_vector(AddrWidth)
     );
 end cp0_reg;
 

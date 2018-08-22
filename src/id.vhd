@@ -55,8 +55,13 @@ entity id is
         valid_i: in std_logic;
         valid_o: out std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_i: in std_logic;
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
-        currentInstAddr_o: out std_logic_vector(AddrWidth)
+        tlbRefill_o: out std_logic;
+        currentInstAddr_o: out std_logic_vector(AddrWidth);
+
+        -- hazard barrier --
+        isIdEhb_o: out std_logic
     );
 end id;
 

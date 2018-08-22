@@ -65,13 +65,16 @@ entity ex is
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWriteSel_o: out std_logic_vector(SelWidth);
         cp0RegWe_o: out std_logic;
+        cp0Sp_o: out CP0Special;
 
         -- for exception --
         valid_i: in std_logic;
         valid_o: out std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_i: in std_logic;
         currentInstAddr_i: in std_logic_vector(AddrWidth);
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_o: out std_logic;
         isInDelaySlot_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth);
         flushForceWrite_i: in std_logic;
@@ -411,7 +414,7 @@ begin
                     cp0RegWriteSel_o <= operandX_i(SelWidth);
                     cp0RegWe_o <= YES;
                     cp0RegData_o <= operand2_i;
- 
+
                 when others =>
                     toWriteReg_o <= NO;
             end case;

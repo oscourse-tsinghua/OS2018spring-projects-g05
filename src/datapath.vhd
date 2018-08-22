@@ -4,15 +4,18 @@ use work.global_const.all;
 use work.alu_const.all;
 use work.mem_const.all;
 use work.cp0_const.all;
+use work.mmu_const.all;
 use work.except_const.all;
 
 entity datapath is
     generic (
         instEntranceAddr:       std_logic_vector(AddrWidth);
         exceptBootBaseAddr:     std_logic_vector(AddrWidth);
+        tlbRefillExl0Offset:    std_logic_vector(AddrWidth);
         generalExceptOffset:    std_logic_vector(AddrWidth);
         interruptIv1Offset:     std_logic_vector(AddrWidth);
-        cpuId: std_logic_vector(9 downto 0)
+        cpuId:                  std_logic_vector(9 downto 0);
+        scStallPeriods:         integer
     );
     port (
         rst, clk: in std_logic;
@@ -23,13 +26,30 @@ entity datapath is
         dataEnable_o: out std_logic;
         dataWrite_o: out std_logic;
         dataData_i: in std_logic_vector(DataWidth);
+        scCorrect_i: in std_logic;
         dataData_o: out std_logic_vector(DataWidth);
         dataAddr_o: out std_logic_vector(AddrWidth);
         dataByteSelect_o: out std_logic_vector(3 downto 0);
+        sync_o: out std_logic_vector(2 downto 0);
 
+        instExcept_i, dataExcept_i: in std_logic_vector(ExceptionCauseWidth);
+        instTlbRefill_i, dataTlbRefill_i: in std_logic;
         ifToStall_i, memToStall_i: in std_logic;
 
         int_i: in std_logic_vector(intWidth);
+        timerInt_o: out std_logic;
+
+        -- To MMU
+        isKernelMode_o: out std_logic;
+        entryIndex_i: in std_logic_vector(TLBIndexWidth);
+        entryIndexValid_i: in std_logic;
+        entryIndex_o: out std_logic_vector(TLBIndexWidth);
+        entryWrite_o: out std_logic;
+        entryFlush_o: out std_logic;
+        entry_i: in TLBEntry;
+        entry_o: out TLBEntry;
+        pageMask_o: out std_logic_vector(AddrWidth);
+
         debug_wb_pc: out std_logic_vector(AddrWidth);
         debug_wb_rf_wen_datapath: out std_logic;
         debug_wb_rf_wnum: out std_logic_vector(RegAddrWidth);
@@ -62,6 +82,7 @@ architecture bhv of datapath is
     signal valid_24: std_logic;
     signal inst_24: std_logic_vector(InstWidth);
     signal exceptCause_24: std_logic_vector(ExceptionCauseWidth);
+    signal tlbRefill_24: std_logic;
 
     -- Signals connecting regfile and id --
     signal regReadEnable1_43, regReadEnable2_43: std_logic;
@@ -82,6 +103,7 @@ architecture bhv of datapath is
     signal isInDelaySlot_54: std_logic;
     signal valid_45: std_logic;
     signal exceptCause_45: std_logic_vector(ExceptionCauseWidth);
+    signal tlbRefill_45: std_logic;
     signal currentInstAddr_45: std_logic_vector(AddrWidth);
     signal flushForceWrite_45: std_logic;
 
@@ -96,6 +118,7 @@ architecture bhv of datapath is
     signal exIsInDelaySlot_56: std_logic;
     signal exLinkAddress_56: std_logic_vector(AddrWidth);
     signal exExceptCause_56: std_logic_vector(ExceptionCauseWidth);
+    signal exTlbRefill_56: std_logic;
     signal exCurrentInstAddr_56: std_logic_vector(AddrWidth);
     signal valid_56: std_logic;
     signal flushForceWrite_56: std_logic;
@@ -119,9 +142,11 @@ architecture bhv of datapath is
     signal cp0RegWriteAddr_67: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWriteSel_67: std_logic_vector(SelWidth);
     signal cp0RegWe_67: std_logic;
+    signal cp0Sp_67: CP0Special;
     signal tempProduct_67, tempProduct_76: std_logic_vector(DoubleDataWidth);
     signal cnt_67, cnt_76: std_logic_vector(CntWidth);
     signal exceptCause_67: std_logic_vector(ExceptionCauseWidth);
+    signal tlbRefill_67: std_logic;
     signal currentInstAddr_67: std_logic_vector(AddrWidth);
     signal isInDelaySlot_67: std_logic;
     signal valid_67: std_logic;
@@ -150,7 +175,9 @@ architecture bhv of datapath is
     signal cp0RegWriteAddr_78: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWriteSel_78: std_logic_vector(SelWidth);
     signal cp0RegWe_78: std_logic;
+    signal cp0Sp_78: CP0Special;
     signal exceptCause_78: std_logic_vector(ExceptionCauseWidth);
+    signal tlbRefill_78: std_logic;
     signal currentInstAddr_78: std_logic_vector(AddrWidth);
     signal isInDelaySlot_78: std_logic;
     signal valid_78: std_logic;
@@ -178,6 +205,7 @@ architecture bhv of datapath is
     signal cp0RegWriteAddr_89: std_logic_vector(CP0RegAddrWidth);
     signal cp0RegWriteSel_89: std_logic_vector(SelWidth);
     signal cp0RegWe_89: std_logic;
+    signal cp0Sp_89: CP0Special;
     signal currentInstAddr_89: std_logic_vector(AddrWidth);
     signal flushForceWrite_89: std_logic;
 
@@ -199,6 +227,7 @@ architecture bhv of datapath is
     signal wbCP0RegWriteAddr_9c: std_logic_vector(CP0RegAddrWidth);
     signal wbCP0RegWriteSel_9c: std_logic_vector(SelWidth);
     signal wbCP0RegWe_9c: std_logic;
+    signal cp0Sp_9c: CP0Special;
 
     -- Signals connecting hi_lo and ex --
     signal hiData_a6, loData_a6: std_logic_vector(DataWidth);
@@ -247,6 +276,7 @@ architecture bhv of datapath is
     signal currentInstAddr_8c, currentAccessAddr_8c: std_logic_vector(AddrWidth);
     signal isInDelaySlot_8c: std_logic;
     signal memDataWrite_8c: std_logic;
+    signal tlbRefill_8c: std_logic;
 
     -- Signals connecting cp0 and ctrl --
     signal cp0Status_cb: std_logic_vector(DataWidth);
@@ -256,9 +286,12 @@ architecture bhv of datapath is
     signal ctrlToWriteBadVAddr_cb: std_logic;
     signal ctrlBadVAddr_cb: std_logic_vector(DataWidth);
     signal exceptCause_cb: std_logic_vector(ExceptionCauseWidth);
+    signal depc_cb: std_logic_vector(AddrWidth);
+    signal tlbRefill_cb: std_logic;
 
     -- Signals connecting mem and ctrl --
     signal memCp0RegWe_8b: std_logic;
+    signal scStall_8b: integer;
     signal memDataWrite: std_logic;
 begin
 
@@ -351,8 +384,12 @@ begin
             valid_i => valid_24,
             valid_o => valid_45,
             exceptCause_i => exceptCause_24,
+            tlbRefill_i =>tlbRefill_24,
             exceptCause_o => exceptCause_45,
-            currentInstAddr_o => currentInstAddr_45
+            tlbRefill_o =>tlbRefill_45,
+            currentInstAddr_o => currentInstAddr_45,
+
+            isIdEhb_o => isIdEhb_4b
         );
     idIsInDelaySlot_4b <= isInDelaySlot_45;
 
@@ -378,7 +415,9 @@ begin
             stall_i => stall,
 
             idExceptCause_i => exceptCause_45,
+            idTlbRefill_i => tlbRefill_45,
             exExceptCause_o => exExceptCause_56,
+            exTlbRefill_o => exTlbRefill_56,
             valid_i => valid_45,
             valid_o => valid_56,
             flush_i => flush_b5,
@@ -454,12 +493,15 @@ begin
             cp0RegWriteAddr_o => cp0RegWriteAddr_67,
             cp0RegWriteSel_o => cp0RegWriteSel_67,
             cp0RegWe_o => cp0RegWe_67,
+            cp0Sp_o => cp0Sp_67,
 
             valid_i => valid_56,
             valid_o => valid_67,
             exceptCause_i => exExceptCause_56,
+            tlbRefill_i => exTlbRefill_56,
             currentInstAddr_i => exCurrentInstAddr_56,
             exceptCause_o => exceptCause_67,
+            tlbRefill_o => tlbRefill_67,
             currentInstAddr_o => currentInstAddr_67,
             isInDelaySlot_o => isInDelaySlot_67,
             flushForceWrite_i => flushForceWrite_56,
@@ -520,18 +562,22 @@ begin
             cp0RegWriteAddr_i => cp0RegWriteAddr_67,
             cp0RegWriteSel_i => cp0RegWriteSel_67,
             cp0RegWe_i => cp0RegWe_67,
+            cp0Sp_i => cp0Sp_67,
             cp0RegData_o => cp0RegData_78,
             cp0RegWriteAddr_o => cp0RegWriteAddr_78,
             cp0RegWriteSel_o => cp0RegWriteSel_78,
             cp0RegWe_o => cp0RegWe_78,
+            cp0Sp_o => cp0Sp_78,
 
             valid_i => valid_67,
             flush_i => flush_b7,
             exceptCause_i => exceptCause_67,
+            tlbRefill_i => tlbRefill_67,
             isInDelaySlot_i => isInDelaySlot_67,
             currentInstAddr_i => currentInstAddr_67,
             valid_o => valid_78,
             exceptCause_o => exceptCause_78,
+            tlbRefill_o => tlbRefill_78,
             currentInstAddr_o => currentInstAddr_78,
             isInDelaySlot_o => isInDelaySlot_78,
             flushForceWrite_i => flushForceWrite_67,
@@ -539,6 +585,9 @@ begin
         );
 
     mem_ist: entity work.mem
+        generic map (
+            scStallPeriods => scStallPeriods
+        )
         port map (
             rst => rst,
             toWriteReg_i => toWriteReg_78,
@@ -560,29 +609,38 @@ begin
             memt_i => memt_78,
             memAddr_i => memAddr_78,
             memData_i => memData_78,
+            memExcept_i => dataExcept_i,
+            tlbRefill_i => dataTlbRefill_i,
             loadedData_i => dataData_i,
+            scCorrect_i => scCorrect_i,
             savingData_o => dataData_o,
             memAddr_o => dataAddr_o,
             dataEnable_o => dataEnable_o,
             dataWrite_o => memDataWrite_8c,
             dataByteSelect_o => dataByteSelect_o,
+            sync_o => sync_o,
+            scStall_o => scStall_8b,
 
             cp0RegData_i => cp0RegData_78,
             cp0RegWriteAddr_i => cp0RegWriteAddr_78,
             cp0RegWriteSel_i => cp0RegWriteSel_78,
             cp0RegWe_i => cp0RegWe_78,
+            cp0Sp_i => cp0Sp_78,
             cp0RegData_o => cp0RegData_89,
             cp0RegWriteAddr_o => cp0RegWriteAddr_89,
             cp0RegWriteSel_o => cp0RegWriteSel_89,
             cp0RegWe_o => cp0RegWe_89,
+            cp0Sp_o => cp0Sp_89,
 
             valid_i => valid_78,
             exceptCause_i => exceptCause_78,
+            instTlbRefill_i => tlbRefill_78,
             isInDelaySlot_i => isInDelaySlot_78,
             currentInstAddr_i => currentInstAddr_78,
             cp0Status_i => status_c8,
             cp0Cause_i => cause_c8,
             exceptCause_o => exceptCause_8c,
+            tlbRefill_o => tlbRefill_8c,
             isInDelaySlot_o => isInDelaySlot_8c,
             currentInstAddr_o => currentInstAddr_8c,
             currentAccessAddr_o => currentAccessAddr_8c,
@@ -628,10 +686,12 @@ begin
             memCP0RegWriteAddr_i => cp0RegWriteAddr_89,
             memCP0RegWriteSel_i => cp0RegWriteSel_89,
             memCP0RegWe_i => cp0RegWe_89,
+            cp0Sp_i => cp0Sp_89,
             wbCP0RegData_o => wbCP0RegData_9c,
             wbCP0RegWriteAddr_o => wbCP0RegWriteAddr_9c,
             wbCP0RegWriteSel_o => wbCP0RegWriteSel_9c,
             wbCP0RegWe_o => wbCP0RegWe_9c,
+            cp0Sp_o => cp0Sp_9c,
             flush_i => flush_b9,
             currentInstAddr_i => currentInstAddr_89,
             currentInstAddr_o => debug_wb_pc,
@@ -660,6 +720,7 @@ begin
     ctrl_ist: entity work.ctrl
         generic map (
             exceptBootBaseAddr => exceptBootBaseAddr,
+            tlbRefillExl0Offset => tlbRefillExl0Offset,
             generalExceptOffset => generalExceptOffset,
             interruptIv1Offset => interruptIv1Offset
         )
@@ -677,11 +738,18 @@ begin
             newPC_o => newPC_b1,
             exceptionBase_i => cp0EBaseAddr_cb,
             exceptCause_i => exceptCause_cb,
+            tlbRefill_i => tlbRefill_cb,
             cp0Status_i => cp0Status_cb,
             cp0Cause_i => cp0Cause_cb,
             cp0Epc_i => cp0Epc_cb,
+            depc_i => depc_cb,
             toWriteBadVAddr_o => ctrlToWriteBadVAddr_cb,
-            badVAddr_o => ctrlBadVAddr_cb
+            badVAddr_o => ctrlBadVAddr_cb,
+            isIdEhb_i => isIdEhb_4b,
+            excp0RegWe_i => excp0RegWe_6b,
+            memCP0RegWe_i => memCp0RegWe_8b,
+            wbcp0regWe_i => wbCP0RegWe_9b,
+            scStall_i => scStall_8b
         );
     flush_b2 <= flush_b1;
     flush_b5 <= flush_b1;
@@ -703,10 +771,12 @@ begin
             data_i => wbCP0RegData_9c,
             int_i => int_i,
             data_o => data_c6,
+            timerInt_o => timerInt_o,
 
             status_o => status_c8,
             cause_o => cause_c8,
             epc_o => epc_c8,
+            depc_o => depc_cb,
 
             valid_i => valid_78,
             exceptCause_i => exceptCause_8c,
@@ -715,7 +785,19 @@ begin
             memDataWrite_i => memDataWrite_8c,
             isInDelaySlot_i => isInDelaySlot_8c,
             exceptCause_o => exceptCause_cb,
+            isKernelMode_o => isKernelMode_o,
+            tlbRefill_i => tlbRefill_8c,
+            tlbRefill_o => tlbRefill_cb,
 
+            cp0Sp_i => cp0Sp_9c,
+            entryIndex_i => entryIndex_i,
+            entryIndexValid_i => entryIndexValid_i,
+            entry_i => entry_i,
+            entryIndex_o => entryIndex_o,
+            entryWrite_o => entryWrite_o,
+            entry_o => entry_o,
+            entryFlush_o => entryFlush_o,
+            pageMask_o => pageMask_o,
 
             ctrlBadVAddr_i => ctrlBadVAddr_cb,
             ctrlToWriteBadVAddr_i => ctrlToWriteBadVAddr_cb,

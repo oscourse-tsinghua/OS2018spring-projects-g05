@@ -30,7 +30,9 @@ entity id_ex is
 
         -- exception --
         idExceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        idTlbRefill_i: in std_logic;
         exExceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        exTlbRefill_o: out std_logic;
         valid_i: in std_logic;
         valid_o: out std_logic;
         flush_i: in std_logic;

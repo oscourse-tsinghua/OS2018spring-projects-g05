@@ -43,19 +43,23 @@ entity ex_mem is
         cp0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
         cp0RegWriteSel_i: in std_logic_vector(SelWidth);
         cp0RegWe_i: in std_logic;
+        cp0Sp_i: in CP0Special;
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWriteSel_o: out std_logic_vector(SelWidth);
         cp0RegWe_o: out std_logic;
+        cp0Sp_o: out CP0Special;
 
         -- for exception --
         valid_i: in std_logic;
         flush_i: in std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_i: in std_logic;
         isInDelaySlot_i: in std_logic;
         currentInstAddr_i: in std_logic_vector(AddrWidth);
         valid_o: out std_logic;
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_o: out std_logic;
         isInDelaySlot_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth);
         flushForceWrite_i: in std_logic;

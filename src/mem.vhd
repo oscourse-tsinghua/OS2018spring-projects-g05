@@ -7,6 +7,10 @@ use work.cp0_const.all;
 use work.except_const.all;
 
 entity mem is
+    generic (
+        -- Periods to stall after SC fails. It should be configured differently among CPUs
+        scStallPeriods: integer := 0
+    );
     port (
         rst: in std_logic;
 
@@ -27,6 +31,8 @@ entity mem is
         memt_i: in MemType;
         memAddr_i: in std_logic_vector(AddrWidth);
         memData_i: in std_logic_vector(DataWidth); -- Data to store
+        memExcept_i: in std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_i: in std_logic;
         loadedData_i: in std_logic_vector(DataWidth); -- Data loaded from RAM
         savingData_o: out std_logic_vector(DataWidth);
         memAddr_o: out std_logic_vector(AddrWidth);
@@ -39,24 +45,32 @@ entity mem is
         cp0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
         cp0RegWriteSel_i: in std_logic_vector(SelWidth);
         cp0RegWe_i: in std_logic;
+        cp0Sp_i: in CP0Special;
         cp0RegData_o: out std_logic_vector(DataWidth);
         cp0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         cp0RegWriteSel_o: out std_logic_vector(SelWidth);
         cp0RegWe_o: out std_logic;
+        cp0Sp_o: out CP0Special;
 
         -- for exception --
         valid_i: in std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        instTlbRefill_i: in std_logic;
         isInDelaySlot_i: in std_logic;
         currentInstAddr_i: in std_logic_vector(AddrWidth);
         cp0Status_i, cp0Cause_i: in std_logic_vector(DataWidth);
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_o: out std_logic;
         isInDelaySlot_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth);
         currentAccessAddr_o: out std_logic_vector(AddrWidth);
         flushForceWrite_i: in std_logic;
-        flushForceWrite_o: out std_logic
+        flushForceWrite_o: out std_logic;
 
+        -- for sync --
+        scStall_o: out integer;
+        scCorrect_i: in std_logic;
+        sync_o: out std_logic_vector(2 downto 0) -- bit0 for ll, bit1 for sc, 2 for flush caused by eret
     );
 end mem;
 

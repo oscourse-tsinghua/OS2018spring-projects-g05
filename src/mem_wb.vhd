@@ -29,10 +29,12 @@ entity mem_wb is
         memCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
         memCP0RegWriteSel_i: in std_logic_vector(SelWidth);
         memCP0RegWe_i: in std_logic;
+        cp0Sp_i: in CP0Special;
         wbCP0RegData_o: out std_logic_vector(DataWidth);
         wbCP0RegWriteAddr_o: out std_logic_vector(CP0RegAddrWidth);
         wbCP0RegWriteSel_o: out std_logic_vector(SelWidth);
         wbCP0RegWe_o: out std_logic;
+        cp0Sp_o: out CP0Special;
         flushForceWrite_i: in std_logic;
 
         -- for exception --
@@ -59,7 +61,7 @@ begin
                     writeRegAddr_o <= writeRegAddr_i;
                     writeRegData_o <= writeRegData_i;
                     currentInstAddr_o <= writeRegData_i - "1000";
-                end if;                  
+                end if;
 
                 toWriteHi_o <= NO;
                 toWriteLo_o <= NO;

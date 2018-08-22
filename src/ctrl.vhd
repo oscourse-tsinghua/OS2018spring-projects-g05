@@ -19,6 +19,7 @@ use work.cp0_const.all;
 entity ctrl is
     generic (
         exceptBootBaseAddr:     std_logic_vector(AddrWidth);
+        tlbRefillExl0Offset:    std_logic_vector(AddrWidth);
         generalExceptOffset:    std_logic_vector(AddrWidth);
         interruptIv1Offset:     std_logic_vector(AddrWidth)
     );
@@ -27,6 +28,7 @@ entity ctrl is
 
         -- Stall
         ifToStall_i, idToStall_i, exToStall_i, memToStall_i, blNullify_i: in std_logic;
+        scStall_i: in integer;
         stall_o: out std_logic_vector(StallWidth);
         idNextInDelaySlot_i: in std_logic;
 
@@ -34,10 +36,18 @@ entity ctrl is
         exceptionBase_i: in std_logic_vector(DataWidth);
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         cp0Status_i, cp0Cause_i, cp0Epc_i: in std_logic_vector(DataWidth);
+        depc_i: in std_logic_vector(AddrWidth);
         newPC_o: out std_logic_vector(AddrWidth);
         flush_o: out std_logic;
         toWriteBadVAddr_o: out std_logic;
-        badVAddr_o: out std_logic_vector(AddrWidth)
+        badVAddr_o: out std_logic_vector(AddrWidth);
+        tlbRefill_i: in std_logic;
+
+        -- Hazard Barrier
+        isIdEhb_i: in std_logic;
+        excp0regWe_i: in std_logic;
+        memcp0regWe_i: in std_logic;
+        wbcp0regWe_i: in std_logic
     );
 end ctrl;
 
