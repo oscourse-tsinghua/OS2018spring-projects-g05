@@ -14,7 +14,8 @@ entity cpu is
         interruptIv1Offset: std_logic_vector(AddrWidth) := 32ux"200";
         convEndianEnable: boolean := false;
         cpuId: std_logic_vector(9 downto 0) := 10ub"0";
-        enableCache: std_logic := YES
+        enableCache: std_logic := YES;
+        scStallPeriods: integer := 0
     );
     port (
         clk, rst: in std_logic;
@@ -134,7 +135,7 @@ begin
             generalExceptOffset     => generalExceptOffset,
             interruptIv1Offset      => interruptIv1Offset,
             cpuId                   => cpuId,
-            scStallPeriods          => 0
+            scStallPeriods          => scStallPeriods
         )
         port map (
             rst => rst,

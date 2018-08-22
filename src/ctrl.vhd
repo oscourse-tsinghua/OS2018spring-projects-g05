@@ -54,9 +54,11 @@ end ctrl;
 architecture bhv of ctrl is
     signal toWriteBadVAddr: std_logic;
     signal badVAddr: std_logic_vector(AddrWidth);
+    signal scStall: integer;
 begin
     process(all)
         variable newPC, epc: std_logic_vector(AddrWidth);
+        variable isMtc0: std_logic;
     begin
         newPC_o <= (others => '0');
         newPC := (others => 'X');

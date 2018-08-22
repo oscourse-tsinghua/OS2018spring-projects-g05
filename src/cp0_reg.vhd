@@ -68,18 +68,27 @@ architecture bhv of cp0_reg is
     type RegArray is array (0 to CP0_MAX_ID) of std_logic_vector(DataWidth);
     signal regArr, curArr: RegArray;
     -- curArr including the data that will be written to regArr in the next period
+    signal timerInt: std_logic;
     signal exceptCause: std_logic_vector(ExceptionCauseWidth);
+    signal tlbRefill: std_logic;
+    signal debugPoint: std_logic;
+    signal debugType: std_logic_vector(WatchHiW1CBits);
     signal currentInstAddr, currentAccessAddr, ctrlBadVAddr: std_logic_vector(AddrWidth);
     signal isIndelaySlot: std_logic;
 begin
     status_o <= curArr(STATUS_REG);
     cause_o <= curArr(CAUSE_REG);
     epc_o <= curArr(EPC_REG);
+    depc_o <= curArr(DEPC_REG);
 
     data_o <= PRID_CONSTANT when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and rsel_i = "000") else
               curArr(PRID_OR_EBASE_REG) when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and rsel_i = "001") else
               curArr(conv_integer(raddr_i)) when (rsel_i = "000" and conv_integer(raddr_i) /= PRID_OR_EBASE_REG) else
               32ux"0";
+
+    entry_o.hi <= curArr(ENTRY_HI_REG);
+    entry_o.lo0 <= curArr(ENTRY_LO0_REG);
+    entry_o.lo1 <= curArr(ENTRY_LO1_REG);
 
     -- we can still do this because PRID is a preset constant --
     cp0EBaseAddr_o <= curArr(PRID_OR_EBASE_REG);
