@@ -10,7 +10,7 @@ entity cpu is
         instEntranceAddr: std_logic_vector(AddrWidth) := 32ux"bfc0_0000";
         exceptBootBaseAddr: std_logic_vector(AddrWidth) := 32ux"bfc0_0200";
         generalExceptOffset: std_logic_vector(AddrWidth) := 32ux"180";
-        interruptIv1Offset: std_logic_vector(AddrWidth) := 32ux"180";
+        interruptIv1Offset: std_logic_vector(AddrWidth) := 32ux"200";
         convEndianEnable: boolean := false;
         cpuId: std_logic_vector(9 downto 0) := 10ub"0";
         enableCache: std_logic := YES

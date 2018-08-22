@@ -296,6 +296,9 @@ begin
     end process;
 
     cpu: entity work.cpu
+        generic map(
+            interruptIv1Offset => 32ux"180"
+        )
         port map(
             clk => aclk, rst => areset,
 
