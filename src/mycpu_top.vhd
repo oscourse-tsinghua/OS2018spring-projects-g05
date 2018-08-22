@@ -29,7 +29,7 @@ entity mycpu_top is
         rlast: in std_logic;
         rvalid: in std_logic;
         rready: out std_logic;
-        
+
         awid: out std_logic_vector(3 downto 0);
         awaddr: out std_logic_vector(31 downto 0);
         awlen: out std_logic_vector(7 downto 0);
@@ -62,6 +62,8 @@ entity mycpu_top is
 end mycpu_top;
 
 architecture bhv of mycpu_top is
+    signal areset: std_logic;
+
     -- fit loongnix's name norm in my view
     -- Xihang Liu, Aug. 13, 2018
     signal aInstArEnable: std_logic;
@@ -126,6 +128,8 @@ architecture bhv of mycpu_top is
     signal currentSendIdx: std_logic_vector(3 downto 0);
     signal readFromInst, readFromData: std_logic;
 begin
+    areset <= not aresetn;
+
     readFromInst <= YES when sstate = INIT and aInstArenable = YES and readFromData = NO and
                         table(conv_integer(aInstAraddr(RequestIdIndex))).state = INIT else
                     NO;
@@ -170,38 +174,38 @@ begin
 
     awid <= "0000" when writeFrom = CACHE else "0001";
     wid <= "0000" when writeFrom = CACHE else "0001";
-    awaddr <= "000" & aDataAwaddr(28 downto 0) when writeFrom = CACHE else 
+    awaddr <= "000" & aDataAwaddr(28 downto 0) when writeFrom = CACHE else
               "000" & writeBuffer.tag(22 downto 0) & writeBuffer.sendCount(3 downto 0) & "00";
     awlen <= (others => '0') when writeFrom = CACHE else
              conv_std_logic_vector(DATA_WRITE_LEN, 8);
     awsize <= "010";
     awburst <= "01";
-    
+
     awvalid <= '1' when ((wstate = INIT or wstate = DOK) and writeFrom = CACHE) or
                         ((bstate = INIT or bstate = DOK) and writeFrom = BUF and writeBuffer.sendCount = "00000") else
                '0';
 
-    wdata <= aDataAwdata when writeFrom = CACHE else 
+    wdata <= aDataAwdata when writeFrom = CACHE else
              writeBuffer.data(conv_integer(writeBuffer.sendCount(3 downto 0))).data;
-    wstrb <= aDataAwbyteSelect when writeFrom = CACHE else 
+    wstrb <= aDataAwbyteSelect when writeFrom = CACHE else
              (others => '1');
     wvalid <= '1' when ((wstate = INIT or wstate = AOK) and writeFrom = CACHE) or
-                       ((bstate = INIT or bstate = AOK) and writeFrom = BUF) else 
+                       ((bstate = INIT or bstate = AOK) and writeFrom = BUF) else
               '0';
     wlast <= '1' when (writeFrom = CACHE) or
-                      (writeFrom = BUF and writeBuffer.sendCount = "01111") else 
+                      (writeFrom = BUF and writeBuffer.sendCount = "01111") else
              '0';
 
     bready <= '1';
 
-    aDataAwrequestAck <= '1' when ((writeBuffer.tag = aDataAwaddr(31 downto 6) and writeBuffer.present = '1') or 
-                                  (writeBuffer.state = SYNCED and aDataSingleByte = NO)) and writeFrom = IDLE and aDataAwenable = YES else 
+    aDataAwrequestAck <= '1' when ((writeBuffer.tag = aDataAwaddr(31 downto 6) and writeBuffer.present = '1') or
+                                  (writeBuffer.state = SYNCED and aDataSingleByte = NO)) and writeFrom = IDLE and aDataAwenable = YES else
                          bvalid when aDataSingleByte = YES and aDataSingleByte = YES and writeFrom = CACHE else
                          '0';
 
     process (aclk) begin
         if (rising_edge(aclk)) then
-            if (aresetn = RST_ENABLE) then
+            if (areset = RST_ENABLE) then
                 sstate <= INIT;
                 wstate <= INIT;
                 bstate <= INIT;
@@ -212,7 +216,7 @@ begin
                 sendReqFrom <= IDLE;
             else
                 if (sstate = PENDING and arready = '1') then
-                    sstate <= INIT; 
+                    sstate <= INIT;
                     sendReqFrom <= IDLE;
                 end if;
                 if (sstate = INIT) then
@@ -234,7 +238,7 @@ begin
                 if (rlast = '1' and rvalid = '1') then
                     table(conv_integer(rid)).state <= INIT;
                 end if;
-                
+
                 if (writeFrom = IDLE and aDataAwenable = YES and aDataSingleByte = YES) then
                     writeFrom <= CACHE;
                 elsif (writeBuffer.state = UNSYNC and writeFrom = IDLE) then
@@ -247,7 +251,7 @@ begin
                     writeBuffer.readCount <= (others => '0');
                     writeBuffer.tag <= aDataAwaddr(31 downto 6);
                 end if;
-                
+
                 if (writeFrom = BUF) then
                     if (bstate = INIT and awready = '1' and wready = '1') then
                         bstate <= WRITE;
@@ -293,7 +297,7 @@ begin
 
     cpu: entity work.cpu
         port map(
-            clk => aclk, resetn => aresetn,
+            clk => aclk, rst => areset,
 
             instEnable_o => aInstArenable,
             instAddr_o => aInstAraddr,

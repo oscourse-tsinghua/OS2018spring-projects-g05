@@ -16,7 +16,7 @@ entity cpu is
         enableCache: std_logic := YES
     );
     port (
-        clk, resetn: in std_logic;
+        clk, rst: in std_logic;
 
         instEnable_o: out std_logic;
         instAddr_o: out std_logic_vector(AddrWidth);
@@ -71,7 +71,7 @@ architecture bhv of cpu is
 begin
     inst_cache: entity work.inst_cache
         port map (
-            clk => clk, rst => resetn,
+            clk => clk, rst => rst,
             req_i => instFlow_c2d,
             res_o => instFlow_d2c,
 
@@ -84,7 +84,7 @@ begin
         );
     data_cache: entity work.data_cache
         port map (
-            clk => clk, rst => resetn,
+            clk => clk, rst => rst,
             req_i => dataFlow_c2d,
             res_o => dataFlow_d2c,
 
@@ -134,7 +134,7 @@ begin
             cpuId                   => cpuId
         )
         port map (
-            rst => resetn,
+            rst => rst,
             clk => clk,
             instEnable_o => instFlow_c2d.enable,
             instData_i => instData,
