@@ -114,7 +114,10 @@ begin
                 elsif (blNullify_i = PIPELINE_STOP) then
                     stall_o <= "010000";
                 elsif (ifToStall_i = PIPELINE_STOP) then
-                    stall_o <= "110000";
+                    stall_o <= "111000"; -- 1. Make delay slot and branch instruction always to be adjacent stage, so
+                                         --    we can force delay slot to be executed when there's an exception.
+                                         -- 2. This shortens IF's critical path because it simplifies the exception
+                                         --    handling.
                 else
                     stall_o <= "000000";
                 end if;
