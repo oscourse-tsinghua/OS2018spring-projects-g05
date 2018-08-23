@@ -186,7 +186,6 @@ architecture bhv of datapath is
     -- Signals connecting mem and id --
     signal memToWriteReg_84: std_logic;
     signal memWriteRegAddr_84: std_logic_vector(RegAddrWidth);
-    signal memWriteRegData_84: std_logic_vector(DataWidth);
 
     -- Signals connecting mem and ex --
     signal memToWriteHi_86, memToWriteLo_86: std_logic;
@@ -358,7 +357,6 @@ begin
             exWriteRegData_i => exWriteRegData_64,
             memToWriteReg_i => memToWriteReg_84,
             memWriteRegAddr_i => memWriteRegAddr_84,
-            memWriteRegData_i => memWriteRegData_84,
 
             nextWillStall_i => stall(ID_STOP_IDX),
             toStall_o => idToStall_4b,
@@ -649,7 +647,6 @@ begin
         );
     memToWriteReg_84 <= toWriteReg_89;
     memWriteRegAddr_84 <= writeRegAddr_89;
-    memWriteRegData_84 <= writeRegData_89;
     memToWriteHi_86 <= toWriteHi_89;
     memToWriteLo_86 <= toWriteLo_89;
     memWriteHiData_86 <= writeHiData_89;
