@@ -297,6 +297,7 @@ begin
 
     cpu: entity work.cpu
         generic map(
+            extraCmd => false,
             interruptIv1Offset => 32ux"180"
         )
         port map(

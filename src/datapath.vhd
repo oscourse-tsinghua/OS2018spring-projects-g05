@@ -9,6 +9,7 @@ use work.except_const.all;
 
 entity datapath is
     generic (
+        extraCmd:               boolean;
         instEntranceAddr:       std_logic_vector(AddrWidth);
         exceptBootBaseAddr:     std_logic_vector(AddrWidth);
         tlbRefillExl0Offset:    std_logic_vector(AddrWidth);
@@ -340,6 +341,9 @@ begin
         );
 
     id_ist: entity work.id
+        generic map (
+            extraCmd => extraCmd
+        )
         port map (
             rst => rst,
 

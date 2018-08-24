@@ -42,14 +42,6 @@ package global_const is
     constant ZEROS_31: std_logic_vector(30 downto 0) := (others => '0');
     constant ZEROS_16: std_logic_vector(15 downto 0) := (others => '0');
 
-    --
-    -- For Branch instuctions
-    --
-    constant BRANCH_FLAG: std_logic := '1';
-    constant NOT_BRANCH_FLAG: std_logic := '0';
-    constant IN_DELAY_SLOT_FLAG: std_logic := '1';
-    constant NOT_IN_DELAY_SLOT_FLAG: std_logic := '0';
-
     constant CPU1_ID: std_logic := '0';
     constant CPU2_ID: std_logic := '1';
 end global_const;
