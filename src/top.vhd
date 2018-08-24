@@ -225,7 +225,11 @@ begin
             sync_o => sync1,
             scCorrect_i => scCorrect1,
             int_i => irq1,
-            timerInt_o => timerInt1
+            timerInt_o => timerInt1,
+            debug_wb_pc => open,
+            debug_wb_rf_wen => open,
+            debug_wb_rf_wnum => open,
+            debug_wb_rf_wdata => open
         );
 
     cpu2_ist: entity work.cpu
@@ -250,7 +254,11 @@ begin
             sync_o => sync2,
             scCorrect_i => scCorrect2,
             int_i => irq2,
-            timerInt_o => timerInt2
+            timerInt_o => timerInt2,
+            debug_wb_pc => open,
+            debug_wb_rf_wen => open,
+            debug_wb_rf_wnum => open,
+            debug_wb_rf_wdata => open
         );
 
     devctrl_ist: entity work.devctrl

@@ -48,7 +48,12 @@ entity datapath is
         entryFlush_o: out std_logic;
         entry_i: in TLBEntry;
         entry_o: out TLBEntry;
-        pageMask_o: out std_logic_vector(AddrWidth)
+        pageMask_o: out std_logic_vector(AddrWidth);
+
+        debug_wb_pc: out std_logic_vector(AddrWidth);
+        debug_wb_rf_wen_datapath: out std_logic;
+        debug_wb_rf_wnum: out std_logic_vector(RegAddrWidth);
+        debug_wb_rf_wdata: out std_logic_vector(DataWidth)
     );
 end datapath;
 
@@ -100,6 +105,7 @@ architecture bhv of datapath is
     signal exceptCause_45: std_logic_vector(ExceptionCauseWidth);
     signal tlbRefill_45: std_logic;
     signal currentInstAddr_45: std_logic_vector(AddrWidth);
+    signal flushForceWrite_45: std_logic;
 
     -- Signals connecting id_ex and ex --
     signal alut_56: AluType;
@@ -115,6 +121,7 @@ architecture bhv of datapath is
     signal exTlbRefill_56: std_logic;
     signal exCurrentInstAddr_56: std_logic_vector(AddrWidth);
     signal valid_56: std_logic;
+    signal flushForceWrite_56: std_logic;
 
     -- Signals connecting ex and id --
     signal exToWriteReg_64: std_logic;
@@ -143,6 +150,7 @@ architecture bhv of datapath is
     signal currentInstAddr_67: std_logic_vector(AddrWidth);
     signal isInDelaySlot_67: std_logic;
     signal valid_67: std_logic;
+    signal flushForceWrite_67: std_logic;
 
     -- Signals connecting ex and cp0 --
     signal cp0RegReadAddr_6c: std_logic_vector(CP0RegAddrWidth);
@@ -173,6 +181,7 @@ architecture bhv of datapath is
     signal currentInstAddr_78: std_logic_vector(AddrWidth);
     signal isInDelaySlot_78: std_logic;
     signal valid_78: std_logic;
+    signal flushForceWrite_78: std_logic;
 
     -- Signals connecting mem and id --
     signal memToWriteReg_84: std_logic;
@@ -197,6 +206,8 @@ architecture bhv of datapath is
     signal cp0RegWriteSel_89: std_logic_vector(SelWidth);
     signal cp0RegWe_89: std_logic;
     signal cp0Sp_89: CP0Special;
+    signal currentInstAddr_89: std_logic_vector(AddrWidth);
+    signal flushForceWrite_89: std_logic;
 
     -- Signals connecting mem_wb and regfile --
     signal toWriteReg_93: std_logic;
@@ -241,6 +252,7 @@ architecture bhv of datapath is
     -- Signals connecting id and ctrl --
     signal isIdEhb_4b: std_logic;
     signal idToStall_4b, blNullify_4b: std_logic;
+    signal idIsInDelaySlot_4b: std_logic;
 
     -- Signals connecting ex and ctrl --
     signal exToStall_6b: std_logic;
@@ -280,6 +292,7 @@ architecture bhv of datapath is
     -- Signals connecting mem and ctrl --
     signal memCp0RegWe_8b: std_logic;
     signal scStall_8b: integer;
+    signal memDataWrite: std_logic;
 begin
 
     pc_reg_ist: entity work.pc_reg
@@ -369,6 +382,7 @@ begin
             isInDelaySlot_o => isInDelaySlot_45,
             blNullify_o => blNullify_4b,
             linkAddr_o => linkAddr_45,
+            flushForceWrite_o => flushForceWrite_45,
 
             valid_i => valid_24,
             valid_o => valid_45,
@@ -417,7 +431,9 @@ begin
             exIsInDelaySlot_o => exIsInDelaySlot_56,
             isInDelaySlot_o => isInDelaySlot_54,
             idCurrentInstAddr_i => currentInstAddr_45,
-            exCurrentInstAddr_o => exCurrentInstAddr_56
+            exCurrentInstAddr_o => exCurrentInstAddr_56,
+            flushForceWrite_i => flushForceWrite_45,
+            flushForceWrite_o => flushForceWrite_56
         );
 
     ex_ist: entity work.ex
@@ -489,8 +505,9 @@ begin
             exceptCause_o => exceptCause_67,
             tlbRefill_o => tlbRefill_67,
             currentInstAddr_o => currentInstAddr_67,
-            isInDelaySlot_o => isInDelaySlot_67
-
+            isInDelaySlot_o => isInDelaySlot_67,
+            flushForceWrite_i => flushForceWrite_56,
+            flushForceWrite_o => flushForceWrite_67
         );
     exToWriteReg_64 <= toWriteReg_67;
     exWriteRegAddr_64 <= writeRegAddr_67;
@@ -563,7 +580,9 @@ begin
             exceptCause_o => exceptCause_78,
             tlbRefill_o => tlbRefill_78,
             currentInstAddr_o => currentInstAddr_78,
-            isInDelaySlot_o => isInDelaySlot_78
+            isInDelaySlot_o => isInDelaySlot_78,
+            flushForceWrite_i => flushForceWrite_67,
+            flushForceWrite_o => flushForceWrite_78
         );
 
     mem_ist: entity work.mem
@@ -625,7 +644,9 @@ begin
             tlbRefill_o => tlbRefill_8c,
             isInDelaySlot_o => isInDelaySlot_8c,
             currentInstAddr_o => currentInstAddr_8c,
-            currentAccessAddr_o => currentAccessAddr_8c
+            currentAccessAddr_o => currentAccessAddr_8c,
+            flushForceWrite_i => flushForceWrite_78,
+            flushForceWrite_o => flushForceWrite_89
         );
     memToWriteReg_84 <= toWriteReg_89;
     memWriteRegAddr_84 <= writeRegAddr_89;
@@ -639,6 +660,7 @@ begin
     cp0RegWe_86 <= cp0RegWe_89;
     memcp0regWe_8b <= cp0regWe_89;
     dataWrite_o <= memDataWrite_8c;
+    currentInstAddr_89 <= currentInstAddr_8c;
 
     mem_wb_ist: entity work.mem_wb
         port map (
@@ -671,13 +693,19 @@ begin
             wbCP0RegWriteSel_o => wbCP0RegWriteSel_9c,
             wbCP0RegWe_o => wbCP0RegWe_9c,
             cp0Sp_o => cp0Sp_9c,
-            flush_i => flush_b9
+            flush_i => flush_b9,
+            currentInstAddr_i => currentInstAddr_89,
+            currentInstAddr_o => debug_wb_pc,
+            flushForceWrite_i => flushForceWrite_89
         );
     wbToWriteHi_96 <= toWriteHi_9a;
     wbToWriteLo_96 <= toWriteLo_9a;
     wbWriteHiData_96 <= writeHiData_9a;
     wbWriteLoData_96 <= writeLoData_9a;
     wbCP0RegWe_9b <= wbCP0RegWe_9c;
+    debug_wb_rf_wen_datapath <= towriteReg_93;
+    debug_wb_rf_wnum <= writeRegAddr_93;
+    debug_wb_rf_wdata <= writeRegData_93;
 
     hi_lo_ist: entity work.hi_lo
         port map(
@@ -707,6 +735,7 @@ begin
             memToStall_i => memToStall_i,
             stall_o => stall,
             flush_o => flush_b1,
+            idNextInDelaySlot_i => idIsInDelaySlot_4b,
             newPC_o => newPC_b1,
             exceptionBase_i => cp0EBaseAddr_cb,
             exceptCause_i => exceptCause_cb,

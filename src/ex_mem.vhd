@@ -61,7 +61,9 @@ entity ex_mem is
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         tlbRefill_o: out std_logic;
         isInDelaySlot_o: out std_logic;
-        currentInstAddr_o: out std_logic_vector(AddrWidth)
+        currentInstAddr_o: out std_logic_vector(AddrWidth);
+        flushForceWrite_i: in std_logic;
+        flushForceWrite_o: out std_logic
     );
 end ex_mem;
 
@@ -101,6 +103,7 @@ begin
                 cp0Sp_o <= INVALID;
 
                 valid_o <= NO;
+                flushForceWrite_o <= NO;
 
                 if (stall_i(EX_STOP_IDX) = PIPELINE_STOP and stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                     tempProduct_o <= tempProduct_i;
@@ -135,6 +138,7 @@ begin
 
                 tempProduct_o <= tempProduct_i;
                 cnt_o <= cnt_i;
+                flushForceWrite_o <= flushForceWrite_i;
             end if;
         end if;
     end process;

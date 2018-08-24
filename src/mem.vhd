@@ -64,6 +64,8 @@ entity mem is
         isInDelaySlot_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth);
         currentAccessAddr_o: out std_logic_vector(AddrWidth);
+        flushForceWrite_i: in std_logic;
+        flushForceWrite_o: out std_logic;
 
         -- for sync --
         scStall_o: out integer;
@@ -76,6 +78,7 @@ architecture bhv of mem is
     signal dataWrite: std_logic;
     signal interrupt: std_logic_vector(ExceptionCauseWidth);
 begin
+    flushForceWrite_o <= flushForceWrite_i;
     memAddr_o <= memAddr_i(31 downto 2) & "00";
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;

@@ -31,6 +31,7 @@ entity id is
 
         nextWillStall_i: in std_logic;
         toStall_o: out std_logic;
+        flushForceWrite_o: out std_logic;
 
         alut_o: out AluType;
         memt_o: out MemType;
@@ -210,6 +211,7 @@ begin
         regReadEnable2_o <= DISABLE;
         regReadAddr2_o <= (others => '0');
         isIdEhb_o <= NO;
+        flushForceWrite_o <= NO;
 
         -- Assign 'X' to them, otherwise it will introduce a level latch to keep prior values
         operand1 := (others => 'X');
@@ -452,6 +454,7 @@ begin
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= instRd;
                             isInvalid := NO;
+                            flushForceWrite_o <= YES;
 
                         when FUNC_SYSCALL =>
                             oprSrc1 := INVALID;

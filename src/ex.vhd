@@ -76,7 +76,9 @@ entity ex is
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
         tlbRefill_o: out std_logic;
         isInDelaySlot_o: out std_logic;
-        currentInstAddr_o: out std_logic_vector(AddrWidth)
+        currentInstAddr_o: out std_logic_vector(AddrWidth);
+        flushForceWrite_i: in std_logic;
+        flushForceWrite_o: out std_logic
     );
 end ex;
 
@@ -118,6 +120,7 @@ architecture bhv of ex is
     signal reg1Ltreg2: std_logic;
 begin
     memt_o <= memt_i;
+    flushForceWrite_o <= flushForceWrite_i;
 
     clo <= 32ux"00" when operand1_i(31) = '0' else 32ux"01" when operand1_i(30) = '0' else
            32ux"02" when operand1_i(29) = '0' else 32ux"03" when operand1_i(28) = '0' else

@@ -29,7 +29,12 @@ entity cpu is
         sync_o: out std_logic_vector(2 downto 0);
 
         int_i: in std_logic_vector(IntWidth);
-        timerInt_o: out std_logic
+        timerInt_o: out std_logic;
+
+        debug_wb_pc: out std_logic_vector(AddrWidth);
+        debug_wb_rf_wen: out std_logic_vector(3 downto 0);
+        debug_wb_rf_wnum: out std_logic_vector(CP0RegAddrWidth);
+        debug_wb_rf_wdata: out std_logic_vector(DataWidth)
     );
 end cpu;
 
@@ -61,6 +66,8 @@ architecture bhv of cpu is
     signal pageMask: std_logic_vector(AddrWidth);
 
     signal sync: std_logic_vector(2 downto 0);
+
+    signal debug_wb_rf_wen_ref: std_logic;
 begin
     inst_cache: entity work.cache
         generic map (
@@ -150,6 +157,7 @@ begin
             entry_i => entrySave,
             entry_o => entryLoad
         );
+    debug_wb_rf_wen <= (0 => debug_wb_rf_wen_ref, 1 => debug_wb_rf_wen_ref, 2 => debug_wb_rf_wen_ref, 3 => debug_wb_rf_wen_ref);
 
     datapath_ist: entity work.datapath
         generic map (
@@ -191,7 +199,11 @@ begin
             entry_o => entrySave,
             pageMask_o => pageMask,
             scCorrect_i => scCorrect_i,
-            sync_o => sync
+            sync_o => sync,
+            debug_wb_pc => debug_wb_pc,
+            debug_wb_rf_wdata => debug_wb_rf_wdata,
+            debug_wb_rf_wnum => debug_wb_rf_wnum,
+            debug_wb_rf_wen_datapath => debug_wb_rf_wen_ref
         );
     sync_o <= sync;
 
