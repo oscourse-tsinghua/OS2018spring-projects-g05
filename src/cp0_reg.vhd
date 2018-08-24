@@ -262,7 +262,7 @@ begin
                 if (ctrlToWriteBadVAddr_i = YES) then
                     regArr(BAD_V_ADDR_REG) <= ctrlBadVAddr_i;
                     regArr(STATUS_REG)(STATUS_EXL_BIT) <= '1';
-                    if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
+                    if (isIndelaySlot_i = YES) then
                         regArr(EPC_REG) <= currentInstAddr_i - 4;
                         regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '1';
                     else
@@ -283,7 +283,7 @@ begin
                     if (curArr(STATUS_REG)(STATUS_EXL_BIT) = '0') then -- See doc of Status[EXL]
                         -- Here we use `curArr` instead of `regArr`, because this should happen at the same time
                         -- as the interrupt enabled
-                        if (isIndelaySlot_i = IN_DELAY_SLOT_FLAG) then
+                        if (isIndelaySlot_i = YES) then
                             epc := currentInstAddr_i - 4;
                             regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '1';
                         else
