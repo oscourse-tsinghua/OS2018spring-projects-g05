@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use work.global_const.all;
 use work.except_const.all;
+use work.mmu_const.all;
 use work.bus_const.all;
 use work.ddr3_const.all;
 
@@ -68,15 +69,15 @@ architecture bhv of cpu is
     signal instByteSelect: std_logic_vector(3 downto 0);
     signal dataByteSelect: std_logic_vector(3 downto 0);
 
-    signal instFlow_d2c, dataFlow_d2c: BusD2C;
-    signal instFlow_c2d, dataFlow_c2d: BusC2D;
+    signal instCache_d2c, dataCache_d2c: BusD2C;
+    signal instCache_c2d, dataCache_c2d: BusC2D;
 
 begin
     inst_cache: entity work.inst_cache
         port map (
             clk => clk, rst => rst,
-            req_i => instFlow_c2d,
-            res_o => instFlow_d2c,
+            req_i => instCache_c2d,
+            res_o => instCache_d2c,
 
             enable_o => instEnable_o,
             addr_o => instAddr_o,
@@ -88,8 +89,8 @@ begin
     data_cache: entity work.data_cache
         port map (
             clk => clk, rst => rst,
-            req_i => dataFlow_c2d,
-            res_o => dataFlow_d2c,
+            req_i => dataCache_c2d,
+            res_o => dataCache_d2c,
 
             arenable_o => dataArenable_o,
             araddr_o => dataAraddr_o,
@@ -105,27 +106,27 @@ begin
             singleByte_o => dataSingleByte_o
         );
 
-    instFlow_c2d.dataSave <= (others => '0');
+    instCache_c2d.dataSave <= (others => '0');
     conv_endian_inst_load: entity work.conv_endian
         generic map (enable => convEndianEnable)
-        port map (input => instFlow_d2c.dataLoad, output => instData);
+        port map (input => instCache_d2c.dataLoad, output => instData);
     conv_endian_data_save: entity work.conv_endian
         generic map (enable => convEndianEnable)
-        port map (input => dataDataSave, output => dataFlow_c2d.dataSave);
+        port map (input => dataDataSave, output => dataCache_c2d.dataSave);
     conv_endian_data_load: entity work.conv_endian
         generic map (enable => convEndianEnable)
-        port map (input => dataFlow_d2c.dataLoad, output => dataDataLoad);
+        port map (input => dataCache_d2c.dataLoad, output => dataDataLoad);
 
-    instFlow_c2d.byteSelect <= "1111";
+    instCache_c2d.byteSelect <= "1111";
     process (all) begin
         if (convEndianEnable) then
-            dataFlow_c2d.byteSelect <= dataByteSelect(0) & dataByteSelect(1) & dataByteSelect(2) & dataByteSelect(3);
+            dataCache_c2d.byteSelect <= dataByteSelect(0) & dataByteSelect(1) & dataByteSelect(2) & dataByteSelect(3);
         else
-            dataFlow_c2d.byteSelect <= dataByteSelect;
+            dataCache_c2d.byteSelect <= dataByteSelect;
         end if;
     end process;
 
-    instFlow_c2d.write <= NO;
+    instCache_c2d.write <= NO;
     debug_wb_rf_wen <= (0 => debug_wb_rf_wen_ref, 1 => debug_wb_rf_wen_ref, 2 => debug_wb_rf_wen_ref, 3 => debug_wb_rf_wen_ref);
 
     datapath_ist: entity work.datapath
@@ -142,21 +143,21 @@ begin
         port map (
             rst => rst,
             clk => clk,
-            instEnable_o => instFlow_c2d.enable,
+            instEnable_o => instCache_c2d.enable,
             instData_i => instData,
-            instAddr_o => instFlow_c2d.addr,
-            dataEnable_o => dataFlow_c2d.enable,
-            dataWrite_o => dataFlow_c2d.write,
+            instAddr_o => instCache_c2d.addr,
+            dataEnable_o => dataCache_c2d.enable,
+            dataWrite_o => dataCache_c2d.write,
             dataData_i => dataDataLoad,
             dataData_o => dataDataSave,
-            dataAddr_o => dataFlow_c2d.addr,
+            dataAddr_o => dataCache_c2d.addr,
             dataByteSelect_o => dataByteSelect,
             instExcept_i => NO_CAUSE,
             dataExcept_i => NO_CAUSE,
             instTlbRefill_i => NO,
             dataTlbRefill_i => NO,
-            ifToStall_i => instFlow_d2c.busy,
-            memToStall_i => dataFlow_d2c.busy,
+            ifToStall_i => instCache_d2c.busy,
+            memToStall_i => dataCache_d2c.busy,
             int_i => int,
             timerInt_o => open,
             isKernelMode_o => open,

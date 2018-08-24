@@ -486,7 +486,6 @@ begin
                                 when FUNC_DERET =>
                                     isInvalid := NO;
                                     exceptCause_o <= DERET_CAUSE;
-                                    tlbRefill_o <= '0';
 
                                 when FUNC_TLBWI =>
                                     isInvalid := NO;
@@ -987,6 +986,7 @@ begin
                             when FUNC_ERET =>
                                 isInvalid := NO;
                                 exceptCause_o <= ERET_CAUSE;
+
                             when others =>
                                 null;
                         end case;
