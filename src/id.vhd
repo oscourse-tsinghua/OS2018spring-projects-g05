@@ -170,8 +170,6 @@ begin
     pcPlus8 <= pc_i + "1000";
     pcPlus4 <= pc_i + "100";
     immInstrAddr <= pc_i(InstJmpUnchangeIdx) & inst_i(InstImmAddrIdx) & "00";
-    -- Address used by exception instructions
-    currentInstAddr_o <= pc_i;
 
     isInDelaySlot_o <= isInDelaySlot_i;
     valid_o <= valid_i;
@@ -1127,11 +1125,14 @@ begin
             end if;
         end if;
 
-        if ((branchFlag = BRANCH_FLAG) and (branchTargetAddress(1 downto 0) /= "00")) then
-            branchFlag := NOT_BRANCH_FLAG;
+        if ((jumpToRs = YES) and (branchTargetAddress(1 downto 0) /= "00")) then
+            branchFlag := NO;
+            currentInstAddr_o <= branchTargetAddress;
             branchTargetAddress := (others => '0');
             exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
             tlbRefill_o <= '0';
+        else
+            currentInstAddr_o <= pc_i;
         end if;
 
         if (tneFlag = YES and operand1 /= operand2) then
@@ -1140,7 +1141,7 @@ begin
         end if;
 
         if (nextWillStall_i = '1') then
-            branchFlag := NOT_BRANCH_FLAG;
+            branchFlag := NO;
         end if;
 
         operand1_o <= operand1;
