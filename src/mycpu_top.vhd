@@ -323,7 +323,7 @@ begin
             dataAddr_i => aDataAddr,
             dataSingleByte_o => aDataSingleByte,
 
-            int => int,
+            int_i => int,
             debug_wb_pc => debug_wb_pc,
             debug_wb_rf_wen => debug_wb_rf_wen,
             debug_wb_rf_wnum => debug_wb_rf_wnum,

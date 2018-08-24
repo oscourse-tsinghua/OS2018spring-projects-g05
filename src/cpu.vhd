@@ -42,7 +42,7 @@ entity cpu is
         dataAddr_i: in std_logic_vector(AddrWidth);
         dataSingleByte_o: out std_logic;
 
-        int: in std_logic_vector(IntWidth);
+        int_i: in std_logic_vector(IntWidth);
         debug_wb_pc: out std_logic_vector(AddrWidth);
         debug_wb_rf_wen: out std_logic_vector(3 downto 0);
         debug_wb_rf_wnum: out std_logic_vector(CP0RegAddrWidth);
@@ -62,16 +62,24 @@ architecture bhv of cpu is
     signal dataDataSave: std_logic_vector(DataWidth);
     signal dataDataLoad: std_logic_vector(DataWidth);
     signal dataVAddr: std_logic_vector(AddrWidth);
-    signal dataTlbRefill: std_logic;
-    signal debug_wb_rf_wen_ref: std_logic;
-    signal data_sram_wen_ref: std_logic;
-    signal instDataWrite: std_logic_vector(DataWidth);
-    signal instByteSelect: std_logic_vector(3 downto 0);
     signal dataByteSelect: std_logic_vector(3 downto 0);
+    signal dataExcept: std_logic_vector(ExceptionCauseWidth);
+    signal dataTlbRefill: std_logic;
 
     signal instCache_d2c, dataCache_d2c: BusD2C;
     signal instCache_c2d, dataCache_c2d: BusC2D;
 
+    signal isKernelMode: std_logic;
+    signal entryIndexSave, entryIndexLoad: std_logic_vector(TLBIndexWidth);
+    signal entryIndexValid: std_logic;
+    signal entryWrite: std_logic;
+    signal entryFlush: std_logic;
+    signal entrySave, entryLoad: TLBEntry;
+    signal pageMask: std_logic_vector(AddrWidth);
+
+    signal sync: std_logic_vector(2 downto 0);
+
+    signal debug_wb_rf_wen_ref: std_logic;
 begin
     inst_cache: entity work.inst_cache
         port map (
@@ -158,7 +166,7 @@ begin
             dataTlbRefill_i => NO,
             ifToStall_i => instCache_d2c.busy,
             memToStall_i => dataCache_d2c.busy,
-            int_i => int,
+            int_i => int_i,
             timerInt_o => open,
             isKernelMode_o => open,
             entryIndex_i => (others => '0'),
