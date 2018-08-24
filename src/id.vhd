@@ -491,7 +491,6 @@ begin
                                 when FUNC_DERET =>
                                     isInvalid := NO;
                                     exceptCause_o <= DERET_CAUSE;
-                                    tlbRefill_o <= '0';
 
                                 when FUNC_TLBWI =>
                                     isInvalid := NO;
@@ -744,7 +743,6 @@ begin
                             oprSrc2 := INVALID;
                             toWriteReg_o <= NO;
                             exceptCause_o <= SYSCALL_CAUSE;
-                            tlbRefill_o <= '0';
                             isInvalid := NO;
 
                         when FUNC_BREAK =>
@@ -752,7 +750,6 @@ begin
                             oprSrc2 := INVALID;
                             toWriteReg_o <= NO;
                             exceptCause_o <= BREAKPOINT_CAUSE;
-                            tlbRefill_o <= '0';
                             isInvalid := NO;
 
                         when others =>
@@ -997,7 +994,6 @@ begin
                             when FUNC_ERET =>
                                 isInvalid := NO;
                                 exceptCause_o <= ERET_CAUSE;
-                                tlbRefill_o <= '0';
 
                             when others =>
                                 null;
@@ -1010,7 +1006,6 @@ begin
 
             if (isInvalid = YES or not zeroJudge(instOp, instRs, instRt, instRd, instSa, instFunc)) then
                 exceptCause_o <= INVALID_INST_CAUSE;
-                tlbRefill_o <= '0';
             end if;
 
             case oprSrc1 is
@@ -1173,14 +1168,12 @@ begin
             currentInstAddr_o <= branchTargetAddress;
             branchTargetAddress := (others => '0');
             exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
-            tlbRefill_o <= '0';
         else
             currentInstAddr_o <= pc_i;
         end if;
 
         if (tneFlag = YES and operand1 /= operand2) then
             exceptCause_o <= TRAP_CAUSE;
-            tlbRefill_o <= '0';
         end if;
 
         if (nextWillStall_i = '1') then
