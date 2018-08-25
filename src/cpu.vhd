@@ -8,6 +8,7 @@ use work.bus_const.all;
 entity cpu is
     generic (
         extraCmd: boolean := true;
+        enableMMU: boolean := true;
         instEntranceAddr: std_logic_vector(AddrWidth) := 32ux"bfc0_0000";
         exceptBootBaseAddr: std_logic_vector(AddrWidth) := 32ux"bfc0_0200";
         tlbRefillExl0Offset: std_logic_vector(AddrWidth) := 32ux"000";
@@ -103,7 +104,7 @@ begin
             llLoc_i => llLoc_i
         );
 
-    instCache_c2d.dataSave <= (others => 'X');
+    instCache_c2d.dataSave <= (others => '0');
     conv_endian_inst_load: entity work.conv_endian
         generic map (enable => convEndianEnable)
         port map (input => instCache_d2c.dataLoad, output => instData);
@@ -127,6 +128,9 @@ begin
     dataCache_c2d.write <= dataWrite;
 
     mmu_ist: entity work.mmu
+        generic map (
+            enableMMU => enableMMU
+        )
         port map (
             clk => clk, rst => rst,
 
@@ -177,7 +181,6 @@ begin
             instEnable_o => instEnable,
             instData_i => instData,
             instAddr_o => instVAddr,
-            instTlbRefill_i => instTlbRefill,
             dataEnable_o => dataEnable,
             dataWrite_o => dataWrite,
             dataData_i => dataDataLoad,
@@ -186,6 +189,7 @@ begin
             dataByteSelect_o => dataByteSelect,
             instExcept_i => instExcept,
             dataExcept_i => dataExcept,
+            instTlbRefill_i => instTlbRefill,
             dataTlbRefill_i => dataTlbRefill,
             ifToStall_i => instCache_d2c.busy,
             memToStall_i => dataCache_d2c.busy,

@@ -10,6 +10,9 @@ use work.mmu_const.all;
 use work.cp0_const.all;
 
 entity mmu is
+    generic (
+        enableMMU: boolean
+    );
     port (
         rst, clk: in std_logic;
 
@@ -130,83 +133,99 @@ architecture bhv of mmu is
         end if;
     end translate;
 begin
-    -- Translation
-    process (all)
-    begin
-        translate(
-            enable_i => enable1_i,
-            isLoad_i => isLoad1_i,
-            addr_i => addr1_i,
-            addr_o => addr1_o,
-            enable_o => enable1_o,
-            exceptCause_o => exceptCause1_o,
-            tlbRefill_o => tlbRefill1_o
-        );
-    end process;
-    process (all)
-    begin
-        translate(
-            enable_i => enable2_i,
-            isLoad_i => isLoad2_i,
-            addr_i => addr2_i,
-            addr_o => addr2_o,
-            enable_o => enable2_o,
-            exceptCause_o => exceptCause2_o,
-            tlbRefill_o => tlbRefill2_o
-        );
-    end process;
+    BYPASS: if not enableMMU generate
+        addr1_o <= addr1_i;
+        enable1_o <= enable1_i;
+        exceptCause1_o <= NO_CAUSE;
+        tlbRefill1_o <= NO;
+        addr2_o <= addr2_i;
+        enable2_o <= enable2_i;
+        exceptCause2_o <= NO_CAUSE;
+        tlbRefill2_o <= NO;
+        index_o <= (others => 'X');
+        indexValid_o <= 'X';
+        entry_o <= (others => (others => 'X'));
+    end generate BYPASS;
 
-    -- Store entry
-    process (clk) begin
-        if (rising_edge(clk)) then
-            if (rst = RST_ENABLE) then
-                for i in 0 to TLB_ENTRY_NUM - 1 loop
-                    entries(i).hi <= (others => '0');
-                    entries(i).lo0 <= (others => '0');
-                    entries(i).lo1 <= (others => '0');
-                end loop;
-            else
-                if (entryWrite_i = YES) then
-                    entries(conv_integer(index_i)) <= entry_i;
-                end if;
-                if (entryFlush_i = YES) then
+    FUNCTIONING: if enableMMU generate
+        -- Translation
+        process (all)
+        begin
+            translate(
+                enable_i => enable1_i,
+                isLoad_i => isLoad1_i,
+                addr_i => addr1_i,
+                addr_o => addr1_o,
+                enable_o => enable1_o,
+                exceptCause_o => exceptCause1_o,
+                tlbRefill_o => tlbRefill1_o
+            );
+        end process;
+        process (all)
+        begin
+            translate(
+                enable_i => enable2_i,
+                isLoad_i => isLoad2_i,
+                addr_i => addr2_i,
+                addr_o => addr2_o,
+                enable_o => enable2_o,
+                exceptCause_o => exceptCause2_o,
+                tlbRefill_o => tlbRefill2_o
+            );
+        end process;
+
+        -- Store entry
+        process (clk) begin
+            if (rising_edge(clk)) then
+                if (rst = RST_ENABLE) then
                     for i in 0 to TLB_ENTRY_NUM - 1 loop
-                        entries(i).lo0(ENTRY_LO_V_BIT) <= '0';
-                        entries(i).lo1(ENTRY_LO_V_BIT) <= '0';
+                        entries(i).hi <= (others => '0');
+                        entries(i).lo0 <= (others => '0');
+                        entries(i).lo1 <= (others => '0');
                     end loop;
+                else
+                    if (entryWrite_i = YES) then
+                        entries(conv_integer(index_i)) <= entry_i;
+                    end if;
+                    if (entryFlush_i = YES) then
+                        for i in 0 to TLB_ENTRY_NUM - 1 loop
+                            entries(i).lo0(ENTRY_LO_V_BIT) <= '0';
+                            entries(i).lo1(ENTRY_LO_V_BIT) <= '0';
+                        end loop;
+                    end if;
                 end if;
             end if;
-        end if;
-    end process;
+        end process;
 
-    process (all) begin
-        pageMask <= 5ux"c";
-        for i in 28 downto 13 loop
-            if ((pageMask_i(i + 1) = '0') and (pageMask_i(i) = '1')) then
-                pageMask <= conv_std_logic_vector(i, 5);
-            end if;
-        end loop;
-    end process;
-
-
-    -- Probe entry
-    -- Here might be some bugs with the synthesisier, which failed to work with `process(all)`
-    process (entries, entry_i) begin
-        index_o <= 4x"0";
-        indexValid_o <= '0';
-        for i in 0 to TLB_ENTRY_NUM - 1 loop
-            if (entries(i).hi(EntryHiVPN2Bits) = entry_i.hi(EntryHiVPN2Bits)) then
-                if (
-                    (entries(i).lo0(ENTRY_LO_G_BIT) and entries(i).lo1(ENTRY_LO_G_BIT)) = '1' or -- global
-                    entries(i).hi(EntryHiASIDBits) = entry_i.hi(EntryHiASIDBits) -- ASID match
-                ) then
-                    index_o <= conv_std_logic_vector(i, 4);
-                    indexValid_o <= '1';
+        process (all) begin
+            pageMask <= 5ux"c";
+            for i in 28 downto 13 loop
+                if ((pageMask_i(i + 1) = '0') and (pageMask_i(i) = '1')) then
+                    pageMask <= conv_std_logic_vector(i, 5);
                 end if;
-            end if;
-        end loop;
-    end process;
+            end loop;
+        end process;
 
-    entry_o <= entries(conv_integer(index_i));
+
+        -- Probe entry
+        -- Here might be some bugs with the synthesisier, which failed to work with `process(all)`
+        process (entries, entry_i) begin
+            index_o <= 4x"0";
+            indexValid_o <= '0';
+            for i in 0 to TLB_ENTRY_NUM - 1 loop
+                if (entries(i).hi(EntryHiVPN2Bits) = entry_i.hi(EntryHiVPN2Bits)) then
+                    if (
+                        (entries(i).lo0(ENTRY_LO_G_BIT) and entries(i).lo1(ENTRY_LO_G_BIT)) = '1' or -- global
+                        entries(i).hi(EntryHiASIDBits) = entry_i.hi(EntryHiASIDBits) -- ASID match
+                    ) then
+                        index_o <= conv_std_logic_vector(i, 4);
+                        indexValid_o <= '1';
+                    end if;
+                end if;
+            end loop;
+        end process;
+
+        entry_o <= entries(conv_integer(index_i));
+    end generate FUNCTIONING;
 end bhv;
 
