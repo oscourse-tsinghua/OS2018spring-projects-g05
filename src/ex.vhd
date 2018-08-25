@@ -11,6 +11,9 @@ use work.except_const.all;
 use work.cp0_const.all;
 
 entity ex is
+    generic (
+        extraCmd: boolean
+    );
     port (
         rst: in std_logic;
 
@@ -241,6 +244,7 @@ begin
         cp0RegWriteAddr_o <= (others => '0');
         cp0RegWriteSel_o <= (others => '0');
         cp0RegData_o <= (others => '0');
+        cp0Sp_o <= INVALID;
         writeHiData_o <= (others => '0');
         writeLoData_o <= (others => '0');
         cp0RegReadAddr_o <= (others => '0');
@@ -250,12 +254,74 @@ begin
         divider_o <= (others => '0');
 
         exceptCause_o <= exceptCause_i;
+        tlbRefill_o <= tlbRefill_i;
 
         res64 := (others => 'X');
         ovSum := NO; -- Otherwise it will introduce a level latch to keep the prior value
 
         if (rst = RST_DISABLE) then
             writeRegAddr_o <= writeRegAddr_i;
+            if (extraCmd) then
+                case alut_i is
+                    when ALU_MOVN =>
+                        if (operand2_i /= ZEROS_32) then
+                            writeRegData_o <= operand1_i;
+                        else
+                            toWriteReg_o <= NO;
+                            writeRegData_o <= (others => '0');
+                        end if;
+
+                    when ALU_MOVZ =>
+                        if (operand2_i = ZEROS_32) then
+                            writeRegData_o <= operand1_i;
+                        else
+                            toWriteReg_o <= NO;
+                            writeRegData_o <= (others => '0');
+                        end if;
+
+                    when ALU_MADD | ALU_MADDU | ALU_MSUB | ALU_MSUBU =>
+                        if (cnt_i = "00") then
+                            calcMult <= '1';
+                            multip1 <= operand1_i;
+                            multip2 <= operand2_i;
+                            tempProduct_o <= product;
+                            cnt_o <= "01";
+                            toStall_o <= PIPELINE_STOP;
+                        elsif (cnt_i = "01") then
+                            calcMult <= '0';
+                            tempProduct_o <= (others => '0');
+                            cnt_o <= "00";
+                            toStall_o <= PIPELINE_NONSTOP;
+                            toWriteHi_o <= YES;
+                            toWriteLo_o <= YES;
+                            if (alut_i = ALU_MADD or alut_i = ALU_MADDU) then
+                                res64 := (realHiData & realLoData) + tempProduct_i;
+                            elsif (alut_i = ALU_MSUB or alut_i = ALU_MSUBU) then
+                                res64 := (realHiData & realLoData) - tempProduct_i;
+                            end if;
+                            writeHiData_o <= res64(HiDataWidth);
+                            writeLoData_o <= res64(LoDataWidth);
+                        end if;
+
+                    when ALU_TLBWI =>
+                        cp0Sp_o <= CP0SP_TLBWI;
+
+                    when ALU_TLBWR =>
+                        cp0Sp_o <= CP0SP_TLBWR;
+
+                    when ALU_TLBP =>
+                        cp0Sp_o <= CP0SP_TLBP;
+
+                    when ALU_TLBR =>
+                        cp0Sp_o <= CP0SP_TLBR;
+
+                    when ALU_TLBINVF =>
+                        cp0Sp_o <= CP0SP_TLBINVF;
+
+                    when others =>
+                        null;
+                end case;
+            end if;
             case alut_i is
                 when ALU_OR => writeRegData_o <= operand1_i or operand2_i;
                 when ALU_AND => writeRegData_o <= operand1_i and operand2_i;
@@ -408,7 +474,6 @@ begin
                         toStall_o <= PIPELINE_STOP;
                     end if;
 
-
                 when ALU_MTC0 =>
                     cp0RegWriteAddr_o <= operand1_i(4 downto 0);
                     cp0RegWriteSel_o <= operandX_i(SelWidth);
@@ -416,7 +481,7 @@ begin
                     cp0RegData_o <= operand2_i;
 
                 when others =>
-                    toWriteReg_o <= NO;
+                    null;
             end case;
             if ((alut_i = ALU_ADD) or (alut_i = ALU_SUB)) then
                 if (ovSum = YES) then
