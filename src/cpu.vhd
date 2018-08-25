@@ -9,6 +9,7 @@ use work.ddr3_const.all;
 entity cpu is
     generic (
         extraCmd: boolean := true;
+        enableMMU: boolean := true;
         instEntranceAddr: std_logic_vector(AddrWidth) := 32ux"bfc0_0000";
         exceptBootBaseAddr: std_logic_vector(AddrWidth) := 32ux"bfc0_0200";
         tlbRefillExl0Offset: std_logic_vector(AddrWidth) := 32ux"000";
@@ -135,6 +136,43 @@ begin
     end process;
 
     instCache_c2d.write <= NO;
+    dataCache_c2d.write <= dataWrite;
+
+    mmu_ist: entity work.mmu
+        generic map (
+            enableMMU => enableMMU
+        )
+        port map (
+            clk => clk, rst => rst,
+
+            isKernelMode_i => isKernelMode,
+
+            enable1_i => instEnable,
+            isLoad1_i => YES,
+            addr1_i => instVAddr,
+            addr1_o => instCache_c2d.addr,
+            enable1_o => instCache_c2d.enable,
+            exceptCause1_o => instExcept,
+            tlbRefill1_o => instTlbRefill,
+
+            enable2_i => dataEnable,
+            isLoad2_i => not dataWrite,
+            addr2_i => dataVAddr,
+            addr2_o => dataCache_c2d.addr,
+            enable2_o => dataCache_c2d.enable,
+            exceptCause2_o => dataExcept,
+            tlbRefill2_o => dataTlbRefill,
+
+            pageMask_i => pageMask,
+            index_i => entryIndexSave,
+            index_o => entryIndexLoad,
+            indexValid_o => entryIndexValid,
+            entryWrite_i => entryWrite,
+
+            entryFlush_i => entryFlush,
+            entry_i => entrySave,
+            entry_o => entryLoad
+        );
     debug_wb_rf_wen <= (0 => debug_wb_rf_wen_ref, 1 => debug_wb_rf_wen_ref, 2 => debug_wb_rf_wen_ref, 3 => debug_wb_rf_wen_ref);
 
     datapath_ist: entity work.datapath
@@ -151,34 +189,34 @@ begin
         port map (
             rst => rst,
             clk => clk,
-            instEnable_o => instCache_c2d.enable,
+            instEnable_o => instEnable,
             instData_i => instData,
-            instAddr_o => instCache_c2d.addr,
-            dataEnable_o => dataCache_c2d.enable,
-            dataWrite_o => dataCache_c2d.write,
+            instAddr_o => instVAddr,
+            dataEnable_o => dataEnable,
+            dataWrite_o => dataWrite,
             dataData_i => dataDataLoad,
             dataData_o => dataDataSave,
-            dataAddr_o => dataCache_c2d.addr,
+            dataAddr_o => dataVAddr,
             dataByteSelect_o => dataByteSelect,
-            instExcept_i => NO_CAUSE,
-            dataExcept_i => NO_CAUSE,
-            instTlbRefill_i => NO,
-            dataTlbRefill_i => NO,
+            instExcept_i => instExcept,
+            dataExcept_i => dataExcept,
+            instTlbRefill_i => instTlbRefill,
+            dataTlbRefill_i => dataTlbRefill,
             ifToStall_i => instCache_d2c.busy,
             memToStall_i => dataCache_d2c.busy,
             int_i => int_i,
             timerInt_o => open,
-            isKernelMode_o => open,
-            entryIndex_i => (others => '0'),
-            entryIndexValid_i => NO,
-            entryIndex_o => open,
-            entryWrite_o => open,
-            entryFlush_o => open,
-            entry_i => (others => (others => '0')),
-            entry_o => open,
-            pageMask_o => open,
+            isKernelMode_o => isKernelMode,
+            entryIndex_i => entryIndexLoad,
+            entryIndexValid_i => entryIndexValid,
+            entryIndex_o => entryIndexSave,
+            entryWrite_o => entryWrite,
+            entryFlush_o => entryFlush,
+            entry_i => entryLoad,
+            entry_o => entrySave,
+            pageMask_o => pageMask,
             scCorrect_i => YES,
-            sync_o => open,
+            sync_o => sync,
             debug_wb_pc => debug_wb_pc,
             debug_wb_rf_wdata => debug_wb_rf_wdata,
             debug_wb_rf_wnum => debug_wb_rf_wnum,
