@@ -13,6 +13,7 @@ use work.mmu_const.all;
 
 entity cp0_reg is
     generic (
+        extraReg: boolean;
         cpuId: std_logic_vector(9 downto 0)
     );
     port (
@@ -86,6 +87,65 @@ begin
               curArr(conv_integer(raddr_i)) when (rsel_i = "000" and conv_integer(raddr_i) /= PRID_OR_EBASE_REG) else
               32ux"0";
 
+    EXTRA: if extraReg generate
+        isKernelMode_o <= curArr(STATUS_REG)(STATUS_ERL_BIT) or
+                          curArr(STATUS_REG)(STATUS_EXL_BIT) or
+                          not curArr(STATUS_REG)(STATUS_UM_BIT);
+
+        entryIndex_o <= curArr(RANDOM_REG)(TLBIndexWidth) when cp0Sp_i = CP0SP_TLBWR else curArr(INDEX_REG)(TLBIndexWidth);
+
+        entryFlush_o <= '1' when cp0Sp_i = CP0SP_TLBINVF else '0';
+        entryWrite_o <= '1' when cp0Sp_i = CP0SP_TLBWI or cp0Sp_i = CP0SP_TLBWR else '0';
+
+        pageMask_o <= 3ub"0" & curArr(PAGEMASK_REG)(PageMaskMaskBits) & 13ub"0";
+
+        process (all) begin
+            -- debug point --
+            debugPoint <= NO;
+            debugType <= "000";
+            if (valid_i = YES) then
+                if (
+                    regArr(WATCHHI_REG)(WATCHHI_G_BIT) = '1' or
+                    regArr(WATCHHI_REG)(WatchHiASIDBits) = regArr(ENTRY_HI_REG)(EntryHiASIDBits)
+                ) then
+                    if (
+                        regArr(WATCHLO_REG)(WatchLoVAddrBits) = currentInstAddr_i(WatchLoVAddrBits) and
+                        regArr(WATCHLO_REG)(WATCHLO_I_BIT) = '1'
+                    ) then
+                        debugPoint <= YES;
+                        debugType <= "100";
+                    end if;
+                    if (regArr(WATCHLO_REG)(WatchLoVAddrBits) = currentAccessAddr_i(WatchLoVAddrBits)) then
+                        if (regArr(WATCHLO_REG)(WATCHLO_R_BIT) = '1' and memDataWrite_i = '0') then
+                            debugPoint <= YES;
+                            debugType <= "010";
+                        elsif (regArr(WATCHLO_REG)(WATCHLO_W_BIT) = '1' and memDataWrite_i = '1') then
+                            debugPoint <= YES;
+                            debugType <= "001";
+                        end if;
+                    end if;
+                end if;
+            end if;
+        end process;
+
+        process (all) begin
+            -- Add debug exception into `exceptCause` --
+            exceptCause <= exceptCause_i;
+            tlbRefill <= tlbRefill_i;
+            if (
+                (debugPoint or regArr(CAUSE_REG)(CAUSE_WP_BIT)) = '1' and
+                ((regArr(STATUS_REG)(STATUS_ERL_BIT) or regArr(STATUS_REG)(STATUS_EXL_BIT)) = '0')
+            ) then
+                -- `valid_i` can be 0 here
+                -- When debugpoint happened with TLB or address exception, issue debug point first to improve robustness.
+                exceptCause <= WATCH_CAUSE;
+                tlbRefill <= '0';
+            end if;
+        end process;
+        exceptCause_o <= exceptCause;
+        tlbRefill_o <= tlbRefill;
+    end generate EXTRA;
+
     entry_o.hi <= curArr(ENTRY_HI_REG);
     entry_o.lo0 <= curArr(ENTRY_LO0_REG);
     entry_o.lo1 <= curArr(ENTRY_LO1_REG);
@@ -154,6 +214,13 @@ begin
                     -- Not updating EPC and CAUSE[BD] because EXL = 1
                 end if;
 
+                if (extraReg and debugPoint = YES) then
+                    regArr(WATCHHI_REG)(WatchHiW1CBits) <= debugType;
+                    if ((regArr(STATUS_REG)(STATUS_ERL_BIT) or regArr(STATUS_REG)(STATUS_EXL_BIT)) = '1') then
+                        -- Then we should pending the watch_cause --
+                        regArr(CAUSE_REG)(CAUSE_WP_BIT) <= '1';
+                    end if;
+                end if;
                 if ((exceptCause /= NO_CAUSE) and (exceptCause /= ERET_CAUSE)) then
                     --if (curArr(STATUS_REG)(STATUS_EXL_BIT) = '0') then -- See doc of Status[EXL]
                         -- Here we use `curArr` instead of `regArr`, because this should happen at the same time
@@ -165,7 +232,11 @@ begin
                             epc := currentInstAddr;
                             regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '0';
                         end if;
-                        regArr(EPC_REG) <= epc;
+                        if (extraReg and exceptCause = WATCH_CAUSE) then
+                            regArr(DEPC_REG) <= epc;
+                        else
+                            regArr(EPC_REG) <= epc;
+                        end if;
                     --end if;
                     regArr(STATUS_REG)(STATUS_EXL_BIT) <= '1';
                     regArr(CAUSE_REG)(CauseExcCodeBits) <= exceptCause;

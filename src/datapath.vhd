@@ -762,6 +762,7 @@ begin
 
     cp0_reg_ist: entity work.cp0_reg
         generic map(
+            extraReg => extraCmd,
             cpuId => cpuId
         )
         port map(
