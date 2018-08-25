@@ -69,13 +69,13 @@ architecture bhv of cp0_reg is
     type RegArray is array (0 to CP0_MAX_ID) of std_logic_vector(DataWidth);
     signal regArr, curArr: RegArray;
     -- curArr including the data that will be written to regArr in the next period
-    signal timerInt: std_logic;
     signal exceptCause: std_logic_vector(ExceptionCauseWidth);
     signal tlbRefill: std_logic;
     signal debugPoint: std_logic;
     signal debugType: std_logic_vector(WatchHiW1CBits);
-    signal currentInstAddr, currentAccessAddr, ctrlBadVAddr: std_logic_vector(AddrWidth);
-    signal isIndelaySlot: std_logic;
+    signal exceptCauseDelay: std_logic_vector(ExceptionCauseWidth);
+    signal currentInstAddrDelay, currentAccessAddrDelay: std_logic_vector(AddrWidth);
+    signal isIndelaySlotDelay: std_logic;
 begin
     status_o <= curArr(STATUS_REG);
     cause_o <= curArr(CAUSE_REG);
@@ -191,14 +191,13 @@ begin
                     STATUS_CP0_BIT => '1', STATUS_BEV_BIT => '1', STATUS_ERL_BIT => '1', StatusImBits => '1', others => '0'
                 );
                 regArr(PRID_OR_EBASE_REG) <= "1000000000000000000000" & cpuId;
-                exceptCause <= NO_CAUSE;
+                exceptCauseDelay <= NO_CAUSE;
             else
-                exceptCause <= exceptCause_i;
-                currentInstAddr <= currentInstAddr_i;
-                currentAccessAddr <= currentAccessAddr_i;
+                exceptCauseDelay <= exceptCause_i;
+                currentInstAddrDelay <= currentInstAddr_i;
+                currentAccessAddrDelay <= currentAccessAddr_i;
+                isIndelaySlotDelay <= isIndelaySlot_i;
                 regArr(CAUSE_REG)(CauseIpHardBits) <= int_i;
-                ctrlBadVaddr <= ctrlBadVAddr_i;
-                isIndelaySlot <= isIndelaySlot_i;
 
                 regArr(COUNT_REG) <= regArr(COUNT_REG) + 1;
 
@@ -221,38 +220,38 @@ begin
                         regArr(CAUSE_REG)(CAUSE_WP_BIT) <= '1';
                     end if;
                 end if;
-                if ((exceptCause /= NO_CAUSE) and (exceptCause /= ERET_CAUSE)) then
+                if ((exceptCauseDelay /= NO_CAUSE) and (exceptCauseDelay /= ERET_CAUSE)) then
                     --if (curArr(STATUS_REG)(STATUS_EXL_BIT) = '0') then -- See doc of Status[EXL]
                         -- Here we use `curArr` instead of `regArr`, because this should happen at the same time
                         -- as the interrupt enabled
-                        if (isIndelaySlot = YES) then
-                            epc := currentInstAddr - 4;
+                        if (isIndelaySlotDelay = YES) then
+                            epc := currentInstAddrDelay - 4;
                             regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '1';
                         else
-                            epc := currentInstAddr;
+                            epc := currentInstAddrDelay;
                             regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '0';
                         end if;
-                        if (extraReg and exceptCause = WATCH_CAUSE) then
+                        if (extraReg and exceptCauseDelay = WATCH_CAUSE) then
                             regArr(DEPC_REG) <= epc;
                         else
                             regArr(EPC_REG) <= epc;
                         end if;
                     --end if;
                     regArr(STATUS_REG)(STATUS_EXL_BIT) <= '1';
-                    regArr(CAUSE_REG)(CauseExcCodeBits) <= exceptCause;
+                    regArr(CAUSE_REG)(CauseExcCodeBits) <= exceptCauseDelay;
                 end if;
-                case (exceptCause) is
+                case (exceptCauseDelay) is
                     when ERET_CAUSE =>
                         if regArr(EPC_REG)(1 downto 0) = "00" then
                             regArr(STATUS_REG)(STATUS_EXL_BIT) <= '0';
                         end if;
                     when ADDR_ERR_STORE_CAUSE =>
-                        regArr(BAD_V_ADDR_REG) <= currentAccessAddr;
+                        regArr(BAD_V_ADDR_REG) <= currentAccessAddrDelay;
                     when ADDR_ERR_LOAD_OR_IF_CAUSE =>
-                        if currentInstAddr(1 downto 0) /= "00" then
-                            regArr(BAD_V_ADDR_REG) <= currentInstAddr;
+                        if currentInstAddrDelay(1 downto 0) /= "00" then
+                            regArr(BAD_V_ADDR_REG) <= currentInstAddrDelay;
                         else
-                            regArr(BAD_V_ADDR_REG) <= currentAccessAddr;
+                            regArr(BAD_V_ADDR_REG) <= currentAccessAddrDelay;
                         end if;
                     when others =>
                         null;
