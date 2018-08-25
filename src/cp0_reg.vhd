@@ -13,6 +13,7 @@ use work.mmu_const.all;
 
 entity cp0_reg is
     generic (
+        extraReg: boolean;
         cpuId: std_logic_vector(9 downto 0)
     );
     port (
@@ -68,7 +69,6 @@ architecture bhv of cp0_reg is
     type RegArray is array (0 to CP0_MAX_ID) of std_logic_vector(DataWidth);
     signal regArr, curArr: RegArray;
     -- curArr including the data that will be written to regArr in the next period
-    signal timerInt: std_logic;
     signal exceptCause: std_logic_vector(ExceptionCauseWidth);
     signal tlbRefill: std_logic;
     signal debugPoint: std_logic;
@@ -85,16 +85,64 @@ begin
               curArr(conv_integer(raddr_i)) when (rsel_i = "000" and conv_integer(raddr_i) /= PRID_OR_EBASE_REG) else
               32ux"0";
 
-    timerInt_o <= timerInt;
+    EXTRA: if extraReg generate
+        isKernelMode_o <= curArr(STATUS_REG)(STATUS_ERL_BIT) or
+                          curArr(STATUS_REG)(STATUS_EXL_BIT) or
+                          not curArr(STATUS_REG)(STATUS_UM_BIT);
 
-    isKernelMode_o <= curArr(STATUS_REG)(STATUS_ERL_BIT) or
-                      curArr(STATUS_REG)(STATUS_EXL_BIT) or
-                      not curArr(STATUS_REG)(STATUS_UM_BIT);
+        entryIndex_o <= curArr(RANDOM_REG)(TLBIndexWidth) when cp0Sp_i = CP0SP_TLBWR else curArr(INDEX_REG)(TLBIndexWidth);
 
-    entryIndex_o <= curArr(RANDOM_REG)(TLBIndexWidth) when cp0Sp_i = CP0SP_TLBWR else curArr(INDEX_REG)(TLBIndexWidth);
+        entryFlush_o <= '1' when cp0Sp_i = CP0SP_TLBINVF else '0';
+        entryWrite_o <= '1' when cp0Sp_i = CP0SP_TLBWI or cp0Sp_i = CP0SP_TLBWR else '0';
 
-    entryFlush_o <= '1' when cp0Sp_i = CP0SP_TLBINVF else '0';
-    entryWrite_o <= '1' when cp0Sp_i = CP0SP_TLBWI or cp0Sp_i = CP0SP_TLBWR else '0';
+        pageMask_o <= 3ub"0" & curArr(PAGEMASK_REG)(PageMaskMaskBits) & 13ub"0";
+
+        process (all) begin
+            -- debug point --
+            debugPoint <= NO;
+            debugType <= "000";
+            if (valid_i = YES) then
+                if (
+                    regArr(WATCHHI_REG)(WATCHHI_G_BIT) = '1' or
+                    regArr(WATCHHI_REG)(WatchHiASIDBits) = regArr(ENTRY_HI_REG)(EntryHiASIDBits)
+                ) then
+                    if (
+                        regArr(WATCHLO_REG)(WatchLoVAddrBits) = currentInstAddr_i(WatchLoVAddrBits) and
+                        regArr(WATCHLO_REG)(WATCHLO_I_BIT) = '1'
+                    ) then
+                        debugPoint <= YES;
+                        debugType <= "100";
+                    end if;
+                    if (regArr(WATCHLO_REG)(WatchLoVAddrBits) = currentAccessAddr_i(WatchLoVAddrBits)) then
+                        if (regArr(WATCHLO_REG)(WATCHLO_R_BIT) = '1' and memDataWrite_i = '0') then
+                            debugPoint <= YES;
+                            debugType <= "010";
+                        elsif (regArr(WATCHLO_REG)(WATCHLO_W_BIT) = '1' and memDataWrite_i = '1') then
+                            debugPoint <= YES;
+                            debugType <= "001";
+                        end if;
+                    end if;
+                end if;
+            end if;
+        end process;
+
+        process (all) begin
+            -- Add debug exception into `exceptCause` --
+            exceptCause <= exceptCause_i;
+            tlbRefill <= tlbRefill_i;
+            if (
+                (debugPoint or regArr(CAUSE_REG)(CAUSE_WP_BIT)) = '1' and
+                ((regArr(STATUS_REG)(STATUS_ERL_BIT) or regArr(STATUS_REG)(STATUS_EXL_BIT)) = '0')
+            ) then
+                -- `valid_i` can be 0 here
+                -- When debugpoint happened with TLB or address exception, issue debug point first to improve robustness.
+                exceptCause <= WATCH_CAUSE;
+                tlbRefill <= '0';
+            end if;
+        end process;
+        exceptCause_o <= exceptCause;
+        tlbRefill_o <= tlbRefill;
+    end generate EXTRA;
 
     entry_o.hi <= curArr(ENTRY_HI_REG);
     entry_o.lo0 <= curArr(ENTRY_LO0_REG);
@@ -102,8 +150,6 @@ begin
 
     -- we can still do this because PRID is a preset constant --
     cp0EBaseAddr_o <= curArr(PRID_OR_EBASE_REG);
-
-    pageMask_o <= 3ub"0" & curArr(PAGEMASK_REG)(PageMaskMaskBits) & 13ub"0";
 
     process (all) begin
         -- write to cp0 --
@@ -159,52 +205,6 @@ begin
         end if;
     end process;
 
-    process (all) begin
-        -- debug point --
-        debugPoint <= NO;
-        debugType <= "000";
-        if (valid_i = YES) then
-            if (
-                regArr(WATCHHI_REG)(WATCHHI_G_BIT) = '1' or
-                regArr(WATCHHI_REG)(WatchHiASIDBits) = regArr(ENTRY_HI_REG)(EntryHiASIDBits)
-            ) then
-                if (
-                    regArr(WATCHLO_REG)(WatchLoVAddrBits) = currentInstAddr_i(WatchLoVAddrBits) and
-                    regArr(WATCHLO_REG)(WATCHLO_I_BIT) = '1'
-                ) then
-                    debugPoint <= YES;
-                    debugType <= "100";
-                end if;
-                if (regArr(WATCHLO_REG)(WatchLoVAddrBits) = currentAccessAddr_i(WatchLoVAddrBits)) then
-                    if (regArr(WATCHLO_REG)(WATCHLO_R_BIT) = '1' and memDataWrite_i = '0') then
-                        debugPoint <= YES;
-                        debugType <= "010";
-                    elsif (regArr(WATCHLO_REG)(WATCHLO_W_BIT) = '1' and memDataWrite_i = '1') then
-                        debugPoint <= YES;
-                        debugType <= "001";
-                    end if;
-                end if;
-            end if;
-        end if;
-    end process;
-
-    process (all) begin
-        -- Add debug exception into `exceptCause` --
-        exceptCause <= exceptCause_i;
-        tlbRefill <= tlbRefill_i;
-        if (
-            (debugPoint or regArr(CAUSE_REG)(CAUSE_WP_BIT)) = '1' and
-            ((regArr(STATUS_REG)(STATUS_ERL_BIT) or regArr(STATUS_REG)(STATUS_EXL_BIT)) = '0')
-        ) then
-            -- `valid_i` can be 0 here
-            -- When debugpoint happened with TLB or address exception, issue debug point first to improve robustness.
-            exceptCause <= WATCH_CAUSE;
-            tlbRefill <= '0';
-        end if;
-    end process;
-    exceptCause_o <= exceptCause;
-    tlbRefill_o <= tlbRefill;
-
     process (clk)
         variable epc: std_logic_vector(AddrWidth);
     begin
@@ -220,12 +220,12 @@ begin
                 regArr(PRID_OR_EBASE_REG) <= "1000000000000000000000" & cpuId;
                 regArr(CONFIG_REG) <= (31 => '1', 7 => '1', 1 => '1', 0 => '1', others => '0');
 
-                timerInt <= INTERRUPT_NOT_ASSERT;
+                timerInt_o <= INTERRUPT_NOT_ASSERT;
             else
                 regArr(CAUSE_REG)(CauseIpHardBits) <= int_i;
 
                 if (regArr(COUNT_REG) + 1 = regArr(COMPARE_REG)) then
-                    timerInt <= INTERRUPT_ASSERT;
+                    timerInt_o <= INTERRUPT_ASSERT;
                 end if;
                 regArr(COUNT_REG) <= regArr(COUNT_REG) + 1;
 
@@ -255,7 +255,7 @@ begin
                     regArr(conv_integer(waddr_i)) <= curArr(conv_integer(waddr_i));
                     -- We only assign the `waddr_i`-th register, in order not to interfere the counters above
                     if (conv_integer(waddr_i) = COMPARE_REG) then
-                        timerInt <= INTERRUPT_NOT_ASSERT; -- Side effect
+                        timerInt_o <= INTERRUPT_NOT_ASSERT; -- Side effect
                     end if;
                 end if;
 
@@ -266,7 +266,7 @@ begin
                     -- Not updating EPC and CAUSE[BD] because EXL = 1
                 end if;
 
-                if (debugPoint = YES) then
+                if (extraReg and debugPoint = YES) then
                     regArr(WATCHHI_REG)(WatchHiW1CBits) <= debugType;
                     if ((regArr(STATUS_REG)(STATUS_ERL_BIT) or regArr(STATUS_REG)(STATUS_EXL_BIT)) = '1') then
                         -- Then we should pending the watch_cause --
@@ -284,7 +284,7 @@ begin
                             epc := currentInstAddr_i;
                             regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '0';
                         end if;
-                        if (exceptCause = WATCH_CAUSE) then
+                        if (extraReg and exceptCause = WATCH_CAUSE) then
                             regArr(DEPC_REG) <= epc;
                         else
                             regArr(EPC_REG) <= epc;
