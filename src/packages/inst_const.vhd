@@ -180,6 +180,25 @@ package inst_const is
     constant OP_JMPSPECIAL: std_logic_vector(InstOpWidth) := "000001";
 
     --
+    -- CP1
+    --
+    constant OP_COP1: std_logic_vector(InstOpWidth) := "010001";
+    constant OP_LDC1: std_logic_vector(InstOpWidth) := "110101";
+    constant OP_LWC1: std_logic_vector(InstOpWidth) := "110001";
+    constant OP_SDC1: std_logic_vector(InstOpWidth) := "111101";
+    constant OP_SWC1: std_logic_vector(InstOpWidth) := "111001";
+    constant RS_CF: std_logic_vector(InstRsWidth) := "00010"; -- cfc1
+    constant RS_CT: std_logic_vector(InstRsWidth) := "00110"; -- ctc1
+    -- Note: RS_MF and RS_MT is identical to CP0, but we should implement them
+    -- (i.e. mtc1 and mfc1) for simulation
+
+    --
+    -- Float Arith Codes
+    --
+    constant FUNC_ABS: std_logic_vector(InstFuncWidth) := "000101";
+    constant FUNC_NEG: std_logic_vector(InstFuncWidth) := "000111";
+
+    --
     -- Cache(unimplemented)
     --
     constant FUNC_SYNC: std_logic_vector(InstFuncWidth) := "001111";

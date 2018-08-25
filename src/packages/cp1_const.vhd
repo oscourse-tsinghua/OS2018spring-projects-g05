@@ -4,14 +4,14 @@ use work.global_const.all;
 
 package cp1_const is
 
-	--
-	-- ids of special usage registers.
-	--
-	-- See page 87 of document MD00082 Revision 6.01 for supported registers.
-	-- Besides, some of the below registers is optional for Linux,
-	-- so be careful if you want further implementation.
-	constant FIR_REG:         integer := 0;
-	-- Floating Point Implementation Register --
+    --
+    -- ids of special usage registers.
+    --
+    -- See page 87 of document MD00082 Revision 6.01 for supported registers.
+    -- Besides, some of the below registers is optional for Linux,
+    -- so be careful if you want further implementation.
+    constant FIR_REG:         integer := 0;
+    -- Floating Point Implementation Register --
     constant FCSR_REG:        integer := 31;
     -- Floating Point Control and Status Register --
     constant FEXR_REG:     	  integer := 26;
@@ -44,13 +44,13 @@ package cp1_const is
     constant ROUND_TO_MINUS: std_logic_vector(1 downto 0) := "11";
 
     --
- 	-- Bits of FCCR, FEXR, FENR register
- 	-- Note: though not required by Linux, write to these bits should force related bits in FCSR to change
- 	--
- 	subtype FCCRFCCBits is integer range 7 downto 0;
- 	subtype FEXRCauseBits is integer range 17 downto 12;
- 	subtype FEXRFlasgBits is integer range 6 downto 2;
- 	subtype FENREnablesBits is integer range 11 downto 7;
- 	constant FENR_FS_BIT: integer := 2;
- 	subtype FENRRMBits is integer range 1 downto 0;
+    -- Bits of FCCR, FEXR, FENR register
+    -- Note: though not required by Linux, write to these bits should force related bits in FCSR to change
+    --
+    subtype FCCRFCCBits is integer range 7 downto 0;
+    subtype FEXRCauseBits is integer range 17 downto 12;
+    subtype FEXRFlasgBits is integer range 6 downto 2;
+    subtype FENREnablesBits is integer range 11 downto 7;
+    constant FENR_FS_BIT: integer := 2;
+    subtype FENRRMBits is integer range 1 downto 0;
 end cp1_const;
