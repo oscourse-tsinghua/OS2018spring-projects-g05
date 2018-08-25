@@ -8,7 +8,7 @@ use ieee.numeric_std.all;
 use work.global_const.all;
 use work.except_const.all;
 use work.cp0_const.all;
-use work.cp0_config_const.all;
+use work.config_const.all;
 use work.mmu_const.all;
 
 entity cp0_reg is
@@ -66,7 +66,14 @@ entity cp0_reg is
 end cp0_reg;
 
 architecture bhv of cp0_reg is
-    type RegArray is array (0 to CP0_MAX_ID) of std_logic_vector(DataWidth);
+    function CP0MaxValidId return integer is begin
+        if (extraReg = YES) then
+            return 32;
+        else
+            return CP0_MAX_ID;
+        end if;
+    end CP0MaxValidId;
+    type RegArray is array (0 to CP0MaxValidId) of std_logic_vector(DataWidth);
     signal regArr, curArr: RegArray;
     -- curArr including the data that will be written to regArr in the next period
     signal exceptCause: std_logic_vector(ExceptionCauseWidth);

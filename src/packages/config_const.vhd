@@ -2,21 +2,21 @@ library ieee;
 use ieee.std_logic_1164.all;
 use work.global_const.all;
 
-package cp0_config_const is
-    constant CONFIG1_CONSTANT: std_logic_vector(31 downto 0) := 32ux"1e582c00";
+package config_const is
+    constant CONFIG1_CONSTANT: std_logic_vector(31 downto 0) := 32ux"1e582c01";
     /* 
-    	config registers specification:
-    	for config0:
-    	    bit 31      1, because config1 is present
-    	    bit 30:25   5ub"0", we do not have a fixed mapping MMU
-         	bit 24:16   8ub"0", this field is reserved for implementation
-        	bit 15      0, because processor is running in little-endian mode
-        	bit 14:13   2ub"0", architecture type is mips32
-    	    bit 12:10   3ub"0", revision level is release 1
-    	    bit 9:7     3ub"1", we have a standard TLB
-    	    bit 6:4     3ub"0", this field must be zero
-    	    bit 3       0, instruction cache is not virtual
-    	    bit 2:0     3, KSeg0 cacheability, 2 for uncached and 3 for cacheable
+        config registers specification:
+        for config0:
+            bit 31      1, because config1 is present
+            bit 30:25   5ub"0", we do not have a fixed mapping MMU
+            bit 24:16   8ub"0", this field is reserved for implementation
+            bit 15      0, because processor is running in little-endian mode
+            bit 14:13   2ub"0", architecture type is mips32
+            bit 12:10   3ub"0", revision level is release 1
+            bit 9:7     3ub"1", we have a standard TLB
+            bit 6:4     3ub"0", this field must be zero
+            bit 3       0, instruction cache is not virtual
+            bit 2:0     3, KSeg0 cacheability, 2 for uncached and 3 for cacheable
             only bit 2:0 is writable(but only write "010" or "011" is allowed here)
 
         for config1:
@@ -34,7 +34,7 @@ package cp0_config_const is
             bit 3       0, for no watch register implemented
             bit 2       0, for mips16e not implemented
             bit 1       0, for EJTAG not implemented
-            bit 0       0, for FPU(float point unit) not implemented
+            bit 0       1, for FPU(float point unit) not implemented
             0001 1110 0101 1000 0010 1100 0000 0000
             none is writable, could be directly initialized as 0x1e582c00
 
@@ -77,4 +77,23 @@ package cp0_config_const is
 
         and so, config2 and config3 should always be zero. 
     */
-end cp0_config_const;
+    constant FIR_CONST: std_logic_vector(31 downto 0) := 32ux"00870000";
+    /*
+        fir register specification:
+        for config0:
+            bit 31:30   0, reserved
+            bit 29      0, user-mode access of FRE is not supported
+            bit 28      0, UFR is not needed
+            bit 27:24   0, reserved
+            bit 23      1, some IEEE754-2008 features is implementated
+            bit 22      0, fpu is 32 bit
+            bit 21      0, long-word fixed point not implemented
+            bit 20      0, word fixed point not implemented
+            bit 19      0, MIPS 3D not implemented
+            bit 18      1, paired-single floating point is implemented
+            bit 17      1, double precision floating point is implemented
+            bit 16      1, single precision floating point is implemented
+            bit 15:8    CPU_id, remembed to implement from cp1.vhd
+            bit 7:0     0, revision field not implemented
+    */
+end config_const;
