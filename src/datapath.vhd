@@ -441,6 +441,9 @@ begin
         );
 
     ex_ist: entity work.ex
+        generic map (
+            extraCmd => extraCmd
+        )
         port map (
             rst => rst,
 
