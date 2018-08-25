@@ -73,6 +73,9 @@ architecture bhv of cp0_reg is
     signal tlbRefill: std_logic;
     signal debugPoint: std_logic;
     signal debugType: std_logic_vector(WatchHiW1CBits);
+    signal exceptCauseDelay: std_logic_vector(ExceptionCauseWidth);
+    signal currentInstAddrDelay, currentAccessAddrDelay: std_logic_vector(AddrWidth);
+    signal isIndelaySlotDelay: std_logic;
 begin
     status_o <= curArr(STATUS_REG);
     cause_o <= curArr(CAUSE_REG);
@@ -221,7 +224,13 @@ begin
                 regArr(CONFIG_REG) <= (31 => '1', 7 => '1', 1 => '1', 0 => '1', others => '0');
 
                 timerInt_o <= INTERRUPT_NOT_ASSERT;
+                exceptCauseDelay <= NO_CAUSE;
             else
+                exceptCauseDelay <= exceptCause_i;
+                currentInstAddrDelay <= currentInstAddr_i;
+                currentAccessAddrDelay <= currentAccessAddr_i;
+                isIndelaySlotDelay <= isIndelaySlot_i;
+
                 regArr(CAUSE_REG)(CauseIpHardBits) <= int_i;
 
                 if (regArr(COUNT_REG) + 1 = regArr(COMPARE_REG)) then
@@ -273,33 +282,33 @@ begin
                         regArr(CAUSE_REG)(CAUSE_WP_BIT) <= '1';
                     end if;
                 end if;
-                if ((exceptCause /= NO_CAUSE) and (exceptCause /= ERET_CAUSE) and (exceptCause /= DERET_CAUSE)) then
+                if ((exceptCauseDelay /= NO_CAUSE) and (exceptCauseDelay /= ERET_CAUSE) and (exceptCauseDelay /= DERET_CAUSE)) then
                     if (curArr(STATUS_REG)(STATUS_EXL_BIT) = '0') then -- See doc of Status[EXL]
                         -- Here we use `curArr` instead of `regArr`, because this should happen at the same time
                         -- as the interrupt enabled
-                        if (isIndelaySlot_i = YES) then
-                            epc := currentInstAddr_i - 4;
+                        if (isInDelaySlotDelay = YES) then
+                            epc := currentInstAddrDelay - 4;
                             regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '1';
                         else
-                            epc := currentInstAddr_i;
+                            epc := currentInstAddrDelay;
                             regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '0';
                         end if;
-                        if (extraReg and exceptCause = WATCH_CAUSE) then
+                        if (extraReg and exceptCauseDelay = WATCH_CAUSE) then
                             regArr(DEPC_REG) <= epc;
                         else
                             regArr(EPC_REG) <= epc;
                         end if;
                     end if;
                     regArr(STATUS_REG)(STATUS_EXL_BIT) <= '1';
-                    regArr(CAUSE_REG)(CauseExcCodeBits) <= exceptCause;
+                    regArr(CAUSE_REG)(CauseExcCodeBits) <= exceptCauseDelay;
                 end if;
-                case (exceptCause) is
+                case (exceptCauseDelay) is
                     when ERET_CAUSE|DERET_CAUSE =>
                         regArr(STATUS_REG)(STATUS_EXL_BIT) <= '0';
                     when TLB_LOAD_CAUSE|TLB_STORE_CAUSE|ADDR_ERR_LOAD_OR_IF_CAUSE|ADDR_ERR_STORE_CAUSE|TLB_MODIFIED_CAUSE =>
-                        regArr(BAD_V_ADDR_REG) <= currentAccessAddr_i;
-                        regArr(ENTRY_HI_REG)(EntryHiVPN2Bits) <= currentAccessAddr_i(EntryHiVPN2Bits);
-                        regArr(CONTEXT_REG)(ContextBadVPNBits) <= currentAccessAddr_i(EntryHiVPN2Bits);
+                        regArr(BAD_V_ADDR_REG) <= currentAccessAddrDelay;
+                        regArr(ENTRY_HI_REG)(EntryHiVPN2Bits) <= currentAccessAddrDelay(EntryHiVPN2Bits);
+                        regArr(CONTEXT_REG)(ContextBadVPNBits) <= currentAccessAddrDelay(EntryHiVPN2Bits);
                     -- when WATCH_CAUSE =>
                         -- Software is responsible for clear the WP bit
                     when others =>
