@@ -262,14 +262,8 @@ begin
                 if (ctrlToWriteBadVAddr_i = YES) then
                     regArr(BAD_V_ADDR_REG) <= ctrlBadVAddr_i;
                     regArr(STATUS_REG)(STATUS_EXL_BIT) <= '1';
-                    if (isIndelaySlot_i = YES) then
-                        regArr(EPC_REG) <= currentInstAddr_i - 4;
-                        regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '1';
-                    else
-                        regArr(EPC_REG) <= currentInstAddr_i;
-                        regArr(CAUSE_REG)(CAUSE_BD_BIT) <= '0';
-                    end if;
                     regArr(CAUSE_REG)(CauseExcCodeBits) <= ADDR_ERR_LOAD_OR_IF_CAUSE;
+                    -- Not updating EPC and CAUSE[BD] because EXL = 1
                 end if;
 
                 if (debugPoint = YES) then
