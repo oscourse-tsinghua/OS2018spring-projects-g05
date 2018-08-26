@@ -70,7 +70,7 @@ begin
 
 		process(all)begin
 			if (raddr_i = FIR_REG) then
-				data_o <= FIR_CONST;
+				data_o <= FIR_CONST(31 downto 16) & cpuId(7 downto 0) & FIR_CONST(7 downto 0);
 			elsif (raddr_i = FCSR_REG) then
 				data_o <= fcsrReg;
 			elsif (raddr_i = FCCR_REG) then

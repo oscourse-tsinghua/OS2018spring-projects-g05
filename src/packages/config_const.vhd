@@ -91,7 +91,7 @@ package config_const is
             bit 20      0, word fixed point not implemented
             bit 19      0, MIPS 3D not implemented
             bit 18      1, paired-single floating point is implemented
-            bit 17      1, double precision floating point is implemented
+            bit 17      0, double precision floating point is not implemented
             bit 16      1, single precision floating point is implemented
             bit 15:8    CPU_id, remembed to implement from cp1.vhd
             bit 7:0     0, revision field not implemented

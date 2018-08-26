@@ -6,6 +6,7 @@ package mem_const is
     type MemType is (
         INVALID, MEM_LB, MEM_LBU, MEM_LH, MEM_LHU, MEM_LW,
         MEM_LWL, MEM_LWR, MEM_SB, MEM_SH, MEM_SW, MEM_SWL, MEM_SWR,
-        MEM_LL, MEM_SC
+        MEM_LL, MEM_SC,
+        MEM_LD, MEM_SD
     );
 end mem_const;

@@ -16,16 +16,33 @@ package alu_const is
         ALU_MFC0, ALU_MTC0, ALU_TLBWI, ALU_TLBWR, ALU_TLBP, ALU_TLBR, ALU_TLBINVF
     );
 
+    -- floating point operand type --
+    type FPAluType is (
+        INVALID,
+        FPALU_ABS, FPALU_NEG
+    );
+
     -- where is the operand from --
     type OprSrcType is (
         INVALID,
         REG, IMM, SGN_IMM, SA, REGID
     );
 
-    -- Extra operand invented for offset (memory)
+    -- Extra operand invented for offset (memory) --
     type XOprSrcType is (
         INVALID,
         IMM
+    );
+
+    -- Floating point operands --
+    type FOprSrcType is  (
+        INVALID,
+        SINGLE, PAIRED
+    );
+
+    type FloatExceptType is (
+        NO,
+        UNIMPL, INVALID, DIV_BY_ZERO, OVERFLOW, UNDERFLOW, INEXACT
     );
 
     --
