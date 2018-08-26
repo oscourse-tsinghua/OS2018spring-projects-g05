@@ -217,7 +217,7 @@ begin
     begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then
-                -- Please refer to MIPS Vol3 for reset value
+                -- Please refer to MIPS Vol3 revision 6.02 for reset value
                 -- Undefined reset value are reset to 0 here for robustness
                 regArr <= (others => (others => '0'));
                 regArr(RANDOM_REG) <= conv_std_logic_vector(TLB_ENTRY_NUM - 1, 32);

@@ -14,6 +14,7 @@ package global_const is
     subtype RegNum is integer range 0 to 31;
     subtype CntWidth is integer range 1 downto 0;
     subtype CP0RegAddrWidth is integer range 4 downto 0;
+    subtype CP1RegAddrWidth is integer range 4 downto 0;
     subtype SelWidth is integer range 2 downto 0;
 
     type RegArrayType is array (RegNum) of std_logic_vector(DataWidth);
