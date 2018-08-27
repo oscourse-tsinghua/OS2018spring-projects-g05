@@ -52,12 +52,13 @@ entity id_ex is
 end id_ex;
 
 architecture bhv of id_ex is
+    signal exValid: std_logic;
 begin
     process(clk) begin
         if (rising_edge(clk)) then
             if (
                 (rst = RST_ENABLE) or
-                (flush_i = YES and idIsInDelaySlot_i = NO)
+                (flush_i = YES and not (idIsInDelaySlot_i = YES and exValid = NO))
             ) then
                 alut_o <= INVALID;
                 memt_o <= INVALID;
@@ -71,7 +72,7 @@ begin
                 exIsInDelaySlot_o <= NO;
                 isInDelaySlot_o <= NO;
                 exCurrentInstAddr_o <= (others => '0');
-                valid_o <= NO;
+                exValid <= NO;
                 flushForceWrite_o <= NO;
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_STOP and stall_i(EX_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= INVALID;
@@ -86,7 +87,7 @@ begin
                 exIsInDelaySlot_o <= NO;
                 -- Keep `isInDelaySlot_o` as old value
                 exCurrentInstAddr_o <= (others => '0');
-                valid_o <= NO;
+                exValid <= NO;
                 flushForceWrite_o <= flushForceWrite_i;
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= alut_i;
@@ -103,9 +104,10 @@ begin
                 end if;
                 exExceptCause_o <= idExceptCause_i;
                 exCurrentInstAddr_o <= idCurrentInstAddr_i;
-                valid_o <= valid_i;
+                exValid <= valid_i;
                 flushForceWrite_o <= flushForceWrite_i;
             end if;
         end if;
     end process;
+    valid_o <= exValid;
 end bhv;
