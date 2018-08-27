@@ -8,6 +8,7 @@ use work.except_const.all;
 
 entity mem is
     generic (
+        extraCmd: boolean;
         -- Periods to stall after SC fails. It should be configured differently among CPUs
         scStallPeriods: integer := 0
     );
@@ -87,6 +88,8 @@ begin
     -- We preserve the low 2 bits for `lw` and `sw` as required by BadVAddr register
     -- `lh`, `lhu` and `sh` likewise
 
+    cp0Sp_o <= cp0Sp_i;
+
     process(all)
         variable loadedByte: std_logic_vector(7 downto 0);
         variable loadedShort: std_logic_vector(15 downto 0);
@@ -112,6 +115,7 @@ begin
             cp0RegWriteAddr_o <= (others => '0');
             cp0RegWriteSel_o <= (others => '0');
             cp0RegData_o <= (others => '0');
+            sync_o <= (others => '0');
         else
             toWriteReg_o <= toWriteReg_i;
             writeRegAddr_o <= writeRegAddr_i;
@@ -129,6 +133,60 @@ begin
 
             if (exceptCause_i = NO_CAUSE) then
                 -- Byte selection --
+                if (extraCmd) then
+                    case memt_i is
+                        when MEM_LL|MEM_SC =>
+                            writeRegData_o <= loadedData_i;
+                            savingData_o <= memData_i;
+                            dataByteSelect_o <= "1111";
+                        when MEM_LWL|MEM_SWL =>
+                            case memAddr_i(1 downto 0) is
+                                when "00" =>
+                                    writeRegData_o <= loadedData_i(7 downto 0) & memData_i(23 downto 0);
+                                    savingData_o <= 24ub"0" & memData_i(31 downto 24);
+                                    dataByteSelect_o <= "0001"; -- Read this from right(low) to left(high)!!
+                                when "01" =>
+                                    writeRegData_o <= loadedData_i(15 downto 0) & memData_i(15 downto 0);
+                                    savingData_o <= 16ub"0" & memData_i(31 downto 16);
+                                    dataByteSelect_o <= "0011";
+                                when "10" =>
+                                    writeRegData_o <= loadedData_i(23 downto 0) & memData_i(7 downto 0);
+                                    savingData_o <= 8ub"0" & memData_i(31 downto 8);
+                                    dataByteSelect_o <= "0111";
+                                when "11" =>
+                                    writeRegData_o <= loadedData_i;
+                                    savingData_o <= memData_i;
+                                    dataByteSelect_o <= "1111";
+                                when others =>
+                                    -- Although there is actually no other cases
+                                    -- But the simulator thinks something like 'Z' should be considered
+                                    null;
+                            end case;
+                        when MEM_LWR|MEM_SWR =>
+                            case memAddr_i(1 downto 0) is
+                                when "00" =>
+                                    writeRegData_o <= loadedData_i;
+                                    savingData_o <= memData_i;
+                                    dataByteSelect_o <= "1111";
+                                when "01" =>
+                                    writeRegData_o <= memData_i(31 downto 24) & loadedData_i(31 downto 8);
+                                    savingData_o <= memData_i(23 downto 0) & 8ub"0";
+                                    dataByteSelect_o <= "1110";
+                                when "10" =>
+                                    writeRegData_o <= memData_i(31 downto 16) & loadedData_i(31 downto 16);
+                                    savingData_o <= memData_i(15 downto 0) & 16ub"0";
+                                    dataByteSelect_o <= "1100";
+                                when "11" =>
+                                    writeRegData_o <= memData_i(31 downto 8) & loadedData_i(31 downto 24);
+                                    savingData_o <= memData_i(7 downto 0) & 24ub"0";
+                                    dataByteSelect_o <= "1000";
+                                when others =>
+                                    null;
+                            end case;
+                        when others =>
+                            null;
+                    end case;
+                end if;
                 case memt_i is
                     when MEM_LW|MEM_SW =>
                         writeRegData_o <= loadedData_i;
@@ -169,6 +227,24 @@ begin
                         null;
                 end case;
 
+                if (extraCmd) then
+                    case memt_i is
+                        when MEM_LL|MEM_LWL|MEM_LWR =>
+                            dataEnable_o <= ENABLE;
+                        when MEM_SWL|MEM_SWR =>
+                            dataWrite <= YES;
+                            dataEnable_o <= ENABLE;
+                        when MEM_SC =>
+                            dataWrite <= YES;
+                            dataEnable_o <= ENABLE;
+                            writeRegData_o <= 31ub"0" & scCorrect_i;
+                            if (scCorrect_i = '0') then
+                                scStall_o <= scStallPeriods;
+                            end if;
+                        when others =>
+                            null;
+                    end case;
+                end if;
                 case memt_i is
                     when MEM_LB => -- toWriteReg_o is already YES
                         writeRegData_o <= std_logic_vector(resize(signed(loadedByte), 32));
@@ -187,7 +263,6 @@ begin
                     when MEM_SB|MEM_SH|MEM_SW =>
                         dataWrite <= YES;
                         dataEnable_o <= ENABLE;
-
                     when others =>
                         null;
                 end case;
@@ -207,6 +282,7 @@ begin
     dataWrite_o <= dataWrite when
                    (exceptCause_i and interrupt) = NO_CAUSE else
                    NO;
+    -- NOTE: dataWrite_o should not depend on memExcept_i, or there might be an oscillation
 
     exceptCause_o <= interrupt when
                      interrupt /= NO_CAUSE or rst = RST_ENABLE else exceptCause_i;

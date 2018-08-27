@@ -591,6 +591,7 @@ begin
 
     mem_ist: entity work.mem
         generic map (
+            extraCmd => extraCmd,
             scStallPeriods => scStallPeriods
         )
         port map (
