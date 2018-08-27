@@ -724,6 +724,7 @@ begin
 
     ctrl_ist: entity work.ctrl
         generic map (
+            extraCmd => extraCmd,
             exceptBootBaseAddr => exceptBootBaseAddr,
             tlbRefillExl0Offset => tlbRefillExl0Offset,
             generalExceptOffset => generalExceptOffset,
