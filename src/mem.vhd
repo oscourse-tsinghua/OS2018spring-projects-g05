@@ -55,6 +55,7 @@ entity mem is
 
         -- for exception --
         valid_i: in std_logic;
+        noInt_i: in std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         instTlbRefill_i: in std_logic;
         isInDelaySlot_i: in std_logic;
@@ -276,6 +277,7 @@ begin
     end process;
 
     interrupt <= EXTERNAL_CAUSE when
+                    noInt_i = NO and
                     valid_i = YES and
                     (cp0Cause_i(CauseIpBits) and cp0Status_i(StatusImBits)) /= 8ux"0" and
                     cp0Status_i(STATUS_EXL_BIT) = NO and
@@ -283,6 +285,9 @@ begin
                     cp0Status_i(STATUS_IE_BIT) = YES
                  else
                     NO_CAUSE;
+    -- When there's an exception in a branch command, the delay slot should be preserved, so
+    -- EPC should be set to the branch target. But the branch target is only visible in ID
+    -- stage, so here we simply disable interrupt for branch command, i.e. `noInt_i = YES`.
 
     dataWrite_o <= dataWrite when
                    (exceptCause_i and interrupt) = NO_CAUSE else

@@ -73,6 +73,8 @@ entity ex is
         -- for exception --
         valid_i: in std_logic;
         valid_o: out std_logic;
+        noInt_i: in std_logic;
+        noInt_o: out std_logic;
         exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
         tlbRefill_i: in std_logic;
         currentInstAddr_i: in std_logic_vector(AddrWidth);
@@ -163,6 +165,7 @@ begin
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;
     valid_o <= valid_i;
+    noInt_o <= noInt_i;
 
     -- multiplication --
     process(multip1, multip2, alut_i, calcMult)
