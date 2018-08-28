@@ -35,6 +35,8 @@ entity id_ex is
         exTlbRefill_o: out std_logic;
         valid_i: in std_logic;
         valid_o: out std_logic;
+        noInt_i: in std_logic;
+        noInt_o: out std_logic;
         flush_i: in std_logic;
 
         -- branch --
@@ -73,6 +75,7 @@ begin
                 isInDelaySlot_o <= NO;
                 exCurrentInstAddr_o <= (others => '0');
                 exValid <= NO;
+                noInt_o <= NO;
                 flushForceWrite_o <= NO;
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_STOP and stall_i(EX_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= INVALID;
@@ -88,6 +91,7 @@ begin
                 -- Keep `isInDelaySlot_o` as old value
                 exCurrentInstAddr_o <= (others => '0');
                 exValid <= NO;
+                noInt_o <= NO;
                 flushForceWrite_o <= flushForceWrite_i;
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= alut_i;
@@ -105,6 +109,7 @@ begin
                 exExceptCause_o <= idExceptCause_i;
                 exCurrentInstAddr_o <= idCurrentInstAddr_i;
                 exValid <= valid_i;
+                noInt_o <= noInt_i;
                 flushForceWrite_o <= flushForceWrite_i;
             end if;
         end if;

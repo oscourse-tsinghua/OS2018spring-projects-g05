@@ -122,6 +122,7 @@ architecture bhv of datapath is
     signal exTlbRefill_56: std_logic;
     signal exCurrentInstAddr_56: std_logic_vector(AddrWidth);
     signal valid_56: std_logic;
+    signal noInt_56: std_logic;
     signal flushForceWrite_56: std_logic;
 
     -- Signals connecting ex and id --
@@ -151,6 +152,7 @@ architecture bhv of datapath is
     signal currentInstAddr_67: std_logic_vector(AddrWidth);
     signal isInDelaySlot_67: std_logic;
     signal valid_67: std_logic;
+    signal noInt_67: std_logic;
     signal flushForceWrite_67: std_logic;
 
     -- Signals connecting ex and cp0 --
@@ -182,6 +184,7 @@ architecture bhv of datapath is
     signal currentInstAddr_78: std_logic_vector(AddrWidth);
     signal isInDelaySlot_78: std_logic;
     signal valid_78: std_logic;
+    signal noInt_78: std_logic;
     signal flushForceWrite_78: std_logic;
 
     -- Signals connecting mem and id --
@@ -252,7 +255,6 @@ architecture bhv of datapath is
     -- Signals connecting id and ctrl --
     signal isIdEhb_4b: std_logic;
     signal idToStall_4b, blNullify_4b: std_logic;
-    signal idIsInDelaySlot_4b: std_logic;
 
     -- Signals connecting ex and ctrl --
     signal exToStall_6b: std_logic;
@@ -393,7 +395,6 @@ begin
 
             isIdEhb_o => isIdEhb_4b
         );
-    idIsInDelaySlot_4b <= isInDelaySlot_45;
 
     id_ex_ist: entity work.id_ex
         port map (
@@ -422,6 +423,8 @@ begin
             exTlbRefill_o => exTlbRefill_56,
             valid_i => valid_45,
             valid_o => valid_56,
+            noInt_i => nextInstInDelaySlot_45,
+            noInt_o => noInt_56,
             flush_i => flush_b5,
 
             idLinkAddress_i => linkAddr_45,
@@ -502,6 +505,8 @@ begin
 
             valid_i => valid_56,
             valid_o => valid_67,
+            noInt_i => noInt_56,
+            noInt_o => noInt_67,
             exceptCause_i => exExceptCause_56,
             tlbRefill_i => exTlbRefill_56,
             currentInstAddr_i => exCurrentInstAddr_56,
@@ -511,7 +516,6 @@ begin
             isInDelaySlot_o => isInDelaySlot_67,
             flushForceWrite_i => flushForceWrite_56,
             flushForceWrite_o => flushForceWrite_67
-
         );
     exToWriteReg_64 <= toWriteReg_67;
     exWriteRegAddr_64 <= writeRegAddr_67;
@@ -575,12 +579,14 @@ begin
             cp0Sp_o => cp0Sp_78,
 
             valid_i => valid_67,
+            noInt_i => noInt_67,
             flush_i => flush_b7,
             exceptCause_i => exceptCause_67,
             tlbRefill_i => tlbRefill_67,
             isInDelaySlot_i => isInDelaySlot_67,
             currentInstAddr_i => currentInstAddr_67,
             valid_o => valid_78,
+            noInt_o => noInt_78,
             exceptCause_o => exceptCause_78,
             tlbRefill_o => tlbRefill_78,
             currentInstAddr_o => currentInstAddr_78,
@@ -639,6 +645,7 @@ begin
             cp0Sp_o => cp0Sp_89,
 
             valid_i => valid_78,
+            noInt_i => noInt_78,
             exceptCause_i => exceptCause_78,
             instTlbRefill_i => tlbRefill_78,
             isInDelaySlot_i => isInDelaySlot_78,
@@ -740,7 +747,6 @@ begin
             memToStall_i => memToStall_i,
             stall_o => stall,
             flush_o => flush_b1,
-            idNextInDelaySlot_i => idIsInDelaySlot_4b,
             newPC_o => newPC_b1,
             exceptionBase_i => cp0EBaseAddr_cb,
             exceptCause_i => exceptCause_cb,

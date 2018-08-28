@@ -31,7 +31,6 @@ entity ctrl is
         ifToStall_i, idToStall_i, exToStall_i, memToStall_i, blNullify_i: in std_logic;
         scStall_i: in integer;
         stall_o: out std_logic_vector(StallWidth);
-        idNextInDelaySlot_i: in std_logic;
 
         -- Exception
         exceptionBase_i: in std_logic_vector(DataWidth);
