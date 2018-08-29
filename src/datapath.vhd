@@ -256,7 +256,6 @@ architecture bhv of datapath is
     -- Signals connecting id and ctrl --
     signal isIdEhb_4b: std_logic;
     signal idToStall_4b, blNullify_4b: std_logic;
-    signal idIsInDelaySlot_4b: std_logic;
 
     -- Signals connecting ex and ctrl --
     signal exToStall_6b: std_logic;
@@ -754,7 +753,6 @@ begin
             memToStall_i => memToStall_i,
             stall_o => stall,
             flush_o => flush_b1,
-            idNextInDelaySlot_i => idIsInDelaySlot_4b,
             newPC_o => newPC_b1,
             exceptionBase_i => cp0EBaseAddr_cb,
             exceptCause_i => exceptCause_cb,

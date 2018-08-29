@@ -31,7 +31,6 @@ entity ctrl is
         ifToStall_i, idToStall_i, exToStall_i, memToStall_i, blNullify_i: in std_logic;
         scStall_i: in integer;
         stall_o: out std_logic_vector(StallWidth);
-        idNextInDelaySlot_i: in std_logic;
 
         -- Exception
         exceptionBase_i: in std_logic_vector(DataWidth);
@@ -89,7 +88,7 @@ begin
                     epc := depc_i;
                 end if;
                 if (exceptCause_i = ERET_CAUSE or (extraCmd and exceptCause_i = DERET_CAUSE)) then
-                    if (cp0Epc_i(1 downto 0) = "00") then
+                    if (epc(1 downto 0) = "00") then
                         newPC := epc;
                     else
                         toWriteBadVAddr <= YES;

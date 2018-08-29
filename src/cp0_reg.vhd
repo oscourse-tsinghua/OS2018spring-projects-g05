@@ -232,32 +232,34 @@ begin
                 isIndelaySlotDelay <= isIndelaySlot_i;
 
                 regArr(CAUSE_REG)(CauseIpHardBits) <= int_i;
-
-                if (regArr(COUNT_REG) + 1 = regArr(COMPARE_REG)) then
-                    timerInt_o <= INTERRUPT_ASSERT;
-                end if;
                 regArr(COUNT_REG) <= regArr(COUNT_REG) + 1;
 
-                if (regArr(RANDOM_REG) = regArr(WIRED_REG)) then
-                    regArr(RANDOM_REG) <= conv_std_logic_vector(TLB_ENTRY_NUM - 1, 32);
-                else
-                    regArr(RANDOM_REG) <= regArr(RANDOM_REG) - 1;
-                end if;
+                if (extraReg) then
+                    if (regArr(COUNT_REG) + 1 = regArr(COMPARE_REG)) then
+                        timerInt_o <= INTERRUPT_ASSERT;
+                    end if;
 
-                -- According to MIPS Spec. Vol. III, Table 7-1
-                -- Software should pad 2 spaces for TLBP -> MFC0 INDEX
-                -- And 3 spaces for TLBR -> MFC0 EntryHi (why EntryLo0/1 is not mentioned)
-                -- So no forwarding is needed here
-                if (cp0Sp_i = CP0SP_TLBP) then
-                    regArr(INDEX_REG) <= 32x"0";
-                    regArr(INDEX_REG)(31) <= not entryIndexValid_i;
-                    regArr(INDEX_REG)(TLBIndexWidth) <= entryIndex_i;
-                elsif (cp0Sp_i = CP0SP_TLBR) then
-                    regArr(ENTRY_HI_REG) <= entry_i.hi;
-                    regArr(ENTRY_LO0_REG) <= entry_i.lo0;
-                    regArr(ENTRY_LO1_REG) <= entry_i.lo1;
-                    regArr(ENTRY_LO0_REG)(ENTRY_LO_G_BIT) <= entry_i.lo0(ENTRY_LO_G_BIT) and entry_i.lo1(ENTRY_LO_G_BIT);
-                    regArr(ENTRY_LO1_REG)(ENTRY_LO_G_BIT) <= entry_i.lo0(ENTRY_LO_G_BIT) and entry_i.lo1(ENTRY_LO_G_BIT);
+                    if (regArr(RANDOM_REG) = regArr(WIRED_REG)) then
+                        regArr(RANDOM_REG) <= conv_std_logic_vector(TLB_ENTRY_NUM - 1, 32);
+                    else
+                        regArr(RANDOM_REG) <= regArr(RANDOM_REG) - 1;
+                    end if;
+
+                    -- According to MIPS Spec. Vol. III, Table 7-1
+                    -- Software should pad 2 spaces for TLBP -> MFC0 INDEX
+                    -- And 3 spaces for TLBR -> MFC0 EntryHi (why EntryLo0/1 is not mentioned)
+                    -- So no forwarding is needed here
+                    if (cp0Sp_i = CP0SP_TLBP) then
+                        regArr(INDEX_REG) <= 32x"0";
+                        regArr(INDEX_REG)(31) <= not entryIndexValid_i;
+                        regArr(INDEX_REG)(TLBIndexWidth) <= entryIndex_i;
+                    elsif (cp0Sp_i = CP0SP_TLBR) then
+                        regArr(ENTRY_HI_REG) <= entry_i.hi;
+                        regArr(ENTRY_LO0_REG) <= entry_i.lo0;
+                        regArr(ENTRY_LO1_REG) <= entry_i.lo1;
+                        regArr(ENTRY_LO0_REG)(ENTRY_LO_G_BIT) <= entry_i.lo0(ENTRY_LO_G_BIT) and entry_i.lo1(ENTRY_LO_G_BIT);
+                        regArr(ENTRY_LO1_REG)(ENTRY_LO_G_BIT) <= entry_i.lo0(ENTRY_LO_G_BIT) and entry_i.lo1(ENTRY_LO_G_BIT);
+                    end if;
                 end if;
 
                 if (we_i = ENABLE) then
@@ -275,13 +277,6 @@ begin
                     -- Not updating EPC and CAUSE[BD] because EXL = 1
                 end if;
 
-                if (extraReg and debugPoint = YES) then
-                    regArr(WATCHHI_REG)(WatchHiW1CBits) <= debugType;
-                    if ((regArr(STATUS_REG)(STATUS_ERL_BIT) or regArr(STATUS_REG)(STATUS_EXL_BIT)) = '1') then
-                        -- Then we should pending the watch_cause --
-                        regArr(CAUSE_REG)(CAUSE_WP_BIT) <= '1';
-                    end if;
-                end if;
                 if ((exceptCauseDelay /= NO_CAUSE) and (exceptCauseDelay /= ERET_CAUSE) and (exceptCauseDelay /= DERET_CAUSE)) then
                     if (curArr(STATUS_REG)(STATUS_EXL_BIT) = '0') then -- See doc of Status[EXL]
                         -- Here we use `curArr` instead of `regArr`, because this should happen at the same time
@@ -302,15 +297,34 @@ begin
                     regArr(STATUS_REG)(STATUS_EXL_BIT) <= '1';
                     regArr(CAUSE_REG)(CauseExcCodeBits) <= exceptCauseDelay;
                 end if;
+                if (extraReg) then
+                    if (debugPoint = YES) then
+                        regArr(WATCHHI_REG)(WatchHiW1CBits) <= debugType;
+                        if ((regArr(STATUS_REG)(STATUS_ERL_BIT) or regArr(STATUS_REG)(STATUS_EXL_BIT)) = '1') then
+                            -- Then we should pend the watch_cause --
+                            regArr(CAUSE_REG)(CAUSE_WP_BIT) <= '1';
+                        end if;
+                    end if;
+                    case (exceptCauseDelay) is
+                        when DERET_CAUSE =>
+                            if regArr(DEPC_REG)(1 downto 0) = "00" then
+                                regArr(STATUS_REG)(STATUS_EXL_BIT) <= '0';
+                            end if;
+                        -- when WATCH_CAUSE =>
+                            -- Software is responsible for clear the WP bit
+                        when others =>
+                            null;
+                    end case;
+                end if;
                 case (exceptCauseDelay) is
-                    when ERET_CAUSE|DERET_CAUSE =>
-                        regArr(STATUS_REG)(STATUS_EXL_BIT) <= '0';
+                    when ERET_CAUSE =>
+                        if regArr(EPC_REG)(1 downto 0) = "00" then
+                            regArr(STATUS_REG)(STATUS_EXL_BIT) <= '0';
+                        end if;
                     when TLB_LOAD_CAUSE|TLB_STORE_CAUSE|ADDR_ERR_LOAD_OR_IF_CAUSE|ADDR_ERR_STORE_CAUSE|TLB_MODIFIED_CAUSE =>
                         regArr(BAD_V_ADDR_REG) <= currentAccessAddrDelay;
                         regArr(ENTRY_HI_REG)(EntryHiVPN2Bits) <= currentAccessAddrDelay(EntryHiVPN2Bits);
                         regArr(CONTEXT_REG)(ContextBadVPNBits) <= currentAccessAddrDelay(EntryHiVPN2Bits);
-                    -- when WATCH_CAUSE =>
-                        -- Software is responsible for clear the WP bit
                     when others =>
                         null;
                 end case;
