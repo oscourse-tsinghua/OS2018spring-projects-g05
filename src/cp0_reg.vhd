@@ -285,14 +285,11 @@ begin
                         if regArr(EPC_REG)(1 downto 0) = "00" then
                             regArr(STATUS_REG)(STATUS_EXL_BIT) <= '0';
                         end if;
-                    when ADDR_ERR_STORE_CAUSE =>
+                    when ADDR_ERR_LOAD_OR_IF_CAUSE|ADDR_ERR_STORE_CAUSE =>
+                        -- If there's an exception of instruction address,
+                        -- `currentAccessAddrDelay` should be the address of
+                        -- that instruction. See mem.vhd.
                         regArr(BAD_V_ADDR_REG) <= currentAccessAddrDelay;
-                    when ADDR_ERR_LOAD_OR_IF_CAUSE =>
-                        if currentInstAddrDelay(1 downto 0) /= "00" then
-                            regArr(BAD_V_ADDR_REG) <= currentInstAddrDelay;
-                        else
-                            regArr(BAD_V_ADDR_REG) <= currentAccessAddrDelay;
-                        end if;
                     when others =>
                         null;
                 end case;
