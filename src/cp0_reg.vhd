@@ -322,6 +322,9 @@ begin
                             regArr(STATUS_REG)(STATUS_EXL_BIT) <= '0';
                         end if;
                     when TLB_LOAD_CAUSE|TLB_STORE_CAUSE|ADDR_ERR_LOAD_OR_IF_CAUSE|ADDR_ERR_STORE_CAUSE|TLB_MODIFIED_CAUSE =>
+                        -- If there's an exception of instruction address,
+                        -- `currentAccessAddrDelay` should be the address of
+                        -- that instruction. See mem.vhd.
                         regArr(BAD_V_ADDR_REG) <= currentAccessAddrDelay;
                         regArr(ENTRY_HI_REG)(EntryHiVPN2Bits) <= currentAccessAddrDelay(EntryHiVPN2Bits);
                         regArr(CONTEXT_REG)(ContextBadVPNBits) <= currentAccessAddrDelay(EntryHiVPN2Bits);
