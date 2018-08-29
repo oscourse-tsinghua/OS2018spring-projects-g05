@@ -716,6 +716,9 @@ begin
                             toWriteReg_o <= NO;
                             writeRegAddr_o <= (others => '0');
                             isInvalid := NO;
+                            if (extraCmd and inst_i(10) = '1') then
+                                isIdEhb_o <= YES;
+                            end if;
 
                         when JMP_JALR =>
                             oprSrc1 := REG;
@@ -1132,6 +1135,9 @@ begin
             if (branchToJump = YES) then
                 branchTargetAddress := pcPlus4 + instOffsetImm - instImmSign;
                 branchFlag := YES;
+            elsif (extraCmd and branchLikely = YES) then
+                blNullify := PIPELINE_STOP;
+                nextInstInDelaySlot_o <= NO;
             end if;
 
             if (branchToLink = YES) then
@@ -1149,6 +1155,10 @@ begin
             exceptCause_o <= ADDR_ERR_LOAD_OR_IF_CAUSE;
         else
             currentInstAddr_o <= pc_i;
+        end if;
+
+        if (extraCmd and tneFlag = YES and operand1 /= operand2) then
+            exceptCause_o <= TRAP_CAUSE;
         end if;
 
         if (nextWillStall_i = '1') then
