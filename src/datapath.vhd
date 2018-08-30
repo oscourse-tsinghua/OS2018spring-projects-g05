@@ -606,7 +606,6 @@ begin
             scStallPeriods => scStallPeriods
         )
         port map (
-            rst => rst,
             toWriteReg_i => toWriteReg_78,
             writeRegAddr_i => writeRegAddr_78,
             writeRegData_i => writeRegData_78,
