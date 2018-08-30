@@ -1013,20 +1013,15 @@ begin
                     regReadEnable1_o <= ENABLE;
                     regReadAddr1_o <= instRs;
                     operand1 := regData1_i;
-
-                    -- Push Forward --
-                    if (memToWriteReg_i = YES and memWriteRegAddr_i = instRs) then
-                        operand1 := memWriteRegData_i;
-                        if (instRs = "00000") then
-                            operand1 := (others => '0');
-                        end if;
-                    end if;
-                    if (exToWriteReg_i = YES and exWriteRegAddr_i = instRs) then
-                        operand1 := exWriteRegData_i;
-                        if (instRs = "00000") then
-                            operand1 := (others => '0');
-                        elsif (lastMemt_i /= INVALID) then
-                            toStall := PIPELINE_STOP;
+                    if (instRs /= 5ub"0") then
+                        -- Ex Push Forward, Mem Wait --
+                        if (exToWriteReg_i = YES and exWriteRegAddr_i = instRs) then
+                            operand1 := exWriteRegData_i;
+                            if (lastMemt_i /= INVALID) then
+                                toStall := PIPELINE_STOP;
+                            end if;
+                        elsif (memToWriteReg_i = YES and memWriteRegAddr_i = instRs) then
+                            operand1 := memWriteRegData_i;
                         end if;
                     end if;
 
@@ -1055,20 +1050,15 @@ begin
                     regReadEnable2_o <= ENABLE;
                     regReadAddr2_o <= instRt;
                     operand2 := regData2_i;
-
-                    -- Push Forward --
-                    if (memToWriteReg_i = YES and memWriteRegAddr_i = instRt) then
-                        operand2 := memWriteRegData_i;
-                        if (instRt = 5ub"0") then
-                            operand2 := (others => '0');
-                        end if;
-                    end if;
-                    if (exToWriteReg_i = YES and exWriteRegAddr_i = instRt) then
-                        operand2 := exWriteRegData_i;
-                        if (instRt = 5ub"0") then
-                            operand2 := (others => '0');
-                        elsif (lastMemt_i /= INVALID) then
-                            toStall := PIPELINE_STOP;
+                    if (instRt /= 5ub"0") then
+                        -- Ex Push Forward, Mem Wait --
+                        if (exToWriteReg_i = YES and exWriteRegAddr_i = instRt) then
+                            operand2 := exWriteRegData_i;
+                            if (lastMemt_i /= INVALID) then
+                                toStall := PIPELINE_STOP;
+                            end if;
+                        elsif (memToWriteReg_i = YES and memWriteRegAddr_i = instRt) then
+                            operand2 := memWriteRegData_i;
                         end if;
                     end if;
 
