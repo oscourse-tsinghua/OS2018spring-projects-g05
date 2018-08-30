@@ -7,6 +7,7 @@ use work.bus_const.all;
 
 entity cpu is
     generic (
+        innerCache: boolean := true;
         extraCmd: boolean := true;
         enableMMU: boolean := true;
         instEntranceAddr: std_logic_vector(AddrWidth) := 32ux"bfc0_0000";
@@ -24,8 +25,15 @@ entity cpu is
 
         instDev_i, dataDev_i: in BusD2C;
         instDev_o, dataDev_o: out BusC2D;
+        busMon_i: in BusC2D;
+        llBit_i: in std_logic;
+        llLoc_i: in std_logic_vector(AddrWidth);
+        scCorrect_i: in std_logic;
+        sync_o: out std_logic_vector(2 downto 0);
 
         int_i: in std_logic_vector(IntWidth);
+        timerInt_o: out std_logic;
+
         debug_wb_pc: out std_logic_vector(AddrWidth);
         debug_wb_rf_wen: out std_logic_vector(3 downto 0);
         debug_wb_rf_wnum: out std_logic_vector(CP0RegAddrWidth);
@@ -64,10 +72,47 @@ architecture bhv of cpu is
 
     signal debug_wb_rf_wen_ref: std_logic;
 begin
-    instCache_d2c <= instDev_i;
-    dataCache_d2c <= dataDev_i;
-    instDev_o <= instCache_c2d;
-    dataDev_o <= dataCache_c2d;
+    INNER_CACHE: if innerCache generate
+        inst_cache: entity work.cache
+            generic map (
+                enableCache => enableCache
+            )
+            port map (
+                clk => clk, rst => rst,
+                vAddr_i => instVAddr,
+                req_i => instCache_c2d,
+                res_o => instCache_d2c,
+                sync_i => "000",
+                req_o => instDev_o,
+                res_i => instDev_i,
+                mon_i => busMon_i,
+                llBit_i => llBit_i,
+                llLoc_i => llLoc_i
+            );
+        data_cache: entity work.cache
+            generic map (
+                enableCache => enableCache
+            )
+            port map (
+                clk => clk, rst => rst,
+                vAddr_i => dataVAddr,
+                req_i => dataCache_c2d,
+                res_o => dataCache_d2c,
+                sync_i => sync,
+                req_o => dataDev_o,
+                res_i => dataDev_i,
+                mon_i => busMon_i,
+                llBit_i => llBit_i,
+                llLoc_i => llLoc_i
+            );
+    end generate;
+
+    BYPASS_CACHE: if not innerCache generate
+        instCache_d2c <= instDev_i;
+        dataCache_d2c <= dataDev_i;
+        instDev_o <= instCache_c2d;
+        dataDev_o <= dataCache_c2d;
+    end generate;
 
     instCache_c2d.dataSave <= (others => '0');
     conv_endian_inst_load: entity work.conv_endian
@@ -159,7 +204,7 @@ begin
             ifToStall_i => instCache_d2c.busy,
             memToStall_i => dataCache_d2c.busy,
             int_i => int_i,
-            timerInt_o => open,
+            timerInt_o => timerInt_o,
             isKernelMode_o => isKernelMode,
             entryIndex_i => entryIndexLoad,
             entryIndexValid_i => entryIndexValid,
@@ -169,12 +214,13 @@ begin
             entry_i => entryLoad,
             entry_o => entrySave,
             pageMask_o => pageMask,
-            scCorrect_i => YES,
+            scCorrect_i => scCorrect_i,
             sync_o => sync,
             debug_wb_pc => debug_wb_pc,
             debug_wb_rf_wdata => debug_wb_rf_wdata,
             debug_wb_rf_wnum => debug_wb_rf_wnum,
             debug_wb_rf_wen_datapath => debug_wb_rf_wen_ref
         );
+    sync_o <= sync;
 
 end bhv;

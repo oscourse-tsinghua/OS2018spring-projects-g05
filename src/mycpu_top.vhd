@@ -334,6 +334,7 @@ begin
 
     cpu: entity work.cpu
         generic map(
+            innerCache => false,
             extraCmd => false,
             enableMMU => false,
             interruptIv1Offset => 32ux"180"
@@ -345,8 +346,15 @@ begin
             dataDev_i => dataDev_d2c,
             instDev_o => instDev_c2d,
             dataDev_o => dataDev_c2d,
+            busMon_i => (enable => NO, write => NO, others => (others => '0')),
+            llBit_i => '0',
+            llLoc_i => (others => '0'),
+            scCorrect_i => YES,
+            sync_o => open,
 
             int_i => int,
+            timerInt_o => open,
+
             debug_wb_pc => debug_wb_pc,
             debug_wb_rf_wen => debug_wb_rf_wen,
             debug_wb_rf_wnum => debug_wb_rf_wnum,
