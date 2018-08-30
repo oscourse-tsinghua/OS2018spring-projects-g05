@@ -4,7 +4,6 @@ use work.global_const.all;
 use work.except_const.all;
 use work.mmu_const.all;
 use work.bus_const.all;
-use work.ddr3_const.all;
 
 entity cpu is
     generic (
@@ -23,25 +22,8 @@ entity cpu is
     port (
         clk, rst: in std_logic;
 
-        instEnable_o: out std_logic;
-        instAddr_o: out std_logic_vector(AddrWidth);
-        instRequestAck_i: in std_logic;
-        instEnable_i: in std_logic;
-        instData_i: in std_logic_vector(DataWidth);
-        instAddr_i: in std_logic_vector(AddrWidth);
-
-        dataArenable_o: out std_logic;
-        dataAraddr_o: out std_logic_vector(AddrWidth);
-        dataArrequestAck_i: in std_logic;
-        dataAwenable_o: out std_logic;
-        dataAwaddr_o: out std_logic_vector(AddrWidth);
-        dataAwdata_o: out std_logic_vector(DataWidth);
-        dataAwbyteSelect_o: out std_logic_vector(3 downto 0);
-        dataAwrequestAck_i: in std_logic;
-        dataEnable_i: in std_logic;
-        dataData_i: in std_logic_vector(DataWidth);
-        dataAddr_i: in std_logic_vector(AddrWidth);
-        dataSingleByte_o: out std_logic;
+        instDev_i, dataDev_i: in BusD2C;
+        instDev_o, dataDev_o: out BusC2D;
 
         int_i: in std_logic_vector(IntWidth);
         debug_wb_pc: out std_logic_vector(AddrWidth);
@@ -82,38 +64,10 @@ architecture bhv of cpu is
 
     signal debug_wb_rf_wen_ref: std_logic;
 begin
-    inst_cache: entity work.inst_cache
-        port map (
-            clk => clk, rst => rst,
-            req_i => instCache_c2d,
-            res_o => instCache_d2c,
-
-            enable_o => instEnable_o,
-            addr_o => instAddr_o,
-            requestAck_i => instRequestAck_i,
-            enable_i => instEnable_i,
-            data_i => instData_i,
-            addr_i => instAddr_i
-        );
-    data_cache: entity work.data_cache
-        port map (
-            clk => clk, rst => rst,
-            req_i => dataCache_c2d,
-            res_o => dataCache_d2c,
-
-            arenable_o => dataArenable_o,
-            araddr_o => dataAraddr_o,
-            arrequestAck_i => dataArrequestAck_i,
-            awenable_o => dataAwenable_o,
-            awaddr_o => dataAwaddr_o,
-            awdata_o => dataAwdata_o,
-            awbyteSelect_o => dataAwbyteSelect_o,
-            awrequestAck_i => dataAwrequestAck_i,
-            enable_i => dataEnable_i,
-            data_i => dataData_i,
-            addr_i => dataAddr_i,
-            singleByte_o => dataSingleByte_o
-        );
+    instCache_d2c <= instDev_i;
+    dataCache_d2c <= dataDev_i;
+    instDev_o <= instCache_c2d;
+    dataDev_o <= dataCache_c2d;
 
     instCache_c2d.dataSave <= (others => '0');
     conv_endian_inst_load: entity work.conv_endian

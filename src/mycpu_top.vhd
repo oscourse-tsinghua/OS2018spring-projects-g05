@@ -64,6 +64,9 @@ end mycpu_top;
 architecture bhv of mycpu_top is
     signal areset: std_logic;
 
+    signal instDev_d2c, dataDev_d2c: BusD2C;
+    signal instDev_c2d, dataDev_c2d: BusC2D;
+
     -- fit loongnix's name norm in my view
     -- Xihang Liu, Aug. 13, 2018
     signal aInstArEnable: std_logic;
@@ -295,6 +298,40 @@ begin
         end if;
     end process;
 
+    inst_cache: entity work.inst_cache
+        port map (
+            clk => aclk, rst => areset,
+            req_i => instDev_c2d,
+            res_o => instDev_d2c,
+
+            enable_o => aInstArenable,
+            addr_o => aInstAraddr,
+            requestAck_i => aInstRequestAck,
+            enable_i => aInstEnable,
+            data_i => aInstData,
+            addr_i => aInstAddr
+        );
+
+    data_cache: entity work.data_cache
+        port map (
+            clk => aclk, rst => areset,
+            req_i => dataDev_c2d,
+            res_o => dataDev_d2c,
+
+            arenable_o => aDataArenable,
+            araddr_o => aDataAraddr,
+            arrequestAck_i => aDataArrequestAck,
+            awenable_o => aDataAwenable,
+            awaddr_o => aDataAwaddr,
+            awdata_o => aDataAwdata,
+            awbyteSelect_o => aDataAwbyteSelect,
+            awrequestAck_i => aDataAwrequestAck,
+            enable_i => aDataEnable,
+            data_i => aDataData,
+            addr_i => aDataAddr,
+            singleByte_o => aDataSingleByte
+        );
+
     cpu: entity work.cpu
         generic map(
             extraCmd => false,
@@ -304,25 +341,10 @@ begin
         port map(
             clk => aclk, rst => areset,
 
-            instEnable_o => aInstArenable,
-            instAddr_o => aInstAraddr,
-            instRequestAck_i => aInstRequestAck,
-            instEnable_i => aInstEnable,
-            instData_i => aInstData,
-            instAddr_i => aInstAddr,
-
-            dataArenable_o => aDataArenable,
-            dataAraddr_o => aDataAraddr,
-            dataArrequestAck_i => aDataArrequestAck,
-            dataAwenable_o => aDataAwenable,
-            dataAwaddr_o => aDataAwaddr,
-            dataAwdata_o => aDataAwdata,
-            dataAwbyteSelect_o => aDataAwbyteSelect,
-            dataAwrequestAck_i => aDataAwrequestAck,
-            dataEnable_i => aDataEnable,
-            dataData_i => aDataData,
-            dataAddr_i => aDataAddr,
-            dataSingleByte_o => aDataSingleByte,
+            instDev_i => instDev_d2c,
+            dataDev_i => dataDev_d2c,
+            instDev_o => instDev_c2d,
+            dataDev_o => dataDev_c2d,
 
             int_i => int,
             debug_wb_pc => debug_wb_pc,
