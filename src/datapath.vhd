@@ -449,8 +449,6 @@ begin
             extraCmd => extraCmd
         )
         port map (
-            rst => rst,
-
             alut_i => alut_56,
             memt_i => memt_56,
             operand1_i => operand1_56,
