@@ -25,11 +25,14 @@ entity id is
         regReadAddr2_o: out std_logic_vector(RegAddrWidth);
 
         -- Push Forward --
+        exMemt_i: in MemType;
         exToWriteReg_i: in std_logic;
         exWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
         exWriteRegData_i: in std_logic_vector(DataWidth);
+        memMemt_i: in MemType;
         memToWriteReg_i: in std_logic;
         memWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
+        memWriteRegDataShort_i: in std_logic_vector(DataWidth);
 
         nextWillStall_i: in std_logic;
         toStall_o: out std_logic;
@@ -37,7 +40,6 @@ entity id is
 
         alut_o: out AluType;
         memt_o: out MemType;
-        lastMemt_i: in MemType; -- memt of last instruction, used to determine stalling
         operand1_o: out std_logic_vector(DataWidth);
         operand2_o: out std_logic_vector(DataWidth);
         operandX_o: out std_logic_vector(DataWidth);
@@ -1012,11 +1014,15 @@ begin
                         -- Ex Push Forward, Mem Wait --
                         if (exToWriteReg_i = YES and exWriteRegAddr_i = instRs) then
                             operand1 := exWriteRegData_i;
-                            if (lastMemt_i /= INVALID) then
+                            if (exMemt_i /= INVALID) then
                                 toStall := PIPELINE_STOP;
                             end if;
                         elsif (memToWriteReg_i = YES and memWriteRegAddr_i = instRs) then
-                            toStall := PIPELINE_STOP;
+                            if (memMemt_i = INVALID) then
+                                operand1 := memWriteRegDataShort_i;
+                            else
+                                toStall := PIPELINE_STOP;
+                            end if;
                         end if;
                     end if;
 
@@ -1049,11 +1055,15 @@ begin
                         -- Ex Push Forward, Mem Wait --
                         if (exToWriteReg_i = YES and exWriteRegAddr_i = instRt) then
                             operand2 := exWriteRegData_i;
-                            if (lastMemt_i /= INVALID) then
+                            if (exMemt_i /= INVALID) then
                                 toStall := PIPELINE_STOP;
                             end if;
                         elsif (memToWriteReg_i = YES and memWriteRegAddr_i = instRt) then
-                            toStall := PIPELINE_STOP;
+                            if (memMemt_i = INVALID) then
+                                operand2 := memWriteRegDataShort_i;
+                            else
+                                toStall := PIPELINE_STOP;
+                            end if;
                         end if;
                     end if;
 
