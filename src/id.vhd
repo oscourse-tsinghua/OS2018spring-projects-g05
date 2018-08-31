@@ -205,6 +205,8 @@ begin
         writeRegAddr_o <= (others => '0');
         toStall_o <= PIPELINE_NONSTOP;
         blNullify := PIPELINE_NONSTOP;
+        branchLikely := NO;
+        tneFlag := NO;
 
         linkAddr_o <= (others => '0');
         branchTargetAddress := (others => '0');
@@ -216,6 +218,7 @@ begin
         tlbRefill_o <= tlbRefill_i;
         regReadAddr1_o <= (others => '0');
         regReadAddr2_o <= (others => '0');
+        isIdEhb_o <= NO;
         flushForceWrite_o <= NO;
 
         -- Assign 'X' to them, otherwise it will introduce a level latch to keep prior values

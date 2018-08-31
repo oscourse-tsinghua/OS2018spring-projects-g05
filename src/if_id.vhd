@@ -15,7 +15,10 @@ entity if_id is
         valid_o: out std_logic; -- There IS an instruction, not pipeline stopping
         inst_o: out std_logic_vector(InstWidth);
 
+        exceptCause_i: in std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_i: in std_logic;
         exceptCause_o: out std_logic_vector(ExceptionCauseWidth);
+        tlbRefill_o: out std_logic;
         flush_i: in std_logic
     );
 end if_id;
@@ -34,11 +37,17 @@ begin
                 valid_o <= NO;
                 inst_o <= (others => '0');
                 exceptCause_o <= NO_CAUSE;
+                tlbRefill_o <= '0';
             elsif (stall_i(IF_STOP_IDX) = PIPELINE_NONSTOP) then
                 pc_o <= pc_i;
                 valid_o <= YES;
-                inst_o <= inst_i;
-                exceptCause_o <= NO_CAUSE;
+                if (exceptCause_i = NO_CAUSE) then
+                    inst_o <= inst_i;
+                else
+                    inst_o <= 32ux"0";
+                end if;
+                exceptCause_o <= exceptCause_i;
+                tlbRefill_o <= tlbRefill_i;
             end if;
         end if;
     end process;
