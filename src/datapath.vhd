@@ -86,7 +86,6 @@ architecture bhv of datapath is
     signal tlbRefill_24: std_logic;
 
     -- Signals connecting regfile and id --
-    signal regReadEnable1_43, regReadEnable2_43: std_logic;
     signal regReadAddr1_43, regReadAddr2_43: std_logic_vector(RegAddrWidth);
     signal regData1_34, regData2_34: std_logic_vector(DataWidth);
 
@@ -129,7 +128,7 @@ architecture bhv of datapath is
     signal exToWriteReg_64: std_logic;
     signal exWriteRegAddr_64: std_logic_vector(RegAddrWidth);
     signal exWriteRegData_64: std_logic_vector(DataWidth);
-    signal lastMemt_64: MemType;
+    signal exMemt_64: MemType;
 
     -- Signals connecting ex and ex_mem --
     signal toWriteReg_67: std_logic;
@@ -338,10 +337,8 @@ begin
             writeEnable_i => toWriteReg_93,
             writeAddr_i => writeRegAddr_93,
             writeData_i => writeRegData_93,
-            readEnable1_i => regReadEnable1_43,
             readAddr1_i => regReadAddr1_43,
             readData1_o => regData1_34,
-            readEnable2_i => regReadEnable2_43,
             readAddr2_i => regReadAddr2_43,
             readData2_o => regData2_34
         );
@@ -357,11 +354,10 @@ begin
             inst_i => inst_24,
             regData1_i => regData1_34,
             regData2_i => regData2_34,
-            regReadEnable1_o => regReadEnable1_43,
-            regReadEnable2_o => regReadEnable2_43,
             regReadAddr1_o => regReadAddr1_43,
             regReadAddr2_o => regReadAddr2_43,
 
+            exMemt_i => exMemt_64,
             exToWriteReg_i => exToWriteReg_64,
             exWriteRegAddr_i => exWriteRegAddr_64,
             exWriteRegData_i => exWriteRegData_64,
@@ -369,12 +365,10 @@ begin
             memWriteRegAddr_i => memWriteRegAddr_84,
             memWriteRegData_i => memWriteRegData_84,
 
-            nextWillStall_i => stall(ID_STOP_IDX),
             toStall_o => idToStall_4b,
 
             alut_o => alut_45,
             memt_o => memt_45,
-            lastMemt_i => lastMemt_64,
             operand1_o => operand1_45,
             operand2_o => operand2_45,
             operandX_o => operandX_45,
@@ -523,7 +517,7 @@ begin
     exToWriteReg_64 <= toWriteReg_67;
     exWriteRegAddr_64 <= writeRegAddr_67;
     exWriteRegData_64 <= writeRegData_67;
-    lastMemt_64 <= memt_67;
+    exMemt_64 <= memt_67;
     excp0RegWe_6b <= cp0RegWe_67;
 
     div_ist: entity work.div
