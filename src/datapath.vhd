@@ -86,7 +86,6 @@ architecture bhv of datapath is
     signal tlbRefill_24: std_logic;
 
     -- Signals connecting regfile and id --
-    signal regReadEnable1_43, regReadEnable2_43: std_logic;
     signal regReadAddr1_43, regReadAddr2_43: std_logic_vector(RegAddrWidth);
     signal regData1_34, regData2_34: std_logic_vector(DataWidth);
 
@@ -122,13 +121,14 @@ architecture bhv of datapath is
     signal exTlbRefill_56: std_logic;
     signal exCurrentInstAddr_56: std_logic_vector(AddrWidth);
     signal valid_56: std_logic;
+    signal noInt_56: std_logic;
     signal flushForceWrite_56: std_logic;
 
     -- Signals connecting ex and id --
     signal exToWriteReg_64: std_logic;
     signal exWriteRegAddr_64: std_logic_vector(RegAddrWidth);
     signal exWriteRegData_64: std_logic_vector(DataWidth);
-    signal lastMemt_64: MemType;
+    signal exMemt_64: MemType;
 
     -- Signals connecting ex and ex_mem --
     signal toWriteReg_67: std_logic;
@@ -151,6 +151,7 @@ architecture bhv of datapath is
     signal currentInstAddr_67: std_logic_vector(AddrWidth);
     signal isInDelaySlot_67: std_logic;
     signal valid_67: std_logic;
+    signal noInt_67: std_logic;
     signal flushForceWrite_67: std_logic;
 
     -- Signals connecting ex and cp0 --
@@ -182,6 +183,7 @@ architecture bhv of datapath is
     signal currentInstAddr_78: std_logic_vector(AddrWidth);
     signal isInDelaySlot_78: std_logic;
     signal valid_78: std_logic;
+    signal noInt_78: std_logic;
     signal flushForceWrite_78: std_logic;
 
     -- Signals connecting mem and id --
@@ -253,7 +255,6 @@ architecture bhv of datapath is
     -- Signals connecting id and ctrl --
     signal isIdEhb_4b: std_logic;
     signal idToStall_4b, blNullify_4b: std_logic;
-    signal idIsInDelaySlot_4b: std_logic;
 
     -- Signals connecting ex and ctrl --
     signal exToStall_6b: std_logic;
@@ -336,10 +337,8 @@ begin
             writeEnable_i => toWriteReg_93,
             writeAddr_i => writeRegAddr_93,
             writeData_i => writeRegData_93,
-            readEnable1_i => regReadEnable1_43,
             readAddr1_i => regReadAddr1_43,
             readData1_o => regData1_34,
-            readEnable2_i => regReadEnable2_43,
             readAddr2_i => regReadAddr2_43,
             readData2_o => regData2_34
         );
@@ -355,11 +354,10 @@ begin
             inst_i => inst_24,
             regData1_i => regData1_34,
             regData2_i => regData2_34,
-            regReadEnable1_o => regReadEnable1_43,
-            regReadEnable2_o => regReadEnable2_43,
             regReadAddr1_o => regReadAddr1_43,
             regReadAddr2_o => regReadAddr2_43,
 
+            exMemt_i => exMemt_64,
             exToWriteReg_i => exToWriteReg_64,
             exWriteRegAddr_i => exWriteRegAddr_64,
             exWriteRegData_i => exWriteRegData_64,
@@ -367,12 +365,10 @@ begin
             memWriteRegAddr_i => memWriteRegAddr_84,
             memWriteRegData_i => memWriteRegData_84,
 
-            nextWillStall_i => stall(ID_STOP_IDX),
             toStall_o => idToStall_4b,
 
             alut_o => alut_45,
             memt_o => memt_45,
-            lastMemt_i => lastMemt_64,
             operand1_o => operand1_45,
             operand2_o => operand2_45,
             operandX_o => operandX_45,
@@ -426,6 +422,8 @@ begin
             exTlbRefill_o => exTlbRefill_56,
             valid_i => valid_45,
             valid_o => valid_56,
+            noInt_i => nextInstInDelaySlot_45,
+            noInt_o => noInt_56,
             flush_i => flush_b5,
 
             idLinkAddress_i => linkAddr_45,
@@ -445,8 +443,6 @@ begin
             extraCmd => extraCmd
         )
         port map (
-            rst => rst,
-
             alut_i => alut_56,
             memt_i => memt_56,
             operand1_i => operand1_56,
@@ -506,6 +502,8 @@ begin
 
             valid_i => valid_56,
             valid_o => valid_67,
+            noInt_i => noInt_56,
+            noInt_o => noInt_67,
             exceptCause_i => exExceptCause_56,
             tlbRefill_i => exTlbRefill_56,
             currentInstAddr_i => exCurrentInstAddr_56,
@@ -519,7 +517,7 @@ begin
     exToWriteReg_64 <= toWriteReg_67;
     exWriteRegAddr_64 <= writeRegAddr_67;
     exWriteRegData_64 <= writeRegData_67;
-    lastMemt_64 <= memt_67;
+    exMemt_64 <= memt_67;
     excp0RegWe_6b <= cp0RegWe_67;
 
     div_ist: entity work.div
@@ -578,12 +576,14 @@ begin
             cp0Sp_o => cp0Sp_78,
 
             valid_i => valid_67,
+            noInt_i => noInt_67,
             flush_i => flush_b7,
             exceptCause_i => exceptCause_67,
             tlbRefill_i => tlbRefill_67,
             isInDelaySlot_i => isInDelaySlot_67,
             currentInstAddr_i => currentInstAddr_67,
             valid_o => valid_78,
+            noInt_o => noInt_78,
             exceptCause_o => exceptCause_78,
             tlbRefill_o => tlbRefill_78,
             currentInstAddr_o => currentInstAddr_78,
@@ -594,10 +594,10 @@ begin
 
     mem_ist: entity work.mem
         generic map (
+            extraCmd => extraCmd,
             scStallPeriods => scStallPeriods
         )
         port map (
-            rst => rst,
             toWriteReg_i => toWriteReg_78,
             writeRegAddr_i => writeRegAddr_78,
             writeRegData_i => writeRegData_78,
@@ -641,6 +641,7 @@ begin
             cp0Sp_o => cp0Sp_89,
 
             valid_i => valid_78,
+            noInt_i => noInt_78,
             exceptCause_i => exceptCause_78,
             instTlbRefill_i => tlbRefill_78,
             isInDelaySlot_i => isInDelaySlot_78,
@@ -727,6 +728,7 @@ begin
 
     ctrl_ist: entity work.ctrl
         generic map (
+            extraCmd => extraCmd,
             exceptBootBaseAddr => exceptBootBaseAddr,
             tlbRefillExl0Offset => tlbRefillExl0Offset,
             generalExceptOffset => generalExceptOffset,
@@ -742,7 +744,6 @@ begin
             memToStall_i => memToStall_i,
             stall_o => stall,
             flush_o => flush_b1,
-            idNextInDelaySlot_i => idIsInDelaySlot_4b,
             newPC_o => newPC_b1,
             exceptionBase_i => cp0EBaseAddr_cb,
             exceptCause_i => exceptCause_cb,

@@ -7,6 +7,7 @@ use work.bus_const.all;
 
 entity cpu is
     generic (
+        innerCache: boolean := true;
         extraCmd: boolean := true;
         enableMMU: boolean := true;
         instEntranceAddr: std_logic_vector(AddrWidth) := 32ux"bfc0_0000";
@@ -71,38 +72,47 @@ architecture bhv of cpu is
 
     signal debug_wb_rf_wen_ref: std_logic;
 begin
-    inst_cache: entity work.cache
-        generic map (
-            enableCache => enableCache
-        )
-        port map (
-            clk => clk, rst => rst,
-            vAddr_i => instVAddr,
-            req_i => instCache_c2d,
-            res_o => instCache_d2c,
-            sync_i => "000",
-            req_o => instDev_o,
-            res_i => instDev_i,
-            mon_i => busMon_i,
-            llBit_i => llBit_i,
-            llLoc_i => llLoc_i
-        );
-    data_cache: entity work.cache
-        generic map (
-            enableCache => enableCache
-        )
-        port map (
-            clk => clk, rst => rst,
-            vAddr_i => dataVAddr,
-            req_i => dataCache_c2d,
-            res_o => dataCache_d2c,
-            sync_i => sync,
-            req_o => dataDev_o,
-            res_i => dataDev_i,
-            mon_i => busMon_i,
-            llBit_i => llBit_i,
-            llLoc_i => llLoc_i
-        );
+    INNER_CACHE: if innerCache generate
+        inst_cache: entity work.cache
+            generic map (
+                enableCache => enableCache
+            )
+            port map (
+                clk => clk, rst => rst,
+                vAddr_i => instVAddr,
+                req_i => instCache_c2d,
+                res_o => instCache_d2c,
+                sync_i => "000",
+                req_o => instDev_o,
+                res_i => instDev_i,
+                mon_i => busMon_i,
+                llBit_i => llBit_i,
+                llLoc_i => llLoc_i
+            );
+        data_cache: entity work.cache
+            generic map (
+                enableCache => enableCache
+            )
+            port map (
+                clk => clk, rst => rst,
+                vAddr_i => dataVAddr,
+                req_i => dataCache_c2d,
+                res_o => dataCache_d2c,
+                sync_i => sync,
+                req_o => dataDev_o,
+                res_i => dataDev_i,
+                mon_i => busMon_i,
+                llBit_i => llBit_i,
+                llLoc_i => llLoc_i
+            );
+    end generate;
+
+    BYPASS_CACHE: if not innerCache generate
+        instCache_d2c <= instDev_i;
+        dataCache_d2c <= dataDev_i;
+        instDev_o <= instCache_c2d;
+        dataDev_o <= dataCache_c2d;
+    end generate;
 
     instCache_c2d.dataSave <= (others => '0');
     conv_endian_inst_load: entity work.conv_endian

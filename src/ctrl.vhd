@@ -18,6 +18,7 @@ use work.cp0_const.all;
 
 entity ctrl is
     generic (
+        extraCmd: boolean;
         exceptBootBaseAddr:     std_logic_vector(AddrWidth);
         tlbRefillExl0Offset:    std_logic_vector(AddrWidth);
         generalExceptOffset:    std_logic_vector(AddrWidth);
@@ -30,7 +31,6 @@ entity ctrl is
         ifToStall_i, idToStall_i, exToStall_i, memToStall_i, blNullify_i: in std_logic;
         scStall_i: in integer;
         stall_o: out std_logic_vector(StallWidth);
-        idNextInDelaySlot_i: in std_logic;
 
         -- Exception
         exceptionBase_i: in std_logic_vector(DataWidth);
@@ -63,65 +63,63 @@ begin
         newPC_o <= (others => '0');
         newPC := (others => 'X');
         isMtc0 := excp0regWe_i or memcp0regWe_i or wbcp0regWe_i;
-        if (rst = RST_ENABLE) then
+        stall_o <= (others => '0');
+        flush_o <= '0';
+        newPC_o <= (others => '0');
+        toWriteBadVAddr <= NO;
+        badVAddr <= (others => '0');
+        if (exceptCause_i /= NO_CAUSE) then
+            flush_o <= '1';
             stall_o <= (others => '0');
-            flush_o <= '0';
-            newPC_o <= (others => '0');
-            badVAddr <= (others => '0');
-            toWriteBadVAddr <= NO;
-        else
-            toWriteBadVAddr <= NO;
-            badVAddr <= (others => '0');
-            if (exceptCause_i /= NO_CAUSE) then
-                flush_o <= '1';
-                stall_o <= (others => '0');
-                if (cp0Status_i(STATUS_BEV_BIT) = '0') then
-                    newPC := exceptionBase_i;
+            if (cp0Status_i(STATUS_BEV_BIT) = '0') then
+                newPC := exceptionBase_i;
+            else
+                newPC := exceptBootBaseAddr;
+            end if;
+
+            if (exceptCause_i = ERET_CAUSE) then
+                epc := cp0Epc_i;
+            end if;
+            if (extraCmd and exceptCause_i = DERET_CAUSE) then
+                epc := depc_i;
+            end if;
+            if (exceptCause_i = ERET_CAUSE or (extraCmd and exceptCause_i = DERET_CAUSE)) then
+                if (epc(1 downto 0) = "00") then
+                    newPC := epc;
                 else
-                    newPC := exceptBootBaseAddr;
-                end if;
-                if (exceptCause_i = ERET_CAUSE or exceptCause_i = DERET_CAUSE) then
-                    if (exceptCause_i = ERET_CAUSE) then
-                        epc := cp0Epc_i;
-                    else
-                        epc := depc_i;
-                    end if;
-                    if (cp0Epc_i(1 downto 0) = "00") then
-                        newPC := epc;
-                    else
-                        toWriteBadVAddr <= YES;
-                        badVAddr <= epc;
-                        newPC := newPC + generalExceptOffset;
-                    end if;
-                elsif (
-                    (exceptCause_i = TLB_LOAD_CAUSE or exceptCause_i = TLB_STORE_CAUSE) and
-                    cp0Status_i(STATUS_EXL_BIT) = '0' and tlbRefill_i = '1'
-                ) then
-                    newPC := newPC + tlbRefillExl0Offset;
-                elsif (exceptCause_i = EXTERNAL_CAUSE and cp0Cause_i(CAUSE_IV_BIT) = '1') then
-                    newPC := newPC + interruptIv1Offset;
-                else
+                    toWriteBadVAddr <= YES;
+                    badVAddr <= epc;
                     newPC := newPC + generalExceptOffset;
                 end if;
-                newPC_o <= newPC;
+            elsif (
+                extraCmd and
+                (exceptCause_i = TLB_LOAD_CAUSE or exceptCause_i = TLB_STORE_CAUSE) and
+                cp0Status_i(STATUS_EXL_BIT) = '0' and tlbRefill_i = '1'
+            ) then
+                newPC := newPC + tlbRefillExl0Offset;
+            elsif (exceptCause_i = EXTERNAL_CAUSE and cp0Cause_i(CAUSE_IV_BIT) = '1') then
+                newPC := newPC + interruptIv1Offset;
             else
-                flush_o <= '0';
-                if (memToStall_i = PIPELINE_STOP) then
-                    stall_o <= "111110";
-                elsif (exToStall_i = PIPELINE_STOP or scStall_i /= 0 or scStall /= 0) then
-                    stall_o <= "111100";
-                elsif ((idToStall_i = PIPELINE_STOP) or (isIdEhb_i = '1' and isMtc0 = '1')) then
-                    stall_o <= "111000";
-                elsif (blNullify_i = PIPELINE_STOP) then
-                    stall_o <= "010000";
-                elsif (ifToStall_i = PIPELINE_STOP) then
-                    stall_o <= "111000"; -- 1. Make delay slot and branch instruction always to be adjacent stage, so
-                                         --    we can force delay slot to be executed when there's an exception.
-                                         -- 2. This shortens IF's critical path because it simplifies the exception
-                                         --    handling.
-                else
-                    stall_o <= "000000";
-                end if;
+                newPC := newPC + generalExceptOffset;
+            end if;
+            newPC_o <= newPC;
+        else
+            flush_o <= '0';
+            if (memToStall_i = PIPELINE_STOP) then
+                stall_o <= "111110";
+            elsif (exToStall_i = PIPELINE_STOP or (extraCmd and (scStall_i /= 0 or scStall /= 0))) then
+                stall_o <= "111100";
+            elsif ((idToStall_i = PIPELINE_STOP) or (extraCmd and isIdEhb_i = '1' and isMtc0 = '1')) then
+                stall_o <= "111000";
+            elsif (blNullify_i = PIPELINE_STOP) then
+                stall_o <= "010000";
+            elsif (ifToStall_i = PIPELINE_STOP) then
+                stall_o <= "111000"; -- 1. Make delay slot and branch instruction always to be adjacent stage, so
+                                     --    we can force delay slot to be executed when there's an exception.
+                                     -- 2. This shortens IF's critical path because it simplifies the exception
+                                     --    handling.
+            else
+                stall_o <= "000000";
             end if;
         end if;
     end process;
@@ -130,13 +128,15 @@ begin
         if (rising_edge(clk)) then
             badVAddr_o <= badVAddr;
             toWriteBadVAddr_o <= toWriteBadVAddr;
-            if (rst = RST_ENABLE) then
-                scStall <= 0;
-            else
-                if (scStall_i /= 0) then
-                    scStall <= scStall_i;
-                elsif (scStall /= 0) then
-                    scStall <= scStall - 1;
+            if (extraCmd) then
+                if (rst = RST_ENABLE) then
+                    scStall <= 0;
+                else
+                    if (scStall_i /= 0) then
+                        scStall <= scStall_i;
+                    elsif (scStall /= 0) then
+                        scStall <= scStall - 1;
+                    end if;
                 end if;
             end if;
         end if;

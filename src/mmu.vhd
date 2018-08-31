@@ -63,10 +63,13 @@ architecture bhv of mmu is
         tlbExcept := true;
         tlbInvalid := false;
         tlbModified := false;
+        /*
         if (isKernelMode_i = NO and addr_i(31 downto 28) >= 4x"8") then
             -- kseg0, kseg1, kseg2
             addrExcept := true;
         end if;
+        */ -- We delay exception handling for 1 period to speed up MEM,
+           -- so `isKernelMode` is not readly during the immediately following IF
 
         if (addr_i(31 downto 28) >= 4x"8" and addr_i(31 downto 28) < 4x"a") then
             -- kseg0 (unmapped)
