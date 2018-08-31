@@ -8,7 +8,7 @@ use work.cp1_const.all;
 
 entity float_alu is
 	generic(
-		enable: boolean
+		floatEnable: boolean
 	);
 	port (
 		rst: in std_logic;
@@ -21,7 +21,7 @@ entity float_alu is
 		toWriteRegAddr_i: in std_logic_vector(CP1RegAddrWidth);
 		toWriteReg_o: out std_logic;
 		toWriteRegAddr_o: out std_logic_vector(CP1RegAddrWidth);
-		toWriteRegData_o: out std_logic_vector(DoubleDataWidth)
+		toWriteRegData_o: out std_logic_vector(DoubleDataWidth);
 		exceptFlags: out FloatExceptType;
 		toStall_o: out std_logic
 	);
@@ -49,7 +49,7 @@ architecture bhv of float_alu is
 	end doubleneg;
 begin
 	process(all) begin
-		if (enable = YES) then
+		if (floatEnable = true) then
 			toWriteReg_o <= toWriteReg_i;
 			toWriteRegAddr_o <= toWriteRegAddr_i;
 			case(alut_i) is

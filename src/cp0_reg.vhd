@@ -67,7 +67,7 @@ end cp0_reg;
 
 architecture bhv of cp0_reg is
     function CP0MaxValidId return integer is begin
-        if (extraReg = YES) then
+        if (extraReg = true) then
             return 32;
         else
             return CP0_MAX_ID;

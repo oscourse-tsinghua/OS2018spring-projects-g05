@@ -41,7 +41,7 @@ package alu_const is
     );
 
     type FloatExceptType is (
-        NO,
+        NONE,
         UNIMPL, INVALID, DIV_BY_ZERO, OVERFLOW, UNDERFLOW, INEXACT
     );
 
