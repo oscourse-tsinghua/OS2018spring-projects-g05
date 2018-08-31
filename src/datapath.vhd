@@ -86,7 +86,6 @@ architecture bhv of datapath is
     signal tlbRefill_24: std_logic;
 
     -- Signals connecting regfile and id --
-    signal regReadEnable1_43, regReadEnable2_43: std_logic;
     signal regReadAddr1_43, regReadAddr2_43: std_logic_vector(RegAddrWidth);
     signal regData1_34, regData2_34: std_logic_vector(DataWidth);
 
@@ -336,10 +335,8 @@ begin
             writeEnable_i => toWriteReg_93,
             writeAddr_i => writeRegAddr_93,
             writeData_i => writeRegData_93,
-            readEnable1_i => regReadEnable1_43,
             readAddr1_i => regReadAddr1_43,
             readData1_o => regData1_34,
-            readEnable2_i => regReadEnable2_43,
             readAddr2_i => regReadAddr2_43,
             readData2_o => regData2_34
         );
@@ -355,8 +352,6 @@ begin
             inst_i => inst_24,
             regData1_i => regData1_34,
             regData2_i => regData2_34,
-            regReadEnable1_o => regReadEnable1_43,
-            regReadEnable2_o => regReadEnable2_43,
             regReadAddr1_o => regReadAddr1_43,
             regReadAddr2_o => regReadAddr2_43,
 
@@ -369,7 +364,6 @@ begin
             memWriteRegAddr_i => memWriteRegAddr_74,
             memWriteRegDataShort_i => memWriteRegDataShort_74,
 
-            nextWillStall_i => stall(ID_STOP_IDX),
             toStall_o => idToStall_4b,
 
             alut_o => alut_45,

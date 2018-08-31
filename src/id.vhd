@@ -19,8 +19,6 @@ entity id is
         inst_i: in std_logic_vector(InstWidth);
         regData1_i: in std_logic_vector(DataWidth);
         regData2_i: in std_logic_vector(DataWidth);
-        regReadEnable1_o: out std_logic;
-        regReadEnable2_o: out std_logic;
         regReadAddr1_o: out std_logic_vector(RegAddrWidth);
         regReadAddr2_o: out std_logic_vector(RegAddrWidth);
 
@@ -34,7 +32,6 @@ entity id is
         memWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
         memWriteRegDataShort_i: in std_logic_vector(DataWidth);
 
-        nextWillStall_i: in std_logic;
         toStall_o: out std_logic;
         flushForceWrite_o: out std_logic;
 
@@ -197,7 +194,7 @@ begin
         variable isInvalid, jumpToRs, condJump, branchToJump, branchToLink: std_logic;
         variable branchFlag: std_logic;
         variable branchTargetAddress: std_logic_vector(AddrWidth);
-        variable toStall, blNullify, branchLikely, tneFlag: std_logic;
+        variable blNullify, branchLikely, tneFlag: std_logic;
     begin
         oprSrc1 := INVALID;
         oprSrc2 := INVALID;
@@ -206,7 +203,7 @@ begin
         memt_o <= INVALID;
         toWriteReg_o <= NO;
         writeRegAddr_o <= (others => '0');
-        toStall := PIPELINE_NONSTOP;
+        toStall_o <= PIPELINE_NONSTOP;
         blNullify := PIPELINE_NONSTOP;
 
         linkAddr_o <= (others => '0');
@@ -216,9 +213,8 @@ begin
         jumpToRs := NO;
         condJump := NO;
         exceptCause_o <= exceptCause_i;
-        regReadEnable1_o <= DISABLE;
+        tlbRefill_o <= tlbRefill_i;
         regReadAddr1_o <= (others => '0');
-        regReadEnable2_o <= DISABLE;
         regReadAddr2_o <= (others => '0');
         flushForceWrite_o <= NO;
 
@@ -1007,7 +1003,6 @@ begin
 
             case oprSrc1 is
                 when REG =>
-                    regReadEnable1_o <= ENABLE;
                     regReadAddr1_o <= instRs;
                     operand1 := regData1_i;
                     if (instRs /= 5ub"0") then
@@ -1015,13 +1010,12 @@ begin
                         if (exToWriteReg_i = YES and exWriteRegAddr_i = instRs) then
                             operand1 := exWriteRegData_i;
                             if (exMemt_i /= INVALID) then
-                                toStall := PIPELINE_STOP;
+                                toStall_o <= PIPELINE_STOP;
                             end if;
                         elsif (memToWriteReg_i = YES and memWriteRegAddr_i = instRs) then
-                            if (memMemt_i = INVALID) then
-                                operand1 := memWriteRegDataShort_i;
-                            else
-                                toStall := PIPELINE_STOP;
+                            operand1 := memWriteRegDataShort_i;
+                            if (memMemt_i /= INVALID) then
+                                toStall_o <= PIPELINE_STOP;
                             end if;
                         end if;
                     end if;
@@ -1048,7 +1042,6 @@ begin
 
             case oprSrc2 is
                 when REG =>
-                    regReadEnable2_o <= ENABLE;
                     regReadAddr2_o <= instRt;
                     operand2 := regData2_i;
                     if (instRt /= 5ub"0") then
@@ -1056,13 +1049,12 @@ begin
                         if (exToWriteReg_i = YES and exWriteRegAddr_i = instRt) then
                             operand2 := exWriteRegData_i;
                             if (exMemt_i /= INVALID) then
-                                toStall := PIPELINE_STOP;
+                                toStall_o <= PIPELINE_STOP;
                             end if;
                         elsif (memToWriteReg_i = YES and memWriteRegAddr_i = instRt) then
-                            if (memMemt_i = INVALID) then
-                                operand2 := memWriteRegDataShort_i;
-                            else
-                                toStall := PIPELINE_STOP;
+                            operand2 := memWriteRegDataShort_i;
+                            if (memMemt_i /= INVALID) then
+                                toStall_o <= PIPELINE_STOP;
                             end if;
                         end if;
                     end if;
@@ -1171,16 +1163,11 @@ begin
             exceptCause_o <= TRAP_CAUSE;
         end if;
 
-        if (nextWillStall_i = '1') then
-            branchFlag := NO;
-        end if;
-
         operand1_o <= operand1;
         operand2_o <= operand2;
         operandX_o <= operandX;
         branchFlag_o <= branchFlag;
         branchTargetAddress_o <= branchTargetAddress;
-        toStall_o <= toStall;
         blNullify_o <= blNullify;
     end process;
 end bhv;

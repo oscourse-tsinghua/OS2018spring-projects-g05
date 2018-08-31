@@ -9,10 +9,8 @@ entity regfile is
         writeEnable_i: in std_logic;
         writeAddr_i: in std_logic_vector(RegAddrWidth);
         writeData_i: in std_logic_vector(DataWidth);
-        readEnable1_i: in std_logic;
         readAddr1_i: in std_logic_vector(RegAddrWidth);
         readData1_o: out std_logic_vector(DataWidth);
-        readEnable2_i: in std_logic;
         readAddr2_i: in std_logic_vector(RegAddrWidth);
         readData2_o: out std_logic_vector(DataWidth)
     );
@@ -34,28 +32,22 @@ begin
     end process;
 
     process(all) begin
-        readData1_o <= (others => '0');
-        if (rst = RST_DISABLE and readEnable1_i = ENABLE) then
-            readData1_o <= regArray(conv_integer(readAddr1_i));
-            if (readAddr1_i = writeAddr_i and writeEnable_i = ENABLE) then
-                readData1_o <= writeData_i;
-            end if;
-            if (readAddr1_i = "00000") then
-                readData1_o <= (others => '0');
-            end if;
+        readData1_o <= regArray(conv_integer(readAddr1_i));
+        if (readAddr1_i = writeAddr_i and writeEnable_i = ENABLE) then
+            readData1_o <= writeData_i;
+        end if;
+        if (readAddr1_i = "00000") then
+            readData1_o <= (others => '0');
         end if;
     end process;
 
     process(all) begin
-        readData2_o <= (others => '0');
-        if (rst = RST_DISABLE and readEnable2_i = ENABLE) then
-            readData2_o <= regArray(conv_integer(readAddr2_i));
-            if (readAddr2_i = writeAddr_i and writeEnable_i = ENABLE) then
-                readData2_o <= writeData_i;
-            end if;
-            if (readAddr2_i = "00000") then
-                readData2_o <= (others => '0');
-            end if;
+        readData2_o <= regArray(conv_integer(readAddr2_i));
+        if (readAddr2_i = writeAddr_i and writeEnable_i = ENABLE) then
+            readData2_o <= writeData_i;
+        end if;
+        if (readAddr2_i = "00000") then
+            readData2_o <= (others => '0');
         end if;
     end process;
 
