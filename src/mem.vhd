@@ -88,6 +88,8 @@ begin
     -- `lh`, `lhu` and `sh` likewise
 
     cp0Sp_o <= cp0Sp_i;
+    toWriteReg_o <= toWriteReg_i;
+    writeRegAddr_o <= writeRegAddr_i;
 
     process(all)
         variable loadedByte: std_logic_vector(7 downto 0);
@@ -101,8 +103,6 @@ begin
         loadedShort := (others => '0');
         scStall_o <= 0;
 
-        toWriteReg_o <= toWriteReg_i;
-        writeRegAddr_o <= writeRegAddr_i;
         writeRegData_o <= writeRegData_i;
 
         toWriteHi_o <= toWriteHi_i;

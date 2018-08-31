@@ -129,7 +129,7 @@ architecture bhv of datapath is
     signal exToWriteReg_64: std_logic;
     signal exWriteRegAddr_64: std_logic_vector(RegAddrWidth);
     signal exWriteRegData_64: std_logic_vector(DataWidth);
-    signal lastMemt_64: MemType;
+    signal exMemt_64: MemType;
 
     -- Signals connecting ex and ex_mem --
     signal toWriteReg_67: std_logic;
@@ -187,10 +187,11 @@ architecture bhv of datapath is
     signal noInt_78: std_logic;
     signal flushForceWrite_78: std_logic;
 
-    -- Signals connecting mem and id --
-    signal memToWriteReg_84: std_logic;
-    signal memWriteRegAddr_84: std_logic_vector(RegAddrWidth);
-    signal memWriteRegData_84: std_logic_vector(DataWidth);
+    -- Signals connecting ex_mem and id --
+    signal memMemt_74: MemType;
+    signal memToWriteReg_74: std_logic;
+    signal memWriteRegAddr_74: std_logic_vector(RegAddrWidth);
+    signal memWriteRegDataShort_74: std_logic_vector(DataWidth);
 
     -- Signals connecting mem and ex --
     signal memToWriteHi_86, memToWriteLo_86: std_logic;
@@ -362,19 +363,20 @@ begin
             regReadAddr1_o => regReadAddr1_43,
             regReadAddr2_o => regReadAddr2_43,
 
+            exMemt_i => exMemt_64,
             exToWriteReg_i => exToWriteReg_64,
             exWriteRegAddr_i => exWriteRegAddr_64,
             exWriteRegData_i => exWriteRegData_64,
-            memToWriteReg_i => memToWriteReg_84,
-            memWriteRegAddr_i => memWriteRegAddr_84,
-            memWriteRegData_i => memWriteRegData_84,
+            memMemt_i => memMemt_74,
+            memToWriteReg_i => memToWriteReg_74,
+            memWriteRegAddr_i => memWriteRegAddr_74,
+            memWriteRegDataShort_i => memWriteRegDataShort_74,
 
             nextWillStall_i => stall(ID_STOP_IDX),
             toStall_o => idToStall_4b,
 
             alut_o => alut_45,
             memt_o => memt_45,
-            lastMemt_i => lastMemt_64,
             operand1_o => operand1_45,
             operand2_o => operand2_45,
             operandX_o => operandX_45,
@@ -523,7 +525,7 @@ begin
     exToWriteReg_64 <= toWriteReg_67;
     exWriteRegAddr_64 <= writeRegAddr_67;
     exWriteRegData_64 <= writeRegData_67;
-    lastMemt_64 <= memt_67;
+    exMemt_64 <= memt_67;
     excp0RegWe_6b <= cp0RegWe_67;
 
     div_ist: entity work.div
@@ -597,6 +599,10 @@ begin
             flushForceWrite_i => flushForceWrite_67,
             flushForceWrite_o => flushForceWrite_78
         );
+    memMemt_74 <= memt_78;
+    memToWriteReg_74 <= toWriteReg_78;
+    memWriteRegAddr_74 <= writeRegAddr_78;
+    memWriteRegDataShort_74 <= writeRegData_78;
 
     mem_ist: entity work.mem
         generic map (
@@ -662,9 +668,6 @@ begin
             flushForceWrite_i => flushForceWrite_78,
             flushForceWrite_o => flushForceWrite_89
         );
-    memToWriteReg_84 <= toWriteReg_89;
-    memWriteRegAddr_84 <= writeRegAddr_89;
-    memWriteRegData_84 <= writeRegData_89;
     memToWriteHi_86 <= toWriteHi_89;
     memToWriteLo_86 <= toWriteLo_89;
     memWriteHiData_86 <= writeHiData_89;
