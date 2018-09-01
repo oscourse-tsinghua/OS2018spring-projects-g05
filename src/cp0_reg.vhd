@@ -128,24 +128,25 @@ begin
                 end if;
             end if;
         end process;
-
-        process (all) begin
-            -- Add debug exception into `exceptCause` --
-            exceptCause <= exceptCause_i;
-            tlbRefill <= tlbRefill_i;
-            if (
-                (debugPoint or regArr(CAUSE_REG)(CAUSE_WP_BIT)) = '1' and
-                ((regArr(STATUS_REG)(STATUS_ERL_BIT) or regArr(STATUS_REG)(STATUS_EXL_BIT)) = '0')
-            ) then
-                -- `valid_i` can be 0 here
-                -- When debugpoint happened with TLB or address exception, issue debug point first to improve robustness.
-                exceptCause <= WATCH_CAUSE;
-                tlbRefill <= '0';
-            end if;
-        end process;
-        exceptCause_o <= exceptCause;
-        tlbRefill_o <= tlbRefill;
     end generate EXTRA;
+
+    process (all) begin
+        -- Add debug exception into `exceptCause` --
+        exceptCause <= exceptCause_i;
+        tlbRefill <= tlbRefill_i;
+        if (
+            extraReg and
+            (debugPoint or regArr(CAUSE_REG)(CAUSE_WP_BIT)) = '1' and
+            ((regArr(STATUS_REG)(STATUS_ERL_BIT) or regArr(STATUS_REG)(STATUS_EXL_BIT)) = '0')
+        ) then
+            -- `valid_i` can be 0 here
+            -- When debugpoint happened with TLB or address exception, issue debug point first to improve robustness.
+            exceptCause <= WATCH_CAUSE;
+            tlbRefill <= '0';
+        end if;
+    end process;
+    exceptCause_o <= exceptCause;
+    tlbRefill_o <= tlbRefill;
 
     entry_o.hi <= curArr(ENTRY_HI_REG);
     entry_o.lo0 <= curArr(ENTRY_LO0_REG);
