@@ -1093,49 +1093,50 @@ begin
             branchToJump := NO;
             branchToLink := NO;
             nextInstInDelaySlot_o <= YES;
-            case (instOp) is
-                when OP_JMPSPECIAL =>
-                    case (instRt) is
-                        when JMP_BGEZ =>
-                            if (operand1(31) = '0') then
-                                branchToJump := YES;
-                            end if;
-                        when JMP_BLTZ =>
-                            if (operand1(31) = '1') then
-                                branchToJump := YES;
-                            end if;
-                        when JMP_BGEZAL =>
-                            if (operand1(31) = '0') then
-                                branchToJump := YES;
-                            end if;
-                            branchToLink := YES;
-                        when JMP_BLTZAL =>
-                            if (operand1(31) = '1') then
-                                branchToJump := YES;
-                            end if;
-                            branchToLink := YES;
-                        when others =>
-                            null;
-                    end case;
-                when JMP_BEQ =>
-                    if (operand1 = operand2) then
+            if (instOp = OP_JMPSPECIAL) then
+                if (instRt = JMP_BGEZ or (extraCmd and instRt = JMP_BGEZL)) then
+                    if (operand1(31) = '0') then
                         branchToJump := YES;
                     end if;
-                when JMP_BGTZ =>
-                    if (operand1(31) = '0' and operand1 /= 32ux"0") then
+                end if;
+                if (instRt = JMP_BLTZ or (extraCmd and instRt = JMP_BLTZL)) then
+                    if (operand1(31) = '1') then
                         branchToJump := YES;
                     end if;
-                when JMP_BLEZ =>
-                    if (operand1(31) = '1' or operand1 = 32ux"0") then
+                end if;
+                if (instRt = JMP_BGEZAL) then
+                    if (operand1(31) = '0') then
                         branchToJump := YES;
                     end if;
-                when JMP_BNE =>
-                    if (operand1 /= operand2) then
+                    branchToLink := YES;
+                end if;
+                if (instRt = JMP_BLTZAL) then
+                    if (operand1(31) = '1') then
                         branchToJump := YES;
                     end if;
-                when others =>
-                    null;
-            end case;
+                    branchToLink := YES;
+                end if;
+            end if;
+            if (instOp = JMP_BEQ or (extraCmd and instOp = JMP_BEQL)) then
+                if (operand1 = operand2) then
+                    branchToJump := YES;
+                end if;
+            end if;
+            if (instOp = JMP_BGTZ or (extraCmd and instOp = JMP_BGTZL)) then
+                if (operand1(31) = '0' and operand1 /= 32ux"0") then
+                    branchToJump := YES;
+                end if;
+            end if;
+            if (instOp = JMP_BLEZ or (extraCmd and instOp = JMP_BLEZL)) then
+                if (operand1(31) = '1' or operand1 = 32ux"0") then
+                    branchToJump := YES;
+                end if;
+            end if;
+            if (instOp = JMP_BNE or (extraCmd and instOp = JMP_BNEL)) then
+                if (operand1 /= operand2) then
+                    branchToJump := YES;
+                end if;
+            end if;
 
             if (branchToJump = YES) then
                 branchTargetAddress := pcPlus4 + instOffsetImm - instImmSign;
