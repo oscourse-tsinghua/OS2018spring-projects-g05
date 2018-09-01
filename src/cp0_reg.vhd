@@ -190,6 +190,8 @@ begin
                     STATUS_CP0_BIT => '1', STATUS_BEV_BIT => '1', STATUS_ERL_BIT => '1', StatusImBits => '1', others => '0'
                 );
                 regArr(PRID_OR_EBASE_REG) <= "1000000000000000000000" & cpuId;
+
+                timerInt_o <= INTERRUPT_NOT_ASSERT;
                 exceptCauseDelay <= NO_CAUSE;
             else
                 exceptCauseDelay <= exceptCause_i;
@@ -231,6 +233,9 @@ begin
                 if (we_i = ENABLE) then
                     regArr(conv_integer(waddr_i)) <= curArr(conv_integer(waddr_i));
                     -- We only assign the `waddr_i`-th register, in order not to interfere the counters above
+                    if (extraReg and conv_integer(waddr_i) = COMPARE_REG) then
+                        timerInt_o <= INTERRUPT_NOT_ASSERT; -- Side effect
+                    end if;
                 end if;
 
                 if (ctrlToWriteBadVAddr_i = YES) then
@@ -240,7 +245,7 @@ begin
                     -- Not updating EPC and CAUSE[BD] because EXL = 1
                 end if;
 
-                if ((exceptCauseDelay /= NO_CAUSE) and (exceptCauseDelay /= ERET_CAUSE)) then
+                if ((exceptCauseDelay /= NO_CAUSE) and (exceptCauseDelay /= ERET_CAUSE) and (not extraReg or exceptCauseDelay /= DERET_CAUSE)) then
                     --if (curArr(STATUS_REG)(STATUS_EXL_BIT) = '0') then -- See doc of Status[EXL]
                         -- Here we use `curArr` instead of `regArr`, because this should happen at the same time
                         -- as the interrupt enabled
@@ -289,6 +294,10 @@ begin
                         -- `currentAccessAddrDelay` should be the address of
                         -- that instruction. See mem.vhd.
                         regArr(BAD_V_ADDR_REG) <= currentAccessAddrDelay;
+                        if (extraReg) then
+                            regArr(ENTRY_HI_REG)(EntryHiVPN2Bits) <= currentAccessAddrDelay(EntryHiVPN2Bits);
+                            regArr(CONTEXT_REG)(ContextBadVPNBits) <= currentAccessAddrDelay(EntryHiVPN2Bits);
+                        end if;
                     when others =>
                         null;
                 end case;
