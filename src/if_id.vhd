@@ -41,7 +41,11 @@ begin
             elsif (stall_i(IF_STOP_IDX) = PIPELINE_NONSTOP) then
                 pc_o <= pc_i;
                 valid_o <= YES;
-                inst_o <= inst_i when exceptCause_i = NO_CAUSE else 32ux"0";
+                if (exceptCause_i = NO_CAUSE) then
+                    inst_o <= inst_i;
+                else
+                    inst_o <= 32ux"0";
+                end if;
                 exceptCause_o <= exceptCause_i;
                 tlbRefill_o <= tlbRefill_i;
             end if;
