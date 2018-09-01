@@ -205,6 +205,7 @@ begin
 
     cpu1_ist: entity work.cpu
         generic map (
+            memPushForward => true, -- TODO: Why???
             exceptBootBaseAddr => getExceptBootBaseAddr,
             tlbRefillExl0Offset => getTlbRefillExl0Offset,
             generalExceptOffset => getGeneralExceptOffset,
@@ -234,6 +235,7 @@ begin
 
     cpu2_ist: entity work.cpu
         generic map (
+            memPushForward => true,
             exceptBootBaseAddr => getExceptBootBaseAddr,
             tlbRefillExl0Offset => getTlbRefillExl0Offset,
             generalExceptOffset => getGeneralExceptOffset,

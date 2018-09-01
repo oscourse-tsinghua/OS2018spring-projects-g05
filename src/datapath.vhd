@@ -10,6 +10,7 @@ use work.except_const.all;
 entity datapath is
     generic (
         extraCmd:               boolean;
+        memPushForward:         boolean;
         instEntranceAddr:       std_logic_vector(AddrWidth);
         exceptBootBaseAddr:     std_logic_vector(AddrWidth);
         tlbRefillExl0Offset:    std_logic_vector(AddrWidth);
@@ -187,9 +188,13 @@ architecture bhv of datapath is
     signal flushForceWrite_78: std_logic;
 
     -- Signals connecting mem and id --
-    signal memToWriteReg_84: std_logic;
-    signal memWriteRegAddr_84: std_logic_vector(RegAddrWidth);
-    signal memWriteRegData_84: std_logic_vector(DataWidth);
+    signal memWriteRegDataLong_84: std_logic_vector(DataWidth);
+
+    -- Signals connecting ex_mem and id --
+    signal memMemt_74: MemType;
+    signal memToWriteReg_74: std_logic;
+    signal memWriteRegAddr_74: std_logic_vector(RegAddrWidth);
+    signal memWriteRegDataShort_74: std_logic_vector(DataWidth);
 
     -- Signals connecting mem and ex --
     signal memToWriteHi_86, memToWriteLo_86: std_logic;
@@ -345,7 +350,8 @@ begin
 
     id_ist: entity work.id
         generic map (
-            extraCmd => extraCmd
+            extraCmd => extraCmd,
+            memPushForward => memPushForward
         )
         port map (
             rst => rst,
@@ -361,9 +367,11 @@ begin
             exToWriteReg_i => exToWriteReg_64,
             exWriteRegAddr_i => exWriteRegAddr_64,
             exWriteRegData_i => exWriteRegData_64,
-            memToWriteReg_i => memToWriteReg_84,
-            memWriteRegAddr_i => memWriteRegAddr_84,
-            memWriteRegData_i => memWriteRegData_84,
+            memMemt_i => memMemt_74,
+            memToWriteReg_i => memToWriteReg_74,
+            memWriteRegAddr_i => memWriteRegAddr_74,
+            memWriteRegDataShort_i => memWriteRegDataShort_74,
+            memWriteRegDataLong_i => memWriteRegDataLong_84,
 
             toStall_o => idToStall_4b,
 
@@ -591,6 +599,10 @@ begin
             flushForceWrite_i => flushForceWrite_67,
             flushForceWrite_o => flushForceWrite_78
         );
+    memMemt_74 <= memt_78;
+    memToWriteReg_74 <= toWriteReg_78;
+    memWriteRegAddr_74 <= writeRegAddr_78;
+    memWriteRegDataShort_74 <= writeRegData_78;
 
     mem_ist: entity work.mem
         generic map (
@@ -656,9 +668,7 @@ begin
             flushForceWrite_i => flushForceWrite_78,
             flushForceWrite_o => flushForceWrite_89
         );
-    memToWriteReg_84 <= toWriteReg_89;
-    memWriteRegAddr_84 <= writeRegAddr_89;
-    memWriteRegData_84 <= writeRegData_89;
+    memWriteRegDataLong_84 <= writeRegData_89;
     memToWriteHi_86 <= toWriteHi_89;
     memToWriteLo_86 <= toWriteLo_89;
     memWriteHiData_86 <= writeHiData_89;

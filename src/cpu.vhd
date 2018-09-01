@@ -10,6 +10,7 @@ entity cpu is
         innerCache: boolean := true;
         extraCmd: boolean := true;
         enableMMU: boolean := true;
+        memPushForward: boolean := false;
         instEntranceAddr: std_logic_vector(AddrWidth) := 32ux"bfc0_0000";
         exceptBootBaseAddr: std_logic_vector(AddrWidth) := 32ux"bfc0_0200";
         tlbRefillExl0Offset: std_logic_vector(AddrWidth) := 32ux"000";
@@ -177,6 +178,7 @@ begin
     datapath_ist: entity work.datapath
         generic map (
             extraCmd                => extraCmd,
+            memPushForward          => memPushForward,
             instEntranceAddr        => instEntranceAddr,
             exceptBootBaseAddr      => exceptBootBaseAddr,
             tlbRefillExl0Offset     => tlbRefillExl0Offset,
