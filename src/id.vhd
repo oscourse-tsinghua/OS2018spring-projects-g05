@@ -19,10 +19,15 @@ entity id is
         inst_i: in std_logic_vector(InstWidth);
         regData1_i: in std_logic_vector(DataWidth);
         regData2_i: in std_logic_vector(DataWidth);
-        regReadEnable1_o: out std_logic;
-        regReadEnable2_o: out std_logic;
         regReadAddr1_o: out std_logic_vector(RegAddrWidth);
         regReadAddr2_o: out std_logic_vector(RegAddrWidth);
+
+        fpRegReadAddr1_o: out std_logic_vector(RegAddrWidth);
+        fpRegReadDouble1_o: out std_logic;
+        fpRegData1_i: in std_logic_vector(DoubleDataWidth);
+        fpRegReadAddr2_o: out std_logic_vector(RegAddrWidth);
+        fpRegReadDouble2_o: out std_logic;
+        fpRegData2_i: in std_logic_vector(DoubleDataWidth);
 
         -- Push Forward --
         exMemt_i: in MemType;
@@ -32,6 +37,17 @@ entity id is
         memToWriteReg_i: in std_logic;
         memWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
         memWriteRegData_i: in std_logic_vector(DataWidth);
+
+        -- Push Forward for CP1 --
+        exToWriteFPReg_i: in std_logic;
+        exWriteFPDouble_i: in std_logic;
+        exWriteFPRegAddr_i: in std_logic_vector(RegAddrWidth);
+        exWriteFPRegData_i: in std_logic_vector(DoubleDataWidth);
+
+        memToWriteFPReg_i: in std_logic;
+        memWriteFPDouble_i: in std_logic;
+        memWriteFPRegAddr_i: in std_logic_vector(RegAddrWidth);
+        memWriteFPRegData_i: in std_logic_vector(DoubleDataWidth);
 
         toStall_o: out std_logic;
         flushForceWrite_o: out std_logic;
@@ -44,6 +60,11 @@ entity id is
         operandX_o: out std_logic_vector(DataWidth);
         toWriteReg_o: out std_logic;
         writeRegAddr_o: out std_logic_vector(RegAddrWidth);
+        foperand1_o: out std_logic_vector(DoubleDataWidth);
+        foperand2_o: out std_logic_vector(DoubleDataWidth);
+        toWriteFPReg_o: out std_logic;
+        writeFPRegAddr_o: out std_logic_vector(RegAddrWidth);
+        writeFPDouble_o: out std_logic;
 
         -- For ju instructions --
         isInDelaySlot_i: in std_logic;
@@ -218,6 +239,9 @@ begin
         tneFlag := NO;
         dataFlowFloat <= NO;
 
+        toWriteFPReg_o <= NO;
+        writeFPRegAddr_o <= (others => '0');
+
         linkAddr_o <= (others => '0');
         branchTargetAddress := (others => '0');
         branchFlag := NO;
@@ -230,6 +254,8 @@ begin
         regReadAddr2_o <= (others => '0');
         isIdEhb_o <= NO;
         flushForceWrite_o <= NO;
+
+        writeFPDouble_o <= NO;
 
         -- Assign 'X' to them, otherwise it will introduce a level latch to keep prior values
         operand1 := (others => 'X');
@@ -522,17 +548,21 @@ begin
                         case (instRs) is
                             when RS_CF =>
                                 oprSrc2 := REG;
-                                oprSrcF1 := SINGLE;
+                                oprSrcF2 := INVALID;
+                                writeFPRegAddr_o <= instRt;
                                 dataFlowFloat <= YES;
                                 fpAlut_o <= CF;
                                 isInvalid <= NO;
 
                             when RS_CT =>
-                                oprSrc2 := REG;
-                                oprSrcF1 := SINGLE;
+                                oprSrcF1 := INVALID;
+                                oprSrcF2 := SINGLE;
+                                writeFPRegAddr_o <= instRd;
                                 dataFlowFloat <= YES;
                                 fpAlut_o <= CT;
                                 isInvalid <= NO;
+                                toWriteFPReg_o <= YES;
+                                writeFPRegAddr_o <= instRd;
 
                             when others =>
                                 null;
@@ -1048,9 +1078,6 @@ begin
                             operand1 := memWriteRegData_i;
                         end if;
                     end if;
-                    if (dataFlowFloat = YES) then
-                        foperand1 := 32ub"0" & operand1;
-                    end if;
 
                 when SA =>
                     operand1 := 27ub"0" & instSa;
@@ -1087,6 +1114,10 @@ begin
                             operand2 := memWriteRegData_i;
                         end if;
                     end if;
+                    if (dataFlowFloat = YES) then
+                        foperand1 := 32ub"0" & operand2;
+                        operand2 := (others => '0');
+                    end if;
 
                 when IMM =>
                     operand2 := 16ub"0" & instImm;
@@ -1113,7 +1144,7 @@ begin
             case oprSrcF1 is
                 when SINGLE =>
                     fpRegReadAddr1_o <= instRt;
-                    fpRegReadDouble <= NO;
+                    fpRegReadDouble1_o <= NO;
                     foperand1 := fpRegData1_i;
                     -- Ex Push Forward, Mem Wait --
                     if (exToWriteFPReg_i = YES) and ((exWriteFPRegAddr_i = instRt)
@@ -1131,13 +1162,13 @@ begin
                             toStall_o <= PIPELINE_STOP;
                         end if;
                     elsif (memToWriteFPReg_i = YES) and ((memWriteFPRegAddr_i = instRt)
-                        or (exWriteFPRegAddr_i(4 downto 1) = instRt(4 downto 1) and exWriteFPDouble_i = YES)) then
+                        or (exWriteFPRegAddr_i(4 downto 1) = instRt(4 downto 1) and memWriteFPDouble_i = YES)) then
                             toStall_o <= PIPELINE_STOP;
                     end if;
 
                 when DOUBLE =>
                     fpRegReadAddr1_o <= instRt;
-                    fpRegReadDouble <= YES;
+                    fpRegReadDouble1_o <= YES;
                     foperand1 := fpregData1_i;
                     if (exToWriteFPReg_i = YES) and (exWriteFPRegAddr_i(4 downto 1) = instRd(4 downto 1)) then
                         toStall_o <= PIPELINE_STOP;
@@ -1151,7 +1182,7 @@ begin
             case oprSrcF2 is
                 when SINGLE =>
                     fpRegReadAddr2_o <= instRd;
-                    fpRegReadDouble <= NO;
+                    fpRegReadDouble2_o <= NO;
                     foperand2 := fpRegData2_i;
                     -- Ex Push Forward, Mem Wait --
                     if (exToWriteFPReg_i = YES) and ((exWriteFPRegAddr_i = instRd)
@@ -1169,19 +1200,22 @@ begin
                             toStall_o <= PIPELINE_STOP;
                         end if;
                     elsif (memToWriteFPReg_i = YES) and ((memWriteFPRegAddr_i = instRd)
-                        or (exWriteFPRegAddr_i(4 downto 1) = instRd(4 downto 1) and exWriteFPDouble_i = YES)) then
+                        or (exWriteFPRegAddr_i(4 downto 1) = instRd(4 downto 1) and memWriteFPDouble_i = YES)) then
                             toStall_o <= PIPELINE_STOP;
                     end if;
 
                 when DOUBLE =>
                     fpRegReadAddr2_o <= instRd;
-                    fpRegReadDouble <= YES;
+                    fpRegReadDouble2_o <= YES;
                     foperand2 := fpregData2_i;
                     if (exToWriteFPReg_i = YES) and (exWriteFPRegAddr_i(4 downto 1) = instRd(4 downto 1)) then
                         toStall_o <= PIPELINE_STOP;
                     elsif (memToWriteFPReg_i = YES) and (memWriteFPRegAddr_i(4 downto 1) = instRd(4 downto 1)) then
                         toStall_o <= PIPELINE_STOP;
                     end if;
+
+                when REGID =>
+                    foperand2 := 59ub"0" & instRt;
 
                 when others =>
                     null;

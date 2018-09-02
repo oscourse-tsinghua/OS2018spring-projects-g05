@@ -37,6 +37,14 @@ entity mem_wb is
         cp0Sp_o: out CP0Special;
         flushForceWrite_i: in std_logic;
 
+        -- for float --
+        fpToWriteReg_i: in std_logic;
+        fpWriteRegAddr_i: in std_logic_vector(DataWidth);
+        fpWriteRegData_i: in std_logic_vector(DoubleDataWidth);
+        fpWriteTarget_i: in FloatTargetType;
+        fpExceptFlags_i: in FloatExceptType;
+        fpWriteDouble_i: in std_logic;
+
         -- for exception --
         flush_i: in std_logic
     );

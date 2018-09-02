@@ -65,7 +65,21 @@ entity ex_mem is
         isInDelaySlot_o: out std_logic;
         currentInstAddr_o: out std_logic_vector(AddrWidth);
         flushForceWrite_i: in std_logic;
-        flushForceWrite_o: out std_logic
+        flushForceWrite_o: out std_logic;
+
+        -- for float --
+        fpToWriteReg_i: in std_logic;
+        fpWriteRegAddr_i: in std_logic_vector(DataWidth);
+        fpWriteRegData_i: in std_logic_vector(DoubleDataWidth);
+        fpWriteTarget_i: in FloatTargetType;
+        fpExceptFlags_i: in FloatExceptType;
+        fpWriteDouble_i: in std_logic;
+        fpToWriteReg_o: out std_logic;
+        fpWriteRegAddr_o: out std_logic_vector(DataWidth);
+        fpWriteRegData_o: out std_logic_vector(DoubleDataWidth);
+        fpWriteTarget_o: out FloatTargetType;
+        fpExceptFlags_o: out FloatExceptType;
+        fpWriteDouble_o: out std_logic
     );
 end ex_mem;
 
@@ -112,6 +126,12 @@ begin
                     tempProduct_o <= tempProduct_i;
                     cnt_o <= cnt_i;
                 end if;
+                fpToWriteReg_o <= NO;
+                fpWriteRegAddr_o <= (others => '0');
+                fpWriteRegData_o <= (others => '0');
+                fpWriteTarget_o <= INVALID;
+                fpExceptFlags_o <= NONE;
+                fpWriteDouble_o <= NO;
             elsif (stall_i(EX_STOP_IDX) = PIPELINE_NONSTOP) then
                 toWriteReg_o <= toWriteReg_i;
                 writeRegAddr_o <= writeRegAddr_i;
@@ -143,6 +163,24 @@ begin
                 tempProduct_o <= tempProduct_i;
                 cnt_o <= cnt_i;
                 flushForceWrite_o <= flushForceWrite_i;
+                if (fpWriteTarget_i /= REG) then
+                    fpToWriteReg_o <= fpToWriteReg_i;
+                    fpWriteRegAddr_o <= fpWriteRegAddr_i;
+                    fpWriteRegData_o <= fpWriteRegData_i;
+                    fpWriteTarget_o <= fpWriteTarget_i;
+                    fpExceptFlags_o <= fpExceptFlags_i;
+                    fpWriteDouble_o <= fpWriteDouble_i;
+                else
+                    toWriteReg_o <= fpWriteRegAddr_o;
+                    writeRegData_o <= fpWriteRegData_o;
+                    writeRegAddr_o <= fpWriteRegAddr_o(4 downto 0); 
+                    fpToWriteReg_o <= NO;
+                    fpWriteRegAddr_o <= (others => '0');
+                    fpWriteRegData_o <= (others => '0');
+                    fpWriteTarget_o <= (others => '0');
+                    fpExceptFlags_o <= (others => '0');
+                    fpWriteDouble_o <= NO;
+                end if;
             end if;
         end if;
     end process;

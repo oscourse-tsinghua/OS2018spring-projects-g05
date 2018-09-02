@@ -30,6 +30,7 @@ entity ctrl is
         -- Stall
         ifToStall_i, idToStall_i, exToStall_i, memToStall_i, blNullify_i: in std_logic;
         scStall_i: in integer;
+        fpToStall_i: in std_logic;
         stall_o: out std_logic_vector(StallWidth);
 
         -- Exception
@@ -107,7 +108,7 @@ begin
             flush_o <= '0';
             if (memToStall_i = PIPELINE_STOP) then
                 stall_o <= "111110";
-            elsif (exToStall_i = PIPELINE_STOP or (extraCmd and (scStall_i /= 0 or scStall /= 0))) then
+            elsif (exToStall_i = PIPELINE_STOP or (extraCmd and (scStall_i /= 0 or scStall /= 0 or fpToStall_i))) then
                 stall_o <= "111100";
             elsif ((idToStall_i = PIPELINE_STOP) or (extraCmd and isIdEhb_i = '1' and isMtc0 = '1')) then
                 stall_o <= "111000";

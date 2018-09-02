@@ -4,7 +4,7 @@ use work.global_const.all;
 
 package alu_const is
 
-    -- where is the operand type --
+    -- Where is the operand type --
     type AluType is (
         INVALID,
         ALU_OR, ALU_AND, ALU_XOR, ALU_NOR, ALU_SLL, ALU_SRL, ALU_SRA, ALU_LUI,
@@ -16,16 +16,22 @@ package alu_const is
         ALU_MFC0, ALU_MTC0, ALU_TLBWI, ALU_TLBWR, ALU_TLBP, ALU_TLBR, ALU_TLBINVF
     );
 
-    -- floating point operand type --
+    -- Floating point operand type --
     type FPAluType is (
         INVALID,
         FPALU_ABS, FPALU_NEG, CF, CT
     );
 
-    -- where is the operand from --
+    -- Where is the operand from --
     type OprSrcType is (
         INVALID,
         REG, IMM, SGN_IMM, SA, REGID
+    );
+
+    -- Float Alu to Write What --
+    type FloatTargetType is (
+        INVALID,
+        MEM, REG, CP1, FREG
     );
 
     -- Extra operand invented for offset (memory) --
@@ -37,7 +43,7 @@ package alu_const is
     -- Floating point operands --
     type FOprSrcType is  (
         INVALID,
-        REG, SINGLE, PAIRED
+        SINGLE, PAIRED, REGID
     );
 
     type FloatExceptType is (

@@ -21,6 +21,21 @@ entity id_ex is
         toWriteReg_o: out std_logic;
         writeRegAddr_o: out std_logic_vector(RegAddrWidth);
 
+        -- basic float operation --
+        foperand1_i: in std_logic_vector(DoubleDataWidth);
+        foperand2_i: in std_logic_vector(DoubleDataWidth);
+        toWriteFPReg_i: in std_logic;
+        writeFPRegAddr_i: in std_logic_vector(RegDataWidth);
+        writeFPDouble_i: in std_logic;
+        fpAlut_i: in FPAluType;
+
+        foperand1_o: out std_logic_vector(DoubleDataWidth);
+        foperand2_o: out std_logic_vector(DoubleDataWidth);
+        toWriteFPReg_o: out std_logic;
+        writeFPRegAddr_o: out std_logic_vector(RegAddrWidth);
+        writeFPDouble_o: out std_logic;
+        fpAlut_o: out FPAluType;
+
         -- memory and stall --
         alut_i: in AluType;
         memt_i: in MemType;
@@ -78,6 +93,12 @@ begin
                 exValid <= NO;
                 noInt_o <= NO;
                 flushForceWrite_o <= NO;
+                foperand1_o <= (others => '0');
+                foperand2_o <= (others => '0');
+                toWriteFPReg_o <= NO;
+                writeFPRegAddr_o <= (others => '0');
+                writeFPDouble_o <= (others => '0');
+                fpAlut_o <= INVALID;
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_STOP and stall_i(EX_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= INVALID;
                 memt_o <= INVALID;
@@ -94,7 +115,13 @@ begin
                 exCurrentInstAddr_o <= (others => '0');
                 exValid <= NO;
                 noInt_o <= NO;
-                flushForceWrite_o <= flushForceWrite_i;
+                flushForceWrite_o <= NO;
+                foperand1_o <= (others => '0');
+                foperand2_o <= (others => '0');
+                toWriteFPReg_o <= NO;
+                writeFPRegAddr_o <= (others => '0');
+                writeFPDouble_o <= (others => '0');
+                fpAlut_o <= INVALID;
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= alut_i;
                 memt_o <= memt_i;
@@ -114,6 +141,12 @@ begin
                 exValid <= valid_i;
                 noInt_o <= noInt_i;
                 flushForceWrite_o <= flushForceWrite_i;
+                foperand1_o <= foperand1_i;
+                foperand2_o <= foperand2_i;
+                toWriteFPReg_o <= toWriteFPReg_i;
+                writeFPRegAddr_o <= writeFPRegAddr_i;
+                writeFPDouble_o <= writeFPDouble_i;
+                fpAlut_o <= fpAlut_i;
             end if;
         end if;
     end process;

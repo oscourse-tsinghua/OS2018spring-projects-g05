@@ -67,6 +67,20 @@ entity mem is
         flushForceWrite_i: in std_logic;
         flushForceWrite_o: out std_logic;
 
+        -- for float --
+        fpToWriteReg_i: in std_logic;
+        fpWriteRegAddr_i: in std_logic_vector(DataWidth);
+        fpWriteRegData_i: in std_logic_vector(DoubleDataWidth);
+        fpWriteTarget_i: in FloatTargetType;
+        fpExceptFlags_i: in FloatExceptType;
+        fpWriteDouble_i: in std_logic;
+        fpToWriteReg_o: out std_logic;
+        fpWriteRegAddr_o: out std_logic_vector(DataWidth);
+        fpWriteRegData_o: out std_logic_vector(DoubleDataWidth);
+        fpWriteTarget_o: out FloatTargetType;
+        fpExceptFlags_o: out FloatExceptType;
+        fpWriteDouble_o: out std_logic
+
         -- for sync --
         scStall_o: out integer;
         scCorrect_i: in std_logic;
@@ -114,6 +128,13 @@ begin
         cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
         cp0RegWriteSel_o <= cp0RegWriteSel_i;
         cp0RegData_o <= cp0RegData_i;
+
+        fpToWriteReg_o <= fpToWriteReg_i;
+        fpWriteRegAddr_o <= fpWriteRegAddr_o;
+        fpWriteRegData_o <= fpWriteRegData_o;
+        fpWriteTarget_o <= fpWriteTarget_i;
+        fpExceptFlags_o <= fpExceptFlags_i;
+        fpWriteDouble_o <= fpWriteDouble_i;
 
         if (exceptCause_i = NO_CAUSE) then
             -- Byte selection --

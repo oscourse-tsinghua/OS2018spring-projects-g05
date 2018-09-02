@@ -73,6 +73,9 @@ architecture bhv of datapath is
     -- b: ctrl
     -- c: cp0
     -- d: div
+    -- e: cp1
+    -- f: float_alu
+    -- g: float_regs
 
     -- Signal connecting pc_reg and if_id --
     signal pc_12: std_logic_vector(AddrWidth);
@@ -91,6 +94,7 @@ architecture bhv of datapath is
 
     -- Signals connecting id and id_ex --
     signal alut_45: AluType;
+    signal fpAlut_45: FPAluType;
     signal memt_45: MemType;
     signal operand1_45: std_logic_vector(DataWidth);
     signal operand2_45: std_logic_vector(DataWidth);
@@ -106,6 +110,11 @@ architecture bhv of datapath is
     signal tlbRefill_45: std_logic;
     signal currentInstAddr_45: std_logic_vector(AddrWidth);
     signal flushForceWrite_45: std_logic;
+    signal foperand1_45: std_logic_vector(DoubleDataWidth);
+    signal foperand2_45: std_logic_vector(DoubleDataWidth);
+    signal toWriteFPReg_45: std_logic;
+    signal writeFPRegAddr_45: std_logic_vector(RegAddrWidth);
+    signal writeFPDouble_45: std_logic;
 
     -- Signals connecting id_ex and ex --
     signal alut_56: AluType;
@@ -185,6 +194,12 @@ architecture bhv of datapath is
     signal valid_78: std_logic;
     signal noInt_78: std_logic;
     signal flushForceWrite_78: std_logic;
+    signal fpToWriteReg_78: std_logic;
+    signal fpWriteRegAddr_78: std_logic_vector(AddrWidth);
+    signal fpWriteRegData_78: std_logic_vector(DoubleDataWidth);
+    signal fpWriteTarget_78: FloatTargetType;
+    signal fpExceptFlags_78: FloatExceptType;
+    signal fpWriteDouble_78: std_logic;
 
     -- Signals connecting mem and id --
     signal memToWriteReg_84: std_logic;
@@ -211,6 +226,12 @@ architecture bhv of datapath is
     signal cp0Sp_89: CP0Special;
     signal currentInstAddr_89: std_logic_vector(AddrWidth);
     signal flushForceWrite_89: std_logic;
+    signal fpToWriteReg_89: std_logic;
+    signal fpWriteRegAddr_89: std_logic_vector(AddrWidth);
+    signal fpWriteRegData_89: std_logic_vector(DoubleDataWidth);
+    signal fpWriteTarget_89: FloatTargetType;
+    signal fpExceptFlags_89: FloatExceptType;
+    signal fpWriteDouble_89: std_logic;
 
     -- Signals connecting mem_wb and regfile --
     signal toWriteReg_93: std_logic;
@@ -295,6 +316,34 @@ architecture bhv of datapath is
     signal memCp0RegWe_8b: std_logic;
     signal scStall_8b: integer;
     signal memDataWrite: std_logic;
+
+    -- Signals connecting id_ex and float_alu --
+    signal foperand1_5f: std_logic_vector(DoubleDataWidth);
+    signal foperand2_5f: std_logic_vector(DoubleDataWidth);
+    signal toWriteFPReg_5f: std_logic;
+    signal writeFPRegAddr_5f: std_logic_vector(RegAddrWidth);
+    signal writeFPDouble_5f: std_logic;
+    signal fpAlut_5f: FPAluType;
+
+    -- Signals connecting id and float_regs --
+    signal fpRegReadAddr1_4g: std_logic_vector(RegAddrWidth);
+    signal fpRegReadDouble1_4g: std_logic;
+    signal fpRegData1_4g: std_logic_vector(DoubleDataWidth);
+    signal fpRegReadAddr2_4g: std_logic_vector(RegAddrWidth);
+    signal fpRegReadDouble2_4g: std_logic;
+    signal fpRegData2_4g: std_logic_vector(DoubleDataWidth);
+
+    -- Signals connecting float_alu and ex_mem --
+    signal toWriteFPReg_f7: std_logic;
+    signal writeFPRegAddr_f7: std_logic_vector(RegAddrWidth);
+    signal writeFPRegData_f7: std_logic_vector(DoubleDataWidth);
+    signal writeFPDouble_f7: std_logic;
+    signal exceptFlags_f7: FloatExceptType;
+    signal fpWriteTarget_f7: FloatTargetType;
+
+    -- Signals connecting float_alu and ctrl --
+    signal fpToStall_fb: std_logic;
+
 begin
 
     pc_reg_ist: entity work.pc_reg
@@ -357,6 +406,13 @@ begin
             regReadAddr1_o => regReadAddr1_43,
             regReadAddr2_o => regReadAddr2_43,
 
+            fpRegReadAddr1_o => fpRegReadAddr1_4g,
+            fpRegReadAddr2_o => fpRegReadAddr2_4g,
+            fpRegReadDouble1_o => fpRegReadDouble1_4g,
+            fpRegReadDouble2_o => fpRegReadDouble2_4g,
+            fpRegData1_i => fpRegData1_4g,
+            fpRegData2_i => fpRegData2_4g,
+
             exMemt_i => exMemt_64,
             exToWriteReg_i => exToWriteReg_64,
             exWriteRegAddr_i => exWriteRegAddr_64,
@@ -368,12 +424,18 @@ begin
             toStall_o => idToStall_4b,
 
             alut_o => alut_45,
+            fpAlut_o => fpAlut_45,
             memt_o => memt_45,
             operand1_o => operand1_45,
             operand2_o => operand2_45,
             operandX_o => operandX_45,
             toWriteReg_o => toWriteReg_45,
             writeRegAddr_o => writeRegAddr_45,
+            foperand1_o => foperand1_45,
+            foperand2_o => foperand2_45,
+            toWriteFPReg_o => toWriteFPReg_45,
+            writeFPRegAddr_o => writeFPRegAddr_45,
+            writeFPDouble_o => writeFPDouble_45,
 
             isInDelaySlot_i => isInDelaySlot_54,
             nextInstInDelaySlot_o => nextInstInDelaySlot_45,
@@ -387,9 +449,9 @@ begin
             valid_i => valid_24,
             valid_o => valid_45,
             exceptCause_i => exceptCause_24,
-            tlbRefill_i =>tlbRefill_24,
+            tlbRefill_i => tlbRefill_24,
             exceptCause_o => exceptCause_45,
-            tlbRefill_o =>tlbRefill_45,
+            tlbRefill_o => tlbRefill_45,
             currentInstAddr_o => currentInstAddr_45,
 
             isIdEhb_o => isIdEhb_4b
@@ -409,6 +471,19 @@ begin
             operandX_o => operandX_56,
             toWriteReg_o => toWriteReg_56,
             writeRegAddr_o => writeRegAddr_56,
+
+            foperand1_i => foperand1_45,
+            foperand2_i => foperand2_45,
+            fpAlut_i => fpAlut_45,
+            toWriteFPReg_i => toWriteFPReg_45,
+            writeFPRegAddr_i => writeFPRegAddr_45,
+            writeFPDouble_i => writeFPDouble_45,
+            foperand1_o => foperand1_5f,
+            foperand2_o => foperand2_5f,
+            fpAlut_o => fpAlut_5f,
+            toWriteFPReg_o => toWriteFPReg_5f,
+            writeFPRegAddr_o => writeFPRegAddr_5f,
+            writeFPDouble_o => writeFPDouble_5f,
 
             alut_i => alut_45,
             memt_i => memt_45,
@@ -589,7 +664,21 @@ begin
             currentInstAddr_o => currentInstAddr_78,
             isInDelaySlot_o => isInDelaySlot_78,
             flushForceWrite_i => flushForceWrite_67,
-            flushForceWrite_o => flushForceWrite_78
+            flushForceWrite_o => flushForceWrite_78,
+
+            fpToWriteReg_i => toWriteFPReg_f7,
+            fpWriteRegAddr_i => writeFPRegAddr_f7,
+            fpWriteRegData_i => writeFPRegData_f7,
+            fpWriteTarget_i => fpWriteTarget_f7,
+            fpExceptFlags_i => exceptFlags_f7,
+            fpWriteDouble_i => writeFPDouble_f7,
+
+            fpToWriteReg_o => fpToWriteReg_78,
+            fpWriteRegAddr_o => fpWriteRegAddr_78,
+            fpWriteRegData_o => fpWriteRegData_78,
+            fpWriteTarget_o => fpWriteTarget_78,
+            fpExceptFlags_o => fpExceptFlags_78,
+            fpWriteDouble_o => fpWriteDouble_78
         );
 
     mem_ist: entity work.mem
@@ -654,7 +743,20 @@ begin
             currentInstAddr_o => currentInstAddr_8c,
             currentAccessAddr_o => currentAccessAddr_8c,
             flushForceWrite_i => flushForceWrite_78,
-            flushForceWrite_o => flushForceWrite_89
+            flushForceWrite_o => flushForceWrite_89,
+
+            fpToWriteReg_i => fpToWriteReg_78,
+            fpWriteRegAddr_i => fpWriteRegAddr_78,
+            fpWriteRegData_i => fpWriteRegData_78,
+            fpWriteTarget_i => fpWriteTarget_78,
+            fpExceptFlags_i => fpExceptFlags_78,
+            fpWriteDouble_i => fpWriteDouble_78,
+            fpToWriteReg_o => fpToWriteReg_89,
+            fpWriteRegAddr_o => fpWriteRegAddr_89,
+            fpWriteRegData_o => fpWriteRegData_89,
+            fpWriteTarget_o => fpWriteTarget_89,
+            fpExceptFlags_o => fpExceptFlags_89,
+            fpWriteDouble_o => fpWriteDouble_89
         );
     memToWriteReg_84 <= toWriteReg_89;
     memWriteRegAddr_84 <= writeRegAddr_89;
@@ -704,7 +806,13 @@ begin
             flush_i => flush_b9,
             currentInstAddr_i => currentInstAddr_89,
             currentInstAddr_o => debug_wb_pc,
-            flushForceWrite_i => flushForceWrite_89
+            flushForceWrite_i => flushForceWrite_89,
+            fpToWriteReg_i => fpToWriteReg_89,
+            fpWriteRegAddr_i => fpWriteRegAddr_89,
+            fpWriteRegData_i => fpWriteRegData_89,
+            fpWriteTarget_i => fpWriteTarget_89,
+            fpExceptFlags_i => fpExceptFlags_89,
+            fpWriteDouble_i => fpWriteDouble_89
         );
     wbToWriteHi_96 <= toWriteHi_9a;
     wbToWriteLo_96 <= toWriteLo_9a;
@@ -758,7 +866,8 @@ begin
             excp0RegWe_i => excp0RegWe_6b,
             memCP0RegWe_i => memCp0RegWe_8b,
             wbcp0regWe_i => wbCP0RegWe_9b,
-            scStall_i => scStall_8b
+            scStall_i => scStall_8b,
+            fpToStall_i => fpToStall_fb
         );
     flush_b2 <= flush_b1;
     flush_b5 <= flush_b1;
@@ -817,4 +926,52 @@ begin
     cp0Status_cb <= status_c8;
     cp0Cause_cb <= cause_c8;
     cp0Epc_cb <= epc_c8;
+
+    cp1_reg_ist: entity work.cp1_reg
+        generic map(
+            extraReg => extraCmd,
+            cpuId => cpuId
+        )
+        port map(
+            rst => rst,
+            clk => clk
+        );
+    
+    float_alu_ist: entity work.float_alu
+        generic map(
+            floatEnable => extraCmd
+        )
+        port map(
+            rst => rst,
+            clk => clk,
+            foperand1_i => foperand1_5f,
+            foperand2_i => foperand2_5f,
+            toWriteFPReg_i => toWriteFPReg_5f,
+            writeFPRegAddr_i => writeFPRegAddr_5f,
+            writeFPDouble_i => writeFPDouble_5f,
+            fpAlut_i => fpAlut_5f,
+            toStall_o => fpToStall_fb,
+            toWriteFPReg_o => toWriteFPReg_f7,
+            writeFPRegAddr_o => writeFPRegAddr_f7,
+            writeFPRegData_o => writeFPRegData_f7,
+            writeFPDouble_o => writeFPDouble_f7,
+            exceptFlags_o => exceptFlags_f7,
+            fpWriteTarget_o => fpWriteTarget_f7
+        );
+
+    float_regs_ist: entity work.float_regs
+        generic map(
+            extraReg => extraCmd
+        )
+        port map(
+            rst => rst,
+            clk => clk,
+            readAddr1_i => fpRegReadAddr1_4g,
+            readAddr2_i => fpRegReadAddr2_4g,
+            readDouble1_i => fpRegReadDouble1_4g,
+            readDouble2_i => fpRegReadDouble2_4g,
+            readData1_o => fpRegData1_4g,
+            readData2_o => fpRegData2_4g
+        );
+
 end bhv;
