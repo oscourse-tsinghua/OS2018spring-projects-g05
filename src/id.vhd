@@ -43,11 +43,13 @@ entity id is
         exWriteFPDouble_i: in std_logic;
         exWriteFPRegAddr_i: in std_logic_vector(RegAddrWidth);
         exWriteFPRegData_i: in std_logic_vector(DoubleDataWidth);
+        exWriteFPTarget_i: in FloatTargetType;
 
         memToWriteFPReg_i: in std_logic;
         memWriteFPDouble_i: in std_logic;
         memWriteFPRegAddr_i: in std_logic_vector(RegAddrWidth);
         memWriteFPRegData_i: in std_logic_vector(DoubleDataWidth);
+        memWriteFPTarget_i: in FloatTargetType;
 
         toStall_o: out std_logic;
         flushForceWrite_o: out std_logic;
@@ -1074,8 +1076,12 @@ begin
                             if (exMemt_i /= INVALID) then
                                 toStall_o <= PIPELINE_STOP;
                             end if;
+                        elsif (exWriteFPTarget_i = REG and exWriteFPRegAddr_i(4 downto 0) = instRs and exToWriteFPReg_i = YES) then
+                            operand1 := exWriteFPRegData_i(31 downto 0);
                         elsif (memToWriteReg_i = YES and memWriteRegAddr_i = instRs) then
                             operand1 := memWriteRegData_i;
+                        elsif (memWriteFPTarget_i = REG and memWriteFPRegAddr_i(4 downto 0) = instRs and memToWriteFPReg_i = YES) then
+                            operand1 := memWriteFPRegData_i(31 downto 0);
                         end if;
                     end if;
 
@@ -1110,8 +1116,12 @@ begin
                             if (exMemt_i /= INVALID) then
                                 toStall_o <= PIPELINE_STOP;
                             end if;
+                        elsif (exToWriteFPReg_i = YES and exWriteFPTarget_i = REG and exWriteFPRegAddr_i(4 downto 0) = instRt) then
+                            operand2 := exWriteFPRegData_i(31 downto 0);
                         elsif (memToWriteReg_i = YES and memWriteRegAddr_i = instRt) then
                             operand2 := memWriteRegData_i;
+                        elsif (memToWriteFPReg_i = YES and memWriteFPTarget_i = REG and memWriteFPRegAddr_i(4 downto 0) = instRt) then
+                            operand2 := memWriteFPRegData_i(31 downto 0);
                         end if;
                     end if;
                     if (dataFlowFloat = YES) then
