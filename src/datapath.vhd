@@ -253,6 +253,17 @@ architecture bhv of datapath is
     signal wbCP0RegWe_9c: std_logic;
     signal cp0Sp_9c: CP0Special;
 
+    -- Signals connecting mem_wb and cp1 --
+    signal wbCP1RegWe_9e: std_logic;
+    signal wbCP1RegWriteAddr_9e: std_logic_vector(RegAddrWidth);
+    signal wbCP1RegData_9e: std_logic_vector(DataWidth);
+
+    -- Signals connecting mem_wb and float registers --
+    signal toWriteFPReg_9g: std_logic;
+    signal writeFPRegAddr_9g: std_logic_vector(RegAddrWidth);
+    signal writeFPRegData_9g: std_logic_vector(DoubleDataWidth);
+    signal writeFPDouble_9g: std_logic;
+
     -- Signals connecting hi_lo and ex --
     signal hiData_a6, loData_a6: std_logic_vector(DataWidth);
 
@@ -802,6 +813,16 @@ begin
             wbCP0RegWriteAddr_o => wbCP0RegWriteAddr_9c,
             wbCP0RegWriteSel_o => wbCP0RegWriteSel_9c,
             wbCP0RegWe_o => wbCP0RegWe_9c,
+
+            wbCP1RegWe_o => wbCP1RegWe_9e,
+            wbCP1RegWriteAddr_o => wbCP1RegWriteAddr_9e,
+            wbCP1RegData_o => wbCP1RegData_9e,
+
+            toWriteFPReg_o => toWriteFPReg_9 g,
+            writeFPRegData_o => writeFPRegData_9g,
+            writeFPRegAddr_o => writeFPRegAddr_9g,
+            writeFPDOuble_o => writeFPDouble_9g,
+
             cp0Sp_o => cp0Sp_9c,
             flush_i => flush_b9,
             currentInstAddr_i => currentInstAddr_89,
@@ -934,7 +955,10 @@ begin
         )
         port map(
             rst => rst,
-            clk => clk
+            clk => clk,
+            we_i => wbCP1RegWe_9e,
+            waddr_i => wbCP1RegWriteAddr_9e,
+            data_i => wbCP1RegData_9e
         );
     
     float_alu_ist: entity work.float_alu
@@ -971,7 +995,11 @@ begin
             readDouble1_i => fpRegReadDouble1_4g,
             readDouble2_i => fpRegReadDouble2_4g,
             readData1_o => fpRegData1_4g,
-            readData2_o => fpRegData2_4g
+            readData2_o => fpRegData2_4g,
+            writeEnable_i => toWriteFPReg_9g,
+            writeAddr_i => writeFPRegAddr_9g,
+            writeData_i => writeFPRegData_9g,
+            writeDouble_i => writeFPDouble_9g
         );
 
 end bhv;

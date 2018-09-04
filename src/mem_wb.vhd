@@ -5,6 +5,9 @@ use work.global_const.all;
 use work.cp0_const.all;
 
 entity mem_wb is
+    generic(
+        extraCmd: boolean
+    );
     port (
         rst, clk: in std_logic;
 
@@ -37,6 +40,11 @@ entity mem_wb is
         cp0Sp_o: out CP0Special;
         flushForceWrite_i: in std_logic;
 
+        -- interact with CP1 --
+        wbCP1RegWe_o: out std_logic;
+        wbCP1RegWriteAddr_o: out std_logic_vector(AddrWidth);
+        wbCP1RegData_o: out std_logic_vector(DataWidth);
+
         -- for float --
         fpToWriteReg_i: in std_logic;
         fpWriteRegAddr_i: in std_logic_vector(DataWidth);
@@ -44,6 +52,10 @@ entity mem_wb is
         fpWriteTarget_i: in FloatTargetType;
         fpExceptFlags_i: in FloatExceptType;
         fpWriteDouble_i: in std_logic;
+        toWriteFPReg_o: out std_logic;
+        writeFPRegAddr_o: out std_logic_vector(RegAddrWidth);
+        writeFPRegData_o: out std_logic_vector(DoubleDataWidth);
+        writeFPDouble_o: out std_logic;
 
         -- for exception --
         flush_i: in std_logic
@@ -81,7 +93,16 @@ begin
                 wbCP0RegWriteAddr_o <= (others => '0');
                 wbCP0RegWriteSel_o <= (others => '0');
 
+                wbCP1RegWe_o <= NO;
+                wbCP1RegData_o <= (others => '0');
+                wbCP1RegWriteAddr_o <= (others => '0');
+
                 cp0Sp_o <= INVALID;
+
+                toWriteFPReg_o <= NO;
+                writeFPRegAddr_o <= (others => '0');
+                writeFPRegData_o <= (others => '0');
+                writeFPDouble_o <= NO;
             elsif (stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                 toWriteReg_o <= toWriteReg_i;
                 writeRegAddr_o <= writeRegAddr_i;
@@ -99,6 +120,29 @@ begin
 
                 cp0Sp_o <= cp0Sp_i;
                 currentInstAddr_o <= currentInstAddr_i;
+
+                if (extraCmd) then
+                    case (fpWriteTarget_i) is
+                        when REG =>
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= fpWriteRegAddr_i(4 downto 0);
+                            writeRegData_o <= fpWriteRegData_i(31 downto 0);
+
+                        when FREG =>
+                            toWriteFPReg_o <= YES;
+                            writeFPRegAddr_o <= fpWriteRegAddr_i;
+                            writeFPRegData_o <= fpWriteRegData_i;
+                            writeFPDouble_o <= fpWriteDouble_i;
+
+                        when CP1 =>
+                            wbCP1RegWe_o <= YES;
+                            wbCP1RegData_o <= fpWriteRegData_i(31 downto 0);
+                            wbCP1RegWriteAddr_o <= fpWriteRegAddr_i(4 downto 0);
+
+                        when others =>
+                            null;
+                    end case;
+                end if;
             end if;
         end if;
     end process;
