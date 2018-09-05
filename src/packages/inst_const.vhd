@@ -152,7 +152,6 @@ package inst_const is
     -- CP0
     --
     constant OP_COP0: std_logic_vector(InstOpWidth) := "010000";
-    constant OP_COP1: std_logic_vector(InstOpWidth) := "010001";
     constant RS_MF: std_logic_vector(InstRsWidth) := "00000";
     constant RS_MT: std_logic_vector(InstRsWidth) := "00100";
     constant RS_MFH: std_logic_vector(InstRsWidth) := "00010";

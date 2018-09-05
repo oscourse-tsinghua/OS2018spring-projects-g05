@@ -3,10 +3,11 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use work.global_const.all;
 use work.cp0_const.all;
+use work.alu_const.all;
 
 entity mem_wb is
     generic(
-        extraCmd: boolean
+        extraFeatures: boolean
     );
     port (
         rst, clk: in std_logic;
@@ -42,7 +43,7 @@ entity mem_wb is
 
         -- interact with CP1 --
         wbCP1RegWe_o: out std_logic;
-        wbCP1RegWriteAddr_o: out std_logic_vector(AddrWidth);
+        wbCP1RegWriteAddr_o: out std_logic_vector(RegAddrWidth);
         wbCP1RegData_o: out std_logic_vector(DataWidth);
 
         -- for float --
@@ -121,23 +122,29 @@ begin
                 cp0Sp_o <= cp0Sp_i;
                 currentInstAddr_o <= currentInstAddr_i;
 
-                if (extraCmd) then
+                if (extraFeatures) then
                     case (fpWriteTarget_i) is
                         when REG =>
                             toWriteReg_o <= YES;
                             writeRegAddr_o <= fpWriteRegAddr_i(4 downto 0);
                             writeRegData_o <= fpWriteRegData_i(31 downto 0);
+                            toWriteFPReg_o <= NO;
+                            wbCP1RegWe_o <= NO;
 
                         when FREG =>
                             toWriteFPReg_o <= YES;
-                            writeFPRegAddr_o <= fpWriteRegAddr_i;
+                            writeFPRegAddr_o <= fpWriteRegAddr_i(4 downto 0);
                             writeFPRegData_o <= fpWriteRegData_i;
                             writeFPDouble_o <= fpWriteDouble_i;
+                            toWriteReg_o <= NO;
+                            wbCP1RegWe_o <= NO;
 
                         when CP1 =>
                             wbCP1RegWe_o <= YES;
                             wbCP1RegData_o <= fpWriteRegData_i(31 downto 0);
                             wbCP1RegWriteAddr_o <= fpWriteRegAddr_i(4 downto 0);
+                            toWriteFPReg_o <= NO;
+                            toWriteReg_o <= NO;
 
                         when others =>
                             null;

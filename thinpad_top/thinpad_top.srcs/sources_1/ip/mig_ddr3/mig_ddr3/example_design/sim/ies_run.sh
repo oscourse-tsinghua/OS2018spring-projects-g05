@@ -1,5 +1,5 @@
 ###############################################################################
-## (c) Copyright 2008 2009 Xilinx, Inc. All rights reserved.
+## (c) Copyright 2008 – 2009 Xilinx, Inc. All rights reserved.
 ##
 ## This file contains confidential and proprietary information
 ## of Xilinx, Inc. and is protected under U.S. and

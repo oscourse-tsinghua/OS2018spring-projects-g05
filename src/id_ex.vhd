@@ -25,7 +25,7 @@ entity id_ex is
         foperand1_i: in std_logic_vector(DoubleDataWidth);
         foperand2_i: in std_logic_vector(DoubleDataWidth);
         toWriteFPReg_i: in std_logic;
-        writeFPRegAddr_i: in std_logic_vector(RegDataWidth);
+        writeFPRegAddr_i: in std_logic_vector(RegAddrWidth);
         writeFPDouble_i: in std_logic;
         fpAlut_i: in FPAluType;
 
@@ -97,8 +97,10 @@ begin
                 foperand2_o <= (others => '0');
                 toWriteFPReg_o <= NO;
                 writeFPRegAddr_o <= (others => '0');
-                writeFPDouble_o <= (others => '0');
+                writeFPDouble_o <= NO;
                 fpAlut_o <= INVALID;
+                foperand1_o <= (others => '0');
+                foperand2_o <= (others => '0');
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_STOP and stall_i(EX_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= INVALID;
                 memt_o <= INVALID;
@@ -120,7 +122,7 @@ begin
                 foperand2_o <= (others => '0');
                 toWriteFPReg_o <= NO;
                 writeFPRegAddr_o <= (others => '0');
-                writeFPDouble_o <= (others => '0');
+                writeFPDouble_o <= writeFPDouble_i;
                 fpAlut_o <= INVALID;
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= alut_i;

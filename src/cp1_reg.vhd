@@ -30,14 +30,13 @@ architecture bhv of cp1_reg is
 begin
 	EXTRA: if extraReg generate
 		process (all) begin
-			firCur <= firReg;
 			fcsrCur <= fcsrReg;
 			if (rst = RST_DISABLE and we_i = ENABLE) then
 				case (conv_integer(waddr_i(4 downto 0))) is
 					-- fir is read-only
 					when FCSR_REG =>
 						fcsrCur(FCSRFCCBits) <= data_i(FCSRFCCBits);
-						fcsrCur(FCSR_FS_BIT) <= data_i(FSCR_FS_BIT);
+						fcsrCur(FCSR_FS_BIT) <= data_i(FCSR_FS_BIT);
 						fcsrCur(FCSR_FCC1_BIT) <= data_i(FCSR_FCC1_BIT);
 						fcsrCur(FCSRCauseBits) <= data_i(FCSRCauseBits);
 						fcsrCur(FCSREnablesBits) <= data_i(FCSREnablesBits);
@@ -83,8 +82,7 @@ begin
 				data_o <= (others => '0');
 			end if;
 		end process;
-	end generate EXTRA;
-	EXTRA: if not extraReg generate
-		data_o <= (others => '0');
+	else generate
+	    data_o <= (others => '0');
 	end generate EXTRA;
 end bhv;

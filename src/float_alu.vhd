@@ -12,7 +12,7 @@ entity float_alu is
 	);
 	port (
 		rst: in std_logic;
-		alut_i: in FPAluType;
+		fpAlut_i: in FPAluType;
 		foperand1_i: in std_logic_vector(DoubleDataWidth);
 		foperand2_i: in std_logic_vector(DoubleDataWidth);
 		toWriteFPReg_i: in std_logic;
@@ -24,7 +24,9 @@ entity float_alu is
 		fpWriteTarget_o: out FloatTargetType;
 		writeFPDouble_o: out std_logic;
 		exceptFlags_o: out FloatExceptType;
-		toStall_o: out std_logic
+		toStall_o: out std_logic;
+		cp1RegReadAddr_o: out std_logic_vector(RegAddrWidth);
+		data_i: in std_logic_vector(DataWidth)
 	);
 end float_alu;
 
@@ -58,32 +60,32 @@ begin
 		exceptFlags_o <= NONE;
 		if (floatEnable = true) then
 			writeFPDouble_o <= writeFPDouble_i;
-			case(alut_i) is
+			case(fpAlut_i) is
 				when FPALU_ABS =>
 					if (writeFPDouble_i = NO) then
-						toWriteRegData_o <= singleabs(operand1_i(31 downto 0));
+						writeFPRegData_o <= singleabs(foperand1_i(31 downto 0));
 					else
-						toWriteRegData_o <= doubleabs(operand1_i);
+						writeFPRegData_o <= doubleabs(foperand1_i);
 					end if;
 				
 				when FPALU_NEG =>
 					if (writeFPDouble_i = NO) then
-						toWriteRegData_o <= singleneg(operand1_i(31 downto 0));
+						writeFPRegData_o <= singleneg(foperand1_i(31 downto 0));
 					else
-						toWriteRegData_o <= doubleneg(operand1_i);
+						writeFPRegData_o <= doubleneg(foperand1_i);
 					end if;
 
 				when CF =>
-					fpWriteTarget <= REG;
-					toWriteReg_o <= YES;
-					writeRegAddr_o <= 27ub"0" & writeFPRegAddr_i;
-					writeFPRegData_o <= 32ub"0" & operand1_i;
-
-				when CT =>
-					fpWriteTarget <= FREG;
+					fpWriteTarget_o <= REG;
 					toWriteFPReg_o <= YES;
 					writeFPRegAddr_o <= 27ub"0" & writeFPRegAddr_i;
-					writeFPRegData_o <= 32ub"0" & operand2_i;
+					writeFPRegData_o <= 32ub"0" & foperand2_i(31 downto 0);
+
+				when CT =>
+					fpWriteTarget_o <= FREG;
+					toWriteFPReg_o <= YES;
+					writeFPRegAddr_o <= 27ub"0" & writeFPRegAddr_i;
+					writeFPRegData_o <= 32ub"0" & foperand1_i(31 downto 0);
 
 				when others =>
 					null;

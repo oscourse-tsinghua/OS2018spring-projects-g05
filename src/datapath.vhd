@@ -358,7 +358,7 @@ architecture bhv of datapath is
 
     -- Signals connecting float_alu and ex_mem --
     signal toWriteFPReg_f7: std_logic;
-    signal writeFPRegAddr_f7: std_logic_vector(RegAddrWidth);
+    signal writeFPRegAddr_f7: std_logic_vector(AddrWidth);
     signal writeFPRegData_f7: std_logic_vector(DoubleDataWidth);
     signal writeFPDouble_f7: std_logic;
     signal exceptFlags_f7: FloatExceptType;
@@ -366,6 +366,10 @@ architecture bhv of datapath is
 
     -- Signals connecting float_alu and ctrl --
     signal fpToStall_fb: std_logic;
+
+    -- Signals connecting cp1 and float_alu --
+    signal cp1RegReadAddr_fe: std_logic_vector(RegAddrWidth);
+    signal data_ef: std_logic_vector(DataWidth);
 
 begin
 
@@ -479,17 +483,17 @@ begin
 
             isIdEhb_o => isIdEhb_4b,
 
-            exToWriteFPReg_i <= exToWriteFPReg_f4,
-            exWriteFPTarget_i <= exWriteFPTarget_f4,
-            exWriteFPDouble_i <= exWriteFPDouble_f4,
-            exWriteFPRegAddr_i <= exWriteFPRegAddr_f4,
-            exWriteFPRegData_i <= exWriteFPRegData_f4,
+            exToWriteFPReg_i => exToWriteFPReg_f4,
+            exWriteFPTarget_i => exWriteFPTarget_f4,
+            exWriteFPDouble_i => exWriteFPDouble_f4,
+            exWriteFPRegAddr_i => exWriteFPRegAddr_f4,
+            exWriteFPRegData_i => exWriteFPRegData_f4,
 
-            memToWriteFPReg_i <= memToWriteFPReg_84,
-            memWriteFPTarget_i <= memWriteFPTarget_84,
-            memWriteFPDouble_i <= memWriteFPDouble_84,
-            memWriteFPRegAddr_i <= memWriteFPRegAddr_84,
-            memWriteFPRegData_i <= memWriteFPRegData_84
+            memToWriteFPReg_i => memToWriteFPReg_84,
+            memWriteFPTarget_i => memWriteFPTarget_84,
+            memWriteFPDouble_i => memWriteFPDouble_84,
+            memWriteFPRegAddr_i => memWriteFPRegAddr_84,
+            memWriteFPRegData_i => memWriteFPRegData_84
         );
 
     id_ex_ist: entity work.id_ex
@@ -793,11 +797,11 @@ begin
             fpExceptFlags_o => fpExceptFlags_89,
             fpWriteDouble_o => fpWriteDouble_89
         );
-    memToWriteFPReg_84 <= fpToWriteReg_89,
-    memWriteFPTarget_84 <= fpWriteTarget_89,
-    memWriteFPDouble_84 <= fpWriteDouble_89,
-    memWriteFPRegAddr_84 <= fpWriteRegAddr_89,
-    memWriteFPRegData_84 <= fpWriteRegData_89,
+    memToWriteFPReg_84 <= fpToWriteReg_89;
+    memWriteFPTarget_84 <= fpWriteTarget_89;
+    memWriteFPDouble_84 <= fpWriteDouble_89;
+    memWriteFPRegAddr_84 <= fpWriteRegAddr_89;
+    memWriteFPRegData_84 <= fpWriteRegData_89;
     memToWriteReg_84 <= toWriteReg_89;
     memWriteRegAddr_84 <= writeRegAddr_89;
     memWriteRegData_84 <= writeRegData_89;
@@ -813,6 +817,9 @@ begin
     currentInstAddr_89 <= currentInstAddr_8c;
 
     mem_wb_ist: entity work.mem_wb
+        generic map(
+            extraFeatures => extraCmd
+        )
         port map (
             rst => rst, clk => clk,
 
@@ -847,7 +854,7 @@ begin
             wbCP1RegWriteAddr_o => wbCP1RegWriteAddr_9e,
             wbCP1RegData_o => wbCP1RegData_9e,
 
-            toWriteFPReg_o => toWriteFPReg_9 g,
+            toWriteFPReg_o => toWriteFPReg_9g,
             writeFPRegData_o => writeFPRegData_9g,
             writeFPRegAddr_o => writeFPRegAddr_9g,
             writeFPDOuble_o => writeFPDouble_9g,
@@ -987,7 +994,9 @@ begin
             clk => clk,
             we_i => wbCP1RegWe_9e,
             waddr_i => wbCP1RegWriteAddr_9e,
-            data_i => wbCP1RegData_9e
+            data_i => wbCP1RegData_9e,
+            raddr_i => cp1RegReadAddr_fe,
+            data_o => data_ef
         );
     
     float_alu_ist: entity work.float_alu
@@ -996,7 +1005,6 @@ begin
         )
         port map(
             rst => rst,
-            clk => clk,
             foperand1_i => foperand1_5f,
             foperand2_i => foperand2_5f,
             toWriteFPReg_i => toWriteFPReg_5f,
@@ -1009,13 +1017,15 @@ begin
             writeFPRegData_o => writeFPRegData_f7,
             writeFPDouble_o => writeFPDouble_f7,
             exceptFlags_o => exceptFlags_f7,
-            fpWriteTarget_o => fpWriteTarget_f7
+            fpWriteTarget_o => fpWriteTarget_f7,
+            cp1RegReadAddr_o => cp1RegReadAddr_fe,
+            data_i => data_ef
         );
-    exToWriteFPReg_f4 <= toWriteFPReg_f7,
-    exWriteFPRegAddr_f4 <= writeFPRegAddr_f7,
-    exWriteFPRegData_f4 <= writeFPRegData_f7,
-    exWriteFPDouble_f4 <= writeFPDouble_f7,
-    exWriteFPTarget_f4 <= fpWriteTarget_f7,
+    exToWriteFPReg_f4 <= toWriteFPReg_f7;
+    exWriteFPRegAddr_f4 <= writeFPRegAddr_f7;
+    exWriteFPRegData_f4 <= writeFPRegData_f7;
+    exWriteFPDouble_f4 <= writeFPDouble_f7;
+    exWriteFPTarget_f4 <= fpWriteTarget_f7;
 
     float_regs_ist: entity work.float_regs
         generic map(

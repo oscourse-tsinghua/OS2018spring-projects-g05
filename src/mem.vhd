@@ -5,6 +5,7 @@ use work.global_const.all;
 use work.mem_const.all;
 use work.cp0_const.all;
 use work.except_const.all;
+use work.alu_const.all;
 
 entity mem is
     generic (
@@ -79,7 +80,7 @@ entity mem is
         fpWriteRegData_o: out std_logic_vector(DoubleDataWidth);
         fpWriteTarget_o: out FloatTargetType;
         fpExceptFlags_o: out FloatExceptType;
-        fpWriteDouble_o: out std_logic
+        fpWriteDouble_o: out std_logic;
 
         -- for sync --
         scStall_o: out integer;
@@ -130,8 +131,8 @@ begin
         cp0RegData_o <= cp0RegData_i;
 
         fpToWriteReg_o <= fpToWriteReg_i;
-        fpWriteRegAddr_o <= fpWriteRegAddr_o;
-        fpWriteRegData_o <= fpWriteRegData_o;
+        fpWriteRegAddr_o <= fpWriteRegAddr_i;
+        fpWriteRegData_o <= fpWriteRegData_i;
         fpWriteTarget_o <= fpWriteTarget_i;
         fpExceptFlags_o <= fpExceptFlags_i;
         fpWriteDouble_o <= fpWriteDouble_i;

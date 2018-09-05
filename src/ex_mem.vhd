@@ -5,6 +5,7 @@ use work.global_const.all;
 use work.mem_const.all;
 use work.except_const.all;
 use work.cp0_const.all;
+use work.alu_const.all;
 
 entity ex_mem is
     port (
@@ -69,13 +70,13 @@ entity ex_mem is
 
         -- for float --
         fpToWriteReg_i: in std_logic;
-        fpWriteRegAddr_i: in std_logic_vector(DataWidth);
+        fpWriteRegAddr_i: in std_logic_vector(AddrWidth);
         fpWriteRegData_i: in std_logic_vector(DoubleDataWidth);
         fpWriteTarget_i: in FloatTargetType;
         fpExceptFlags_i: in FloatExceptType;
         fpWriteDouble_i: in std_logic;
         fpToWriteReg_o: out std_logic;
-        fpWriteRegAddr_o: out std_logic_vector(DataWidth);
+        fpWriteRegAddr_o: out std_logic_vector(AddrWidth);
         fpWriteRegData_o: out std_logic_vector(DoubleDataWidth);
         fpWriteTarget_o: out FloatTargetType;
         fpExceptFlags_o: out FloatExceptType;
@@ -171,14 +172,14 @@ begin
                     fpExceptFlags_o <= fpExceptFlags_i;
                     fpWriteDouble_o <= fpWriteDouble_i;
                 else
-                    toWriteReg_o <= fpWriteRegAddr_o;
-                    writeRegData_o <= fpWriteRegData_o;
-                    writeRegAddr_o <= fpWriteRegAddr_o(4 downto 0); 
+                    toWriteReg_o <= fpToWriteReg_i;
+                    writeRegData_o <= fpWriteRegData_i(31 downto 0);
+                    writeRegAddr_o <= fpWriteRegAddr_i(4 downto 0); 
                     fpToWriteReg_o <= NO;
                     fpWriteRegAddr_o <= (others => '0');
                     fpWriteRegData_o <= (others => '0');
-                    fpWriteTarget_o <= (others => '0');
-                    fpExceptFlags_o <= (others => '0');
+                    fpWriteTarget_o <= INVALID;
+                    fpExceptFlags_o <= NONE;
                     fpWriteDouble_o <= NO;
                 end if;
             end if;
