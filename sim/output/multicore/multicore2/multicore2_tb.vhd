@@ -36,8 +36,8 @@ architecture bhv of multicore2_tb is
     signal timerInt1, timerInt2: std_logic;
 
     -- CODE BELOW IS AUTOMATICALLY GENERATED
-constant CPU2_ON: std_logic := '1';
 constant ENABLE_CACHE: std_logic := '0';
+constant CPU2_ON: std_logic := '1';
 begin
     ram_ist: entity work.multicore2_fake_ram
         port map (

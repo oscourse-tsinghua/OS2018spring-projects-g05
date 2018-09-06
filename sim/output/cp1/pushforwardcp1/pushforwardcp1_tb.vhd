@@ -4,7 +4,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.loadstore5_test_const.all;
+use work.pushforwardcp1_test_const.all;
 use work.global_const.all;
 use work.except_const.all;
 use work.mmu_const.all;
@@ -12,10 +12,10 @@ use work.bus_const.all;
 -- CODE BELOW IS AUTOMATICALLY GENERATED
 use work.alu_const.all;
 
-entity loadstore5_tb is
-end loadstore5_tb;
+entity pushforwardcp1_tb is
+end pushforwardcp1_tb;
 
-architecture bhv of loadstore5_tb is
+architecture bhv of pushforwardcp1_tb is
     signal rst: std_logic := '1';
     signal clk: std_logic := '0';
 
@@ -39,7 +39,7 @@ architecture bhv of loadstore5_tb is
 constant CPU2_ON: std_logic := '0';
 constant ENABLE_CACHE: std_logic := '0';
 begin
-    ram_ist: entity work.loadstore5_fake_ram
+    ram_ist: entity work.pushforwardcp1_fake_ram
         port map (
             clk => clk,
             rst => rst,
@@ -181,49 +181,13 @@ alias user_reg is <<signal ^.cpu1_ist.datapath_ist.regfile_ist.regArray: RegArra
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 20 * CLK_PERIOD;
-    assert user_reg(6) = x"01234567" severity FAILURE;
+    assert user_reg(4) = x"0000efc3" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
-    wait for 21 * CLK_PERIOD;
-    assert user_reg(7) = x"89abcdef" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 32 * CLK_PERIOD;
-    assert user_reg(6) = x"234567ff" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 33 * CLK_PERIOD;
-    assert user_reg(7) = x"ffffff89" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 44 * CLK_PERIOD;
-    assert user_reg(6) = x"4567ffff" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 45 * CLK_PERIOD;
-    assert user_reg(7) = x"ffff89ab" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 56 * CLK_PERIOD;
-    assert user_reg(6) = x"67ffffff" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 57 * CLK_PERIOD;
-    assert user_reg(7) = x"ff89abcd" severity FAILURE;
+    wait for 20 * CLK_PERIOD;
+    assert user_reg(5) = x"00008fdc" severity FAILURE;
     wait;
 end process;
     end block assertBlk;
