@@ -77,6 +77,7 @@ begin
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
                 exExceptCause_o <= NO_CAUSE;
+                exTlbRefill_o <= '0';
                 exLinkAddress_o <= (others => '0');
                 exIsInDelaySlot_o <= NO;
                 isInDelaySlot_o <= NO;
@@ -93,6 +94,7 @@ begin
                 toWriteReg_o <= NO;
                 writeRegAddr_o <= (others => '0');
                 exExceptCause_o <= NO_CAUSE;
+                exTlbRefill_o <= '0';
                 exLinkAddress_o <= (others => '0');
                 exIsInDelaySlot_o <= NO;
                 -- Keep `isInDelaySlot_o` as old value
@@ -114,6 +116,7 @@ begin
                     isInDelaySlot_o <= nextInstInDelaySlot_i;
                 end if;
                 exExceptCause_o <= idExceptCause_i;
+                exTlbRefill_o <= idTlbRefill_i;
                 exCurrentInstAddr_o <= idCurrentInstAddr_i;
                 exValid <= valid_i;
                 noInt_o <= noInt_i;

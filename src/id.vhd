@@ -10,7 +10,8 @@ use work.except_const.all;
 
 entity id is
     generic (
-        extraCmd: boolean
+        extraCmd: boolean;
+        memPushForward: boolean
     );
     port (
         rst: in std_logic;
@@ -31,6 +32,7 @@ entity id is
         memToWriteReg_i: in std_logic;
         memWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
         memWriteRegDataShort_i: in std_logic_vector(DataWidth);
+        memWriteRegDataLong_i: in std_logic_vector(DataWidth);
 
         toStall_o: out std_logic;
         flushForceWrite_o: out std_logic;
@@ -1018,7 +1020,11 @@ begin
                         elsif (memToWriteReg_i = YES and memWriteRegAddr_i = instRs) then
                             operand1 := memWriteRegDataShort_i;
                             if (memMemt_i /= INVALID) then
-                                toStall_o <= PIPELINE_STOP;
+                                if (memPushForward) then
+                                    operand1 := memWriteRegDataLong_i;
+                                else
+                                    toStall_o <= PIPELINE_STOP;
+                                end if;
                             end if;
                         end if;
                     end if;
@@ -1057,7 +1063,11 @@ begin
                         elsif (memToWriteReg_i = YES and memWriteRegAddr_i = instRt) then
                             operand2 := memWriteRegDataShort_i;
                             if (memMemt_i /= INVALID) then
-                                toStall_o <= PIPELINE_STOP;
+                                if (memPushForward) then
+                                    operand2 := memWriteRegDataLong_i;
+                                else
+                                    toStall_o <= PIPELINE_STOP;
+                                end if;
                             end if;
                         end if;
                     end if;

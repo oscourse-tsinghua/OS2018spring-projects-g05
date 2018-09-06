@@ -94,6 +94,7 @@ begin
                 tempProduct_o <= (others => '0');
                 cnt_o <= (others => '0');
                 exceptCause_o <= NO_CAUSE;
+                tlbRefill_o <= '0';
                 isInDelaySlot_o <= NO;
                 currentInstAddr_o <= (others => '0');
 
@@ -101,6 +102,7 @@ begin
                 cp0RegData_o <= (others => '0');
                 cp0RegWriteAddr_o <= (others => '0');
                 cp0RegWriteSel_o <= (others => '0');
+                cp0Sp_o <= INVALID;
 
                 valid_o <= NO;
                 noInt_o <= NO;
@@ -128,8 +130,10 @@ begin
                 cp0RegWriteAddr_o <= cp0RegWriteAddr_i;
                 cp0RegWriteSel_o <= cp0RegWriteSel_i;
                 cp0RegData_o <= cp0RegData_i;
+                cp0Sp_o <= cp0Sp_i;
 
                 exceptCause_o <= exceptCause_i;
+                tlbRefill_o <= tlbRefill_i;
                 isInDelaySlot_o <= isInDelaySlot_i;
                 currentInstAddr_o <= currentInstAddr_i;
 

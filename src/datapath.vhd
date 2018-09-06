@@ -10,6 +10,7 @@ use work.except_const.all;
 entity datapath is
     generic (
         extraCmd:               boolean;
+        memPushForward:         boolean;
         instEntranceAddr:       std_logic_vector(AddrWidth);
         exceptBootBaseAddr:     std_logic_vector(AddrWidth);
         tlbRefillExl0Offset:    std_logic_vector(AddrWidth);
@@ -186,6 +187,9 @@ architecture bhv of datapath is
     signal noInt_78: std_logic;
     signal flushForceWrite_78: std_logic;
 
+    -- Signals connecting mem and id --
+    signal memWriteRegDataLong_84: std_logic_vector(DataWidth);
+
     -- Signals connecting ex_mem and id --
     signal memMemt_74: MemType;
     signal memToWriteReg_74: std_logic;
@@ -347,7 +351,8 @@ begin
 
     id_ist: entity work.id
         generic map (
-            extraCmd => extraCmd
+            extraCmd => extraCmd,
+            memPushForward => memPushForward
         )
         port map (
             rst => rst,
@@ -367,6 +372,7 @@ begin
             memToWriteReg_i => memToWriteReg_74,
             memWriteRegAddr_i => memWriteRegAddr_74,
             memWriteRegDataShort_i => memWriteRegDataShort_74,
+            memWriteRegDataLong_i => memWriteRegDataLong_84,
 
             toStall_o => idToStall_4b,
 
@@ -664,6 +670,7 @@ begin
             flushForceWrite_i => flushForceWrite_78,
             flushForceWrite_o => flushForceWrite_89
         );
+    memWriteRegDataLong_84 <= writeRegData_89;
     memToWriteHi_86 <= toWriteHi_89;
     memToWriteLo_86 <= toWriteLo_89;
     memWriteHiData_86 <= writeHiData_89;

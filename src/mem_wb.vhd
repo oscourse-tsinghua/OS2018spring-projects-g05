@@ -72,6 +72,8 @@ begin
                 wbCP0RegData_o <= (others => '0');
                 wbCP0RegWriteAddr_o <= (others => '0');
                 wbCP0RegWriteSel_o <= (others => '0');
+
+                cp0Sp_o <= INVALID;
             elsif (stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
                 toWriteReg_o <= toWriteReg_i;
                 writeRegAddr_o <= writeRegAddr_i;
@@ -86,6 +88,8 @@ begin
                 wbCP0RegWriteAddr_o <= memCP0RegWriteAddr_i;
                 wbCP0RegWriteSel_o <= memCP0RegWriteSel_i;
                 wbCP0RegData_o <= memCP0RegData_i;
+
+                cp0Sp_o <= cp0Sp_i;
                 currentInstAddr_o <= currentInstAddr_i;
             end if;
         end if;
