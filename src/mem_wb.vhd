@@ -108,13 +108,6 @@ begin
 
                 if (extraFeatures) then
                     case (fpWriteTarget_i) is
-                        when REG =>
-                            toWriteReg_o <= YES;
-                            writeRegAddr_o <= fpWriteRegAddr_i(4 downto 0);
-                            writeRegData_o <= fpWriteRegData_i(31 downto 0);
-                            toWriteFPReg_o <= NO;
-                            wbCP1RegWe_o <= NO;
-
                         when FREG =>
                             toWriteFPReg_o <= YES;
                             writeFPRegAddr_o <= fpWriteRegAddr_i(4 downto 0);
