@@ -15,7 +15,8 @@ entity eth_ctrl_encap is
         eth_txd: out std_logic_vector(3 downto 0);
         eth_rxd: in std_logic_vector(3 downto 0);
         eth_mdio_i: in std_logic;
-        eth_mdio_o, eth_mdio_t, eth_mdc: out std_logic
+        eth_mdio_o, eth_mdio_t, eth_mdc: out std_logic;
+        int_o: out std_logic
     );
 end eth_ctrl_encap;
 
@@ -42,6 +43,7 @@ architecture bhv of eth_ctrl_encap is
             s_axi_rresp: out std_logic_vector(1 downto 0);
             s_axi_rvalid: out std_logic;
             s_axi_rready: in std_logic;
+            ip2intc_irpt: out std_logic;
             phy_tx_clk: in std_logic;
             phy_rx_clk: in std_logic;
             phy_crs: in std_logic;
@@ -105,6 +107,7 @@ begin
             s_axi_rvalid => axi_rvalid,
             s_axi_rready => axi_rready,
 
+            ip2intc_irpt => int_o,
             phy_tx_clk => eth_txclk,
             phy_rx_clk => eth_rxclk,
             phy_crs => eth_crs,

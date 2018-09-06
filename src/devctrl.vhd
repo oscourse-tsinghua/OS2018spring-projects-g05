@@ -10,8 +10,8 @@ entity devctrl is
 
         cpu1Inst_i, cpu1Data_i, cpu2Inst_i, cpu2Data_i: in BusC2D;
         cpu1Inst_o, cpu1Data_o, cpu2Inst_o, cpu2Data_o: out BusD2C;
-        ddr3_i, flash_i, serial_i, boot_i, eth_i, led_i, num_i, ipi_i: in BusD2C;
-        ddr3_o, flash_o, serial_o, boot_o, eth_o, led_o, num_o, ipi_o: out BusC2D;
+        ddr3_i, flash_i, serial_i, boot_i, eth_i, led_i, num_i, ipi_i, intc_i: in BusD2C;
+        ddr3_o, flash_o, serial_o, boot_o, eth_o, led_o, num_o, ipi_o, intc_o: out BusC2D;
 
         -- Bus monitoring
         busMon_o: out BusC2D;
@@ -162,6 +162,7 @@ begin
         connectRange(x"1fd0f010", x"1fd0f010", conn_c2d, conn_d2c, num_i, num_o);
         connectRange(x"1c030000", x"1c03ffff", conn_c2d, conn_d2c, eth_i, eth_o);
         connectRange(x"1ff01000", x"1ff0103f", conn_c2d, conn_d2c, ipi_i, ipi_o);
+        connectRange(x"1c080000", x"1c080fff", conn_c2d, conn_d2c, intc_i, intc_o);
     end process;
 
     scCorrect <= llBit when beforeSync_c2d.addr = llLoc and curCPU = llCPU else '0';
