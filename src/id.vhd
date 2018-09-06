@@ -10,7 +10,8 @@ use work.except_const.all;
 
 entity id is
     generic (
-        extraCmd: boolean
+        extraCmd: boolean;
+        memPushForward: boolean
     );
     port (
         rst: in std_logic;
@@ -34,9 +35,11 @@ entity id is
         exToWriteReg_i: in std_logic;
         exWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
         exWriteRegData_i: in std_logic_vector(DataWidth);
+        memMemt_i: in MemType;
         memToWriteReg_i: in std_logic;
         memWriteRegAddr_i: in std_logic_vector(RegAddrWidth);
-        memWriteRegData_i: in std_logic_vector(DataWidth);
+        memWriteRegDataShort_i: in std_logic_vector(DataWidth);
+        memWriteRegDataLong_i: in std_logic_vector(DataWidth);
 
         -- Push Forward for CP1 --
         exToWriteFPReg_i: in std_logic;
@@ -1098,7 +1101,14 @@ begin
                         elsif (exWriteFPTarget_i = REG and exWriteFPRegAddr_i(4 downto 0) = instRs and exToWriteFPReg_i = YES) then
                             operand1 := exWriteFPRegData_i(31 downto 0);
                         elsif (memToWriteReg_i = YES and memWriteRegAddr_i = instRs) then
-                            operand1 := memWriteRegData_i;
+                            operand1 := memWriteRegDataShort_i;
+                            if (memMemt_i /= INVALID) then
+                                if (memPushForward) then
+                                    operand1 := memWriteRegDataLong_i;
+                                else
+                                    toStall_o <= PIPELINE_STOP;
+                                end if;
+                            end if;
                         elsif (memWriteFPTarget_i = REG and memWriteFPRegAddr_i(4 downto 0) = instRs and memToWriteFPReg_i = YES) then
                             operand1 := memWriteFPRegData_i(31 downto 0);
                         end if;
@@ -1138,7 +1148,14 @@ begin
                         elsif (exToWriteFPReg_i = YES and exWriteFPTarget_i = REG and exWriteFPRegAddr_i(4 downto 0) = instRt) then
                             operand2 := exWriteFPRegData_i(31 downto 0);
                         elsif (memToWriteReg_i = YES and memWriteRegAddr_i = instRt) then
-                            operand2 := memWriteRegData_i;
+                            operand2 := memWriteRegDataShort_i;
+                            if (memMemt_i /= INVALID) then
+                                if (memPushForward) then
+                                    operand2 := memWriteRegDataLong_i;
+                                else
+                                    toStall_o <= PIPELINE_STOP;
+                                end if;
+                            end if;
                         elsif (memToWriteFPReg_i = YES and memWriteFPTarget_i = REG and memWriteFPRegAddr_i(4 downto 0) = instRt) then
                             operand2 := memWriteFPRegData_i(31 downto 0);
                         end if;
@@ -1262,49 +1279,50 @@ begin
             branchToJump := NO;
             branchToLink := NO;
             nextInstInDelaySlot_o <= YES;
-            case (instOp) is
-                when OP_JMPSPECIAL =>
-                    case (instRt) is
-                        when JMP_BGEZ | JMP_BGEZL =>
-                            if (operand1(31) = '0') then
-                                branchToJump := YES;
-                            end if;
-                        when JMP_BLTZ | JMP_BLTZL =>
-                            if (operand1(31) = '1') then
-                                branchToJump := YES;
-                            end if;
-                        when JMP_BGEZAL =>
-                            if (operand1(31) = '0') then
-                                branchToJump := YES;
-                            end if;
-                            branchToLink := YES;
-                        when JMP_BLTZAL =>
-                            if (operand1(31) = '1') then
-                                branchToJump := YES;
-                            end if;
-                            branchToLink := YES;
-                        when others =>
-                            null;
-                    end case;
-                when JMP_BEQ | JMP_BEQL =>
-                    if (operand1 = operand2) then
+            if (instOp = OP_JMPSPECIAL) then
+                if (instRt = JMP_BGEZ or (extraCmd and instRt = JMP_BGEZL)) then
+                    if (operand1(31) = '0') then
                         branchToJump := YES;
                     end if;
-                when JMP_BGTZ | JMP_BGTZL =>
-                    if (operand1(31) = '0' and operand1 /= 32ux"0") then
+                end if;
+                if (instRt = JMP_BLTZ or (extraCmd and instRt = JMP_BLTZL)) then
+                    if (operand1(31) = '1') then
                         branchToJump := YES;
                     end if;
-                when JMP_BLEZ | JMP_BLEZL =>
-                    if (operand1(31) = '1' or operand1 = 32ux"0") then
+                end if;
+                if (instRt = JMP_BGEZAL) then
+                    if (operand1(31) = '0') then
                         branchToJump := YES;
                     end if;
-                when JMP_BNE | JMP_BNEL =>
-                    if (operand1 /= operand2) then
+                    branchToLink := YES;
+                end if;
+                if (instRt = JMP_BLTZAL) then
+                    if (operand1(31) = '1') then
                         branchToJump := YES;
                     end if;
-                when others =>
-                    null;
-            end case;
+                    branchToLink := YES;
+                end if;
+            end if;
+            if (instOp = JMP_BEQ or (extraCmd and instOp = JMP_BEQL)) then
+                if (operand1 = operand2) then
+                    branchToJump := YES;
+                end if;
+            end if;
+            if (instOp = JMP_BGTZ or (extraCmd and instOp = JMP_BGTZL)) then
+                if (operand1(31) = '0' and operand1 /= 32ux"0") then
+                    branchToJump := YES;
+                end if;
+            end if;
+            if (instOp = JMP_BLEZ or (extraCmd and instOp = JMP_BLEZL)) then
+                if (operand1(31) = '1' or operand1 = 32ux"0") then
+                    branchToJump := YES;
+                end if;
+            end if;
+            if (instOp = JMP_BNE or (extraCmd and instOp = JMP_BNEL)) then
+                if (operand1 /= operand2) then
+                    branchToJump := YES;
+                end if;
+            end if;
 
             if (branchToJump = YES) then
                 branchTargetAddress := pcPlus4 + instOffsetImm - instImmSign;

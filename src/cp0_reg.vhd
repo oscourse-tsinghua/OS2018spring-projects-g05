@@ -27,6 +27,7 @@ entity cp0_reg is
         data_i: in std_logic_vector(DataWidth);
         int_i: in std_logic_vector(IntWidth);
         data_o: out std_logic_vector(DataWidth);
+        dataValid_o: out std_logic;
         timerInt_o: out std_logic;
         status_o: out std_logic_vector(DataWidth);
         cause_o: out std_logic_vector(DataWidth);
@@ -90,10 +91,11 @@ begin
     depc_o <= curArr(DEPC_REG);
 
     data_o <= PRID_CONSTANT when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and rsel_i = "000") else
-              curArr(PRID_OR_EBASE_REG) when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and rsel_i = "001") else
+              regArr(PRID_OR_EBASE_REG) when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and rsel_i = "001") else
               CONFIG1_CONSTANT when (conv_integer(raddr_i) = CONFIG_REG and rsel_i = "001") else
-              curArr(conv_integer(raddr_i)) when (rsel_i = "000" and conv_integer(raddr_i) /= PRID_OR_EBASE_REG) else
+              regArr(conv_integer(raddr_i)) when (rsel_i = "000" and conv_integer(raddr_i) /= PRID_OR_EBASE_REG) else
               32ux"0";
+    dataValid_o <= not we_i;
 
     EXTRA: if extraReg generate
         isKernelMode_o <= curArr(STATUS_REG)(STATUS_ERL_BIT) or
@@ -135,24 +137,25 @@ begin
                 end if;
             end if;
         end process;
-
-        process (all) begin
-            -- Add debug exception into `exceptCause` --
-            exceptCause <= exceptCause_i;
-            tlbRefill <= tlbRefill_i;
-            if (
-                (debugPoint or regArr(CAUSE_REG)(CAUSE_WP_BIT)) = '1' and
-                ((regArr(STATUS_REG)(STATUS_ERL_BIT) or regArr(STATUS_REG)(STATUS_EXL_BIT)) = '0')
-            ) then
-                -- `valid_i` can be 0 here
-                -- When debugpoint happened with TLB or address exception, issue debug point first to improve robustness.
-                exceptCause <= WATCH_CAUSE;
-                tlbRefill <= '0';
-            end if;
-        end process;
-        exceptCause_o <= exceptCause;
-        tlbRefill_o <= tlbRefill;
     end generate EXTRA;
+
+    process (all) begin
+        -- Add debug exception into `exceptCause` --
+        exceptCause <= exceptCause_i;
+        tlbRefill <= tlbRefill_i;
+        if (
+            extraReg and
+            (debugPoint or regArr(CAUSE_REG)(CAUSE_WP_BIT)) = '1' and
+            ((regArr(STATUS_REG)(STATUS_ERL_BIT) or regArr(STATUS_REG)(STATUS_EXL_BIT)) = '0')
+        ) then
+            -- `valid_i` can be 0 here
+            -- When debugpoint happened with TLB or address exception, issue debug point first to improve robustness.
+            exceptCause <= WATCH_CAUSE;
+            tlbRefill <= '0';
+        end if;
+    end process;
+    exceptCause_o <= exceptCause;
+    tlbRefill_o <= tlbRefill;
 
     entry_o.hi <= curArr(ENTRY_HI_REG);
     entry_o.lo0 <= curArr(ENTRY_LO0_REG);
@@ -272,7 +275,7 @@ begin
                 if (we_i = ENABLE) then
                     regArr(conv_integer(waddr_i)) <= curArr(conv_integer(waddr_i));
                     -- We only assign the `waddr_i`-th register, in order not to interfere the counters above
-                    if (conv_integer(waddr_i) = COMPARE_REG) then
+                    if (extraReg and conv_integer(waddr_i) = COMPARE_REG) then
                         timerInt_o <= INTERRUPT_NOT_ASSERT; -- Side effect
                     end if;
                 end if;
@@ -284,7 +287,7 @@ begin
                     -- Not updating EPC and CAUSE[BD] because EXL = 1
                 end if;
 
-                if ((exceptCauseDelay /= NO_CAUSE) and (exceptCauseDelay /= ERET_CAUSE) and (exceptCauseDelay /= DERET_CAUSE)) then
+                if ((exceptCauseDelay /= NO_CAUSE) and (exceptCauseDelay /= ERET_CAUSE) and (not extraReg or exceptCauseDelay /= DERET_CAUSE)) then
                     if (curArr(STATUS_REG)(STATUS_EXL_BIT) = '0') then -- See doc of Status[EXL]
                         -- Here we use `curArr` instead of `regArr`, because this should happen at the same time
                         -- as the interrupt enabled
@@ -333,8 +336,10 @@ begin
                         -- `currentAccessAddrDelay` should be the address of
                         -- that instruction. See mem.vhd.
                         regArr(BAD_V_ADDR_REG) <= currentAccessAddrDelay;
-                        regArr(ENTRY_HI_REG)(EntryHiVPN2Bits) <= currentAccessAddrDelay(EntryHiVPN2Bits);
-                        regArr(CONTEXT_REG)(ContextBadVPNBits) <= currentAccessAddrDelay(EntryHiVPN2Bits);
+                        if (extraReg) then
+                            regArr(ENTRY_HI_REG)(EntryHiVPN2Bits) <= currentAccessAddrDelay(EntryHiVPN2Bits);
+                            regArr(CONTEXT_REG)(ContextBadVPNBits) <= currentAccessAddrDelay(EntryHiVPN2Bits);
+                        end if;
                     when others =>
                         null;
                 end case;

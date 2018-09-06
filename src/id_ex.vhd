@@ -69,13 +69,20 @@ entity id_ex is
 end id_ex;
 
 architecture bhv of id_ex is
-    signal exValid: std_logic;
+    signal exValid, keepDelaySlot: std_logic;
+
+    attribute dont_touch: string;
+    attribute dont_touch of exValid: signal is "true";
+    attribute dont_touch of keepDelaySlot: signal is "true";
+    attribute dont_touch of idIsInDelaySlot_i: signal is "true";
 begin
+    keepDelaySlot <= YES when idIsInDelaySlot_i = YES and exValid = NO else NO;
+
     process(clk) begin
         if (rising_edge(clk)) then
             if (
                 (rst = RST_ENABLE) or
-                (flush_i = YES and not (idIsInDelaySlot_i = YES and exValid = NO))
+                (flush_i = YES and keepDelaySlot = NO)
             ) then
                 alut_o <= INVALID;
                 memt_o <= INVALID;

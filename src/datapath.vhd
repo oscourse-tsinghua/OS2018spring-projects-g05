@@ -10,6 +10,7 @@ use work.except_const.all;
 entity datapath is
     generic (
         extraCmd:               boolean;
+        memPushForward:         boolean;
         instEntranceAddr:       std_logic_vector(AddrWidth);
         exceptBootBaseAddr:     std_logic_vector(AddrWidth);
         tlbRefillExl0Offset:    std_logic_vector(AddrWidth);
@@ -209,14 +210,18 @@ architecture bhv of datapath is
     signal fpWriteDouble_78: std_logic;
 
     -- Signals connecting mem and id --
-    signal memToWriteReg_84: std_logic;
-    signal memWriteRegAddr_84: std_logic_vector(RegAddrWidth);
-    signal memWriteRegData_84: std_logic_vector(DataWidth);
     signal memToWriteFPReg_84: std_logic;
     signal memWriteFPRegAddr_84: std_logic_vector(AddrWidth);
     signal memWriteFPRegData_84: std_logic_vector(DoubleDataWidth);
     signal memWriteFPDouble_84: std_logic;
     signal memWriteFPTarget_84: FloatTargetType;
+    signal memWriteRegDataLong_84: std_logic_vector(DataWidth);
+
+    -- Signals connecting ex_mem and id --
+    signal memMemt_74: MemType;
+    signal memToWriteReg_74: std_logic;
+    signal memWriteRegAddr_74: std_logic_vector(RegAddrWidth);
+    signal memWriteRegDataShort_74: std_logic_vector(DataWidth);
 
     -- Signals connecting mem and ex --
     signal memToWriteHi_86, memToWriteLo_86: std_logic;
@@ -313,6 +318,7 @@ architecture bhv of datapath is
 
     -- Signals connecting cp0 and ex --
     signal data_c6: std_logic_vector(DataWidth);
+    signal dataValid_c6: std_logic;
 
     -- Signals connecting cp0 and mem --
     signal status_c8: std_logic_vector(DataWidth);
@@ -421,7 +427,8 @@ begin
 
     id_ist: entity work.id
         generic map (
-            extraCmd => extraCmd
+            extraCmd => extraCmd,
+            memPushForward => memPushForward
         )
         port map (
             rst => rst,
@@ -444,9 +451,11 @@ begin
             exToWriteReg_i => exToWriteReg_64,
             exWriteRegAddr_i => exWriteRegAddr_64,
             exWriteRegData_i => exWriteRegData_64,
-            memToWriteReg_i => memToWriteReg_84,
-            memWriteRegAddr_i => memWriteRegAddr_84,
-            memWriteRegData_i => memWriteRegData_84,
+            memMemt_i => memMemt_74,
+            memToWriteReg_i => memToWriteReg_74,
+            memWriteRegAddr_i => memWriteRegAddr_74,
+            memWriteRegDataShort_i => memWriteRegDataShort_74,
+            memWriteRegDataLong_i => memWriteRegDataLong_84,
 
             toStall_o => idToStall_4b,
 
@@ -603,6 +612,7 @@ begin
             divider_o => divider_6d,
 
             cp0RegData_i => data_c6,
+            cp0RegDataValid_i => dataValid_c6,
             memCP0RegData_i => cp0RegData_86,
             memCP0RegWriteAddr_i => cp0RegWriteAddr_86,
             memCP0RegWe_i => cp0RegWe_86,
@@ -719,6 +729,10 @@ begin
             fpExceptFlags_o => fpExceptFlags_78,
             fpWriteDouble_o => fpWriteDouble_78
         );
+    memMemt_74 <= memt_78;
+    memToWriteReg_74 <= toWriteReg_78;
+    memWriteRegAddr_74 <= writeRegAddr_78;
+    memWriteRegDataShort_74 <= writeRegData_78;
 
     mem_ist: entity work.mem
         generic map (
@@ -802,9 +816,7 @@ begin
     memWriteFPDouble_84 <= fpWriteDouble_89;
     memWriteFPRegAddr_84 <= fpWriteRegAddr_89;
     memWriteFPRegData_84 <= fpWriteRegData_89;
-    memToWriteReg_84 <= toWriteReg_89;
-    memWriteRegAddr_84 <= writeRegAddr_89;
-    memWriteRegData_84 <= writeRegData_89;
+    memWriteRegDataLong_84 <= writeRegData_89;
     memToWriteHi_86 <= toWriteHi_89;
     memToWriteLo_86 <= toWriteLo_89;
     memWriteHiData_86 <= writeHiData_89;
@@ -947,6 +959,7 @@ begin
             data_i => wbCP0RegData_9c,
             int_i => int_i,
             data_o => data_c6,
+            dataValid_o => dataValid_c6,
             timerInt_o => timerInt_o,
 
             status_o => status_c8,

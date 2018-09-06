@@ -57,6 +57,7 @@ entity ex is
 
         -- interact with CP0 --
         cp0RegData_i: in std_logic_vector(DataWidth);
+        cp0RegDataValid_i: in std_logic;
         memCP0RegData_i: in std_logic_vector(DataWidth);
         memCP0RegWriteAddr_i: in std_logic_vector(CP0RegAddrWidth);
         memCP0RegWe_i: in std_logic;
@@ -462,6 +463,9 @@ begin
                 cp0RegReadAddr_o <= operand1_i(4 downto 0);
                 cp0RegReadSel_o <= operandX_i(SelWidth);
                 writeRegData_o <= cp0RegData_i;
+                if (cp0RegDataValid_i = NO) then
+                    toStall_o <= PIPELINE_STOP;
+                end if;
 
                 -- Push forward for cp0 --
                 if (memCP0RegWe_i = YES and memCP0RegWriteAddr_i = operand1_i(4 downto 0)) then
