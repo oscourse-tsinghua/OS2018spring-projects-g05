@@ -59,7 +59,9 @@ begin
 
 		process(clk) begin
 			if (rising_edge(clk)) then
-				if (rst = RST_DISABLE) then
+				if (rst = RST_ENABLE) then
+					fcsrReg <= (others => '0');
+				else
 					if (we_i = ENABLE) then
 						fcsrReg <= fcsrCur;
 					end if;

@@ -35,8 +35,8 @@ architecture bhv of logici1_tb is
     signal timerInt1, timerInt2: std_logic;
 
     -- CODE BELOW IS AUTOMATICALLY GENERATED
-constant ENABLE_CACHE: std_logic := '0';
 constant CPU2_ON: std_logic := '0';
+constant ENABLE_CACHE: std_logic := '0';
 begin
     ram_ist: entity work.logici1_fake_ram
         port map (

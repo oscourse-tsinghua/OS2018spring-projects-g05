@@ -105,22 +105,6 @@ begin
                 writeFPRegData_o <= (others => '0');
                 writeFPDouble_o <= NO;
             elsif (stall_i(MEM_STOP_IDX) = PIPELINE_NONSTOP) then
-                toWriteReg_o <= toWriteReg_i;
-                writeRegAddr_o <= writeRegAddr_i;
-                writeRegData_o <= writeRegData_i;
-
-                toWriteHi_o <= toWriteHi_i;
-                toWriteLo_o <= toWriteLo_i;
-                writeHiData_o <= writeHiData_i;
-                writeLoData_o <= writeLoData_i;
-
-                wbCP0RegWe_o <= memCP0RegWe_i;
-                wbCP0RegWriteAddr_o <= memCP0RegWriteAddr_i;
-                wbCP0RegWriteSel_o <= memCP0RegWriteSel_i;
-                wbCP0RegData_o <= memCP0RegData_i;
-
-                cp0Sp_o <= cp0Sp_i;
-                currentInstAddr_o <= currentInstAddr_i;
 
                 if (extraFeatures) then
                     case (fpWriteTarget_i) is
@@ -147,9 +131,27 @@ begin
                             toWriteReg_o <= NO;
 
                         when others =>
-                            null;
+                            toWriteFPReg_o <= NO;
+                            wbCP1RegWe_o <= NO;
                     end case;
                 end if;
+                
+                toWriteReg_o <= toWriteReg_i;
+                writeRegAddr_o <= writeRegAddr_i;
+                writeRegData_o <= writeRegData_i;
+
+                toWriteHi_o <= toWriteHi_i;
+                toWriteLo_o <= toWriteLo_i;
+                writeHiData_o <= writeHiData_i;
+                writeLoData_o <= writeLoData_i;
+
+                wbCP0RegWe_o <= memCP0RegWe_i;
+                wbCP0RegWriteAddr_o <= memCP0RegWriteAddr_i;
+                wbCP0RegWriteSel_o <= memCP0RegWriteSel_i;
+                wbCP0RegData_o <= memCP0RegData_i;
+
+                cp0Sp_o <= cp0Sp_i;
+                currentInstAddr_o <= currentInstAddr_i;
             end if;
         end if;
     end process;

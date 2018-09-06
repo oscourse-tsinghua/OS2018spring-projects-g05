@@ -19,7 +19,7 @@ package alu_const is
     -- Floating point operand type --
     type FPAluType is (
         INVALID,
-        FPALU_ABS, FPALU_NEG, CF, CT
+        FPALU_ABS, FPALU_NEG, CF, CT, MT, MF
     );
 
     -- Where is the operand from --
@@ -31,7 +31,7 @@ package alu_const is
     -- Float Alu to Write What --
     type FloatTargetType is (
         INVALID,
-        MEM, REG, CP1, FREG
+        MEM, REG, CP1, FREG, REGID
     );
 
     -- Extra operand invented for offset (memory) --

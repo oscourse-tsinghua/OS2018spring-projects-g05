@@ -180,38 +180,14 @@ alias user_reg is <<signal ^.cpu1_ist.datapath_ist.regfile_ist.regArray: RegArra
         -- CODE BELOW IS AUTOMATICALLY GENERATED
 process begin
     wait for CLK_PERIOD; -- resetting
-    wait for 9 * CLK_PERIOD;
-    assert user_reg(2) = x"80000083" severity FAILURE;
+    wait for 15 * CLK_PERIOD;
+    assert user_reg(2) = x"00870000" severity FAILURE;
     wait;
 end process;
 process begin
     wait for CLK_PERIOD; -- resetting
-    wait for 10 * CLK_PERIOD;
-    assert user_reg(3) = x"1e582c00" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 11 * CLK_PERIOD;
-    assert user_reg(4) = x"00018000" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 12 * CLK_PERIOD;
-    assert user_reg(5) = x"80000000" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 13 * CLK_PERIOD;
-    assert user_reg(6) = x"00000000" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 14 * CLK_PERIOD;
-    assert user_reg(7) = x"00000000" severity FAILURE;
+    wait for 20 * CLK_PERIOD;
+    assert user_reg(6) = x"fe800000" severity FAILURE;
     wait;
 end process;
     end block assertBlk;

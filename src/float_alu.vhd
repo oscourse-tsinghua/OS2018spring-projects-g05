@@ -87,6 +87,19 @@ begin
 					writeFPRegAddr_o <= 27ub"0" & writeFPRegAddr_i;
 					writeFPRegData_o <= 32ub"0" & foperand1_i(31 downto 0);
 
+				when MF =>
+					fpWriteTarget_o <= REG;
+					cp1RegReadAddr_o <= foperand2_i(4 downto 0);
+					toWriteFPReg_o <= YES;
+					writeFPRegAddr_o <= 27ub"0" & writeFPRegAddr_i;
+					writeFPRegData_o <= 32ub"0" & data_i;
+
+				when MT =>
+					fpWriteTarget_o <= CP1;
+					toWriteFPReg_o <= YES;
+					writeFPRegAddr_o <= 27ub"0" & writeFPRegAddr_i;
+					writeFPRegData_o <= foperand1_i;
+
 				when others =>
 					null;
 			end case;

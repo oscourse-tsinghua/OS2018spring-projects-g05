@@ -567,6 +567,24 @@ begin
                                 toWriteFPReg_o <= YES;
                                 writeFPRegAddr_o <= instRd;
 
+                            when RS_MF =>
+                                oprSrcF1 := INVALID;
+                                oprSrcF2 := REGID;
+                                dataFlowFloat <= YES;
+                                fpAlut_o <= MF;
+                                isInvalid := NO;
+                                toWriteFPReg_o <= YES;
+                                writeFPRegAddr_o <= instRt;
+
+                            when RS_MT =>
+                                oprSrc2 := REG;
+                                oprSrcF2 := INVALID;
+                                dataFlowFloat <= YES;
+                                fpAlut_o <= MT;
+                                isInvalid := NO;
+                                toWriteFPReg_o <= YES;
+                                writeFPRegAddr_o <= instRd;
+
                             when others =>
                                 null;
                         end case;
@@ -1183,6 +1201,9 @@ begin
                         toStall_o <= PIPELINE_STOP;
                     end if;
 
+                when REGID =>
+                    foperand1 := 59ub"0" & instRt;
+
                 when others =>
                     foperand1 := (others => '0');
             end case;
@@ -1223,7 +1244,7 @@ begin
                     end if;
 
                 when REGID =>
-                    foperand2 := 59ub"0" & instRt;
+                    foperand2 := 59ub"0" & instRd;
 
                 when others =>
                     foperand2 := (others => '0');
