@@ -27,6 +27,7 @@ entity cp0_reg is
         data_i: in std_logic_vector(DataWidth);
         int_i: in std_logic_vector(IntWidth);
         data_o: out std_logic_vector(DataWidth);
+        dataValid_o: out std_logic;
         timerInt_o: out std_logic;
         status_o: out std_logic_vector(DataWidth);
         cause_o: out std_logic_vector(DataWidth);
@@ -83,10 +84,11 @@ begin
     depc_o <= curArr(DEPC_REG);
 
     data_o <= PRID_CONSTANT when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and rsel_i = "000") else
-              curArr(PRID_OR_EBASE_REG) when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and rsel_i = "001") else
+              regArr(PRID_OR_EBASE_REG) when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and rsel_i = "001") else
               CONFIG1_CONSTANT when (conv_integer(raddr_i) = CONFIG_REG and rsel_i = "001") else
-              curArr(conv_integer(raddr_i)) when (rsel_i = "000" and conv_integer(raddr_i) /= PRID_OR_EBASE_REG) else
+              regArr(conv_integer(raddr_i)) when (rsel_i = "000" and conv_integer(raddr_i) /= PRID_OR_EBASE_REG) else
               32ux"0";
+    dataValid_o <= not we_i;
 
     EXTRA: if extraReg generate
         isKernelMode_o <= curArr(STATUS_REG)(STATUS_ERL_BIT) or

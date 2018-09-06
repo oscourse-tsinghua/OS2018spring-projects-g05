@@ -274,6 +274,7 @@ architecture bhv of datapath is
 
     -- Signals connecting cp0 and ex --
     signal data_c6: std_logic_vector(DataWidth);
+    signal dataValid_c6: std_logic;
 
     -- Signals connecting cp0 and mem --
     signal status_c8: std_logic_vector(DataWidth);
@@ -497,6 +498,7 @@ begin
             divider_o => divider_6d,
 
             cp0RegData_i => data_c6,
+            cp0RegDataValid_i => dataValid_c6,
             memCP0RegData_i => cp0RegData_86,
             memCP0RegWriteAddr_i => cp0RegWriteAddr_86,
             memCP0RegWe_i => cp0RegWe_86,
@@ -791,6 +793,7 @@ begin
             data_i => wbCP0RegData_9c,
             int_i => int_i,
             data_o => data_c6,
+            dataValid_o => dataValid_c6,
             timerInt_o => timerInt_o,
 
             status_o => status_c8,
