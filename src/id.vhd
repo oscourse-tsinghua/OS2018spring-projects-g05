@@ -14,8 +14,6 @@ entity id is
         memPushForward: boolean
     );
     port (
-        rst: in std_logic;
-
         pc_i: in std_logic_vector(AddrWidth);
         inst_i: in std_logic_vector(InstWidth);
         regData1_i: in std_logic_vector(DataWidth);
@@ -228,7 +226,7 @@ begin
         operand2 := (others => 'X');
         operandX := (others => 'X');
 
-        if (rst = RST_DISABLE) then
+        --if (rst = RST_DISABLE) then
             isInvalid := YES;
 
             if (extraCmd) then
@@ -1093,7 +1091,7 @@ begin
                 when others =>
                     operandX := (others => '0');
             end case;
-        end if;
+        --end if;
 
         if (jumpToRs = YES) then
             regReadAddr1_o <= instRs;

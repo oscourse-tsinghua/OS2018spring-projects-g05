@@ -86,6 +86,7 @@ begin
 
     data_o <= PRID_CONSTANT when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and rsel_i = "000") else
               regArr(PRID_OR_EBASE_REG) when (conv_integer(raddr_i) = PRID_OR_EBASE_REG and rsel_i = "001") else
+              CONFIG1_CONSTANT when (conv_integer(raddr_i) = CONFIG_REG and rsel_i = "001") else
               regArr(conv_integer(raddr_i)) when (rsel_i = "000" and conv_integer(raddr_i) /= PRID_OR_EBASE_REG) else
               32ux"0";
     dataValid_o <= not we_i;
@@ -162,19 +163,49 @@ begin
         for i in 0 to CP0_MAX_ID loop
             curArr(i) <= regArr(i);
         end loop;
-        if (rst = RST_DISABLE and we_i = ENABLE) then
+        if (we_i = ENABLE) then
             case (conv_integer(waddr_i)) is
+                when STATUS_REG =>
+                    curArr(STATUS_REG)(STATUS_CP0_BIT) <= data_i(STATUS_CP0_BIT);
+                    curArr(STATUS_REG)(STATUS_BEV_BIT) <= data_i(STATUS_BEV_BIT);
+                    curArr(STATUS_REG)(StatusImBits) <= data_i(StatusImBits);
+                    curArr(STATUS_REG)(STATUS_UM_BIT) <= data_i(STATUS_UM_BIT);
+                    curArr(STATUS_REG)(STATUS_ERL_BIT) <= data_i(STATUS_ERL_BIT);
+                    curArr(STATUS_REG)(STATUS_EXL_BIT) <= data_i(STATUS_EXL_BIT);
+                    curArr(STATUS_REG)(STATUS_IE_BIT) <= data_i(STATUS_IE_BIT);
                 when CAUSE_REG =>
                     curArr(CAUSE_REG)(CauseIpSoftBits) <= data_i(CauseIpSoftBits);
                     curArr(CAUSE_REG)(CAUSE_IV_BIT) <= data_i(CAUSE_IV_BIT);
                     if (data_i(CAUSE_WP_BIT) = '0') then -- we cannot write 1 when it's 0
                         curArr(CAUSE_REG)(CAUSE_WP_BIT) <= data_i(CAUSE_WP_BIT);
                     end if;
+                when ENTRY_LO0_REG =>
+                    curArr(ENTRY_LO0_REG)(EntryLoRWBits) <= data_i(EntryLoRWBits);
+                when ENTRY_LO1_REG =>
+                    curArr(ENTRY_LO1_REG)(EntryLoRWBits) <= data_i(EntryLoRWBits);
+                when CONFIG_REG =>
+                    if (wsel_i = 3ub"0") then
+                        -- only config0 could be writable --
+                        if (data_i(2 downto 1) = "01") then
+                            -- only write 2 or 3 should be allowed here --
+                            curArr(CONFIG_REG)(Config0K0Bits) <= data_i(Config0K0Bits);
+                        end if;
+                    end if;
                 when PRID_OR_EBASE_REG =>
                     -- PRID is not writable, but ebase is --
                     if (wsel_i = "001") then
                         curArr(PRID_OR_EBASE_REG)(EbaseAddrBits) <= data_i(EbaseAddrBits);
                     end if;
+                when CONTEXT_REG =>
+                    curArr(CONTEXT_REG)(ContextPTEBaseBits) <= data_i(ContextPTEBaseBits);
+                when PAGEMASK_REG =>
+                    curArr(PAGEMASK_REG)(PageMaskMaskBits) <= data_i(PageMaskMaskBits);
+                when WATCHHI_REG =>
+                    curArr(WATCHHI_REG)(WATCHHI_G_BIT) <= data_i(WATCHHI_G_BIT);
+                    curArr(WATCHHI_REG)(WatchHiASIDBits) <= data_i(WatchHiASIDBits);
+                    curArr(WATCHHI_REG)(WatchHiMaskBits) <= data_i(WatchHiMaskBits);
+                    -- write 1 to clear --
+                    curArr(WATCHHI_REG)(WatchHiW1CBits) <= regArr(WATCHHI_REG)(WatchHiW1CBits) and (not data_i(WatchHiW1CBits));
                 when others =>
                     curArr(conv_integer(waddr_i)) <= data_i;
             end case;
@@ -189,10 +220,12 @@ begin
                 -- Please refer to MIPS Vol3 for reset value
                 -- Undefined reset value are reset to 0 here for robustness
                 regArr <= (others => (others => '0'));
+                regArr(RANDOM_REG) <= conv_std_logic_vector(TLB_ENTRY_NUM - 1, 32);
                 regArr(STATUS_REG) <= (
                     STATUS_CP0_BIT => '1', STATUS_BEV_BIT => '1', STATUS_ERL_BIT => '1', StatusImBits => '1', others => '0'
                 );
                 regArr(PRID_OR_EBASE_REG) <= "1000000000000000000000" & cpuId;
+                regArr(CONFIG_REG) <= (31 => '1', 7 => '1', 1 => '1', 0 => '1', others => '0');
 
                 timerInt_o <= INTERRUPT_NOT_ASSERT;
                 exceptCauseDelay <= NO_CAUSE;

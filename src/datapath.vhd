@@ -356,8 +356,6 @@ begin
             memPushForward => memPushForward
         )
         port map (
-            rst => rst,
-
             pc_i => pc_24,
             inst_i => inst_24,
             regData1_i => regData1_34,
