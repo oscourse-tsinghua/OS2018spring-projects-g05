@@ -337,6 +337,7 @@ begin
             innerCache => false,
             extraCmd => false,
             enableMMU => false,
+            holdFirstEpc => false,
             interruptIv1Offset => 32ux"180"
         )
         port map(

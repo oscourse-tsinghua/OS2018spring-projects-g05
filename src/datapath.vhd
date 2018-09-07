@@ -11,6 +11,7 @@ entity datapath is
     generic (
         extraCmd:               boolean;
         memPushForward:         boolean;
+        holdFirstEpc:           boolean;
         instEntranceAddr:       std_logic_vector(AddrWidth);
         exceptBootBaseAddr:     std_logic_vector(AddrWidth);
         tlbRefillExl0Offset:    std_logic_vector(AddrWidth);
@@ -780,6 +781,7 @@ begin
     cp0_reg_ist: entity work.cp0_reg
         generic map(
             extraReg => extraCmd,
+            holdFirstEpc => holdFirstEpc,
             cpuId => cpuId
         )
         port map(

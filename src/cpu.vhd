@@ -11,6 +11,7 @@ entity cpu is
         extraCmd: boolean := true;
         enableMMU: boolean := true;
         memPushForward: boolean := false;
+        holdFirstEpc: boolean := true;
         instEntranceAddr: std_logic_vector(AddrWidth) := 32ux"bfc0_0000";
         exceptBootBaseAddr: std_logic_vector(AddrWidth) := 32ux"bfc0_0200";
         tlbRefillExl0Offset: std_logic_vector(AddrWidth) := 32ux"000";
@@ -179,6 +180,7 @@ begin
         generic map (
             extraCmd                => extraCmd,
             memPushForward          => memPushForward,
+            holdFirstEpc            => holdFirstEpc,
             instEntranceAddr        => instEntranceAddr,
             exceptBootBaseAddr      => exceptBootBaseAddr,
             tlbRefillExl0Offset     => tlbRefillExl0Offset,

@@ -710,7 +710,7 @@ begin
                             isInvalid := NO;
 
                         when JMP_JR =>
-                            oprSrc1 := REG;
+                            oprSrc1 := INVALID; -- Directly using regData1_i
                             oprSrc2 := INVALID;
                             jumpToRs := YES;
                             branchFlag := YES;
@@ -724,7 +724,7 @@ begin
                             end if;
 
                         when JMP_JALR =>
-                            oprSrc1 := REG;
+                            oprSrc1 := INVALID; -- Directly using regData1_i
                             oprSrc2 := INVALID;
                             jumpToRs := YES;
                             branchFlag := YES;
@@ -1096,7 +1096,14 @@ begin
         end if;
 
         if (jumpToRs = YES) then
-            branchTargetAddress := operand1;
+            regReadAddr1_o <= instRs;
+            branchTargetAddress := regData1_i;
+            if (
+                (exToWriteReg_i = YES and exWriteRegAddr_i = instRs) or
+                (memToWriteReg_i = YES and memWriteRegAddr_i = instRs)
+            ) then
+                toStall_o <= PIPELINE_STOP;
+            end if;
         end if;
 
         if (condJump = YES) then

@@ -14,6 +14,7 @@ use work.mmu_const.all;
 entity cp0_reg is
     generic (
         extraReg: boolean;
+        holdFirstEpc: boolean;
         cpuId: std_logic_vector(9 downto 0)
     );
     port (
@@ -248,7 +249,7 @@ begin
                 end if;
 
                 if ((exceptCauseDelay /= NO_CAUSE) and (exceptCauseDelay /= ERET_CAUSE) and (not extraReg or exceptCauseDelay /= DERET_CAUSE)) then
-                    --if (curArr(STATUS_REG)(STATUS_EXL_BIT) = '0') then -- See doc of Status[EXL]
+                    if (not holdFirstEpc or curArr(STATUS_REG)(STATUS_EXL_BIT) = '0') then -- See doc of Status[EXL]
                         -- Here we use `curArr` instead of `regArr`, because this should happen at the same time
                         -- as the interrupt enabled
                         if (isInDelaySlotDelay = YES) then
@@ -263,7 +264,7 @@ begin
                         else
                             regArr(EPC_REG) <= epc;
                         end if;
-                    --end if;
+                    end if;
                     regArr(STATUS_REG)(STATUS_EXL_BIT) <= '1';
                     regArr(CAUSE_REG)(CauseExcCodeBits) <= exceptCauseDelay;
                 end if;
@@ -286,23 +287,29 @@ begin
                             null;
                     end case;
                 end if;
-                case (exceptCauseDelay) is
-                    when ERET_CAUSE =>
-                        if regArr(EPC_REG)(1 downto 0) = "00" then
-                            regArr(STATUS_REG)(STATUS_EXL_BIT) <= '0';
-                        end if;
-                    when ADDR_ERR_LOAD_OR_IF_CAUSE|ADDR_ERR_STORE_CAUSE =>
-                        -- If there's an exception of instruction address,
-                        -- `currentAccessAddrDelay` should be the address of
-                        -- that instruction. See mem.vhd.
-                        regArr(BAD_V_ADDR_REG) <= currentAccessAddrDelay;
-                        if (extraReg) then
-                            regArr(ENTRY_HI_REG)(EntryHiVPN2Bits) <= currentAccessAddrDelay(EntryHiVPN2Bits);
-                            regArr(CONTEXT_REG)(ContextBadVPNBits) <= currentAccessAddrDelay(EntryHiVPN2Bits);
-                        end if;
-                    when others =>
-                        null;
-                end case;
+                if (exceptCauseDelay = ERET_CAUSE) then
+                    if regArr(EPC_REG)(1 downto 0) = "00" then
+                        regArr(STATUS_REG)(STATUS_EXL_BIT) <= '0';
+                    end if;
+                end if;
+                if (
+                    exceptCauseDelay = ADDR_ERR_LOAD_OR_IF_CAUSE or
+                    exceptCauseDelay = ADDR_ERR_STORE_CAUSE or
+                    (extraReg and (
+                        exceptCauseDelay = TLB_LOAD_CAUSE or
+                        exceptCauseDelay = TLB_STORE_CAUSE or
+                        exceptCauseDelay = TLB_MODIFIED_CAUSE
+                    ))
+                ) then
+                    -- If there's an exception of instruction address,
+                    -- `currentAccessAddrDelay` should be the address of
+                    -- that instruction. See mem.vhd.
+                    regArr(BAD_V_ADDR_REG) <= currentAccessAddrDelay;
+                    if (extraReg) then
+                        regArr(ENTRY_HI_REG)(EntryHiVPN2Bits) <= currentAccessAddrDelay(EntryHiVPN2Bits);
+                        regArr(CONTEXT_REG)(ContextBadVPNBits) <= currentAccessAddrDelay(EntryHiVPN2Bits);
+                    end if;
+                end if;
             end if;
         end if;
     end process;
