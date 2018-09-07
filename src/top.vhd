@@ -140,8 +140,8 @@ architecture bhv of top is
 
     signal cpu1Inst_c2d, cpu1Data_c2d, cpu2Inst_c2d, cpu2Data_c2d: BusC2D;
     signal cpu1Inst_d2c, cpu1Data_d2c, cpu2Inst_d2c, cpu2Data_d2c: BusD2C;
-    signal ddr3_c2d, flash_c2d, serial_c2d, boot_c2d, eth_c2d, led_c2d, num_c2d, ipi_c2d: BusC2D;
-    signal ddr3_d2c, flash_d2c, serial_d2c, boot_d2c, eth_d2c, led_d2c, num_d2c, ipi_d2c: BusD2C;
+    signal ddr3_c2d, flash_c2d, serial_c2d, boot_c2d, eth_c2d, led_c2d, num_c2d, ipi_c2d, intc_c2d: BusC2D;
+    signal ddr3_d2c, flash_d2c, serial_d2c, boot_d2c, eth_d2c, led_d2c, num_d2c, ipi_d2c, intc_d2c: BusD2C;
 
     signal busMon: BusC2D;
     signal llBit: std_logic;
@@ -150,7 +150,7 @@ architecture bhv of top is
     signal scCorrect1, scCorrect2: std_logic;
     signal sync1, sync2: std_logic_vector(2 downto 0);
     signal irq1, irq2: std_logic_vector(5 downto 0);
-    signal timerInt1, timerInt2, comInt, usbInt, ethInt: std_logic;
+    signal timerInt1, timerInt2, comInt, usbInt, ethInt, ethIrq: std_logic;
     signal ipiInt: std_logic_vector(1 downto 0);
 
     -- Serial COM
@@ -197,8 +197,8 @@ begin
             TxD_data => txdData
         );
 
-    irq1 <= (5 => timerInt1, 4 => ipiInt(0), 2 => comInt, others => '0');
-    irq2 <= (5 => timerInt2, 4 => ipiInt(1), 2 => comInt, others => '0');
+    irq1 <= (5 => timerInt1, 4 => ipiInt(0), 3 => ethInt, 2 => comInt, others => '0');
+    irq2 <= (5 => timerInt2, 4 => ipiInt(1), 3 => ethInt, 2 => comInt, others => '0');
     -- MIPS standard requires irq[5] = timer
     -- Monitor requires irq[2] = COM
     -- The IRQ ID should be consistent with the .dts file in Linux
@@ -285,6 +285,7 @@ begin
             led_i => led_d2c,
             num_i => num_d2c,
             ipi_i => ipi_d2c,
+            intc_i => intc_d2c,
             ddr3_o => ddr3_c2d,
             flash_o => flash_c2d,
             serial_o => serial_c2d,
@@ -293,6 +294,7 @@ begin
             led_o => led_c2d,
             num_o => num_c2d,
             ipi_o => ipi_c2d,
+            intc_o => intc_c2d,
 
             busMon_o => busMon,
             llBit_o => llBit,
@@ -387,10 +389,24 @@ begin
             eth_mdio_i => eth_mdio_i,
             eth_mdio_o => eth_mdio_o,
             eth_mdio_t => eth_mdio_t,
-            eth_mdc => eth_mdc
+            eth_mdc => eth_mdc,
+            int_o => ethIrq
         );
     eth_mdio <= 'Z' when eth_mdio_t = '1' else eth_mdio_o;
     eth_mdio_i <= eth_mdio;
+
+    int_ctrl_encap_ist: entity work.int_ctrl_encap
+        port map (
+            clk_100 => clk100,
+            clk_25 => clkMain,
+            rst => rst,
+
+            cpu_i => intc_c2d,
+            cpu_o => intc_d2c,
+
+            int_i => ethIrq,
+            int_o => ethInt
+        );
 
     seg7_ctrl_ist: entity work.seg7_ctrl
         port map (
