@@ -440,7 +440,7 @@ begin
                         memt_o <= MEM_SWR;
                         isInvalid := NO;
 
-                    when OP_CACHE|OP_PREF =>
+                    when OP_CACHE | OP_PREF | OP_LDC1 | OP_LWC1 | OP_SDC1 | OP_SWC1 =>
                         -- Currently not implemented
                         oprSrc1 := INVALID;
                         oprSrc2 := INVALID;
