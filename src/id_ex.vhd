@@ -28,6 +28,7 @@ entity id_ex is
         writeFPRegAddr_i: in std_logic_vector(RegAddrWidth);
         writeFPDouble_i: in std_logic;
         fpAlut_i: in FPAluType;
+        fpMemt_i: in FPMemType;
 
         foperand1_o: out std_logic_vector(DoubleDataWidth);
         foperand2_o: out std_logic_vector(DoubleDataWidth);
@@ -35,6 +36,7 @@ entity id_ex is
         writeFPRegAddr_o: out std_logic_vector(RegAddrWidth);
         writeFPDouble_o: out std_logic;
         fpAlut_o: out FPAluType;
+        fpMemt_o: out FPMemType;
 
         -- memory and stall --
         alut_i: in AluType;
@@ -86,6 +88,7 @@ begin
             ) then
                 alut_o <= INVALID;
                 memt_o <= INVALID;
+                fpMemt_o <= INVALID;
                 operand1_o <= (others => '0');
                 operand2_o <= (others => '0');
                 operandX_o <= (others => '0');
@@ -131,6 +134,7 @@ begin
                 writeFPRegAddr_o <= (others => '0');
                 writeFPDouble_o <= writeFPDouble_i;
                 fpAlut_o <= INVALID;
+                fpMemt_o <= INVALID;
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_NONSTOP) then
                 alut_o <= alut_i;
                 memt_o <= memt_i;
@@ -156,6 +160,7 @@ begin
                 writeFPRegAddr_o <= writeFPRegAddr_i;
                 writeFPDouble_o <= writeFPDouble_i;
                 fpAlut_o <= fpAlut_i;
+                fpMemt_o <= fpMemt_i;
             end if;
         end if;
     end process;

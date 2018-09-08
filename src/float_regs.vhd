@@ -28,14 +28,16 @@ begin
 	EXTRA: if extraReg generate
 	    process(clk) begin
 	        if (rising_edge(clk)) then
-	            regArray <= (others => (others => '0'));
-	        else
-	            if (writeEnable_i = ENABLE) then
-	            	if (writeDouble_i = YES) then
-	            		regArray(conv_integer(writeAddr_i(4 downto 1) & '0')) <= writeData_i(63 downto 32);
-	            		regArray(conv_integer(writeAddr_i(4 downto 1) & '1')) <= writeData_i(31 downto 0);
-	            	else
-	            		regArray(conv_integer(writeAddr_i(4 downto 0))) <= writeData_i(31 downto 0);
+	            if (rst = RST_ENABLE) then
+    	            regArray <= (others => (others => '0'));
+	            else
+	                if (writeEnable_i = ENABLE) then
+	                    if (writeDouble_i = YES) then
+	            	        regArray(conv_integer(writeAddr_i(4 downto 1) & '0')) <= writeData_i(63 downto 32);
+	            	        regArray(conv_integer(writeAddr_i(4 downto 1) & '1')) <= writeData_i(31 downto 0);
+	             	    else
+	            		    regArray(conv_integer(writeAddr_i(4 downto 0))) <= writeData_i(31 downto 0);
+	            		end if;
 	            	end if;
 	            end if;
 	        end if;

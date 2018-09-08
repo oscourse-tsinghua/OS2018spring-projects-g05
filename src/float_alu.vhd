@@ -5,6 +5,7 @@ use ieee.numeric_std.all;
 use work.global_const.all;
 use work.alu_const.all;
 use work.cp1_const.all;
+use work.mem_const.all;
 
 entity float_alu is
 	generic(
@@ -13,6 +14,7 @@ entity float_alu is
 	port (
 		rst: in std_logic;
 		fpAlut_i: in FPAluType;
+		fpMemt_i: in FPMemType;
 		foperand1_i: in std_logic_vector(DoubleDataWidth);
 		foperand2_i: in std_logic_vector(DoubleDataWidth);
 		toWriteFPReg_i: in std_logic;
@@ -26,7 +28,9 @@ entity float_alu is
 		exceptFlags_o: out FloatExceptType;
 		toStall_o: out std_logic;
 		cp1RegReadAddr_o: out std_logic_vector(RegAddrWidth);
-		data_i: in std_logic_vector(DataWidth)
+		data_i: in std_logic_vector(DataWidth);
+		fpMemt_o: out FPMemType;
+		fpMemAddr_o: out std_logic_vector(AddrWidth)
 	);
 end float_alu;
 
@@ -58,8 +62,12 @@ begin
 		writeFPDouble_o <= NO;
 		fpWriteTarget_o <= INVALID;
 		exceptFlags_o <= NONE;
+		toStall_o <= NO;
+		fpMemt_o <= INVALID;
+		fpMemAddr_o <= (others => '0');
 		if (floatEnable = true) then
 			writeFPDouble_o <= writeFPDouble_i;
+			fpMemt_o <= fpMemt_i;
 			case(fpAlut_i) is
 				when FPALU_ABS =>
 					if (writeFPDouble_i = NO) then
@@ -99,6 +107,10 @@ begin
 					toWriteFPReg_o <= YES;
 					writeFPRegAddr_o <= 27ub"0" & writeFPRegAddr_i;
 					writeFPRegData_o <= foperand1_i;
+
+				when FP_LOAD | FP_STORE =>
+					fpWriteTarget_o <= FREG;
+					fpMemAddr_o <= to_stdlogicvector(foperand1_i(31 downto 0) + to_integer(signed(foperand2_i(15 downto 0))));
 
 				when others =>
 					null;

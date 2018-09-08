@@ -97,6 +97,7 @@ architecture bhv of datapath is
     signal alut_45: AluType;
     signal fpAlut_45: FPAluType;
     signal memt_45: MemType;
+    signal fpMemt_45: FPMemType;
     signal operand1_45: std_logic_vector(DataWidth);
     signal operand2_45: std_logic_vector(DataWidth);
     signal operandX_45: std_logic_vector(DataWidth);
@@ -353,6 +354,7 @@ architecture bhv of datapath is
     signal writeFPRegAddr_5f: std_logic_vector(RegAddrWidth);
     signal writeFPDouble_5f: std_logic;
     signal fpAlut_5f: FPAluType;
+    signal fpMemt_5f: FPMemType;
 
     -- Signals connecting id and float_regs --
     signal fpRegReadAddr1_4g: std_logic_vector(RegAddrWidth);
@@ -462,6 +464,7 @@ begin
             alut_o => alut_45,
             fpAlut_o => fpAlut_45,
             memt_o => memt_45,
+            fpMemt_o => fpMemt_45,
             operand1_o => operand1_45,
             operand2_o => operand2_45,
             operandX_o => operandX_45,
@@ -523,12 +526,14 @@ begin
             foperand1_i => foperand1_45,
             foperand2_i => foperand2_45,
             fpAlut_i => fpAlut_45,
+            fpMemt_i => fpMemt_45,
             toWriteFPReg_i => toWriteFPReg_45,
             writeFPRegAddr_i => writeFPRegAddr_45,
             writeFPDouble_i => writeFPDouble_45,
             foperand1_o => foperand1_5f,
             foperand2_o => foperand2_5f,
             fpAlut_o => fpAlut_5f,
+            fpMemt_o => fpMemt_5f,
             toWriteFPReg_o => toWriteFPReg_5f,
             writeFPRegAddr_o => writeFPRegAddr_5f,
             writeFPDouble_o => writeFPDouble_5f,
