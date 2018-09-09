@@ -94,11 +94,23 @@ architecture bhv of mem is
     signal interrupt: std_logic_vector(ExceptionCauseWidth);
 begin
     flushForceWrite_o <= flushForceWrite_i;
-    memAddr_o <= memAddr_i(31 downto 2) & "00";
+    EXTRA: if extraCmd generate
+        memAddr_o <= memAddr_i(31 downto 2) & "00" when memt_i /= INVALID else
+                     fpMemAddr_i(31 downto 2) & "00" when fpMemt_i /= INVALID else
+                     (others => '0');
+    else generate
+        memAddr_o <= memAddr_i(31 downto 2) & "00";
+    end generate EXTRA;
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;
     -- When IF has an exception, memt_i must be INVALID
-    currentAccessAddr_o <= currentInstAddr_i when memt_i = INVALID else memAddr_i;
+    EXTRA: if extraCmd generate
+        currentAccessAddr_o <= currentInstAddr_i when memt_i = INVALID else 
+                               fpMemAddr_i when fpMemt_i /= INVALID else
+                               memAddr_i;
+    else generate
+        currentAccessAddr_o <= currentInstAddr_i when memt_i = INVALID else memAddr_i;
+    end generate EXTRA;
     -- We preserve the low 2 bits for `lw` and `sw` as required by BadVAddr register
     -- `lh`, `lhu` and `sh` likewise
 
@@ -145,6 +157,7 @@ begin
                         writeRegData_o <= loadedData_i;
                         savingData_o <= memData_i;
                         dataByteSelect_o <= "1111";
+                    
                     when MEM_LWL|MEM_SWL =>
                         case memAddr_i(1 downto 0) is
                             when "00" =>
@@ -189,6 +202,15 @@ begin
                             when others =>
                                 null;
                         end case;
+                    when others =>
+                        null;
+                end case;
+                case fpMemt_i is
+                    when MEM_LWC1 =>
+                        fpToWriteReg_o <= YES;
+                        fpWriteRegData_o <= memData_i;
+                        dataByteSelect_o <= "1111";
+
                     when others =>
                         null;
                 end case;
@@ -237,9 +259,11 @@ begin
                 case memt_i is
                     when MEM_LL|MEM_LWL|MEM_LWR =>
                         dataEnable_o <= ENABLE;
+                    
                     when MEM_SWL|MEM_SWR =>
                         dataWrite <= YES;
                         dataEnable_o <= ENABLE;
+                    
                     when MEM_SC =>
                         dataWrite <= YES;
                         dataEnable_o <= ENABLE;
@@ -247,6 +271,11 @@ begin
                         if (scCorrect_i = '0') then
                             scStall_o <= scStallPeriods;
                         end if;
+
+                    when MEM_LWC1 =>
+                        dataWrite <= NO;
+                        dataEnable_o <= ENABLE;
+
                     when others =>
                         null;
                 end case;
@@ -255,20 +284,26 @@ begin
                 when MEM_LB => -- toWriteReg_o is already YES
                     writeRegData_o <= std_logic_vector(resize(signed(loadedByte), 32));
                     dataEnable_o <= ENABLE;
+                
                 when MEM_LBU =>
                     writeRegData_o <= std_logic_vector(resize(unsigned(loadedByte), 32));
                     dataEnable_o <= ENABLE;
+                
                 when MEM_LH =>
                     writeRegData_o <= std_logic_vector(resize(signed(loadedShort), 32));
                     dataEnable_o <= ENABLE;
+                
                 when MEM_LHU =>
                     writeRegData_o <= std_logic_vector(resize(unsigned(loadedShort), 32));
                     dataEnable_o <= ENABLE;
+                
                 when MEM_LW =>
                     dataEnable_o <= ENABLE;
+                
                 when MEM_SB|MEM_SH|MEM_SW =>
                     dataWrite <= YES;
                     dataEnable_o <= ENABLE;
+                
                 when others =>
                     null;
             end case;

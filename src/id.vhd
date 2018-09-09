@@ -482,7 +482,7 @@ begin
                         writeFPRegAddr_o <= instRt;
                         isInvalid := NO;
 
-                    when OP_SWC1 =>
+                    when OP_SDC1 =>
                         oprSrc1 := REG;
                         oprSrcF2 := INVALID;
                         oprSrcX := IMM;

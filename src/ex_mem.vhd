@@ -33,6 +33,11 @@ entity ex_mem is
         memAddr_o: out std_logic_vector(AddrWidth);
         memData_o: out std_logic_vector(DataWidth);
 
+        fpMemt_i: in FPMemType;
+        fpMemAddr_i: in std_logic_vector(AddrWidth);
+        fpMemt_o: out FPMemType;
+        fpMemAddr_o: out std_logic_vector(AddrWidth);
+
         -- multi-period --
         tempProduct_i: in std_logic_vector(DoubleDataWidth);
         cnt_i: in std_logic_vector(CntWidth);
@@ -133,6 +138,8 @@ begin
                 fpWriteTarget_o <= INVALID;
                 fpExceptFlags_o <= NONE;
                 fpWriteDouble_o <= NO;
+                fpMemt_o <= INVALID;
+                fpMemAddr_o <= (others => '0');
             elsif (stall_i(EX_STOP_IDX) = PIPELINE_NONSTOP) then
                 toWriteReg_o <= toWriteReg_i;
                 writeRegAddr_o <= writeRegAddr_i;
@@ -164,6 +171,8 @@ begin
                 tempProduct_o <= tempProduct_i;
                 cnt_o <= cnt_i;
                 flushForceWrite_o <= flushForceWrite_i;
+                fpMemt_o <= fpMemt_i;
+                fpMemAddr_o <= fpMemAddr_i;
                 if (fpWriteTarget_i /= REG) then
                     fpToWriteReg_o <= fpToWriteReg_i;
                     fpWriteRegAddr_o <= fpWriteRegAddr_i;

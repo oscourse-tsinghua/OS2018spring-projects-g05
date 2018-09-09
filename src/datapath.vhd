@@ -209,6 +209,8 @@ architecture bhv of datapath is
     signal fpWriteTarget_78: FloatTargetType;
     signal fpExceptFlags_78: FloatExceptType;
     signal fpWriteDouble_78: std_logic;
+    signal fpMemt_78: FPMemType;
+    signal fpMemAddr_78: FPMemType;
 
     -- Signals connecting mem and id --
     signal memToWriteFPReg_84: std_logic;
@@ -371,6 +373,8 @@ architecture bhv of datapath is
     signal writeFPDouble_f7: std_logic;
     signal exceptFlags_f7: FloatExceptType;
     signal fpWriteTarget_f7: FloatTargetType;
+    signal fpMemt_f7: FPMemType;
+    signal fpMemAddr_f7: std_logic_vector(AddrWidth);
 
     -- Signals connecting float_alu and ctrl --
     signal fpToStall_fb: std_logic;
@@ -732,7 +736,12 @@ begin
             fpWriteRegData_o => fpWriteRegData_78,
             fpWriteTarget_o => fpWriteTarget_78,
             fpExceptFlags_o => fpExceptFlags_78,
-            fpWriteDouble_o => fpWriteDouble_78
+            fpWriteDouble_o => fpWriteDouble_78,
+
+            fpMemt_i => fpMemt_f7,
+            fpMemAddr_i => fpMemAddr_f7,
+            fpMemt_o => fpMemt_78,
+            fpMemAddr_o => fpMemAddr_78
         );
     memMemt_74 <= memt_78;
     memToWriteReg_74 <= toWriteReg_78;
@@ -760,6 +769,9 @@ begin
             toWriteLo_o => toWriteLo_89,
             writeHiData_o => writeHiData_89,
             writeLoData_o => writeLoData_89,
+
+            fpMemt_i => fpMemt_78,
+            fpMemAddr_i => fpMemt_78,
 
             memt_i => memt_78,
             memAddr_i => memAddr_78,
@@ -1036,6 +1048,8 @@ begin
             writeFPDouble_o => writeFPDouble_f7,
             exceptFlags_o => exceptFlags_f7,
             fpWriteTarget_o => fpWriteTarget_f7,
+            fpMemt_o => fpMemt_f7,
+            fpMemAddr_o => fpMemAddr_f7,
             cp1RegReadAddr_o => cp1RegReadAddr_fe,
             data_i => data_ef
         );
