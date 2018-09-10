@@ -348,6 +348,7 @@ architecture bhv of datapath is
     signal memCp0RegWe_8b: std_logic;
     signal scStall_8b: integer;
     signal memDataWrite: std_logic;
+    signal memToStall_8b: std_logic;
 
     -- Signals connecting id_ex and float_alu --
     signal foperand1_5f: std_logic_vector(DoubleDataWidth);
@@ -754,6 +755,7 @@ begin
             scStallPeriods => scStallPeriods
         )
         port map (
+            clk => clk, rst => rst,
             toWriteReg_i => toWriteReg_78,
             writeRegAddr_i => writeRegAddr_78,
             writeRegData_i => writeRegData_78,
@@ -787,6 +789,9 @@ begin
             dataByteSelect_o => dataByteSelect_o,
             sync_o => sync_o,
             scStall_o => scStall_8b,
+
+            memToStall_i => memToStall_i,
+            memToStall_o => memToStall_8b,
 
             cp0RegData_i => cp0RegData_78,
             cp0RegWriteAddr_i => cp0RegWriteAddr_78,
@@ -935,7 +940,7 @@ begin
             idToStall_i => idToStall_4b,
             blNullify_i => blNullify_4b,
             exToStall_i => exToStall_6b,
-            memToStall_i => memToStall_i,
+            memToStall_i => memToStall_8b,
             stall_o => stall,
             flush_o => flush_b1,
             newPC_o => newPC_b1,

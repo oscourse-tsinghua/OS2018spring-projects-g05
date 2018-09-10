@@ -14,6 +14,7 @@ entity mem is
         scStallPeriods: integer := 0
     );
     port (
+        clk, rst: in std_logic;
         toWriteReg_i: in std_logic;
         writeRegAddr_i: in std_logic_vector(RegAddrWidth);
         writeRegData_i: in std_logic_vector(DataWidth);
@@ -39,6 +40,9 @@ entity mem is
         dataEnable_o: out std_logic;
         dataWrite_o: out std_logic;
         dataByteSelect_o: out std_logic_vector(3 downto 0);
+
+        memToStall_i: in std_logic;
+        memToStall_o: out std_logic;
 
         -- interact with cp0 --
         cp0RegData_i: in std_logic_vector(DataWidth);
@@ -92,6 +96,8 @@ end mem;
 architecture bhv of mem is
     signal dataWrite: std_logic;
     signal interrupt: std_logic_vector(ExceptionCauseWidth);
+    type LoadDoubleState is (INIT, FIRST, SECOND, DONE);
+    signal ldState: LoadDoubleState;
 begin
     flushForceWrite_o <= flushForceWrite_i;
     EXTRA: if extraCmd generate
@@ -100,7 +106,13 @@ begin
                      (others => '0');
     else generate
         memAddr_o <= memAddr_i(31 downto 2) & "00";
-    end generate EXTRA;
+    end generate;
+    EXTRA: if extraCmd generate
+        memToStall_o <= PIPELINE_STOP when (fpMemt_i = FMEM_LD or fpMemt_i = FMEM_SD) and LoadDoubleState /= DONE else
+                        memToStall_i;
+    else generate
+        memToStall_o <= memToStall_i;
+    end generate;
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;
     -- When IF has an exception, memt_i must be INVALID
@@ -110,7 +122,7 @@ begin
                                memAddr_i;
     else generate
         currentAccessAddr_o <= currentInstAddr_i when memt_i = INVALID else memAddr_i;
-    end generate EXTRA;
+    end generate;
     -- We preserve the low 2 bits for `lw` and `sw` as required by BadVAddr register
     -- `lh`, `lhu` and `sh` likewise
 
@@ -309,6 +321,26 @@ begin
             end case;
         end if;
     end process;
+
+    EXTRA: if extraCmd generate
+        process(clk) begin
+            if (rising_edge(clk)) then
+                if (rst = RST_DISABLE) then
+                    if (fpMemt_i = FMEM_LD or fpMemt_i = FMEM_SD) then
+                        if ldState = DONE then
+                            ldState <= INIT;
+                        elsif ldState = INIT then
+                            ldState = FIRST;
+                        elsif ldState = FIRST then
+                            ldState = SECOND;
+                        elsif ldState = SECOND then
+                            ldState = DONE;
+                        end if;
+                    end if;
+                end if;
+            end if;
+        end process;
+    end generate;
 
     interrupt <= EXTERNAL_CAUSE when
                     noInt_i = NO and

@@ -11,6 +11,6 @@ package mem_const is
     );
     type FPMemType is(
     	INVALID,
-        FMEM_LW, FMEM_SW
+        FMEM_LW, FMEM_SW, FMEM_LD, FMEM_SD
    	);
 end mem_const;
