@@ -16,16 +16,7 @@ DEFINE reg regfile_ist.regArray: RegArrayType
 
 # Execute an assembly instruction
 # Grammar: "RUN <assembly>"
-# Note: this is a combination of instruction mtc1 and mfc1, so name it mc1
-# so do testcase cc1
-RUN mfc1 $2, $0
-RUN ori $4, $4, 0xffff
-RUN mtc1 $4, $25
-RUN nop
-RUN nop
-RUN nop
-RUN nop
-RUN nop
-RUN mfc1 $6, $31
-ASSERT 15 reg(2) x"00870000"
-ASSERT 20 reg(6) x"fe800000"
+RUN ori $2, $2, 0xefc3
+RUN mtc1 $2, $10
+RUN mfc1 $4, $10
+ASSERT 15 reg(4) x"0000efc3"

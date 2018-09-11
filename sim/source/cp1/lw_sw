@@ -16,18 +16,17 @@ DEFINE reg regfile_ist.regArray: RegArrayType
 
 # Execute an assembly instruction
 # Grammar: "RUN <assembly>"
-RUN ori $3, $3, 0xefc3
-RUN mtc1 $3, $2
-RUN ori $2, $2, 0xabcd
-RUN mfc1 $4, $2
-RUN ori $5, $5, 0x8fdc
-RUN ori $6, $6, 0x1000
-RUN mtc1 $5, $3
-RUN mfc1 $6, $3
+RUN lui $3, 0x8000
+RUN ori $3, $3, 0x0140
+RUN lui $4, 0xacd4
+RUN ori $4, $4, 0xbf58
+RUN mtc1 $4, $3
+RUN swc1 $3, 0($3)
 RUN nop
 RUN nop
 RUN nop
 RUN nop
 RUN nop
-ASSERT 20 reg(4) x"0000efc3"
-ASSERT 20 reg(5) x"00008fdc"
+RUN lwc1 $8, 0($3)
+RUN mfc1 $6, $8
+ASSERT 30 reg(6) x"acd4bf58"

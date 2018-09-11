@@ -40,9 +40,15 @@ begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then
                 -- CODE BELOW IS AUTOMATICALLY GENERATED
-words(1) <= x"c3_ef_42_34"; -- RUN ori $2, $2, 0xefc3
-words(2) <= x"00_50_c2_44"; -- RUN ctc1 $2, $10
-words(3) <= x"00_50_44_44"; -- RUN cfc1 $4, $10
+words(1) <= x"00_00_42_44"; -- RUN cfc1 $2, $0
+words(2) <= x"ff_ff_84_34"; -- RUN ori $4, $4, 0xffff
+words(3) <= x"00_c8_c4_44"; -- RUN ctc1 $4, $25
+words(4) <= x"00_00_00_00"; -- RUN nop
+words(5) <= x"00_00_00_00"; -- RUN nop
+words(6) <= x"00_00_00_00"; -- RUN nop
+words(7) <= x"00_00_00_00"; -- RUN nop
+words(8) <= x"00_00_00_00"; -- RUN nop
+words(9) <= x"00_f8_46_44"; -- RUN cfc1 $6, $31
             elsif ((cpu_i.enable = '1') and (cpu_i.write = '1')) then
                 words(wordAddr) <= (words(wordAddr) and not bitSelect) or (cpu_i.dataSave and bitSelect);
             end if;

@@ -85,6 +85,9 @@ entity mem is
         fpWriteTarget_o: out FloatTargetType;
         fpExceptFlags_o: out FloatExceptType;
         fpWriteDouble_o: out std_logic;
+        fpMemt_i: in FPMemType;
+        fpMemAddr_i: in std_logic_vector(AddrWidth);
+        fpMemData_i: in std_logic_vector(DoubleDataWidth);
 
         -- for sync --
         scStall_o: out integer;
@@ -107,8 +110,8 @@ begin
     else generate
         memAddr_o <= memAddr_i(31 downto 2) & "00";
     end generate;
-    EXTRA: if extraCmd generate
-        memToStall_o <= PIPELINE_STOP when (fpMemt_i = FMEM_LD or fpMemt_i = FMEM_SD) and LoadDoubleState /= DONE else
+    EXTRA2: if extraCmd generate
+        memToStall_o <= PIPELINE_STOP when (fpMemt_i = FMEM_LD or fpMemt_i = FMEM_SD) and (ldState /= DONE) else
                         memToStall_i;
     else generate
         memToStall_o <= memToStall_i;
@@ -116,8 +119,8 @@ begin
     isInDelaySlot_o <= isInDelaySlot_i;
     currentInstAddr_o <= currentInstAddr_i;
     -- When IF has an exception, memt_i must be INVALID
-    EXTRA: if extraCmd generate
-        currentAccessAddr_o <= currentInstAddr_i when memt_i = INVALID else 
+    EXTRA3: if extraCmd generate
+        currentAccessAddr_o <= currentInstAddr_i when memt_i = INVALID and fpMemt_i = INVALID else 
                                fpMemAddr_i when fpMemt_i /= INVALID else
                                memAddr_i;
     else generate
@@ -218,9 +221,12 @@ begin
                         null;
                 end case;
                 case fpMemt_i is
-                    when MEM_LWC1 =>
+                    when FMEM_LW =>
                         fpToWriteReg_o <= YES;
-                        fpWriteRegData_o <= memData_i;
+                        fpWriteRegData_o <= 32ub"0" & loadedData_i;
+                        dataByteSelect_o <= "1111";
+
+                    when FMEM_SW =>
                         dataByteSelect_o <= "1111";
 
                     when others =>
@@ -283,11 +289,21 @@ begin
                         if (scCorrect_i = '0') then
                             scStall_o <= scStallPeriods;
                         end if;
-
-                    when MEM_LWC1 =>
+                        
+                    when others =>
+                        null;
+                end case;
+                
+                case fpMemt_i is
+                    when FMEM_LW =>
                         dataWrite <= NO;
                         dataEnable_o <= ENABLE;
 
+                    when FMEM_SW =>
+                        dataWrite <= YES;
+                        dataEnable_o <= ENABLE;
+                        savingData_o <= fpMemData_i(31 downto 0);
+                    
                     when others =>
                         null;
                 end case;
@@ -322,7 +338,7 @@ begin
         end if;
     end process;
 
-    EXTRA: if extraCmd generate
+    EXTRA4: if extraCmd generate
         process(clk) begin
             if (rising_edge(clk)) then
                 if (rst = RST_DISABLE) then
@@ -330,11 +346,11 @@ begin
                         if ldState = DONE then
                             ldState <= INIT;
                         elsif ldState = INIT then
-                            ldState = FIRST;
+                            ldState <= FIRST;
                         elsif ldState = FIRST then
-                            ldState = SECOND;
+                            ldState <= SECOND;
                         elsif ldState = SECOND then
-                            ldState = DONE;
+                            ldState <= DONE;
                         end if;
                     end if;
                 end if;
@@ -360,7 +376,7 @@ begin
                    NO;
     -- NOTE: dataWrite_o should not depend on memExcept_i, or there might be an oscillation
 
-    EXTRA: if extraCmd generate
+    EXTRA5: if extraCmd generate
         sync_o(2) <= '1' when exceptCause_i = ERET_CAUSE else '0';
         sync_o(1) <= '1' when memt_i = MEM_SC else '0';
         sync_o(0) <= '1' when memt_i = MEM_LL else '0';

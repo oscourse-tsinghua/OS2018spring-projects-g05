@@ -5,19 +5,19 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.mc1_test_const.all;
+use work.lw_sw_test_const.all;
 use work.global_const.all;
 use work.bus_const.all;
 
-entity mc1_fake_ram is
+entity lw_sw_fake_ram is
     port (
         clk, rst: in std_logic;
         cpu_i: in BusC2D;
         cpu_o: out BusD2C
     );
-end mc1_fake_ram;
+end lw_sw_fake_ram;
 
-architecture bhv of mc1_fake_ram is
+architecture bhv of lw_sw_fake_ram is
     type WordsArray is array(0 to MAX_RAM_ADDRESS) of std_logic_vector(DataWidth);
     signal words: WordsArray;
     signal wordAddr: integer;
@@ -40,9 +40,19 @@ begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then
                 -- CODE BELOW IS AUTOMATICALLY GENERATED
-words(1) <= x"c3_ef_42_34"; -- RUN ori $2, $2, 0xefc3
-words(2) <= x"00_50_82_44"; -- RUN mtc1 $2, $10
-words(3) <= x"00_50_04_44"; -- RUN mfc1 $4, $10
+words(1) <= x"00_80_03_3c"; -- RUN lui $3, 0x8000
+words(2) <= x"40_01_63_34"; -- RUN ori $3, $3, 0x0140
+words(3) <= x"d4_ac_04_3c"; -- RUN lui $4, 0xacd4
+words(4) <= x"58_bf_84_34"; -- RUN ori $4, $4, 0xbf58
+words(5) <= x"00_18_84_44"; -- RUN mtc1 $4, $3
+words(6) <= x"00_00_63_e4"; -- RUN swc1 $3, 0($3)
+words(7) <= x"00_00_00_00"; -- RUN nop
+words(8) <= x"00_00_00_00"; -- RUN nop
+words(9) <= x"00_00_00_00"; -- RUN nop
+words(10) <= x"00_00_00_00"; -- RUN nop
+words(11) <= x"00_00_00_00"; -- RUN nop
+words(12) <= x"00_00_68_c4"; -- RUN lwc1 $8, 0($3)
+words(13) <= x"00_40_06_44"; -- RUN mfc1 $6, $8
             elsif ((cpu_i.enable = '1') and (cpu_i.write = '1')) then
                 words(wordAddr) <= (words(wordAddr) and not bitSelect) or (cpu_i.dataSave and bitSelect);
             end if;

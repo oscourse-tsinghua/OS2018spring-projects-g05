@@ -41,13 +41,13 @@ begin
             if (rst = RST_ENABLE) then
                 -- CODE BELOW IS AUTOMATICALLY GENERATED
 words(1) <= x"c3_ef_63_34"; -- RUN ori $3, $3, 0xefc3
-words(2) <= x"00_10_c3_44"; -- RUN ctc1 $3, $2
+words(2) <= x"00_10_83_44"; -- RUN mtc1 $3, $2
 words(3) <= x"cd_ab_42_34"; -- RUN ori $2, $2, 0xabcd
-words(4) <= x"00_10_44_44"; -- RUN cfc1 $4, $2
+words(4) <= x"00_10_04_44"; -- RUN mfc1 $4, $2
 words(5) <= x"dc_8f_a5_34"; -- RUN ori $5, $5, 0x8fdc
 words(6) <= x"00_10_c6_34"; -- RUN ori $6, $6, 0x1000
-words(7) <= x"00_18_c5_44"; -- RUN ctc1 $5, $3
-words(8) <= x"00_18_46_44"; -- RUN cfc1 $6, $3
+words(7) <= x"00_18_85_44"; -- RUN mtc1 $5, $3
+words(8) <= x"00_18_06_44"; -- RUN mfc1 $6, $3
 words(9) <= x"00_00_00_00"; -- RUN nop
 words(10) <= x"00_00_00_00"; -- RUN nop
 words(11) <= x"00_00_00_00"; -- RUN nop

@@ -147,6 +147,7 @@ architecture bhv of datapath is
     signal exWriteFPRegData_f4: std_logic_vector(DoubleDataWidth);
     signal exWriteFPDouble_f4: std_logic;
     signal exWriteFPTarget_f4: FloatTargetType;
+    signal exFPMemt_f4: FPMemType;
 
     -- Signals connecting ex and ex_mem --
     signal toWriteReg_67: std_logic;
@@ -210,7 +211,8 @@ architecture bhv of datapath is
     signal fpExceptFlags_78: FloatExceptType;
     signal fpWriteDouble_78: std_logic;
     signal fpMemt_78: FPMemType;
-    signal fpMemAddr_78: FPMemType;
+    signal fpMemAddr_78: std_logic_vector(AddrWidth);
+    signal fpMemData_78: std_logic_vector(DoubleDataWidth);
 
     -- Signals connecting mem and id --
     signal memToWriteFPReg_84: std_logic;
@@ -353,6 +355,9 @@ architecture bhv of datapath is
     -- Signals connecting id_ex and float_alu --
     signal foperand1_5f: std_logic_vector(DoubleDataWidth);
     signal foperand2_5f: std_logic_vector(DoubleDataWidth);
+    signal operand1_5f: std_logic_vector(DataWidth);
+    signal operand2_5f: std_logic_vector(DataWidth);
+    signal operandX_5f: std_logic_vector(DataWidth);
     signal toWriteFPReg_5f: std_logic;
     signal writeFPRegAddr_5f: std_logic_vector(RegAddrWidth);
     signal writeFPDouble_5f: std_logic;
@@ -376,6 +381,7 @@ architecture bhv of datapath is
     signal fpWriteTarget_f7: FloatTargetType;
     signal fpMemt_f7: FPMemType;
     signal fpMemAddr_f7: std_logic_vector(AddrWidth);
+    signal fpMemData_f7: std_logic_vector(DoubleDataWidth);
 
     -- Signals connecting float_alu and ctrl --
     signal fpToStall_fb: std_logic;
@@ -510,7 +516,9 @@ begin
             memWriteFPTarget_i => memWriteFPTarget_84,
             memWriteFPDouble_i => memWriteFPDouble_84,
             memWriteFPRegAddr_i => memWriteFPRegAddr_84,
-            memWriteFPRegData_i => memWriteFPRegData_84
+            memWriteFPRegData_i => memWriteFPRegData_84,
+
+            fpMemt_i => exFPMemt_f4
         );
 
     id_ex_ist: entity work.id_ex
@@ -570,6 +578,9 @@ begin
             flushForceWrite_i => flushForceWrite_45,
             flushForceWrite_o => flushForceWrite_56
         );
+    operand1_5f <= operand1_56;
+    operand2_5f <= operand2_56;
+    operandX_5f <= operandX_56;
 
     ex_ist: entity work.ex
         generic map (
@@ -741,8 +752,10 @@ begin
 
             fpMemt_i => fpMemt_f7,
             fpMemAddr_i => fpMemAddr_f7,
+            fpMemData_i => fpMemData_f7,
             fpMemt_o => fpMemt_78,
-            fpMemAddr_o => fpMemAddr_78
+            fpMemAddr_o => fpMemAddr_78,
+            fpMemData_o => fpMemData_78
         );
     memMemt_74 <= memt_78;
     memToWriteReg_74 <= toWriteReg_78;
@@ -773,7 +786,8 @@ begin
             writeLoData_o => writeLoData_89,
 
             fpMemt_i => fpMemt_78,
-            fpMemAddr_i => fpMemt_78,
+            fpMemAddr_i => fpMemAddr_78,
+            fpMemData_i => fpMemData_78,
 
             memt_i => memt_78,
             memAddr_i => memAddr_78,
@@ -1042,9 +1056,13 @@ begin
             rst => rst,
             foperand1_i => foperand1_5f,
             foperand2_i => foperand2_5f,
+            operand1_i => operand1_5f,
+            operand2_i => operand2_5f,
+            operandX_i => operandX_5f,
             toWriteFPReg_i => toWriteFPReg_5f,
             writeFPRegAddr_i => writeFPRegAddr_5f,
             writeFPDouble_i => writeFPDouble_5f,
+            fpMemt_i => fpMemt_5f,
             fpAlut_i => fpAlut_5f,
             toStall_o => fpToStall_fb,
             toWriteFPReg_o => toWriteFPReg_f7,
@@ -1055,6 +1073,7 @@ begin
             fpWriteTarget_o => fpWriteTarget_f7,
             fpMemt_o => fpMemt_f7,
             fpMemAddr_o => fpMemAddr_f7,
+            fpMemData_o => fpMemData_f7,
             cp1RegReadAddr_o => cp1RegReadAddr_fe,
             data_i => data_ef
         );
@@ -1063,6 +1082,7 @@ begin
     exWriteFPRegData_f4 <= writeFPRegData_f7;
     exWriteFPDouble_f4 <= writeFPDouble_f7;
     exWriteFPTarget_f4 <= fpWriteTarget_f7;
+    exFPMemt_f4 <= fpMemt_f7;
 
     float_regs_ist: entity work.float_regs
         generic map(
