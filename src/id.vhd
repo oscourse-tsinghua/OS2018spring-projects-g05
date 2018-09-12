@@ -1216,6 +1216,7 @@ begin
             end case;
 
             case oprSrcF1 is
+                -- Single Push Forward, Paired Wait --
                 when SINGLE =>
                     fpRegReadAddr1_o <= instRt;
                     fpRegReadDouble1_o <= NO;
@@ -1244,9 +1245,9 @@ begin
                     fpRegReadAddr1_o <= instRt;
                     fpRegReadDouble1_o <= YES;
                     foperand1 := fpregData1_i;
-                    if (exToWriteFPReg_i = YES) and (exWriteFPRegAddr_i(4 downto 1) = instRd(4 downto 1)) then
+                    if (exToWriteFPReg_i = YES) and (exWriteFPRegAddr_i(4 downto 1) = instRt(4 downto 1)) then
                         toStall_o <= PIPELINE_STOP;
-                    elsif (memToWriteFPReg_i = YES) and (memWriteFPRegAddr_i(4 downto 1) = instRd(4 downto 1)) then
+                    elsif (memToWriteFPReg_i = YES) and (memWriteFPRegAddr_i(4 downto 1) = instRt(4 downto 1)) then
                         toStall_o <= PIPELINE_STOP;
                     end if;
 
@@ -1258,6 +1259,7 @@ begin
             end case;
 
             case oprSrcF2 is
+                -- Single Push Forward, Paired Wait --
                 when SINGLE =>
                     fpRegReadAddr2_o <= instRd;
                     fpRegReadDouble2_o <= NO;

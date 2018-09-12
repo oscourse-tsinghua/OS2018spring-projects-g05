@@ -240,6 +240,11 @@ begin
                             fpWriteRegData(31 downto 0) <= loadedData_i;
                         end if;
 
+                    when FMEM_SD =>
+                        if (ldState = FIRST or ldState = SECOND) then
+                            dataByteSelect_o <= "1111";
+                        end if;
+
                     when others =>
                         null;
                 end case;
@@ -319,6 +324,17 @@ begin
                         dataWrite <= NO;
                         if (ldState = FIRST or ldState = SECOND) then
                             dataEnable_o <= ENABLE;
+                        end if;
+
+                    when FMEM_SD =>
+                        dataWrite <= YES;
+                        if (ldState = FIRST or ldState = SECOND) then
+                            dataEnable_o <= ENABLE;
+                        end if;
+                        if (ldState = FIRST) then
+                            savingData_o <= fpMemData_i(63 downto 32);
+                        elsif (ldState = SECOND) then
+                            savingData_o <= fpMemData_i(31 downto 0);
                         end if;
                     
                     when others =>

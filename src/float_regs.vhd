@@ -52,24 +52,35 @@ begin
     	        else
     	            readData1_o <= 32ub"0" & regArray(conv_integer(readAddr1_i(4 downto 0)));
     	        end if;
-    	        if writeEnable_i = YES and readAddr1_i = writeAddr_i then
-    	        	readData1_o <= writeData_i;
-    	        elsif writeEnable_i = YES and (readAddr1_i(4 downto 1) = writeAddr_i(4 downto 1) and (writeDouble_i = YES)) then
-    	        	if (readAddr1_i(0) = '1') then
-                    -- then this read ID must be even
-                    if (readDouble1_i = YES) then
-                        readData1_o <= writeData_i;
+                if (readDouble1_i = YES) then
+                    if (writeDouble_i = NO) then
+                        if (readAddr1_i(4 downto 1) = writeAddr_i(4 downto 1)) then
+                            if (writeAddr_i(0) = '0') then
+                                readData1_o(63 downto 32) <= writeData_i(31 downto 0);
+                            else
+                                readData1_o(31 downto 0) <= writeData_i(31 downto 0);
+                            end if;
+                        end if;
                     else
-                        readData1_o <= 32ub"0" & writeData_i(63 downto 32);
+                        if (readAddr1_i(4 downto 1) = writeAddr_i(4 downto 1)) then
+                            readData1_o <= writeData_i;
+                        end if;
                     end if;
-    	        	else
-    	        		if readDouble1_i = YES then
-    	        			readData1_o <= writeData_i;
-    	        		else
-    	        			readData1_o <= 32ub"0" & writeData_i(63 downto 32);
-    	        		end if;
-    	        	end if;
-    	        end if;
+                else
+                    if (writeDouble_i = NO) then
+                        if (readAddr1_i = writeAddr_i) then
+                            readData1_o <= writeData_i;
+                        end if;
+                    else
+                        if (readAddr1_i(4 downto 1) = writeAddr_i(4 downto 1)) then
+                            if (readAddr1_i(0) = '0') then
+                                readData1_o(31 downto 0) <= writeData_i(63 downto 32);
+                            else
+                                readData1_o(31 downto 0) <= writeData_i(31 downto 0);
+                            end if;
+                        end if;
+                    end if;
+                end if;
     	    end if;
     	end process;
 
@@ -82,24 +93,35 @@ begin
 	            else
 	                readData2_o <= 32ub"0" & regArray(conv_integer(readAddr2_i(4 downto 0)));
 	            end if;
-    	        if writeEnable_i = YES and readAddr2_i = writeAddr_i then
-                    -- then this read ID must be even
-                    if (readDouble2_i = YES) then
-        	        	readData2_o <= writeData_i;
+                if (readDouble2_i = YES) then
+                    if (writeDouble_i = NO) then
+                        if (readAddr2_i(4 downto 1) = writeAddr_i(4 downto 1)) then
+                            if (writeAddr_i(0) = '0') then
+                                readData2_o(63 downto 32) <= writeData_i(31 downto 0);
+                            else
+                                readData2_o(31 downto 0) <= writeData_i(31 downto 0);
+                            end if;
+                        end if;
                     else
-                        readData2_o <= 32ub"0" & writeData_i(63 downto 32);
+                        if (readAddr2_i(4 downto 1) = writeAddr_i(4 downto 1)) then
+                            readData2_o <= writeData_i;
+                        end if;
                     end if;
-    	        elsif writeEnable_i = YES and (readAddr2_i(4 downto 1) = writeAddr_i(4 downto 1) and (writeDouble_i = YES)) then
-    	        	if (readAddr2_i(0) = '1') then
-    	        		readData2_o <= 32ub"0" & writeData_i(31 downto 0);
-    	        	else
-    	        		if readDouble2_i = YES then
-    	        			readData2_o <= writeData_i;
-    	        		else
-    	        			readData2_o <= 32ub"0" & writeData_i(63 downto 32);
-    	        		end if;
-    	        	end if;
-    	        end if;
+                else
+                    if (writeDouble_i = NO) then
+                        if (readAddr2_i = writeAddr_i) then
+                            readData2_o <= writeData_i;
+                        end if;
+                    else
+                        if (readAddr2_i(4 downto 1) = writeAddr_i(4 downto 1)) then
+                            if (readAddr2_i(0) = '0') then
+                                readData2_o(31 downto 0) <= writeData_i(63 downto 32);
+                            else
+                                readData2_o(31 downto 0) <= writeData_i(31 downto 0);
+                            end if;
+                        end if;
+                    end if;
+                end if;
 	        end if;
 	    end process;
 	end generate EXTRA;
