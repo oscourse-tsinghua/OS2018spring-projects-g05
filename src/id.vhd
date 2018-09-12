@@ -474,7 +474,7 @@ begin
                         fpMemt_o <= FMEM_SW;
                         toWriteFPReg_o <= NO;
                         isInvalid := NO;
-
+                
                     when OP_SDC1 =>
                         oprSrc1 := REG;
                         oprSrcF1 := PAIRED;

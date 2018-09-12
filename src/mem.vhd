@@ -379,14 +379,16 @@ begin
             if (rising_edge(clk)) then
                 if (rst = RST_DISABLE) then
                     if (fpMemt_i = FMEM_LD or fpMemt_i = FMEM_SD) then
-                        if ldState = DONE then
-                            ldState <= INIT;
-                        elsif ldState = INIT then
-                            ldState <= FIRST;
-                        elsif ldState = FIRST then
-                            ldState <= SECOND;
-                        elsif ldState = SECOND then
-                            ldState <= DONE;
+                        if (memToStall_i = PIPELINE_NONSTOP) then
+                            if ldState = DONE then
+                                ldState <= INIT;
+                            elsif ldState = INIT then
+                                ldState <= FIRST;
+                            elsif ldState = FIRST then
+                                ldState <= SECOND;
+                            elsif ldState = SECOND then
+                                ldState <= DONE;
+                            end if;
                         end if;
                     else
                         ldState <= INIT;

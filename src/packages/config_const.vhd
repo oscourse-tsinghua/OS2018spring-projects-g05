@@ -77,7 +77,7 @@ package config_const is
 
         and so, config2 and config3 should always be zero. 
     */
-    constant FIR_CONST: std_logic_vector(31 downto 0) := 32ux"00870000";
+    constant FIR_CONST: std_logic_vector(31 downto 0) := 32ux"00850000";
     /*
         fir register specification:
         for config0:
