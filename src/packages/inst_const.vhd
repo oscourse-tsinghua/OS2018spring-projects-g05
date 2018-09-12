@@ -211,7 +211,7 @@ package inst_const is
     -- Some of the above constants may similiar as definition in general pipel-
     -- line, but we still rename it to remove ambiguity (eg. FUNC_FADD = 
     -- FUNC_MADD)
-    -- Besides, C.cond.fmt isn't judge from the constants.
+    -- Besides, C.cond.fmt should not be judge through the constant approach.
 
     --
     -- Cache(unimplemented)
