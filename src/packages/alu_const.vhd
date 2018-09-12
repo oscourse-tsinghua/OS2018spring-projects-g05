@@ -19,7 +19,7 @@ package alu_const is
     -- Floating point operand type --
     type FPAluType is (
         INVALID,
-        FPALU_ABS, FPALU_NEG, CF, CT, MT, MF, FP_LOAD, FP_STORE
+        CF, CT, MT, MF, FP_LOAD, FP_STORE
     );
 
     -- Where is the operand from --

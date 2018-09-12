@@ -193,6 +193,7 @@ architecture bhv of id is
     signal immInstrAddr: std_logic_vector(AddrWidth);
     signal instImmSign: std_logic_vector(InstOffsetImmWidth);
     signal instOffsetImm: std_logic_vector(InstOffsetImmWidth);
+    signal cc: std_logic_vector(7 downto 0);
 
 begin
 
@@ -227,6 +228,7 @@ begin
         variable branchFlag: std_logic;
         variable branchTargetAddress: std_logic_vector(AddrWidth);
         variable blNullify, branchLikely, tneFlag: std_logic;
+        variable cCondFlag: std_logic;
     begin
         oprSrc1 := INVALID;
         oprSrc2 := INVALID;
@@ -620,9 +622,16 @@ begin
                                 toWriteFPReg_o <= YES;
                                 writeFPRegAddr_o <= instRd;
 
+                            when RS_BC =>
+                                isInvalid := NO;
+
                             when others =>
                                 null;
                         end case;
+
+                        if (inst_i(7 downto 4) = "0011") then
+                            cCondFlag <= YES;
+                        end if;
 
                     when others =>
                         null;
@@ -1095,6 +1104,7 @@ begin
                                 writeRegAddr_o <= instRt;
                                 isInvalid := NO;
                             end if;
+
 
                         when others =>
                             null;

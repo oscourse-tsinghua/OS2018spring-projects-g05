@@ -41,12 +41,12 @@ end float_alu;
 architecture bhv of float_alu is
 	function singleabs(x: std_logic_vector(DataWidth)) return std_logic_vector is
 	begin
-		return 32ub"0" & '1' & x(30 downto 0);
+		return 32ub"0" & '0' & x(30 downto 0);
 	end singleabs;
 
 	function doubleabs(x: std_logic_vector(DoubleDataWidth)) return std_logic_vector is
 	begin
-		return '1' & x(62 downto 0);
+		return '0' & x(62 downto 0);
 	end doubleabs;
 
 	function singleneg(x: std_logic_vector(DataWidth)) return std_logic_vector is
@@ -74,19 +74,6 @@ begin
 			writeFPDouble_o <= writeFPDouble_i;
 			fpMemt_o <= fpMemt_i;
 			case(fpAlut_i) is
-				when FPALU_ABS =>
-					if (writeFPDouble_i = NO) then
-						writeFPRegData_o <= singleabs(foperand1_i(31 downto 0));
-					else
-						writeFPRegData_o <= doubleabs(foperand1_i);
-					end if;
-				
-				when FPALU_NEG =>
-					if (writeFPDouble_i = NO) then
-						writeFPRegData_o <= singleneg(foperand1_i(31 downto 0));
-					else
-						writeFPRegData_o <= doubleneg(foperand1_i);
-					end if;
 
 				when MF =>
 					fpWriteTarget_o <= REG;

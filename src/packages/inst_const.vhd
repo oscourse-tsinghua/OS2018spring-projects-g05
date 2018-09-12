@@ -198,19 +198,21 @@ package inst_const is
     constant FUNC_ABS: std_logic_vector(InstFuncWidth) := "000101";
     constant FUNC_NEG: std_logic_vector(InstFuncWidth) := "000111";
     constant FMT_S: std_logic_vector(InstRsWidth) := "10000";
-    constant FMT_PS: std_logic_vector(InstRsWidth) := "10110";
-    constant FUNC_CVTD: std_logic_vector(InstFuncWidth) := "100001";
-    constant FUNC_CVTPS: std_logic_vector(InstFuncWidth) := "100110";
-    constant FUNC_CVTSPL: std_logic_vector(InstFuncWidth) := "101000";
-    constant FUNC_CVTSPU: std_logic_vector(InstFuncWidth) := "100000";
-    constant FUNC_MAX: std_logic_vector(InstFuncWidth) := "011110";
-    constant FUNC_MIN: std_logic_vector(InstFuncWidth) := "011100";
-    constant FUNC_MAXA: std_logic_vector(InstFuncWidth) := "011111";
-    constant FUNC_MINA: std_logic_vector(InstFuncWidth) := "011101";
-    constant FUNC_MOV: std_logic_vector(InstFuncWidth) := "000110";
-    constant FUNC_RECIP: std_logic_vector(InstFuncWidth) := "010101";
-    constant FUNC_RINT: std_logic_vector(InstFuncWidth) := "011010";
+    --constant FMT_PS: std_logic_vector(InstRsWidth) := "10110";
+    constant FMT_D: std_logic_vector(InstRsWidth) := "10001";
+    constant RS_BC: std_logic_vector(InstRsWidth) := "01000";
+    constant FUNC_FADD: std_logic_vector(InstFuncWidth) := "000000";
+    constant FUNC_FSUB: std_logic_vector(InstFuncWidth) := "000001";
+    constant FUNC_FMUL: std_logic_vector(InstFuncWidth) := "000010";
+    constant FUNC_FDIV: std_logic_vector(InstFuncWidth) := "000011";
     constant FUNC_SQRT: std_logic_vector(InstFuncWidth) := "000100";
+    constant FUNC_FMOV: std_logic_vector(InstFuncWidth) := "000110";
+    constant FUNC_TRUNCW: std_logic_vector(InstFuncWidth) := "001101";
+    -- Some of the above constants may similiar as definition in general pipel-
+    -- line, but we still rename it to remove ambiguity (eg. FUNC_FADD = 
+    -- FUNC_MADD)
+    -- Besides, C.cond.fmt isn't judge from the constants.
+
     --
     -- Cache(unimplemented)
     --
