@@ -463,6 +463,7 @@ begin
                         fpMemt_o <= FMEM_LD;
                         toWriteFPReg_o <= YES;
                         writeFPRegAddr_o <= instRt;
+                        writeFPDouble_o <= YES;
                         isInvalid := NO;
 
                     when OP_SWC1 =>

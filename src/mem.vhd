@@ -101,11 +101,14 @@ architecture bhv of mem is
     signal interrupt: std_logic_vector(ExceptionCauseWidth);
     type LoadDoubleState is (INIT, FIRST, SECOND, DONE);
     signal ldState: LoadDoubleState;
+    signal fpWriteRegData: std_logic_vector(DoubleDataWidth);
 begin
     flushForceWrite_o <= flushForceWrite_i;
     EXTRA: if extraCmd generate
         memAddr_o <= memAddr_i(31 downto 2) & "00" when memt_i /= INVALID else
-                     fpMemAddr_i(31 downto 2) & "00" when fpMemt_i /= INVALID else
+                     fpMemAddr_i(31 downto 2) & "00" when fpMemt_i /= INVALID and fpMemt_i /= FMEM_LD and fpMemt_i /= FMEM_SD else
+                     fpMemAddr_i(31 downto 3) & "000" when ldState = FIRST else
+                     fpMemAddr_i(31 downto 3) & "100" when ldState = SECOND else
                      (others => '0');
     else generate
         memAddr_o <= memAddr_i(31 downto 2) & "00";
@@ -223,11 +226,19 @@ begin
                 case fpMemt_i is
                     when FMEM_LW =>
                         fpToWriteReg_o <= YES;
-                        fpWriteRegData_o <= 32ub"0" & loadedData_i;
+                        fpWriteRegData <= 32ub"0" & loadedData_i;
                         dataByteSelect_o <= "1111";
 
                     when FMEM_SW =>
                         dataByteSelect_o <= "1111";
+
+                    when FMEM_LD =>
+                        fpToWriteReg_o <= YES;
+                        if (ldState = FIRST) then
+                            fpWriteRegData(63 downto 32) <= loadedData_i;
+                        elsif (ldState = SECOND) then
+                            fpWriteRegData(31 downto 0) <= loadedData_i;
+                        end if;
 
                     when others =>
                         null;
@@ -303,6 +314,12 @@ begin
                         dataWrite <= YES;
                         dataEnable_o <= ENABLE;
                         savingData_o <= fpMemData_i(31 downto 0);
+
+                    when FMEM_LD =>
+                        dataWrite <= NO;
+                        if (ldState = FIRST or ldState = SECOND) then
+                            dataEnable_o <= ENABLE;
+                        end if;
                     
                     when others =>
                         null;
@@ -335,6 +352,9 @@ begin
                 when others =>
                     null;
             end case;
+            if (fpMemt_i /= INVALID) then
+                fpWriteRegData_o <= fpWriteRegData;
+            end if;
         end if;
     end process;
 
@@ -352,6 +372,8 @@ begin
                         elsif ldState = SECOND then
                             ldState <= DONE;
                         end if;
+                    else
+                        ldState <= INIT;
                     end if;
                 end if;
             end if;
