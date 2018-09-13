@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
+use ieee.std_logic_signed.all;
 use work.global_const.all;
 use work.alu_const.all;
 use work.cp1_const.all;
@@ -58,6 +58,42 @@ architecture bhv of float_alu is
 			return a(63 downto 52) & dataindex(51 downto 0);
 		end if;
 	end doubleadd;
+
+	function doublesub(a: std_logic_vector(DoubleDataWidth);
+					   b: std_logic_vector(DoubleDataWidth)) return std_logic_vector is
+	variable dataindex: std_logic_vector(53 downto 0);
+	variable powerindex: std_logic_vector(10 downto 0);
+	variable count: integer;
+	variable haveone: std_logic;
+	begin
+		if (a(62 downto 0) > b(62 downto 0)) then
+			dataindex := "01" & a(51 downto 0);
+			dataindex := to_stdlogicvector(dataindex - ("01" & b(51 downto 0)) srl (
+						 to_integer(unsigned(a(62 downto 52)) - unsigned(b(62 downto 52)))));
+			haveone := '0';
+	        for i in 52 downto 0 loop
+    	        if haveone = '0' and dataindex(i) /= '0' then
+    	        	count := i;
+    	        	haveone := '1';
+    	        end if;
+        	end loop;
+        	dataindex := dataindex sll (52 - count);
+        	return a(63) & (a(62 downto 52) - 52 + count) & dataindex(51 downto 0);
+		else
+			dataindex := "01" & b(51 downto 0);
+			dataindex := to_stdlogicvector(dataindex - ("01" & a(51 downto 0)) srl (
+						 to_integer(unsigned(b(62 downto 52)) - unsigned(a(62 downto 52)))));
+			haveone := '0';
+	        for i in 52 downto 0 loop
+    	        if haveone = '0' and dataindex(i) /= '0' then
+    	        	count := i;
+    	        	haveone := '1';
+    	        end if;
+        	end loop;
+        	dataindex := dataindex sll (52 - count);
+        	return not a(63) & (b(62 downto 52) - 52 + count) & dataindex(51 downto 0);
+		end if;
+	end doublesub;
 begin
 	process(all) begin
 		toWriteFPReg_o <= NO;
@@ -116,6 +152,8 @@ begin
 					fpWriteTarget_o <= FREG;
 					if foperand1_i(63) = foperand2_i(63) then
 						writeFPRegData_o <= doubleadd(foperand1_i, foperand2_i);
+					else
+						writeFPRegData_o <= doublesub(foperand1_i, not foperand2_i(63) & foperand2_i(62 downto 0));
 					end if;
 
 				when SUB =>
@@ -123,7 +161,9 @@ begin
 					writeFPRegAddr_o <= 27ub"0" & writeFPRegAddr_i;
 					fpWriteTarget_o <= FREG;
 					if foperand1_i(63) /= foperand2_i(63) then
-						writeFPRegData_o <= doubleadd(foperand1_i, foperand2_i);
+						writeFPRegData_o <= doubleadd(foperand1_i, not foperand2_i(63) & foperand2_i(62 downto 0));
+					else
+						writeFPRegData_o <= doublesub(foperand1_i, foperand2_i);
 					end if;
 
 				when others =>

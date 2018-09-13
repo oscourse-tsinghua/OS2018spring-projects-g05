@@ -720,6 +720,20 @@ begin
                                         end if;
                                         writeFPRegAddr_o <= inst_i(10 downto 6);
 
+                                    when FUNC_FSUB =>
+                                        fpAlut_o <= SUB;
+                                        isInvalid := NO;
+                                        toWriteFPReg_o <= YES;
+                                        if (instRs = FMT_D) then
+                                            oprSrcF1 := PAIRED;
+                                            oprSrcF2 := PAIRED;
+                                            writeFPDouble_o <= YES;
+                                        else
+                                            oprSrcF1 := SINGLE;
+                                            oprSrcF1 := SINGLE;
+                                            writeFPDouble_o <= NO;
+                                        end if;
+                                        writeFPRegAddr_o <= inst_i(10 downto 6);
                                     when others =>
                                         null;
                                 end case;
