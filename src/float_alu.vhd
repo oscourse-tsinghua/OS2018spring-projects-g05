@@ -39,25 +39,25 @@ entity float_alu is
 end float_alu;
 
 architecture bhv of float_alu is
-	function singleabs(x: std_logic_vector(DataWidth)) return std_logic_vector is
+	function doubleadd(a: std_logic_vector(DoubleDataWidth);
+					   b: std_logic_vector(DoubleDataWidth)) return std_logic_vector is
+	variable dataindex: std_logic_vector(53 downto 0);
 	begin
-		return 32ub"0" & '0' & x(30 downto 0);
-	end singleabs;
-
-	function doubleabs(x: std_logic_vector(DoubleDataWidth)) return std_logic_vector is
-	begin
-		return '0' & x(62 downto 0);
-	end doubleabs;
-
-	function singleneg(x: std_logic_vector(DataWidth)) return std_logic_vector is
-	begin
-		return 32ub"0" & not x(31) & x(30 downto 0);
-	end singleneg;
-
-	function doubleneg(x: std_logic_vector(DoubleDataWidth)) return std_logic_vector is
-	begin
-		return not x(63) & x(62 downto 0);
-	end doubleneg;
+		if (a(62 downto 52) > b(62 downto 52)) then
+			dataindex := "01" & a(51 downto 0);
+			dataindex := to_stdlogicvector(dataindex + ("01" & b(51 downto 0)) srl (
+						 to_integer(unsigned(a(62 downto 52)) - unsigned(b(62 downto 52)))));
+		else
+			dataindex := "01" & b(51 downto 0);
+			dataindex := to_stdlogicvector(dataindex + ("01" & a(51 downto 0)) srl (
+						 to_integer(unsigned(b(62 downto 52)) - unsigned(a(62 downto 52)))));
+		end if;
+		if (dataindex(53) = '1') then
+			return a(63) & (a(62 downto 52) + 1) & dataindex(52 downto 1);
+		else
+			return a(63 downto 52) & dataindex(51 downto 0);
+		end if;
+	end doubleadd;
 begin
 	process(all) begin
 		toWriteFPReg_o <= NO;
@@ -109,6 +109,22 @@ begin
 					writeFPRegAddr_o <= 27ub"0" & writeFPRegAddr_i;
 					fpWriteTarget_o <= FREG;
 					fpMemAddr_o <= to_stdlogicvector(operand1_i(31 downto 0) + to_integer(signed(operandX_i(15 downto 0))));
+
+				when ADD =>
+					toWriteFPReg_o <= YES;
+					writeFPRegAddr_o <= 27ub"0" & writeFPRegAddr_i;
+					fpWriteTarget_o <= FREG;
+					if foperand1_i(63) = foperand2_i(63) then
+						writeFPRegData_o <= doubleadd(foperand1_i, foperand2_i);
+					end if;
+
+				when SUB =>
+					toWriteFPReg_o <= YES;
+					writeFPRegAddr_o <= 27ub"0" & writeFPRegAddr_i;
+					fpWriteTarget_o <= FREG;
+					if foperand1_i(63) /= foperand2_i(63) then
+						writeFPRegData_o <= doubleadd(foperand1_i, foperand2_i);
+					end if;
 
 				when others =>
 					null;

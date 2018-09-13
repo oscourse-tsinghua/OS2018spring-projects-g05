@@ -228,7 +228,7 @@ architecture bhv of id is
 
     function floatorder(a: std_logic_vector(DoubleDataWidth)) return std_logic is
     begin
-        if (a(62 downto 51) = 12sb"1") then
+        if (a(62 downto 52) = 11sb"1") then
             return '0';
         elsif a = 64ub"0" then
             return '0';
@@ -702,6 +702,27 @@ begin
                                 cWriteID := inst_i(20 downto 18);
                                 cTFFlag := inst_i(16);
                                 ccJump := YES;
+
+                            when FMT_S | FMT_D =>
+                                case (instFunc) is
+                                    when FUNC_FADD =>
+                                        fpAlut_o <= ADD;
+                                        isInvalid := NO;
+                                        toWriteFPReg_o <= YES;
+                                        if (instRs = FMT_D) then
+                                            oprSrcF1 := PAIRED;
+                                            oprSrcF2 := PAIRED;
+                                            writeFPDouble_o <= YES;
+                                        else
+                                            oprSrcF1 := SINGLE;
+                                            oprSrcF1 := SINGLE;
+                                            writeFPDouble_o <= NO;
+                                        end if;
+                                        writeFPRegAddr_o <= inst_i(10 downto 6);
+
+                                    when others =>
+                                        null;
+                                end case;
 
                             when others =>
                                 null;

@@ -4,7 +4,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.lw_sw_test_const.all;
+use work.add_d_test_const.all;
 use work.global_const.all;
 use work.except_const.all;
 use work.mmu_const.all;
@@ -12,10 +12,10 @@ use work.bus_const.all;
 -- CODE BELOW IS AUTOMATICALLY GENERATED
 use work.alu_const.all;
 
-entity lw_sw_tb is
-end lw_sw_tb;
+entity add_d_tb is
+end add_d_tb;
 
-architecture bhv of lw_sw_tb is
+architecture bhv of add_d_tb is
     signal rst: std_logic := '1';
     signal clk: std_logic := '0';
 
@@ -39,7 +39,7 @@ architecture bhv of lw_sw_tb is
 constant CPU2_ON: std_logic := '0';
 constant ENABLE_CACHE: std_logic := '0';
 begin
-    ram_ist: entity work.lw_sw_fake_ram
+    ram_ist: entity work.add_d_fake_ram
         port map (
             clk => clk,
             rst => rst,
@@ -183,7 +183,13 @@ alias user_reg is <<signal ^.cpu1_ist.datapath_ist.regfile_ist.regArray: RegArra
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 30 * CLK_PERIOD;
-    assert user_reg(6) = x"acd4bf58" severity FAILURE;
+    assert user_reg(4) = 32ux"c0100000" severity FAILURE;
+    wait;
+end process;
+process begin
+    wait for CLK_PERIOD; -- resetting
+    wait for 30 * CLK_PERIOD;
+    assert user_reg(5) = 32ux"00000000" severity FAILURE;
     wait;
 end process;
     end block assertBlk;
