@@ -74,6 +74,7 @@ package inst_const is
     -- TRAP
     --
     constant FUNC_TNE: std_logic_vector(InstFuncWidth) := "110110";
+    constant FUNC_TEQ: std_logic_vector(InstFuncWidth) := "110100";
 
     --
     -- Memory OP codes

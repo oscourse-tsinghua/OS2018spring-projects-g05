@@ -283,7 +283,7 @@ begin
         variable isInvalid, jumpToRs, condJump, branchToJump, branchToLink: std_logic;
         variable branchFlag: std_logic;
         variable branchTargetAddress: std_logic_vector(AddrWidth);
-        variable blNullify, branchLikely, tneFlag: std_logic;
+        variable blNullify, branchLikely, tneFlag, teqFlag: std_logic;
         variable cCondFlag: std_logic;
         variable cResult: std_logic_vector(3 downto 0);
         variable cWriteID: std_logic_vector(2 downto 0);
@@ -305,6 +305,7 @@ begin
         blNullify := PIPELINE_NONSTOP;
         branchLikely := NO;
         tneFlag := NO;
+        teqFlag := NO;
 
         toWriteFPReg_o <= NO;
         writeFPRegAddr_o <= (others => '0');
@@ -374,6 +375,14 @@ begin
                                 toWriteReg_o <= NO;
                                 writeRegAddr_o <= (others => '0');
                                 tneFlag := YES;
+                                isInvalid := NO;
+
+                            when FUNC_TEQ =>
+                                oprSrc1 := REG;
+                                oprSrc2 := REG;
+                                toWriteReg_o <= NO;
+                                writeRegAddr_o <= (others => '0');
+                                teqFlag := YES;
                                 isInvalid := NO;
 
                             when others =>
@@ -1484,6 +1493,9 @@ begin
         end if;
 
         if (extraCmd and tneFlag = YES and operand1 /= operand2) then
+            exceptCause_o <= TRAP_CAUSE;
+        end if;
+        if (extraCmd and teqFlag = YES and operand1 /= operand2) then
             exceptCause_o <= TRAP_CAUSE;
         end if;
         operand1_o <= operand1;
