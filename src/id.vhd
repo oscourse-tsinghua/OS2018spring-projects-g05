@@ -230,8 +230,6 @@ architecture bhv of id is
     begin
         if (a(62 downto 52) = 11sb"1") then
             return '0';
-        elsif a = 64ub"0" then
-            return '0';
         end if;
         return '1';
     end floatorder;
@@ -734,6 +732,22 @@ begin
                                             writeFPDouble_o <= NO;
                                         end if;
                                         writeFPRegAddr_o <= inst_i(10 downto 6);
+
+                                    when FUNC_FMUL =>
+                                        fpAlut_o <= MUL;
+                                        isInvalid := NO;
+                                        toWriteFPReg_o <= YES;
+                                        if (instRs = FMT_D) then
+                                            oprSrcF1 := PAIRED;
+                                            oprSrcF2 := PAIRED;
+                                            writeFPDouble_o <= YES;
+                                        else
+                                            oprSrcF1 := SINGLE;
+                                            oprSrcF1 := SINGLE;
+                                            writeFPDouble_o <= NO;
+                                        end if;
+                                        writeFPRegAddr_o <= inst_i(10 downto 6);
+
                                     when others =>
                                         null;
                                 end case;
@@ -1350,7 +1364,7 @@ begin
                     fpRegReadDouble1_o <= NO;
                     foperand1 := fpRegData1_i;
                     -- Ex Push Forward, Mem Wait --
-                    if (exToWriteFPReg_i = YES) and ((exWriteFPRegAddr_i = instRt)
+                    if (exToWriteFPReg_i = YES) and (exWriteFPTarget_i = FREG) and ((exWriteFPRegAddr_i = instRt)
                         or (exWriteFPRegAddr_i(4 downto 1) = instRt(4 downto 1) and exWriteFPDouble_i = YES))  then
                         if (exWriteFPDouble_i = NO) then
                             foperand1 := exWriteFPRegData_i;
@@ -1365,7 +1379,7 @@ begin
                             toStall_o <= PIPELINE_STOP;
                         end if;
                     elsif (memToWriteFPReg_i = YES) and ((memWriteFPRegAddr_i = instRt)
-                        or (exWriteFPRegAddr_i(4 downto 1) = instRt(4 downto 1) and memWriteFPDouble_i = YES)) then
+                        or (memWriteFPRegAddr_i(4 downto 1) = instRt(4 downto 1) and memWriteFPDouble_i = YES)) then
                             toStall_o <= PIPELINE_STOP;
                     end if;
 
@@ -1393,7 +1407,7 @@ begin
                     fpRegReadDouble2_o <= NO;
                     foperand2 := fpRegData2_i;
                     -- Ex Push Forward, Mem Wait --
-                    if (exToWriteFPReg_i = YES) and ((exWriteFPRegAddr_i = instRd)
+                    if (exToWriteFPReg_i = YES) and (exWriteFPTarget_i = FREG) and ((exWriteFPRegAddr_i = instRd)
                         or (exWriteFPRegAddr_i(4 downto 1) = instRd(4 downto 1) and exWriteFPDouble_i = YES))  then
                         if (exWriteFPDouble_i = NO) then
                             foperand2 := exWriteFPRegData_i;
@@ -1408,7 +1422,7 @@ begin
                             toStall_o <= PIPELINE_STOP;
                         end if;
                     elsif (memToWriteFPReg_i = YES) and ((memWriteFPRegAddr_i = instRd)
-                        or (exWriteFPRegAddr_i(4 downto 1) = instRd(4 downto 1) and memWriteFPDouble_i = YES)) then
+                        or (memWriteFPRegAddr_i(4 downto 1) = instRd(4 downto 1) and memWriteFPDouble_i = YES)) then
                             toStall_o <= PIPELINE_STOP;
                     end if;
 

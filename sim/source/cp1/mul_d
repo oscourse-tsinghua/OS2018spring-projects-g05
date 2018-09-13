@@ -1,0 +1,38 @@
+# Sample test file
+# The entity name is the same as the file name,
+# so there shuld be no file-name suffix
+
+# Line starting with '#' is comment
+# The comment should be in seperated lines
+
+# Import a package
+# Grammar: "IMPORT <packageName>"
+# "IMPORT" should be in UPPER CASE, same below
+IMPORT alu_const
+
+# Define a signal to be checked
+# Grammar: "DEFINE <signalName> <sub_instace_name.sub_sub_instance_name.(...).signal_name>: <type>"
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+# Execute an assembly instruction
+# Grammar: "RUN <assembly>"
+# 0x00
+RUN lui $2, 0x400b
+RUN ori $2, $2, 0x3333
+RUN lui $3, 0x3333
+RUN ori $3, $3, 0x3333
+# 0x10
+RUN lui $4, 0x4012
+RUN mtc1 $2, $6
+RUN mtc1 $3, $7
+RUN mtc1 $4, $8
+# 0x20
+RUN mul.d $f10, $f6, $f8
+RUN mfc1 $10, $10
+RUN mfc1 $11, $11
+RUN nop
+# 0x30
+RUN j 0x30
+RUN nop
+ASSERT 30 reg(10) 32ux"402e9999"
+ASSERT 30 reg(11) 32ux"99999999"

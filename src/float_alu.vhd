@@ -62,7 +62,6 @@ architecture bhv of float_alu is
 	function doublesub(a: std_logic_vector(DoubleDataWidth);
 					   b: std_logic_vector(DoubleDataWidth)) return std_logic_vector is
 	variable dataindex: std_logic_vector(53 downto 0);
-	variable powerindex: std_logic_vector(10 downto 0);
 	variable count: integer;
 	variable haveone: std_logic;
 	begin
@@ -94,6 +93,40 @@ architecture bhv of float_alu is
         	return not a(63) & (b(62 downto 52) - 52 + count) & dataindex(51 downto 0);
 		end if;
 	end doublesub;
+
+	function singlemul(a: std_logic_vector(DataWidth);
+					   b: std_logic_vector(DataWidth)) return std_logic_vector is
+	variable dataA, dataB: std_logic_vector(24 downto 0);
+	variable result: std_logic_vector(49 downto 0);
+	variable powerindex: std_logic_vector(7 downto 0);
+	begin
+		dataA := "01" & a(22 downto 0);
+		dataB := "01" & b(22 downto 0);
+		powerIndex := a(30 downto 23) + b(30 downto 23) - "01111111";
+		result := dataA * dataB;
+		if result(47) = '0' then
+			return (a(31) xor b(31)) & powerIndex & result(45 downto 23);
+		else
+			return (a(31) xor b(31)) & (powerIndex + '1') & result(46 downto 24);
+		end if;
+	end singlemul;
+
+	function doublemul(a: std_logic_vector(DoubleDataWidth);
+					   b: std_logic_vector(DoubleDataWidth)) return std_logic_vector is
+	variable dataA, dataB: std_logic_vector(53 downto 0);
+	variable powerIndex: std_logic_vector(10 downto 0);
+	variable result: std_logic_vector(107 downto 0);
+	begin
+		dataA := "01" & a(51 downto 0);
+		dataB := "01" & b(51 downto 0);
+		powerIndex := a(62 downto 52) + b(62 downto 52) - "01111111111";
+		result := dataA * dataB;
+		if result(105) = '0' then
+			return (a(63) xor b(63)) & powerIndex & result(103 downto 52);
+		else
+			return (a(63) xor b(63)) & (powerIndex + '1') & result(104 downto 53);
+		end if;
+	end doublemul;
 begin
 	process(all) begin
 		toWriteFPReg_o <= NO;
@@ -164,6 +197,16 @@ begin
 						writeFPRegData_o <= doubleadd(foperand1_i, not foperand2_i(63) & foperand2_i(62 downto 0));
 					else
 						writeFPRegData_o <= doublesub(foperand1_i, foperand2_i);
+					end if;
+
+				when MUL =>
+					toWriteFPReg_o <= YES;
+					writeFPRegAddr_o <= 27ub"0" & writeFPRegAddr_i;
+					fpWriteTarget_o <= FREG;
+					if writeFPDouble_i = YES then
+						writeFPRegData_o <= doublemul(foperand1_i, foperand2_i);
+					else
+						writeFPRegData_o <= 32ub"0" & singlemul(foperand1_i(31 downto 0), foperand2_i(31 downto 0));
 					end if;
 
 				when others =>
