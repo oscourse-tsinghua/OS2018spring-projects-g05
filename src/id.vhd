@@ -229,11 +229,11 @@ architecture bhv of id is
     function floatorder(a: std_logic_vector(DoubleDataWidth)) return std_logic is
     begin
         if (a(62 downto 51) = 12sb"1") then
-            return '1';
+            return '0';
         elsif a = 64ub"0" then
-            return '1';
+            return '0';
         end if;
-        return '0';
+        return '1';
     end floatorder;
 
     signal instOp:   std_logic_vector(InstOpWidth);
@@ -333,8 +333,11 @@ begin
         foperand2 := (others => 'X');
 
         cWriteID := (others => '0');
+        cCondFlag := NO;
 
-        if (rst = RST_DISABLE) then
+        if (rst = RST_ENABLE) then
+            cc <= (others => '0');
+        else
             isInvalid := YES;
 
             if (extraCmd) then
@@ -696,7 +699,9 @@ begin
                         end case;
 
                         if (inst_i(7 downto 4) = "0011") then
-                            cCondFlag <= YES;
+                            oprSrcF1 := PAIRED;
+                            oprSrcF2 := PAIRED;
+                            cCondFlag := YES;
                             cCondCode := inst_i(3 downto 0);
                             cWriteID := inst_i(10 downto 8);
                             isInvalid := NO;
@@ -1382,14 +1387,14 @@ begin
         end if;
 
         if (cCondFlag = YES) then
-            cResult(3) <= floatgreater(foperand1, foperand2);
-            cResult(2) <= floatless(foperand1, foperand2);
-            cResult(1) <= floateq(foperand1, foperand2);
-            cResult(0) <= not (floatorder(foperand1) and floatorder(foperand2));
-            if (cResult and cCondCode /= 4ub"0") then
-                cc(cWriteID) <= '1';
+            cResult(3) := floatgreater(foperand1, foperand2);
+            cResult(2) := floatless(foperand1, foperand2);
+            cResult(1) := floateq(foperand1, foperand2);
+            cResult(0) := not (floatorder(foperand1) and floatorder(foperand2));
+            if ((cResult(2 downto 0) and cCondCode(2 downto 0)) /= 3ub"0") then
+                cc(conv_integer(cWriteID)) <= '1';
             else
-                cc(cWriteID) <= '0';
+                cc(conv_integer(cWriteID)) <= '0';
             end if;
         end if;
 
@@ -1399,7 +1404,7 @@ begin
 
         if (ccJump = YES) then
             nextInstInDelaySlot_o <= YES;
-            if (cc(cWriteID) = cTFFlag) then
+            if (cc(conv_integer(cWriteID)) = cTFFlag) then
                 branchTargetAddress := pcPlus4 + instOffsetImm - instImmSign;
                 branchFlag := YES;
             end if;

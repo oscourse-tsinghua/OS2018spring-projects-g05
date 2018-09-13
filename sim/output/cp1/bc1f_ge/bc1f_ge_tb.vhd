@@ -4,7 +4,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.ld_sw_test_const.all;
+use work.bc1f_ge_test_const.all;
 use work.global_const.all;
 use work.except_const.all;
 use work.mmu_const.all;
@@ -12,10 +12,10 @@ use work.bus_const.all;
 -- CODE BELOW IS AUTOMATICALLY GENERATED
 use work.alu_const.all;
 
-entity ld_sw_tb is
-end ld_sw_tb;
+entity bc1f_ge_tb is
+end bc1f_ge_tb;
 
-architecture bhv of ld_sw_tb is
+architecture bhv of bc1f_ge_tb is
     signal rst: std_logic := '1';
     signal clk: std_logic := '0';
 
@@ -36,10 +36,10 @@ architecture bhv of ld_sw_tb is
     signal timerInt1, timerInt2: std_logic;
 
     -- CODE BELOW IS AUTOMATICALLY GENERATED
-constant ENABLE_CACHE: std_logic := '0';
 constant CPU2_ON: std_logic := '0';
+constant ENABLE_CACHE: std_logic := '0';
 begin
-    ram_ist: entity work.ld_sw_fake_ram
+    ram_ist: entity work.bc1f_ge_fake_ram
         port map (
             clk => clk,
             rst => rst,
@@ -183,13 +183,7 @@ alias user_reg is <<signal ^.cpu1_ist.datapath_ist.regfile_ist.regArray: RegArra
 process begin
     wait for CLK_PERIOD; -- resetting
     wait for 40 * CLK_PERIOD;
-    assert user_reg(7) = x"acd4bf58" severity FAILURE;
-    wait;
-end process;
-process begin
-    wait for CLK_PERIOD; -- resetting
-    wait for 40 * CLK_PERIOD;
-    assert user_reg(9) = x"000033c9" severity FAILURE;
+    assert user_reg(6) = x"00000000" severity FAILURE;
     wait;
 end process;
     end block assertBlk;
