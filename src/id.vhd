@@ -250,7 +250,6 @@ architecture bhv of id is
     signal instImmSign: std_logic_vector(InstOffsetImmWidth);
     signal instOffsetImm: std_logic_vector(InstOffsetImmWidth);
     signal cc: std_logic_vector(7 downto 0);
-    signal cCondCode: std_logic_vector(3 downto 0);
 
 begin
 
@@ -288,6 +287,8 @@ begin
         variable cCondFlag: std_logic;
         variable cResult: std_logic_vector(3 downto 0);
         variable cWriteID: std_logic_vector(2 downto 0);
+        variable cCondCode: std_logic_vector(3 downto 0);
+        variable cTFFlag, ccJump: std_logic;
     begin
         oprSrc1 := INVALID;
         oprSrc2 := INVALID;
@@ -314,6 +315,7 @@ begin
         nextInstInDelaySlot_o <= NO;
         jumpToRs := NO;
         condJump := NO;
+        ccJump := NO;
         exceptCause_o <= exceptCause_i;
         tlbRefill_o <= tlbRefill_i;
         regReadAddr1_o <= (others => '0');
@@ -330,7 +332,7 @@ begin
         foperand1 := (others => 'X');
         foperand2 := (others => 'X');
 
-        cWriteID <= (others => '0');
+        cWriteID := (others => '0');
 
         if (rst = RST_DISABLE) then
             isInvalid := YES;
@@ -685,6 +687,9 @@ begin
 
                             when RS_BC =>
                                 isInvalid := NO;
+                                cWriteID := inst_i(20 downto 18);
+                                cTFFlag := inst_i(16);
+                                ccJump := YES;
 
                             when others =>
                                 null;
@@ -692,8 +697,8 @@ begin
 
                         if (inst_i(7 downto 4) = "0011") then
                             cCondFlag <= YES;
-                            cCondCode <= inst_i(3 downto 0);
-                            cWriteID <= inst_i(10 downto 8);
+                            cCondCode := inst_i(3 downto 0);
+                            cWriteID := inst_i(10 downto 8);
                             isInvalid := NO;
                         end if;
 
@@ -1390,6 +1395,14 @@ begin
 
         if (jumpToRs = YES) then
             branchTargetAddress := operand1;
+        end if;
+
+        if (ccJump = YES) then
+            nextInstInDelaySlot_o <= YES;
+            if (cc(cWriteID) = cTFFlag) then
+                branchTargetAddress := pcPlus4 + instOffsetImm - instImmSign;
+                branchFlag := YES;
+            end if;
         end if;
 
         if (condJump = YES) then
