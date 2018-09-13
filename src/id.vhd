@@ -180,6 +180,62 @@ architecture bhv of id is
         return true;
     end zeroJudge;
 
+    function floatgreater(a: std_logic_vector(DoubleDataWidth);
+                          b: std_logic_vector(DoubleDataWidth)) return std_logic is
+        variable comp_residual: std_logic;
+    begin
+        if (a(63) = '1') and (b(63) = '0') then
+            return '0';
+        elsif (a(63) = '0') and (b(63) = '1') then
+            return '1';
+        else
+            if (a(62 downto 0) < b(62 downto 0)) then
+                return a(63);
+            elsif (a(62 downto 0) > b(62 downto 0)) then
+                return a(63) xor '1';
+            end if;
+        end if;
+        return '0';
+    end floatgreater;
+
+    function floatless(a: std_logic_vector(DoubleDataWidth);
+                       b: std_logic_vector(DoubleDataWidth)) return std_logic is
+        variable comp_residual: std_logic;
+    begin
+        if (a(63) = '1') and (b(63) = '0') then
+            return '1';
+        elsif (a(63) = '0') and (b(63) = '1') then
+            return '0';
+        else
+            if (a(62 downto 0) > b(62 downto 0)) then
+                return a(63);
+            elsif (a(62 downto 0) < b(62 downto 0)) then
+                return a(63) xor '1';
+            end if;
+        end if;
+        return '0';
+    end floatless;
+
+    function floateq(a: std_logic_vector(DoubleDataWidth);
+                     b: std_logic_vector(DoubleDataWidth)) return std_logic is
+    begin
+        if a = b then
+            return '1';
+        else
+            return '0';
+        end if;
+    end floateq;
+
+    function floatorder(a: std_logic_vector(DoubleDataWidth)) return std_logic is
+    begin
+        if (a(62 downto 51) = 12sb"1") then
+            return '1';
+        elsif a = 64ub"0" then
+            return '1';
+        end if;
+        return '0';
+    end floatorder;
+
     signal instOp:   std_logic_vector(InstOpWidth);
     signal instRs:   std_logic_vector(InstRsWidth);
     signal instRt:   std_logic_vector(InstRtWidth);
@@ -194,6 +250,7 @@ architecture bhv of id is
     signal instImmSign: std_logic_vector(InstOffsetImmWidth);
     signal instOffsetImm: std_logic_vector(InstOffsetImmWidth);
     signal cc: std_logic_vector(7 downto 0);
+    signal cCondCode: std_logic_vector(3 downto 0);
 
 begin
 
@@ -229,6 +286,8 @@ begin
         variable branchTargetAddress: std_logic_vector(AddrWidth);
         variable blNullify, branchLikely, tneFlag: std_logic;
         variable cCondFlag: std_logic;
+        variable cResult: std_logic_vector(3 downto 0);
+        variable cWriteID: std_logic_vector(2 downto 0);
     begin
         oprSrc1 := INVALID;
         oprSrc2 := INVALID;
@@ -270,6 +329,8 @@ begin
         operandX := (others => 'X');
         foperand1 := (others => 'X');
         foperand2 := (others => 'X');
+
+        cWriteID <= (others => '0');
 
         if (rst = RST_DISABLE) then
             isInvalid := YES;
@@ -631,6 +692,9 @@ begin
 
                         if (inst_i(7 downto 4) = "0011") then
                             cCondFlag <= YES;
+                            cCondCode <= inst_i(3 downto 0);
+                            cWriteID <= inst_i(10 downto 8);
+                            isInvalid := NO;
                         end if;
 
                     when others =>
@@ -1310,6 +1374,18 @@ begin
                 when others =>
                     foperand2 := (others => '0');
             end case;
+        end if;
+
+        if (cCondFlag = YES) then
+            cResult(3) <= floatgreater(foperand1, foperand2);
+            cResult(2) <= floatless(foperand1, foperand2);
+            cResult(1) <= floateq(foperand1, foperand2);
+            cResult(0) <= not (floatorder(foperand1) and floatorder(foperand2));
+            if (cResult and cCondCode /= 4ub"0") then
+                cc(cWriteID) <= '1';
+            else
+                cc(cWriteID) <= '0';
+            end if;
         end if;
 
         if (jumpToRs = YES) then
