@@ -1387,17 +1387,16 @@ begin
         end if;
 
         if (cCondFlag = YES) then
-            cResult(3) := floatgreater(foperand1, foperand2);
-            cResult(2) := floatless(foperand1, foperand2);
-            cResult(1) := floateq(foperand1, foperand2);
+            cResult(3) := floatgreater(foperand2, foperand1);
+            cResult(2) := floatless(foperand2, foperand1);
+            cResult(1) := floateq(foperand2, foperand1);
             cResult(0) := not (floatorder(foperand1) and floatorder(foperand2));
-            if ((cResult(2 downto 0) and cCondCode(2 downto 0)) /= 3ub"0") then
+            if ((cResult(2 downto 0) and cCondCode(2 downto 0)) /= "000") then
                 cc(conv_integer(cWriteID)) <= '1';
             else
                 cc(conv_integer(cWriteID)) <= '0';
             end if;
         end if;
-
         if (jumpToRs = YES) then
             branchTargetAddress := operand1;
         end if;

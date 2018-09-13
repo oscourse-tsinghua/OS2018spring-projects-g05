@@ -40,12 +40,12 @@ begin
         if (rising_edge(clk)) then
             if (rst = RST_ENABLE) then
                 -- CODE BELOW IS AUTOMATICALLY GENERATED
-words(1) <= x"00_c0_03_3c"; -- RUN lui $3, 0xc000
+words(1) <= x"02_c0_03_3c"; -- RUN lui $3, 0xc002
 words(2) <= x"01_c0_04_3c"; -- RUN lui $4, 0xc001
 words(3) <= x"00_10_83_44"; -- RUN mtc1 $3, $2
 words(4) <= x"00_20_84_44"; -- RUN mtc1 $4, $4
-words(5) <= x"3c_10_24_46"; -- RUN c.lt.d $f2, $f4
-words(6) <= x"04_00_01_45"; -- RUN bc1t 0x0010
+words(5) <= x"3c_20_22_46"; -- RUN c.lt.d $f4, $f2
+words(6) <= x"04_00_00_45"; -- RUN bc1f 0x0010
 words(7) <= x"00_00_00_00"; -- RUN nop
 words(8) <= x"cc_cc_06_34"; -- RUN ori $6, $0, 0xcccc
 words(9) <= x"00_00_00_00"; -- RUN nop

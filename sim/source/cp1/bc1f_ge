@@ -17,13 +17,13 @@ DEFINE reg regfile_ist.regArray: RegArrayType
 # Execute an assembly instruction
 # Grammar: "RUN <assembly>"
 # 0x00
-RUN lui $3, 0xc000
+RUN lui $3, 0xc002
 RUN lui $4, 0xc001
 RUN mtc1 $3, $2
 RUN mtc1 $4, $4
 # 0x10
-RUN c.lt.d $f2, $f4
-RUN bc1t 0x0010
+RUN c.lt.d $f4, $f2
+RUN bc1f 0x0010
 RUN nop
 RUN ori $6, $0, 0xcccc
 # 0x20
