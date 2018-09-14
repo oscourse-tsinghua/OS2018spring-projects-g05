@@ -390,6 +390,12 @@ architecture bhv of datapath is
     signal cp1RegReadAddr_fe: std_logic_vector(RegAddrWidth);
     signal data_ef: std_logic_vector(DataWidth);
 
+    --attribute mark_debug: string;
+    --attribute mark_debug of foperand1_5f: signal is "true";
+    --attribute mark_debug of foperand2_5f: signal is "true";
+    --attribute mark_debug of writeFPRegData_f7: signal is "true";
+    --attribute mark_debug of fpAlut_5f: signal is "true";
+
 begin
 
     pc_reg_ist: entity work.pc_reg

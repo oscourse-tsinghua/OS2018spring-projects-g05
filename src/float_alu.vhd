@@ -43,19 +43,24 @@ architecture bhv of float_alu is
 					   b: std_logic_vector(DoubleDataWidth)) return std_logic_vector is
 	variable dataindex: std_logic_vector(53 downto 0);
 	begin
-		if (a(62 downto 52) > b(62 downto 52)) then
+		if (unsigned(a(62 downto 52)) > unsigned(b(62 downto 52))) then
 			dataindex := "01" & a(51 downto 0);
 			dataindex := to_stdlogicvector(dataindex + ("01" & b(51 downto 0)) srl (
 						 to_integer(unsigned(a(62 downto 52)) - unsigned(b(62 downto 52)))));
+			if (dataindex(53) = '1') then
+				return a(63) & (a(62 downto 52) + 1) & dataindex(52 downto 1);
+			else
+				return a(63 downto 52) & dataindex(51 downto 0);
+			end if;
 		else
 			dataindex := "01" & b(51 downto 0);
 			dataindex := to_stdlogicvector(dataindex + ("01" & a(51 downto 0)) srl (
 						 to_integer(unsigned(b(62 downto 52)) - unsigned(a(62 downto 52)))));
-		end if;
-		if (dataindex(53) = '1') then
-			return a(63) & (a(62 downto 52) + 1) & dataindex(52 downto 1);
-		else
-			return a(63 downto 52) & dataindex(51 downto 0);
+			if (dataindex(53) = '1') then
+				return b(63) & (b(62 downto 52) + 1) & dataindex(52 downto 1);
+			else
+				return b(63 downto 52) & dataindex(51 downto 0);
+			end if;
 		end if;
 	end doubleadd;
 
@@ -65,10 +70,10 @@ architecture bhv of float_alu is
 	variable count: integer;
 	variable haveone: std_logic;
 	begin
-		if (a(62 downto 0) > b(62 downto 0)) then
+		if (unsigned(a(62 downto 0)) > unsigned(b(62 downto 0))) then
 			dataindex := "01" & a(51 downto 0);
-			dataindex := to_stdlogicvector(dataindex - ("01" & b(51 downto 0)) srl (
-						 to_integer(unsigned(a(62 downto 52)) - unsigned(b(62 downto 52)))));
+			dataindex := to_stdlogicvector(dataindex - (("01" & b(51 downto 0)) srl (
+						 to_integer(unsigned(a(62 downto 52)) - unsigned(b(62 downto 52))))));
 			haveone := '0';
 	        for i in 52 downto 0 loop
     	        if haveone = '0' and dataindex(i) /= '0' then
@@ -80,8 +85,8 @@ architecture bhv of float_alu is
         	return a(63) & (a(62 downto 52) - 52 + count) & dataindex(51 downto 0);
 		else
 			dataindex := "01" & b(51 downto 0);
-			dataindex := to_stdlogicvector(dataindex - ("01" & a(51 downto 0)) srl (
-						 to_integer(unsigned(b(62 downto 52)) - unsigned(a(62 downto 52)))));
+			dataindex := to_stdlogicvector(dataindex - (("01" & a(51 downto 0)) srl (
+						 to_integer(unsigned(b(62 downto 52)) - unsigned(a(62 downto 52))))));
 			haveone := '0';
 	        for i in 52 downto 0 loop
     	        if haveone = '0' and dataindex(i) /= '0' then

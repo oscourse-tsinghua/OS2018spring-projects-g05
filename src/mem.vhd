@@ -235,9 +235,9 @@ begin
                     when FMEM_LD =>
                         fpToWriteReg_o <= YES;
                         if (ldState = FIRST) then
-                            fpWriteRegData(63 downto 32) <= loadedData_i;
-                        elsif (ldState = SECOND) then
                             fpWriteRegData(31 downto 0) <= loadedData_i;
+                        elsif (ldState = SECOND) then
+                            fpWriteRegData(63 downto 32) <= loadedData_i;
                         end if;
 
                     when FMEM_SD =>
@@ -332,9 +332,9 @@ begin
                             dataEnable_o <= ENABLE;
                         end if;
                         if (ldState = FIRST) then
-                            savingData_o <= fpMemData_i(63 downto 32);
-                        elsif (ldState = SECOND) then
                             savingData_o <= fpMemData_i(31 downto 0);
+                        elsif (ldState = SECOND) then
+                            savingData_o <= fpMemData_i(63 downto 32);
                         end if;
                     
                     when others =>

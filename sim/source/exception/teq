@@ -1,0 +1,65 @@
+# The entity name is the same as the file name,
+# so there shuld be no file-name suffix
+
+# Line starting with '#' is comment
+# The comment should be in seperated lines
+
+# Import a package
+# Grammar: "IMPORT <packageName>"
+# "IMPORT" should be in UPPER CASE, same below
+IMPORT alu_const
+
+# Define a signal to be checked
+# Grammar: "DEFINE <signalName> <sub_instace_name.sub_sub_instance_name.(...).signal_name>: <type>"
+DEFINE reg regfile_ist.regArray: RegArrayType
+
+# Execute an assembly instruction
+# Grammar: "RUN <assembly>"
+
+# Assert a previously defined signal to be equal to some value
+# Period 0 is the time when `rst` set to '0'
+# Grammar: "ASSERT <periodNumber> <signalName> <value>"
+
+# And so on
+
+RUN ori $6, $6, 0xfffe
+
+RUN ori $4, $4, 0xffff
+
+RUN teq $6, $4
+
+RUN b 0x38
+
+RUN xori $2, $0, 0xffff
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x0000
+
+RUN ori $6, $0, 0x00ff
+
+RUN b -0x4
+
+RUN nop
+
+ASSERT 26 reg(6) x"0000fffe"

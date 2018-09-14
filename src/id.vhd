@@ -136,7 +136,7 @@ architecture bhv of id is
 
         case (instOp) is
             when OP_SPECIAL =>
-                if (instFunc /= FUNC_SLL and instFunc /= FUNC_SRL and instFunc /= FUNC_SRA and instFunc /= JMP_JR) then
+                if (instFunc /= FUNC_SLL and instFunc /= FUNC_SRL and instFunc /= FUNC_SRA and instFunc /= JMP_JR and instFunc /= FUNC_TNE and instFunc /= FUNC_TEQ) then
                     saShouleBeZero := true;
                 end if;
                 case (instFunc) is
@@ -189,9 +189,9 @@ architecture bhv of id is
         elsif (a(63) = '0') and (b(63) = '1') then
             return '1';
         else
-            if (a(62 downto 0) < b(62 downto 0)) then
+            if (unsigned(a(62 downto 0)) < unsigned(b(62 downto 0))) then
                 return a(63);
-            elsif (a(62 downto 0) > b(62 downto 0)) then
+            elsif (unsigned(a(62 downto 0)) > unsigned(b(62 downto 0))) then
                 return a(63) xor '1';
             end if;
         end if;
@@ -207,9 +207,9 @@ architecture bhv of id is
         elsif (a(63) = '0') and (b(63) = '1') then
             return '0';
         else
-            if (a(62 downto 0) > b(62 downto 0)) then
+            if (unsigned(a(62 downto 0)) > unsigned(b(62 downto 0))) then
                 return a(63);
-            elsif (a(62 downto 0) < b(62 downto 0)) then
+            elsif (unsigned(a(62 downto 0)) < unsigned(b(62 downto 0))) then
                 return a(63) xor '1';
             end if;
         end if;

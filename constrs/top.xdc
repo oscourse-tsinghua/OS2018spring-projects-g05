@@ -10,9 +10,7 @@ create_clock -period 10.000 -name clk_in -waveform {0.000 5.000} [get_ports clk_
 
 # FIXME: Out dated since we changed clk_ctrl to clk_wiz
 #derived clock
-#create_generated_clock -name clkMain [get_pins -hierarchical *mmcm_adv_inst/CLKOUT0]\
-#    -source [get_pins -hierarchical *mmcm_adv_inst/CLKIN1]\
-#    -master_clock clk_in
+#create_generated_clock -name clkMain [get_pins -hierarchical *mmcm_adv_inst/CLKOUT0] #    -source [get_pins -hierarchical *mmcm_adv_inst/CLKIN1] #    -master_clock clk_in
 
 #reset
 set_property PACKAGE_PIN Y3 [get_ports rst_n]
@@ -42,7 +40,7 @@ set_property PACKAGE_PIN B5 [get_ports {led_rg1[0]}]
 set_property PACKAGE_PIN D6 [get_ports {led_rg1[1]}]
 
 #NUM
-set_property PACKAGE_PIN D3  [get_ports {num_cs_n[7]}]
+set_property PACKAGE_PIN D3 [get_ports {num_cs_n[7]}]
 set_property PACKAGE_PIN D25 [get_ports {num_cs_n[6]}]
 set_property PACKAGE_PIN D26 [get_ports {num_cs_n[5]}]
 set_property PACKAGE_PIN E25 [get_ports {num_cs_n[4]}]
@@ -65,24 +63,24 @@ set_property PACKAGE_PIN AC21 [get_ports {switch[7]}]
 set_property PACKAGE_PIN AD24 [get_ports {switch[6]}]
 set_property PACKAGE_PIN AC22 [get_ports {switch[5]}]
 set_property PACKAGE_PIN AC23 [get_ports {switch[4]}]
-set_property PACKAGE_PIN AB6  [get_ports {switch[3]}]
-set_property PACKAGE_PIN W6   [get_ports {switch[2]}]
-set_property PACKAGE_PIN AA7  [get_ports {switch[1]}]
-set_property PACKAGE_PIN Y6   [get_ports {switch[0]}]
+set_property PACKAGE_PIN AB6 [get_ports {switch[3]}]
+set_property PACKAGE_PIN W6 [get_ports {switch[2]}]
+set_property PACKAGE_PIN AA7 [get_ports {switch[1]}]
+set_property PACKAGE_PIN Y6 [get_ports {switch[0]}]
 
 #btn_key
-set_property PACKAGE_PIN V8  [get_ports {btn_key_col[0]}]
-set_property PACKAGE_PIN V9  [get_ports {btn_key_col[1]}]
-set_property PACKAGE_PIN Y8  [get_ports {btn_key_col[2]}]
-set_property PACKAGE_PIN V7  [get_ports {btn_key_col[3]}]
-set_property PACKAGE_PIN U7  [get_ports {btn_key_row[0]}]
-set_property PACKAGE_PIN W8  [get_ports {btn_key_row[1]}]
-set_property PACKAGE_PIN Y7  [get_ports {btn_key_row[2]}]
+set_property PACKAGE_PIN V8 [get_ports {btn_key_col[0]}]
+set_property PACKAGE_PIN V9 [get_ports {btn_key_col[1]}]
+set_property PACKAGE_PIN Y8 [get_ports {btn_key_col[2]}]
+set_property PACKAGE_PIN V7 [get_ports {btn_key_col[3]}]
+set_property PACKAGE_PIN U7 [get_ports {btn_key_row[0]}]
+set_property PACKAGE_PIN W8 [get_ports {btn_key_row[1]}]
+set_property PACKAGE_PIN Y7 [get_ports {btn_key_row[2]}]
 set_property PACKAGE_PIN AA8 [get_ports {btn_key_row[3]}]
 
 #btn_step
-set_property PACKAGE_PIN Y5 [get_ports btn_step[0]]
-set_property PACKAGE_PIN V6 [get_ports btn_step[1]]
+set_property PACKAGE_PIN Y5 [get_ports {btn_step[0]}]
+set_property PACKAGE_PIN V6 [get_ports {btn_step[1]}]
 
 #SPI flash
 set_property PACKAGE_PIN P20 [get_ports spi_clk]
@@ -208,3 +206,7 @@ create_clock -period 40.000 -name eth_txclk -waveform {0.000 20.000} [get_ports 
 
 set_property CFGBVS VCCO [current_design]
 set_property CONFIG_VOLTAGE 3.3 [current_design]
+
+connect_debug_port u_ila_0/probe3 [get_nets [list {cpu1_ist/datapath_ist/writeFPRegData_f7[0]} {cpu1_ist/datapath_ist/writeFPRegData_f7[1]} {cpu1_ist/datapath_ist/writeFPRegData_f7[2]} {cpu1_ist/datapath_ist/writeFPRegData_f7[3]} {cpu1_ist/datapath_ist/writeFPRegData_f7[4]} {cpu1_ist/datapath_ist/writeFPRegData_f7[5]} {cpu1_ist/datapath_ist/writeFPRegData_f7[6]} {cpu1_ist/datapath_ist/writeFPRegData_f7[7]} {cpu1_ist/datapath_ist/writeFPRegData_f7[8]} {cpu1_ist/datapath_ist/writeFPRegData_f7[9]} {cpu1_ist/datapath_ist/writeFPRegData_f7[10]} {cpu1_ist/datapath_ist/writeFPRegData_f7[11]} {cpu1_ist/datapath_ist/writeFPRegData_f7[12]} {cpu1_ist/datapath_ist/writeFPRegData_f7[13]} {cpu1_ist/datapath_ist/writeFPRegData_f7[14]} {cpu1_ist/datapath_ist/writeFPRegData_f7[15]} {cpu1_ist/datapath_ist/writeFPRegData_f7[16]} {cpu1_ist/datapath_ist/writeFPRegData_f7[17]} {cpu1_ist/datapath_ist/writeFPRegData_f7[18]} {cpu1_ist/datapath_ist/writeFPRegData_f7[19]} {cpu1_ist/datapath_ist/writeFPRegData_f7[20]} {cpu1_ist/datapath_ist/writeFPRegData_f7[21]} {cpu1_ist/datapath_ist/writeFPRegData_f7[22]} {cpu1_ist/datapath_ist/writeFPRegData_f7[23]} {cpu1_ist/datapath_ist/writeFPRegData_f7[24]} {cpu1_ist/datapath_ist/writeFPRegData_f7[25]} {cpu1_ist/datapath_ist/writeFPRegData_f7[26]} {cpu1_ist/datapath_ist/writeFPRegData_f7[27]} {cpu1_ist/datapath_ist/writeFPRegData_f7[28]} {cpu1_ist/datapath_ist/writeFPRegData_f7[29]} {cpu1_ist/datapath_ist/writeFPRegData_f7[30]} {cpu1_ist/datapath_ist/writeFPRegData_f7[31]} {cpu1_ist/datapath_ist/writeFPRegData_f7[32]} {cpu1_ist/datapath_ist/writeFPRegData_f7[33]} {cpu1_ist/datapath_ist/writeFPRegData_f7[34]} {cpu1_ist/datapath_ist/writeFPRegData_f7[35]} {cpu1_ist/datapath_ist/writeFPRegData_f7[36]} {cpu1_ist/datapath_ist/writeFPRegData_f7[37]} {cpu1_ist/datapath_ist/writeFPRegData_f7[38]} {cpu1_ist/datapath_ist/writeFPRegData_f7[39]} {cpu1_ist/datapath_ist/writeFPRegData_f7[40]} {cpu1_ist/datapath_ist/writeFPRegData_f7[41]} {cpu1_ist/datapath_ist/writeFPRegData_f7[42]} {cpu1_ist/datapath_ist/writeFPRegData_f7[43]} {cpu1_ist/datapath_ist/writeFPRegData_f7[44]} {cpu1_ist/datapath_ist/writeFPRegData_f7[45]} {cpu1_ist/datapath_ist/writeFPRegData_f7[46]} {cpu1_ist/datapath_ist/writeFPRegData_f7[47]} {cpu1_ist/datapath_ist/writeFPRegData_f7[48]} {cpu1_ist/datapath_ist/writeFPRegData_f7[49]} {cpu1_ist/datapath_ist/writeFPRegData_f7[50]} {cpu1_ist/datapath_ist/writeFPRegData_f7[51]} {cpu1_ist/datapath_ist/writeFPRegData_f7[52]} {cpu1_ist/datapath_ist/writeFPRegData_f7[53]} {cpu1_ist/datapath_ist/writeFPRegData_f7[54]} {cpu1_ist/datapath_ist/writeFPRegData_f7[55]} {cpu1_ist/datapath_ist/writeFPRegData_f7[56]} {cpu1_ist/datapath_ist/writeFPRegData_f7[57]} {cpu1_ist/datapath_ist/writeFPRegData_f7[58]} {cpu1_ist/datapath_ist/writeFPRegData_f7[59]} {cpu1_ist/datapath_ist/writeFPRegData_f7[60]} {cpu1_ist/datapath_ist/writeFPRegData_f7[61]} {cpu1_ist/datapath_ist/writeFPRegData_f7[62]} {cpu1_ist/datapath_ist/writeFPRegData_f7[63]}]]
+connect_debug_port u_ila_0/probe7 [get_nets [list {cpu2_ist/datapath_ist/writeFPRegData_f7[0]} {cpu2_ist/datapath_ist/writeFPRegData_f7[1]} {cpu2_ist/datapath_ist/writeFPRegData_f7[2]} {cpu2_ist/datapath_ist/writeFPRegData_f7[3]} {cpu2_ist/datapath_ist/writeFPRegData_f7[4]} {cpu2_ist/datapath_ist/writeFPRegData_f7[5]} {cpu2_ist/datapath_ist/writeFPRegData_f7[6]} {cpu2_ist/datapath_ist/writeFPRegData_f7[7]} {cpu2_ist/datapath_ist/writeFPRegData_f7[8]} {cpu2_ist/datapath_ist/writeFPRegData_f7[9]} {cpu2_ist/datapath_ist/writeFPRegData_f7[10]} {cpu2_ist/datapath_ist/writeFPRegData_f7[11]} {cpu2_ist/datapath_ist/writeFPRegData_f7[12]} {cpu2_ist/datapath_ist/writeFPRegData_f7[13]} {cpu2_ist/datapath_ist/writeFPRegData_f7[14]} {cpu2_ist/datapath_ist/writeFPRegData_f7[15]} {cpu2_ist/datapath_ist/writeFPRegData_f7[16]} {cpu2_ist/datapath_ist/writeFPRegData_f7[17]} {cpu2_ist/datapath_ist/writeFPRegData_f7[18]} {cpu2_ist/datapath_ist/writeFPRegData_f7[19]} {cpu2_ist/datapath_ist/writeFPRegData_f7[20]} {cpu2_ist/datapath_ist/writeFPRegData_f7[21]} {cpu2_ist/datapath_ist/writeFPRegData_f7[22]} {cpu2_ist/datapath_ist/writeFPRegData_f7[23]} {cpu2_ist/datapath_ist/writeFPRegData_f7[24]} {cpu2_ist/datapath_ist/writeFPRegData_f7[25]} {cpu2_ist/datapath_ist/writeFPRegData_f7[26]} {cpu2_ist/datapath_ist/writeFPRegData_f7[27]} {cpu2_ist/datapath_ist/writeFPRegData_f7[28]} {cpu2_ist/datapath_ist/writeFPRegData_f7[29]} {cpu2_ist/datapath_ist/writeFPRegData_f7[30]} {cpu2_ist/datapath_ist/writeFPRegData_f7[31]} {cpu2_ist/datapath_ist/writeFPRegData_f7[32]} {cpu2_ist/datapath_ist/writeFPRegData_f7[33]} {cpu2_ist/datapath_ist/writeFPRegData_f7[34]} {cpu2_ist/datapath_ist/writeFPRegData_f7[35]} {cpu2_ist/datapath_ist/writeFPRegData_f7[36]} {cpu2_ist/datapath_ist/writeFPRegData_f7[37]} {cpu2_ist/datapath_ist/writeFPRegData_f7[38]} {cpu2_ist/datapath_ist/writeFPRegData_f7[39]} {cpu2_ist/datapath_ist/writeFPRegData_f7[40]} {cpu2_ist/datapath_ist/writeFPRegData_f7[41]} {cpu2_ist/datapath_ist/writeFPRegData_f7[42]} {cpu2_ist/datapath_ist/writeFPRegData_f7[43]} {cpu2_ist/datapath_ist/writeFPRegData_f7[44]} {cpu2_ist/datapath_ist/writeFPRegData_f7[45]} {cpu2_ist/datapath_ist/writeFPRegData_f7[46]} {cpu2_ist/datapath_ist/writeFPRegData_f7[47]} {cpu2_ist/datapath_ist/writeFPRegData_f7[48]} {cpu2_ist/datapath_ist/writeFPRegData_f7[49]} {cpu2_ist/datapath_ist/writeFPRegData_f7[50]} {cpu2_ist/datapath_ist/writeFPRegData_f7[51]} {cpu2_ist/datapath_ist/writeFPRegData_f7[52]} {cpu2_ist/datapath_ist/writeFPRegData_f7[53]} {cpu2_ist/datapath_ist/writeFPRegData_f7[54]} {cpu2_ist/datapath_ist/writeFPRegData_f7[55]} {cpu2_ist/datapath_ist/writeFPRegData_f7[56]} {cpu2_ist/datapath_ist/writeFPRegData_f7[57]} {cpu2_ist/datapath_ist/writeFPRegData_f7[58]} {cpu2_ist/datapath_ist/writeFPRegData_f7[59]} {cpu2_ist/datapath_ist/writeFPRegData_f7[60]} {cpu2_ist/datapath_ist/writeFPRegData_f7[61]} {cpu2_ist/datapath_ist/writeFPRegData_f7[62]} {cpu2_ist/datapath_ist/writeFPRegData_f7[63]}]]
+

@@ -33,8 +33,8 @@ begin
 	            else
 	                if (writeEnable_i = ENABLE) then
 	                    if (writeDouble_i = YES) then
-	            	        regArray(conv_integer(writeAddr_i(4 downto 1) & '0')) <= writeData_i(63 downto 32);
-	            	        regArray(conv_integer(writeAddr_i(4 downto 1) & '1')) <= writeData_i(31 downto 0);
+	            	        regArray(conv_integer(writeAddr_i(4 downto 1) & '1')) <= writeData_i(63 downto 32);
+	            	        regArray(conv_integer(writeAddr_i(4 downto 1) & '0')) <= writeData_i(31 downto 0);
 	             	    else
 	            		    regArray(conv_integer(writeAddr_i(4 downto 0))) <= writeData_i(31 downto 0);
 	            		end if;
@@ -47,15 +47,15 @@ begin
     	    readData1_o <= (others => '0');
     	    if (rst = RST_DISABLE) then
     	        if (readDouble1_i = YES) then
-    	            readData1_o(63 downto 32) <= regArray(conv_integer(readAddr1_i(4 downto 1) & '0'));
-    	            readData1_o(31 downto 0) <= regArray(conv_integer(readAddr1_i(4 downto 1) & '1'));
+    	            readData1_o(63 downto 32) <= regArray(conv_integer(readAddr1_i(4 downto 1) & '1'));
+    	            readData1_o(31 downto 0) <= regArray(conv_integer(readAddr1_i(4 downto 1) & '0'));
     	        else
     	            readData1_o <= 32ub"0" & regArray(conv_integer(readAddr1_i(4 downto 0)));
     	        end if;
                 if (readDouble1_i = YES) then
                     if (writeDouble_i = NO) then
                         if (readAddr1_i(4 downto 1) = writeAddr_i(4 downto 1)) then
-                            if (writeAddr_i(0) = '0') then
+                            if (writeAddr_i(0) = '1') then
                                 readData1_o(63 downto 32) <= writeData_i(31 downto 0);
                             else
                                 readData1_o(31 downto 0) <= writeData_i(31 downto 0);
@@ -73,7 +73,7 @@ begin
                         end if;
                     else
                         if (readAddr1_i(4 downto 1) = writeAddr_i(4 downto 1)) then
-                            if (readAddr1_i(0) = '0') then
+                            if (readAddr1_i(0) = '1') then
                                 readData1_o(31 downto 0) <= writeData_i(63 downto 32);
                             else
                                 readData1_o(31 downto 0) <= writeData_i(31 downto 0);
@@ -88,15 +88,15 @@ begin
    	    	readData2_o <= (others => '0');
    	    	if (rst = RST_DISABLE) then
 	            if (readDouble2_i = YES) then
-	                readData2_o(63 downto 32) <= regArray(conv_integer(readAddr2_i(4 downto 1) & '0'));
-	                readData2_o(31 downto 0) <= regArray(conv_integer(readAddr2_i(4 downto 1) & '1'));
+	                readData2_o(63 downto 32) <= regArray(conv_integer(readAddr2_i(4 downto 1) & '1'));
+	                readData2_o(31 downto 0) <= regArray(conv_integer(readAddr2_i(4 downto 1) & '0'));
 	            else
 	                readData2_o <= 32ub"0" & regArray(conv_integer(readAddr2_i(4 downto 0)));
 	            end if;
                 if (readDouble2_i = YES) then
                     if (writeDouble_i = NO) then
                         if (readAddr2_i(4 downto 1) = writeAddr_i(4 downto 1)) then
-                            if (writeAddr_i(0) = '0') then
+                            if (writeAddr_i(0) = '1') then
                                 readData2_o(63 downto 32) <= writeData_i(31 downto 0);
                             else
                                 readData2_o(31 downto 0) <= writeData_i(31 downto 0);
@@ -114,7 +114,7 @@ begin
                         end if;
                     else
                         if (readAddr2_i(4 downto 1) = writeAddr_i(4 downto 1)) then
-                            if (readAddr2_i(0) = '0') then
+                            if (readAddr2_i(0) = '1') then
                                 readData2_o(31 downto 0) <= writeData_i(63 downto 32);
                             else
                                 readData2_o(31 downto 0) <= writeData_i(31 downto 0);
