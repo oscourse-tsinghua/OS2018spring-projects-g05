@@ -215,7 +215,7 @@ package inst_const is
     -- Besides, C.cond.fmt should not be judge through the constant approach.
 
     --
-    -- Cache(unimplemented)
+    -- Unimplement
     --
     constant FUNC_SYNC: std_logic_vector(InstFuncWidth) := "001111";
     constant OP_CACHE: std_logic_vector(InstOpWidth) := "101111";

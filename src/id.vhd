@@ -1544,7 +1544,7 @@ begin
         if (extraCmd and tneFlag = YES and operand1 /= operand2) then
             exceptCause_o <= TRAP_CAUSE;
         end if;
-        if (extraCmd and teqFlag = YES and operand1 /= operand2) then
+        if (extraCmd and teqFlag = YES and operand1 = operand2) then
             exceptCause_o <= TRAP_CAUSE;
         end if;
         operand1_o <= operand1;
