@@ -41,12 +41,12 @@ end float_alu;
 architecture bhv of float_alu is
 	function doubleadd(a: std_logic_vector(DoubleDataWidth);
 					   b: std_logic_vector(DoubleDataWidth)) return std_logic_vector is
-	variable dataindex: std_logic_vector(53 downto 0);
+		variable dataindex: std_logic_vector(53 downto 0);
 	begin
 		if (unsigned(a(62 downto 52)) > unsigned(b(62 downto 52))) then
 			dataindex := "01" & a(51 downto 0);
-			dataindex := to_stdlogicvector(dataindex + ("01" & b(51 downto 0)) srl (
-						 to_integer(unsigned(a(62 downto 52)) - unsigned(b(62 downto 52)))));
+			dataindex := to_stdlogicvector(dataindex + (("01" & b(51 downto 0)) srl (
+						 to_integer('0' & (unsigned(a(62 downto 52)) - unsigned(b(62 downto 52)))))));
 			if (dataindex(53) = '1') then
 				return a(63) & (a(62 downto 52) + 1) & dataindex(52 downto 1);
 			else
@@ -54,8 +54,8 @@ architecture bhv of float_alu is
 			end if;
 		else
 			dataindex := "01" & b(51 downto 0);
-			dataindex := to_stdlogicvector(dataindex + ("01" & a(51 downto 0)) srl (
-						 to_integer(unsigned(b(62 downto 52)) - unsigned(a(62 downto 52)))));
+			dataindex := to_stdlogicvector(dataindex + (("01" & a(51 downto 0)) srl (
+						 to_integer('0' & (unsigned(b(62 downto 52)) - unsigned(a(62 downto 52)))))));
 			if (dataindex(53) = '1') then
 				return b(63) & (b(62 downto 52) + 1) & dataindex(52 downto 1);
 			else
@@ -66,14 +66,14 @@ architecture bhv of float_alu is
 
 	function doublesub(a: std_logic_vector(DoubleDataWidth);
 					   b: std_logic_vector(DoubleDataWidth)) return std_logic_vector is
-	variable dataindex: std_logic_vector(53 downto 0);
-	variable count: integer;
-	variable haveone: std_logic;
+		variable dataindex: std_logic_vector(53 downto 0);
+		variable count: integer;
+		variable haveone: std_logic;
 	begin
 		if (unsigned(a(62 downto 0)) > unsigned(b(62 downto 0))) then
 			dataindex := "01" & a(51 downto 0);
 			dataindex := to_stdlogicvector(dataindex - (("01" & b(51 downto 0)) srl (
-						 to_integer(unsigned(a(62 downto 52)) - unsigned(b(62 downto 52))))));
+						 to_integer('0' & (unsigned(a(62 downto 52)) - unsigned(b(62 downto 52)))))));
 			haveone := '0';
 	        for i in 52 downto 0 loop
     	        if haveone = '0' and dataindex(i) /= '0' then
@@ -86,7 +86,7 @@ architecture bhv of float_alu is
 		else
 			dataindex := "01" & b(51 downto 0);
 			dataindex := to_stdlogicvector(dataindex - (("01" & a(51 downto 0)) srl (
-						 to_integer(unsigned(b(62 downto 52)) - unsigned(a(62 downto 52))))));
+						 to_integer('0' & (unsigned(b(62 downto 52)) - unsigned(a(62 downto 52)))))));
 			haveone := '0';
 	        for i in 52 downto 0 loop
     	        if haveone = '0' and dataindex(i) /= '0' then
@@ -101,9 +101,9 @@ architecture bhv of float_alu is
 
 	function singlemul(a: std_logic_vector(DataWidth);
 					   b: std_logic_vector(DataWidth)) return std_logic_vector is
-	variable dataA, dataB: std_logic_vector(24 downto 0);
-	variable result: std_logic_vector(49 downto 0);
-	variable powerindex: std_logic_vector(7 downto 0);
+		variable dataA, dataB: std_logic_vector(24 downto 0);
+		variable result: std_logic_vector(49 downto 0);
+		variable powerindex: std_logic_vector(7 downto 0);
 	begin
 		dataA := "01" & a(22 downto 0);
 		dataB := "01" & b(22 downto 0);
@@ -118,9 +118,9 @@ architecture bhv of float_alu is
 
 	function doublemul(a: std_logic_vector(DoubleDataWidth);
 					   b: std_logic_vector(DoubleDataWidth)) return std_logic_vector is
-	variable dataA, dataB: std_logic_vector(53 downto 0);
-	variable powerIndex: std_logic_vector(10 downto 0);
-	variable result: std_logic_vector(107 downto 0);
+		variable dataA, dataB: std_logic_vector(53 downto 0);
+		variable powerIndex: std_logic_vector(10 downto 0);
+		variable result: std_logic_vector(107 downto 0);
 	begin
 		dataA := "01" & a(51 downto 0);
 		dataB := "01" & b(51 downto 0);

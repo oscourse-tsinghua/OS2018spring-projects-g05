@@ -228,7 +228,7 @@ architecture bhv of id is
 
     function floatorder(a: std_logic_vector(DoubleDataWidth)) return std_logic is
     begin
-        if (a(62 downto 52) = 11sb"1") then
+        if (a(62 downto 52) = 11sb"1") and (a(51 downto 0) /= 52ub"0") then
             return '0';
         end if;
         return '1';
@@ -752,18 +752,18 @@ begin
                                         null;
                                 end case;
 
+                                if (inst_i(7 downto 4) = "0011") then
+                                    oprSrcF1 := PAIRED;
+                                    oprSrcF2 := PAIRED;
+                                    cCondFlag := YES;
+                                    cCondCode := inst_i(3 downto 0);
+                                    cWriteID := inst_i(10 downto 8);
+                                    isInvalid := NO;
+                                end if;
+
                             when others =>
                                 null;
                         end case;
-
-                        if (inst_i(7 downto 4) = "0011") then
-                            oprSrcF1 := PAIRED;
-                            oprSrcF2 := PAIRED;
-                            cCondFlag := YES;
-                            cCondCode := inst_i(3 downto 0);
-                            cWriteID := inst_i(10 downto 8);
-                            isInvalid := NO;
-                        end if;
 
                     when others =>
                         null;
@@ -1369,7 +1369,7 @@ begin
                         if (exWriteFPDouble_i = NO) then
                             foperand1 := exWriteFPRegData_i;
                         else
-                            if (instRt(0) = '0') then
+                            if (instRt(0) = '1') then
                                 foperand1 := 32ub"0" & exWriteFPRegData_i(63 downto 32);
                             else
                                 foperand1 := 32ub"0" & exWriteFPRegData_i(31 downto 0);
@@ -1412,7 +1412,7 @@ begin
                         if (exWriteFPDouble_i = NO) then
                             foperand2 := exWriteFPRegData_i;
                         else
-                            if (instRd(0) = '0') then
+                            if (instRd(0) = '1') then
                                 foperand2 := 32ub"0" & exWriteFPRegData_i(63 downto 32);
                             else
                                 foperand2 := 32ub"0" & exWriteFPRegData_i(31 downto 0);
@@ -1455,6 +1455,7 @@ begin
                 cc(conv_integer(cWriteID)) <= '0';
             end if;
         end if;
+
         if (jumpToRs = YES) then
             branchTargetAddress := operand1;
         end if;
