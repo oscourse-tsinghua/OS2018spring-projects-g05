@@ -60,6 +60,12 @@ architecture bhv of id_ex is
     attribute dont_touch of exValid: signal is "true";
     attribute dont_touch of keepDelaySlot: signal is "true";
     attribute dont_touch of idIsInDelaySlot_i: signal is "true";
+
+    attribute fsm_encoding: string;
+    attribute fsm_encoding of alut_i: signal is "one_hot";
+    attribute fsm_encoding of alut_o: signal is "one_hot";
+    attribute fsm_encoding of memt_i: signal is "one_hot";
+    attribute fsm_encoding of memt_o: signal is "one_hot";
 begin
     keepDelaySlot <= YES when idIsInDelaySlot_i = YES and exValid = NO else NO;
 

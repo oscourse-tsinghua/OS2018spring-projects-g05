@@ -302,6 +302,16 @@ architecture bhv of datapath is
     signal memCp0RegWe_8b: std_logic;
     signal scStall_8b: integer;
     signal memDataWrite: std_logic;
+
+    attribute fsm_encoding: string;
+    attribute fsm_encoding of alut_45: signal is "one_hot";
+    attribute fsm_encoding of alut_56: signal is "one_hot";
+    attribute fsm_encoding of memt_45: signal is "one_hot";
+    attribute fsm_encoding of memt_56: signal is "one_hot";
+    attribute fsm_encoding of memt_67: signal is "one_hot";
+    attribute fsm_encoding of memt_78: signal is "one_hot";
+    attribute fsm_encoding of exMemt_64: signal is "one_hot";
+    attribute fsm_encoding of memMemt_74: signal is "one_hot";
 begin
 
     pc_reg_ist: entity work.pc_reg

@@ -77,6 +77,9 @@ end mem;
 architecture bhv of mem is
     signal dataWrite: std_logic;
     signal interrupt: std_logic_vector(ExceptionCauseWidth);
+
+    attribute fsm_encoding: string;
+    attribute fsm_encoding of memt_i: signal is "one_hot";
 begin
     flushForceWrite_o <= flushForceWrite_i;
     memAddr_o <= memAddr_i(31 downto 2) & "00";
