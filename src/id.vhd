@@ -96,11 +96,6 @@ architecture bhv of id is
                         when others =>
                     end case;
 
-                when OP_SPECIAL3 =>
-                    if (instFunc = FUNC_BSHFL and instSa = SA_SEH) then
-                        rsShallBeZero := true;
-                    end if;
-
                 when JMP_BLEZL | JMP_BGTZL =>
                     rtShallBeZero := true;
 
@@ -169,6 +164,11 @@ architecture bhv of id is
     signal instImmSign: std_logic_vector(InstOffsetImmWidth);
     signal instOffsetImm: std_logic_vector(InstOffsetImmWidth);
 
+    attribute fsm_encoding: string;
+    attribute fsm_encoding of alut_o: signal is "one_hot";
+    attribute fsm_encoding of exMemt_i: signal is "one_hot";
+    attribute fsm_encoding of memMemt_i: signal is "one_hot";
+    attribute fsm_encoding of memt_o: signal is "one_hot";
 begin
 
     -- Segment the instruction --
@@ -200,6 +200,10 @@ begin
         variable branchFlag: std_logic;
         variable branchTargetAddress: std_logic_vector(AddrWidth);
         variable blNullify, branchLikely, tneFlag, teqFlag: std_logic;
+
+        attribute fsm_encoding: string;
+        attribute fsm_encoding of oprSrc1: variable is "one_hot";
+        attribute fsm_encoding of oprSrc2: variable is "one_hot";
     begin
         oprSrc1 := INVALID;
         oprSrc2 := INVALID;
@@ -350,16 +354,6 @@ begin
                             when others =>
                                 null;
                         end case;
-
-                    when OP_SPECIAL3 =>
-                        if (instFunc = FUNC_BSHFL and instSa = SA_SEH) then
-                            oprSrc1 := INVALID;
-                            oprSrc2 := REG;
-                            alut_o <= ALU_SEH;
-                            toWriteReg_o <= YES;
-                            writeRegAddr_o <= instRd;
-                            isInvalid := NO;
-                        end if;
 
                     when OP_LL =>
                         oprSrc1 := REG;

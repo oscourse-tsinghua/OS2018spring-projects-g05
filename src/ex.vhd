@@ -122,6 +122,11 @@ architecture bhv of ex is
     signal product: std_logic_vector(DoubleDataWidth);
     signal trapAssert: std_logic;
     signal reg1Ltreg2: std_logic;
+
+    attribute fsm_encoding: string;
+    attribute fsm_encoding of alut_i: signal is "one_hot";
+    attribute fsm_encoding of memt_i: signal is "one_hot";
+    attribute fsm_encoding of memt_o: signal is "one_hot";
 begin
     memt_o <= memt_i;
     flushForceWrite_o <= flushForceWrite_i;
@@ -297,9 +302,6 @@ begin
                         writeHiData_o <= res64(HiDataWidth);
                         writeLoData_o <= res64(LoDataWidth);
                     end if;
-
-                when ALU_SEH =>
-                    writeRegData_o <= std_logic_vector(resize(signed(operand2_i(15 downto 0)), 32));
 
                 when ALU_TLBWI =>
                     cp0Sp_o <= CP0SP_TLBWI;

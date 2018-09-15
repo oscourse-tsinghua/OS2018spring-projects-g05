@@ -123,9 +123,6 @@ package inst_const is
     constant FUNC_DIV: std_logic_vector(InstFuncWidth) := "011010";
     constant FUNC_DIVU: std_logic_vector(InstFuncWidth) := "011011";
 
-    constant FUNC_BSHFL: std_logic_vector(InstFuncWidth) := "100000";
-    constant SA_SEH: std_logic_vector(InstSaWidth) := "11000";
-
     constant FUNC_WAIT: std_logic_vector(InstFuncWidth) := "100000";
 
     --
@@ -181,7 +178,6 @@ package inst_const is
     --
     constant OP_SPECIAL: std_logic_vector(InstOpWidth) := "000000";
     constant OP_SPECIAL2: std_logic_vector(InstOpWidth) := "011100";
-    constant OP_SPECIAL3: std_logic_vector(InstOpWidth) := "011111";
     constant OP_JMPSPECIAL: std_logic_vector(InstOpWidth) := "000001";
 
     --

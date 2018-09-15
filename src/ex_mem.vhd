@@ -70,6 +70,9 @@ entity ex_mem is
 end ex_mem;
 
 architecture bhv of ex_mem is
+    attribute fsm_encoding: string;
+    attribute fsm_encoding of memt_i: signal is "one_hot";
+    attribute fsm_encoding of memt_o: signal is "one_hot";
 begin
     process(clk) begin
         if (rising_edge(clk)) then
