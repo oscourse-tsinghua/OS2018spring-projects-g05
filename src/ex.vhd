@@ -298,6 +298,9 @@ begin
                         writeLoData_o <= res64(LoDataWidth);
                     end if;
 
+                when ALU_SEH =>
+                    writeRegData_o <= std_logic_vector(resize(signed(operand2_i(15 downto 0)), 32));
+
                 when ALU_TLBWI =>
                     cp0Sp_o <= CP0SP_TLBWI;
 

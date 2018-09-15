@@ -74,30 +74,35 @@ architecture bhv of id is
                        instRd: std_logic_vector(InstRdWidth);
                        instSa: std_logic_vector(InstSaWidth);
                        instFunc: std_logic_vector(InstFuncWidth)) return boolean is
-        variable opShouleBeZero: boolean;
-        variable rsShouleBeZero: boolean;
-        variable rtShouleBeZero: boolean;
-        variable rdShouleBeZero: boolean;
-        variable saShouleBeZero: boolean;
-        variable funcShouleBeZero: boolean;
+        variable opShallBeZero: boolean;
+        variable rsShallBeZero: boolean;
+        variable rtShallBeZero: boolean;
+        variable rdShallBeZero: boolean;
+        variable saShallBeZero: boolean;
+        variable funcShallBeZero: boolean;
     begin
-        rsShouleBeZero := false;
-        rtShouleBeZero := false;
-        rdShouleBeZero := false;
-        saShouleBeZero := false;
+        rsShallBeZero := false;
+        rtShallBeZero := false;
+        rdShallBeZero := false;
+        saShallBeZero := false;
 
         if (extraCmd) then
             case (instOp) is
                 when OP_SPECIAL2 =>
-                    saShouleBeZero := true;
+                    saShallBeZero := true;
                     case (instFunc) is
                         when FUNC_MADD | FUNC_MADDU | FUNC_MSUB | FUNC_MSUBU =>
-                            rdShouleBeZero := true;
+                            rdShallBeZero := true;
                         when others =>
                     end case;
 
+                when OP_SPECIAL3 =>
+                    if (instFunc = FUNC_BSHFL and instSa = SA_SEH) then
+                        rsShallBeZero := true;
+                    end if;
+
                 when JMP_BLEZL | JMP_BGTZL =>
-                    rtShouleBeZero := true;
+                    rtShallBeZero := true;
 
                 when others =>
                     null;
@@ -106,45 +111,45 @@ architecture bhv of id is
 
         case (instOp) is
             when OP_SPECIAL =>
-                if (instFunc /= FUNC_SLL and instFunc /= FUNC_SRL and instFunc /= FUNC_SRA and instFunc /= JMP_JR) then
-                    saShouleBeZero := true;
+                if (instFunc /= FUNC_SLL and instFunc /= FUNC_SRL and instFunc /= FUNC_SRA and instFunc /= JMP_JR and instFunc /= FUNC_TNE and instFunc /= FUNC_TEQ) then
+                    saShallBeZero := true;
                 end if;
                 case (instFunc) is
                     when FUNC_MFHI | FUNC_MFLO =>
-                        rsShouleBeZero := true;
-                        rtShouleBeZero := true;
+                        rsShallBeZero := true;
+                        rtShallBeZero := true;
                     when FUNC_MTHI | FUNC_MTLO | JMP_JR =>
-                        rtShouleBeZero := true;
-                        rdShouleBeZero := true;
+                        rtShallBeZero := true;
+                        rdShallBeZero := true;
                     when JMP_JALR =>
-                        rtShouleBeZero := true;
+                        rtShallBeZero := true;
                     when FUNC_MULT | FUNC_MULTU =>
-                        rdShouleBeZero := true;
+                        rdShallBeZero := true;
                     when others =>
                 end case;
 
             when OP_LUI =>
-                rsShouleBeZero := true;
+                rsShallBeZero := true;
 
             when JMP_BGTZ | JMP_BLEZ =>
-                rtShouleBeZero := true;
+                rtShallBeZero := true;
 
             when others =>
         end case;
 
-        if (opShouleBeZero and instOp /= "000000") then
+        if (opShallBeZero and instOp /= "000000") then
             return false;
         end if;
-        if (rsShouleBeZero and instRs /= "00000") then
+        if (rsShallBeZero and instRs /= "00000") then
             return false;
         end if;
-        if (rtShouleBeZero and instRt /= "00000") then
+        if (rtShallBeZero and instRt /= "00000") then
             return false;
         end if;
-        if (rdShouleBeZero and instRd /= "00000") then
+        if (rdShallBeZero and instRd /= "00000") then
             return false;
         end if;
-        if (saShouleBeZero and instSa /= "00000") then
+        if (saShallBeZero and instSa /= "00000") then
             return false;
         end if;
         return true;
@@ -194,7 +199,7 @@ begin
         variable isInvalid, jumpToRs, condJump, branchToJump, branchToLink: std_logic;
         variable branchFlag: std_logic;
         variable branchTargetAddress: std_logic_vector(AddrWidth);
-        variable blNullify, branchLikely, tneFlag: std_logic;
+        variable blNullify, branchLikely, tneFlag, teqFlag: std_logic;
     begin
         oprSrc1 := INVALID;
         oprSrc2 := INVALID;
@@ -207,6 +212,7 @@ begin
         blNullify := PIPELINE_NONSTOP;
         branchLikely := NO;
         tneFlag := NO;
+        teqFlag := NO;
 
         linkAddr_o <= (others => '0');
         branchTargetAddress := (others => '0');
@@ -263,6 +269,14 @@ begin
                                 toWriteReg_o <= NO;
                                 writeRegAddr_o <= (others => '0');
                                 tneFlag := YES;
+                                isInvalid := NO;
+
+                            when FUNC_TEQ =>
+                                oprSrc1 := REG;
+                                oprSrc2 := REG;
+                                toWriteReg_o <= NO;
+                                writeRegAddr_o <= (others => '0');
+                                teqFlag := YES;
                                 isInvalid := NO;
 
                             when others =>
@@ -336,6 +350,16 @@ begin
                             when others =>
                                 null;
                         end case;
+
+                    when OP_SPECIAL3 =>
+                        if (instFunc = FUNC_BSHFL and instSa = SA_SEH) then
+                            oprSrc1 := INVALID;
+                            oprSrc2 := REG;
+                            alut_o <= ALU_SEH;
+                            toWriteReg_o <= YES;
+                            writeRegAddr_o <= instRd;
+                            isInvalid := NO;
+                        end if;
 
                     when OP_LL =>
                         oprSrc1 := REG;
@@ -1179,6 +1203,9 @@ begin
         end if;
 
         if (extraCmd and tneFlag = YES and operand1 /= operand2) then
+            exceptCause_o <= TRAP_CAUSE;
+        end if;
+        if (extraCmd and teqFlag = YES and operand1 = operand2) then
             exceptCause_o <= TRAP_CAUSE;
         end if;
 
