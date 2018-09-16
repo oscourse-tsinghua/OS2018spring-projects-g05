@@ -674,7 +674,6 @@ begin
 
                             when RS_MT =>
                                 oprSrc2 := REG;
-                                writeFPRegAddr_o <= instRd;
                                 fpAlut_o <= MT;
                                 isInvalid := NO;
                                 toWriteFPReg_o <= YES;
@@ -695,11 +694,11 @@ begin
                                 toWriteFPReg_o <= YES;
                                 writeFPRegAddr_o <= instRd;
 
-                            when RS_BC =>
-                                isInvalid := NO;
-                                cWriteID := inst_i(20 downto 18);
-                                cTFFlag := inst_i(16);
-                                ccJump := YES;
+                            --when RS_BC =>
+                            --    isInvalid := NO;
+                            --    cWriteID := inst_i(20 downto 18);
+                            --    cTFFlag := inst_i(16);
+                            --    ccJump := YES;
 
                             when FMT_S | FMT_D =>
                                 case (instFunc) is
@@ -713,7 +712,7 @@ begin
                                             writeFPDouble_o <= YES;
                                         else
                                             oprSrcF1 := SINGLE;
-                                            oprSrcF1 := SINGLE;
+                                            oprSrcF2 := SINGLE;
                                             writeFPDouble_o <= NO;
                                         end if;
                                         writeFPRegAddr_o <= inst_i(10 downto 6);
@@ -726,9 +725,9 @@ begin
                                             oprSrcF1 := PAIRED;
                                             oprSrcF2 := PAIRED;
                                             writeFPDouble_o <= YES;
-                                        else
+                                        elsif (instRs = FMT_S) then
                                             oprSrcF1 := SINGLE;
-                                            oprSrcF1 := SINGLE;
+                                            oprSrcF2 := SINGLE;
                                             writeFPDouble_o <= NO;
                                         end if;
                                         writeFPRegAddr_o <= inst_i(10 downto 6);
@@ -741,25 +740,45 @@ begin
                                             oprSrcF1 := PAIRED;
                                             oprSrcF2 := PAIRED;
                                             writeFPDouble_o <= YES;
-                                        else
+                                        elsif (instRs = FMT_S) then
                                             oprSrcF1 := SINGLE;
-                                            oprSrcF1 := SINGLE;
+                                            oprSrcF2 := SINGLE;
                                             writeFPDouble_o <= NO;
                                         end if;
                                         writeFPRegAddr_o <= inst_i(10 downto 6);
+
+                                    when FUNC_CVT_D =>
+                                        if (instRs = FMT_S) then
+                                            fpAlut_o <= CVT_D;
+                                            isInvalid := NO;
+                                            toWriteFPReg_o <= YES;
+                                            oprSrcF2 := SINGLE;
+                                            writeFPDouble_o <= YES;
+                                            writeFPRegAddr_o <= inst_i(10 downto 6);
+                                        end if;
+
+                                    when FUNC_CVT_S =>
+                                        if (instRs = FMT_D) then
+                                            fpAlut_o <= CVT_S;
+                                            isInvalid := NO;
+                                            toWriteFPReg_o <= YES;
+                                            oprSrcF2 := PAIRED;
+                                            writeFPDouble_o <= NO;
+                                            writeFPRegAddr_o <= inst_i(10 downto 6);
+                                        end if;
 
                                     when others =>
                                         null;
                                 end case;
 
-                                if (inst_i(7 downto 4) = "0011") then
-                                    oprSrcF1 := PAIRED;
-                                    oprSrcF2 := PAIRED;
-                                    cCondFlag := YES;
-                                    cCondCode := inst_i(3 downto 0);
-                                    cWriteID := inst_i(10 downto 8);
-                                    isInvalid := NO;
-                                end if;
+                            --    if (inst_i(7 downto 4) = "0011") then
+                            --        oprSrcF1 := PAIRED;
+                            --        oprSrcF2 := PAIRED;
+                            --        cCondFlag := YES;
+                            --        cCondCode := inst_i(3 downto 0);
+                            --        cWriteID := inst_i(10 downto 8);
+                            --        isInvalid := NO;
+                            --    end if;
 
                             when others =>
                                 null;
@@ -1364,7 +1383,7 @@ begin
                     fpRegReadDouble1_o <= NO;
                     foperand1 := fpRegData1_i;
                     -- Ex Push Forward, Mem Wait --
-                    if (exToWriteFPReg_i = YES) and (exWriteFPTarget_i = FREG) and ((exWriteFPRegAddr_i = instRt)
+                    if (exToWriteFPReg_i = YES) and (exWriteFPTarget_i = FREG) and ((exWriteFPRegAddr_i(4 downto 0) = instRt)
                         or (exWriteFPRegAddr_i(4 downto 1) = instRt(4 downto 1) and exWriteFPDouble_i = YES))  then
                         if (exWriteFPDouble_i = NO) then
                             foperand1 := exWriteFPRegData_i;
@@ -1378,7 +1397,7 @@ begin
                         if (fpMemt_i /= INVALID) then
                             toStall_o <= PIPELINE_STOP;
                         end if;
-                    elsif (memToWriteFPReg_i = YES) and ((memWriteFPRegAddr_i = instRt)
+                    elsif (memToWriteFPReg_i = YES) and (memWriteFPTarget_i = FREG) and ((memWriteFPRegAddr_i(4 downto 0) = instRt)
                         or (memWriteFPRegAddr_i(4 downto 1) = instRt(4 downto 1) and memWriteFPDouble_i = YES)) then
                             toStall_o <= PIPELINE_STOP;
                     end if;
@@ -1407,7 +1426,7 @@ begin
                     fpRegReadDouble2_o <= NO;
                     foperand2 := fpRegData2_i;
                     -- Ex Push Forward, Mem Wait --
-                    if (exToWriteFPReg_i = YES) and (exWriteFPTarget_i = FREG) and ((exWriteFPRegAddr_i = instRd)
+                    if (exToWriteFPReg_i = YES) and (exWriteFPTarget_i = FREG) and ((exWriteFPRegAddr_i(4 downto 0) = instRd)
                         or (exWriteFPRegAddr_i(4 downto 1) = instRd(4 downto 1) and exWriteFPDouble_i = YES))  then
                         if (exWriteFPDouble_i = NO) then
                             foperand2 := exWriteFPRegData_i;
@@ -1421,7 +1440,7 @@ begin
                         if (fpMemt_i /= INVALID) then
                             toStall_o <= PIPELINE_STOP;
                         end if;
-                    elsif (memToWriteFPReg_i = YES) and ((memWriteFPRegAddr_i = instRd)
+                    elsif (memToWriteFPReg_i = YES) and (memWriteFPTarget_i = FREG) and ((memWriteFPRegAddr_i(4 downto 0) = instRd)
                         or (memWriteFPRegAddr_i(4 downto 1) = instRd(4 downto 1) and memWriteFPDouble_i = YES)) then
                             toStall_o <= PIPELINE_STOP;
                     end if;

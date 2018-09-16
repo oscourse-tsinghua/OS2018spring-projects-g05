@@ -52,31 +52,33 @@ begin
     	        else
     	            readData1_o <= 32ub"0" & regArray(conv_integer(readAddr1_i(4 downto 0)));
     	        end if;
-                if (readDouble1_i = YES) then
-                    if (writeDouble_i = NO) then
-                        if (readAddr1_i(4 downto 1) = writeAddr_i(4 downto 1)) then
-                            if (writeAddr_i(0) = '1') then
-                                readData1_o(63 downto 32) <= writeData_i(31 downto 0);
-                            else
-                                readData1_o(31 downto 0) <= writeData_i(31 downto 0);
+                if (writeEnable_i = YES) then
+                    if (readDouble1_i = YES) then
+                        if (writeDouble_i = NO) then
+                            if (readAddr1_i(4 downto 1) = writeAddr_i(4 downto 1)) then
+                                if (writeAddr_i(0) = '1') then
+                                    readData1_o(63 downto 32) <= writeData_i(31 downto 0);
+                                else
+                                    readData1_o(31 downto 0) <= writeData_i(31 downto 0);
+                                end if;
+                            end if;
+                        else
+                            if (readAddr1_i(4 downto 1) = writeAddr_i(4 downto 1)) then
+                                readData1_o <= writeData_i;
                             end if;
                         end if;
                     else
-                        if (readAddr1_i(4 downto 1) = writeAddr_i(4 downto 1)) then
-                            readData1_o <= writeData_i;
-                        end if;
-                    end if;
-                else
-                    if (writeDouble_i = NO) then
-                        if (readAddr1_i = writeAddr_i) then
-                            readData1_o <= writeData_i;
-                        end if;
-                    else
-                        if (readAddr1_i(4 downto 1) = writeAddr_i(4 downto 1)) then
-                            if (readAddr1_i(0) = '1') then
-                                readData1_o(31 downto 0) <= writeData_i(63 downto 32);
-                            else
-                                readData1_o(31 downto 0) <= writeData_i(31 downto 0);
+                        if (writeDouble_i = NO) then
+                            if (readAddr1_i = writeAddr_i) then
+                                readData1_o <= writeData_i;
+                            end if;
+                        else
+                            if (readAddr1_i(4 downto 1) = writeAddr_i(4 downto 1)) then
+                                if (readAddr1_i(0) = '1') then
+                                    readData1_o(31 downto 0) <= writeData_i(63 downto 32);
+                                else
+                                    readData1_o(31 downto 0) <= writeData_i(31 downto 0);
+                                end if;
                             end if;
                         end if;
                     end if;
@@ -93,31 +95,33 @@ begin
 	            else
 	                readData2_o <= 32ub"0" & regArray(conv_integer(readAddr2_i(4 downto 0)));
 	            end if;
-                if (readDouble2_i = YES) then
-                    if (writeDouble_i = NO) then
-                        if (readAddr2_i(4 downto 1) = writeAddr_i(4 downto 1)) then
-                            if (writeAddr_i(0) = '1') then
-                                readData2_o(63 downto 32) <= writeData_i(31 downto 0);
-                            else
-                                readData2_o(31 downto 0) <= writeData_i(31 downto 0);
+                if (writeEnable_i = YES) then
+                    if (readDouble2_i = YES) then
+                        if (writeDouble_i = NO) then
+                            if (readAddr2_i(4 downto 1) = writeAddr_i(4 downto 1)) then
+                                if (writeAddr_i(0) = '1') then
+                                    readData2_o(63 downto 32) <= writeData_i(31 downto 0);
+                                else
+                                    readData2_o(31 downto 0) <= writeData_i(31 downto 0);
+                                end if;
+                            end if;
+                        else
+                            if (readAddr2_i(4 downto 1) = writeAddr_i(4 downto 1)) then
+                                readData2_o <= writeData_i;
                             end if;
                         end if;
                     else
-                        if (readAddr2_i(4 downto 1) = writeAddr_i(4 downto 1)) then
-                            readData2_o <= writeData_i;
-                        end if;
-                    end if;
-                else
-                    if (writeDouble_i = NO) then
-                        if (readAddr2_i = writeAddr_i) then
-                            readData2_o <= writeData_i;
-                        end if;
-                    else
-                        if (readAddr2_i(4 downto 1) = writeAddr_i(4 downto 1)) then
-                            if (readAddr2_i(0) = '1') then
-                                readData2_o(31 downto 0) <= writeData_i(63 downto 32);
-                            else
-                                readData2_o(31 downto 0) <= writeData_i(31 downto 0);
+                        if (writeDouble_i = NO) then
+                            if (readAddr2_i = writeAddr_i) then
+                                readData2_o <= writeData_i;
+                            end if;
+                        else
+                            if (readAddr2_i(4 downto 1) = writeAddr_i(4 downto 1)) then
+                                if (readAddr2_i(0) = '1') then
+                                    readData2_o(31 downto 0) <= writeData_i(63 downto 32);
+                                else
+                                    readData2_o(31 downto 0) <= writeData_i(31 downto 0);
+                                end if;
                             end if;
                         end if;
                     end if;

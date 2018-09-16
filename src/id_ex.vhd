@@ -109,6 +109,7 @@ begin
                 writeFPRegAddr_o <= (others => '0');
                 writeFPDouble_o <= NO;
                 fpAlut_o <= INVALID;
+                fpMemt_o <= INVALID;
                 foperand1_o <= (others => '0');
                 foperand2_o <= (others => '0');
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_STOP and stall_i(EX_STOP_IDX) = PIPELINE_NONSTOP) then
@@ -132,7 +133,7 @@ begin
                 foperand2_o <= (others => '0');
                 toWriteFPReg_o <= NO;
                 writeFPRegAddr_o <= (others => '0');
-                writeFPDouble_o <= writeFPDouble_i;
+                writeFPDouble_o <= NO;
                 fpAlut_o <= INVALID;
                 fpMemt_o <= INVALID;
             elsif (stall_i(ID_STOP_IDX) = PIPELINE_NONSTOP) then

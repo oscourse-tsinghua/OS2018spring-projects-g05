@@ -207,8 +207,8 @@ package inst_const is
     constant FUNC_FMUL: std_logic_vector(InstFuncWidth) := "000010";
     constant FUNC_FDIV: std_logic_vector(InstFuncWidth) := "000011";
     constant FUNC_SQRT: std_logic_vector(InstFuncWidth) := "000100";
-    constant FUNC_FMOV: std_logic_vector(InstFuncWidth) := "000110";
-    constant FUNC_TRUNCW: std_logic_vector(InstFuncWidth) := "001101";
+    constant FUNC_CVT_D: std_logic_vector(InstFuncWidth) := "100001";
+    constant FUNC_CVT_S: std_logic_vector(InstFuncWidth) := "100000";
     -- Some of the above constants may similiar as definition in general pipel-
     -- line, but we still rename it to remove ambiguity (eg. FUNC_FADD = 
     -- FUNC_MADD)

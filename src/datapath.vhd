@@ -390,11 +390,13 @@ architecture bhv of datapath is
     signal cp1RegReadAddr_fe: std_logic_vector(RegAddrWidth);
     signal data_ef: std_logic_vector(DataWidth);
 
-    --attribute mark_debug: string;
-    --attribute mark_debug of foperand1_5f: signal is "true";
-    --attribute mark_debug of foperand2_5f: signal is "true";
-    --attribute mark_debug of writeFPRegData_f7: signal is "true";
-    --attribute mark_debug of fpAlut_5f: signal is "true";
+    attribute mark_debug: string;
+    attribute mark_debug of writeFPRegAddr_9g: signal is "true";
+    attribute mark_debug of writeFPRegData_9g: signal is "true";
+    attribute mark_debug of writeFPDouble_9g: signal is "true";
+    attribute mark_debug of currentInstAddr_89: signal is "true";
+    attribute mark_debug of toWriteFPReg_9g: signal is "true";
+    attribute mark_debug of exceptCause_8c: signal is "true";
 
 begin
 

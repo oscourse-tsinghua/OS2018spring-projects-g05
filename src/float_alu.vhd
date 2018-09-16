@@ -64,6 +64,31 @@ architecture bhv of float_alu is
 		end if;
 	end doubleadd;
 
+	function singleadd(a: std_logic_vector(DataWidth);
+					   b: std_logic_vector(DataWidth)) return std_logic_vector is
+		variable dataindex: std_logic_vector(24 downto 0);
+	begin
+		if (unsigned(a(30 downto 23)) > unsigned(b(30 downto 23))) then
+			dataindex := "01" & a(22 downto 0);
+			dataindex := to_stdlogicvector(dataindex + (("01" & b(22 downto 0)) srl (
+						 to_integer('0' & (unsigned(a(30 downto 23)) - unsigned(b(30 downto 23)))))));
+			if (dataindex(24) = '1') then
+				return a(31) & (a(30 downto 23) + 1) & dataindex(23 downto 1);
+			else
+				return a(31 downto 23) & dataindex(22 downto 0);
+			end if;
+		else
+			dataindex := "01" & b(22 downto 0);
+			dataindex := to_stdlogicvector(dataindex + (("01" & a(22 downto 0)) srl (
+						 to_integer('0' & (unsigned(b(30 downto 23)) - unsigned(a(30 downto 23)))))));
+			if (dataindex(24) = '1') then
+				return b(31) & (b(30 downto 23) + 1) & dataindex(23 downto 1);
+			else
+				return b(31 downto 23) & dataindex(22 downto 0);
+			end if;
+		end if;
+	end singleadd;
+
 	function doublesub(a: std_logic_vector(DoubleDataWidth);
 					   b: std_logic_vector(DoubleDataWidth)) return std_logic_vector is
 		variable dataindex: std_logic_vector(53 downto 0);
@@ -99,6 +124,41 @@ architecture bhv of float_alu is
 		end if;
 	end doublesub;
 
+	function singlesub(a: std_logic_vector(DataWidth);
+					   b: std_logic_vector(DataWidth)) return std_logic_vector is
+		variable dataindex: std_logic_vector(24 downto 0);
+		variable count: integer;
+		variable haveone: std_logic;
+	begin
+		if (unsigned(a(30 downto 0)) > unsigned(b(30 downto 0))) then
+			dataindex := "01" & a(22 downto 0);
+			dataindex := to_stdlogicvector(dataindex - (("01" & b(22 downto 0)) srl (
+						 to_integer('0' & (unsigned(a(30 downto 23)) - unsigned(b(30 downto 23)))))));
+			haveone := '0';
+	        for i in 23 downto 0 loop
+    	        if haveone = '0' and dataindex(i) /= '0' then
+    	        	count := i;
+    	        	haveone := '1';
+    	        end if;
+        	end loop;
+        	dataindex := dataindex sll (23 - count);
+        	return a(31) & (a(30 downto 23) - 23 + count) & dataindex(22 downto 0);
+		else
+			dataindex := "01" & b(22 downto 0);
+			dataindex := to_stdlogicvector(dataindex - (("01" & a(22 downto 0)) srl (
+						 to_integer('0' & (unsigned(b(30 downto 23)) - unsigned(a(30 downto 23)))))));
+			haveone := '0';
+	        for i in 23 downto 0 loop
+    	        if haveone = '0' and dataindex(i) /= '0' then
+    	        	count := i;
+    	        	haveone := '1';
+    	        end if;
+        	end loop;
+        	dataindex := dataindex sll (23 - count);
+        	return not a(31) & (b(30 downto 23) - 23 + count) & dataindex(22 downto 0);
+		end if;
+	end singlesub;
+
 	function singlemul(a: std_logic_vector(DataWidth);
 					   b: std_logic_vector(DataWidth)) return std_logic_vector is
 		variable dataA, dataB: std_logic_vector(24 downto 0);
@@ -109,6 +169,11 @@ architecture bhv of float_alu is
 		dataB := "01" & b(22 downto 0);
 		powerIndex := a(30 downto 23) + b(30 downto 23) - "01111111";
 		result := dataA * dataB;
+		if (result(47) = '0') then
+			result(46 downto 23) := result(46 downto 23) + result(22);
+		else
+			result(47 downto 24) := result(47 downto 24) + result(23);
+		end if;
 		if result(47) = '0' then
 			return (a(31) xor b(31)) & powerIndex & result(45 downto 23);
 		else
@@ -126,12 +191,27 @@ architecture bhv of float_alu is
 		dataB := "01" & b(51 downto 0);
 		powerIndex := a(62 downto 52) + b(62 downto 52) - "01111111111";
 		result := dataA * dataB;
+		if (result(105) = '0') then
+			result(104 downto 52) := result(104 downto 52) + result(51);
+		else
+			result(105 downto 53) := result(105 downto 53) + result(52);
+		end if;
 		if result(105) = '0' then
 			return (a(63) xor b(63)) & powerIndex & result(103 downto 52);
 		else
 			return (a(63) xor b(63)) & (powerIndex + '1') & result(104 downto 53);
 		end if;
 	end doublemul;
+
+	function singlecvt(a: std_logic_vector(DoubleDataWidth)) return std_logic_vector is
+	begin
+		return a(63 downto 62) & a(58 downto 29);
+	end singlecvt;
+
+	function doublecvt(a: std_logic_vector(DataWidth)) return std_logic_vector is
+	begin
+		return a(31 downto 30) & not a(30) & not a(30) & not a(30) & a(29 downto 0) & 29ub"0"; 
+	end doublecvt;
 begin
 	process(all) begin
 		toWriteFPReg_o <= NO;
@@ -188,20 +268,36 @@ begin
 					toWriteFPReg_o <= YES;
 					writeFPRegAddr_o <= 27ub"0" & writeFPRegAddr_i;
 					fpWriteTarget_o <= FREG;
-					if foperand1_i(63) = foperand2_i(63) then
-						writeFPRegData_o <= doubleadd(foperand1_i, foperand2_i);
+					if (writeFPDouble_i = YES) then
+						if foperand1_i(63) = foperand2_i(63) then
+							writeFPRegData_o <= doubleadd(foperand1_i, foperand2_i);
+						else
+							writeFPRegData_o <= doublesub(foperand1_i, not foperand2_i(63) & foperand2_i(62 downto 0));
+						end if;
 					else
-						writeFPRegData_o <= doublesub(foperand1_i, not foperand2_i(63) & foperand2_i(62 downto 0));
+						if foperand1_i(31) = foperand2_i(31) then
+							writeFPRegData_o <= 32ub"0" & singleadd(foperand1_i(31 downto 0), foperand2_i(31 downto 0));
+						else
+							writeFPRegData_o <= 32ub"0" & singlesub(foperand1_i(31 downto 0), not foperand2_i(31) & foperand2_i(30 downto 0));
+						end if;
 					end if;
 
 				when SUB =>
 					toWriteFPReg_o <= YES;
 					writeFPRegAddr_o <= 27ub"0" & writeFPRegAddr_i;
 					fpWriteTarget_o <= FREG;
-					if foperand1_i(63) /= foperand2_i(63) then
-						writeFPRegData_o <= doubleadd(foperand1_i, not foperand2_i(63) & foperand2_i(62 downto 0));
+					if (writeFPDouble_i = YES) then
+						if foperand1_i(63) /= foperand2_i(63) then
+							writeFPRegData_o <= doubleadd(foperand1_i, not foperand2_i(63) & foperand2_i(62 downto 0));
+						else
+							writeFPRegData_o <= doublesub(foperand1_i, foperand2_i);
+						end if;
 					else
-						writeFPRegData_o <= doublesub(foperand1_i, foperand2_i);
+						if foperand1_i(31) = foperand2_i(31) then
+							writeFPRegData_o <= 32ub"0" & singleadd(foperand1_i(31 downto 0), foperand2_i(31 downto 0));
+						else
+							writeFPRegData_o <= 32ub"0" & singlesub(foperand1_i(31 downto 0), not foperand2_i(31) & foperand2_i(30 downto 0));
+						end if;
 					end if;
 
 				when MUL =>
@@ -213,6 +309,18 @@ begin
 					else
 						writeFPRegData_o <= 32ub"0" & singlemul(foperand1_i(31 downto 0), foperand2_i(31 downto 0));
 					end if;
+
+				when CVT_D =>
+					toWriteFPReg_o <= YES;
+					writeFPRegAddr_o <= 27ub"0" & writeFPRegAddr_i;
+					fpWriteTarget_o <= FREG;
+					writeFPRegData_o <= doublecvt(foperand2_i(31 downto 0));
+
+				when CVT_S =>
+					toWriteFPReg_o <= YES;
+					writeFPRegAddr_o <= 27ub"0" & writeFPRegAddr_i;
+					fpWriteTarget_o <= FREG;
+					writeFPRegData_o <= 32ub"0" & singlecvt(foperand2_i);
 
 				when others =>
 					null;

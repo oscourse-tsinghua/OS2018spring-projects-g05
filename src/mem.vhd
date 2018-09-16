@@ -239,6 +239,7 @@ begin
                         elsif (ldState = SECOND) then
                             fpWriteRegData(63 downto 32) <= loadedData_i;
                         end if;
+                        dataByteSelect_o <= "1111";
 
                     when FMEM_SD =>
                         if (ldState = FIRST or ldState = SECOND) then

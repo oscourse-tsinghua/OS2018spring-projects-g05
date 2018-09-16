@@ -93,7 +93,7 @@ package config_const is
             bit 18      0, paired-single floating point is not implemented
             bit 17      1, double precision floating point is implemented
             bit 16      1, single precision floating point is implemented
-            bit 15:8    CPU_id, remembed to implement from cp1.vhd
+            bit 15:8    CPU_id, implement through cp1.vhd
             bit 7:0     0, revision field not implemented
     */
 end config_const;
