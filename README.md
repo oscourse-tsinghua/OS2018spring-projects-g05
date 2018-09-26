@@ -1,4 +1,6 @@
-# 展示包
+# nCore
+双核 MIPS CPU SoC
+
 ### 文件说明
 
 - `vivado_prj`文件夹中包含Vivado工程入口、实现完成的bit文件、IP核相关文件；
@@ -18,3 +20,7 @@
 ### 软件说明
 
 `soft`文件夹中提供了展示所需的软件。受限于空间，文件夹中只有二进制程序。若需要源码，可在[此GitHub仓库](https://github.com/roastduck/u-boot-naivemips/)的`nscscc`分支下载U-Boot的源码、在[此GitHub仓库](https://github.com/roastduck/linux)的`naivemips`分支下载Linux源码。
+
+### 仿真说明
+
+主要的仿真测例位于`sim/source`，需要预处理后才能生成HDL用以仿真。在根目录执行`make test`即可于`sim/output`生成HDL测例，每个子目录一个测例，将其添加进Vivado工程即可使用。添加时注意将文件语言设为VHDL 2008。某些测例年久失修，暂不能通过。
